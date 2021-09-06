@@ -36,9 +36,7 @@ class VHDLStandard(object):
         return False
 
     def __lt__(self, other):
-        return int(self._standard) < int(
-            other._standard  # pylint: disable=protected-access
-        )
+        return int(self._standard) < int(other._standard)  # pylint: disable=protected-access
 
     def __str__(self):
         if self == VHDL.STD_1993:

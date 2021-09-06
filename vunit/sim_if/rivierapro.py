@@ -75,9 +75,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         """
         Return a VersionConsumer object containing the simulator version.
         """
-        proc = Process(
-            [str(Path(cls.find_prefix()) / "vcom"), "-version"], env=cls.get_env()
-        )
+        proc = Process([str(Path(cls.find_prefix()) / "vcom"), "-version"], env=cls.get_env())
         consumer = VersionConsumer()
         proc.consume_output(consumer)
 
@@ -161,9 +159,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         """
         if vhdl_standard == VHDL.STD_2019:
             if self._version.year is not None:
-                if (self._version.year == 2020 and self._version.month < 4) or (
-                    self._version.year < 2020
-                ):
+                if (self._version.year == 2020 and self._version.month < 4) or (self._version.year < 2020):
                     return "-2018"
 
             return "-2019"
@@ -265,9 +261,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         Get mapped libraries by running vlist on the working directory
         """
         lines = []
-        proc = Process(
-            [str(Path(self._prefix) / "vlist")], cwd=str(Path(library_cfg_file).parent)
-        )
+        proc = Process([str(Path(self._prefix) / "vlist")], cwd=str(Path(library_cfg_file).parent))
         proc.consume_output(callback=lines.append)
 
         libraries = {}
@@ -277,14 +271,10 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
                 continue
             key = match.group(1)
             value = match.group(2)
-            libraries[key] = str(
-                (Path(library_cfg_file).parent / (Path(value).parent)).resolve()
-            )
+            libraries[key] = str((Path(library_cfg_file).parent / (Path(value).parent)).resolve())
         return libraries
 
-    def _create_load_function(
-        self, test_suite_name, config, output_path  # pylint: disable=unused-argument
-    ):
+    def _create_load_function(self, test_suite_name, config, output_path):  # pylint: disable=unused-argument
         """
         Create the vunit_load TCL function that runs the vsim command and loads the design
         """
@@ -294,9 +284,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
                 for name, value in config.generics.items()
             )
         )
-        pli_str = " ".join(
-            '-pli "%s"' % fix_path(name) for name in config.sim_options.get("pli", [])
-        )
+        pli_str = " ".join('-pli "%s"' % fix_path(name) for name in config.sim_options.get("pli", []))
 
         vsim_flags = [
             "-dataset {%s}" % fix_path(str(Path(output_path) / "dataset.asdb")),
@@ -358,14 +346,10 @@ proc vunit_load {{}} {{
         Determine vsim_extra_args
         """
         vsim_extra_args = []
-        vsim_extra_args = config.sim_options.get(
-            "rivierapro.vsim_flags", vsim_extra_args
-        )
+        vsim_extra_args = config.sim_options.get("rivierapro.vsim_flags", vsim_extra_args)
 
         if self._gui:
-            vsim_extra_args = config.sim_options.get(
-                "rivierapro.vsim_flags.gui", vsim_extra_args
-            )
+            vsim_extra_args = config.sim_options.get("rivierapro.vsim_flags.gui", vsim_extra_args)
 
         return " ".join(vsim_extra_args)
 

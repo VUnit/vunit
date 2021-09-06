@@ -22,10 +22,8 @@ from vunit.about import license_text
 ROOT = Path(RSTR)
 
 RE_LICENSE_NOTICE = re.compile(
-    r"(?P<comment_start>#|--|//) This Source Code Form is subject to the terms of the Mozilla Public"
-    + "\n"
-    r"(?P=comment_start) License, v\. 2\.0\. If a copy of the MPL was not distributed with this file,"
-    + "\n"
+    r"(?P<comment_start>#|--|//) This Source Code Form is subject to the terms of the Mozilla Public" + "\n"
+    r"(?P=comment_start) License, v\. 2\.0\. If a copy of the MPL was not distributed with this file," + "\n"
     r"(?P=comment_start) You can obtain one at http://mozilla\.org/MPL/2\.0/\." + "\n"
     r"(?P=comment_start)" + "\n"
     r"(?P=comment_start) Copyright \(c\) (?P<first_year>20\d\d)(-(?P<last_year>20\d\d))?, "
@@ -70,14 +68,12 @@ class TestLicense(unittest.TestCase):
         self.assertEqual(
             int(match.group("first_year")),
             FIRST_YEAR,
-            "Expected copyright year range to start with %d in %s"
-            % (FIRST_YEAR, file_name),
+            "Expected copyright year range to start with %d in %s" % (FIRST_YEAR, file_name),
         )
         self.assertEqual(
             int(match.group("last_year")),
             LAST_YEAR,
-            "Expected copyright year range to end with %d in %s"
-            % (LAST_YEAR, file_name),
+            "Expected copyright year range to end with %d in %s" % (LAST_YEAR, file_name),
         )
 
     @staticmethod
@@ -97,9 +93,7 @@ class TestLicense(unittest.TestCase):
             for _ in range(len(line) - len(sline)):
                 print("~", end="")
             print()
-            raise AssertionError(
-                "Line %i of %s contains trailing whitespace" % (idx + 1, file_name)
-            )
+            raise AssertionError("Line %i of %s contains trailing whitespace" % (idx + 1, file_name))
 
 
 def fix_license(file_name):

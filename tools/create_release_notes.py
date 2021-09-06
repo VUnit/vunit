@@ -22,9 +22,7 @@ def get_releases(source_path: Path):
     """
     release_notes = source_path / "release_notes"
     releases = []
-    for idx, file_name in enumerate(
-        sorted(glob(str(release_notes / "*.rst")), reverse=True)
-    ):
+    for idx, file_name in enumerate(sorted(glob(str(release_notes / "*.rst")), reverse=True)):
         releases.append(Release(file_name, is_latest=idx == 0))
     return releases
 
@@ -72,10 +70,7 @@ Release notes
             fptr.write(title + "\n")
             fptr.write("-" * len(title) + "\n\n")
 
-            fptr.write(
-                "\n`Download from PyPI <https://pypi.python.org/pypi/vunit_hdl/%s/>`__"
-                % release.name
-            )
+            fptr.write("\n`Download from PyPI <https://pypi.python.org/pypi/vunit_hdl/%s/>`__" % release.name)
 
             if not is_last:
                 fptr.write(

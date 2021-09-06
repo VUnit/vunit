@@ -150,12 +150,8 @@ begin
 end architecture;
 """
         )
-        self.assertFalse(
-            (Path(self._preprocessed_path) / "lib" / Path(file_name1).name).exists()
-        )
-        with (
-            Path(self._preprocessed_path) / "lib" / Path(file_name2).name
-        ).open() as fread:
+        self.assertFalse((Path(self._preprocessed_path) / "lib" / Path(file_name1).name).exists())
+        with (Path(self._preprocessed_path) / "lib" / Path(file_name2).name).open() as fread:
             expectd = pp_source.substitute(
                 entity="ent2",
                 report='log("Here I am!"); -- VUnitfier preprocessor: Report turned off, keeping original code.',
@@ -190,12 +186,8 @@ end architecture;
         self.create_file(str(file_name), contents)
 
         ui.add_source_file(file_name, "lib")
-        logger.assert_called_once_with(
-            "Failed to preprocess %s", str(Path(file_name).resolve())
-        )
-        self.assertFalse(
-            (Path(self._preprocessed_path) / "lib" / file_name.name).exists()
-        )
+        logger.assert_called_once_with("Failed to preprocess %s", str(Path(file_name).resolve()))
+        self.assertFalse((Path(self._preprocessed_path) / "lib" / file_name.name).exists())
 
     def test_supported_source_file_suffixes(self):
         """Test adding a supported filetype, of any case, is accepted."""
@@ -205,9 +197,7 @@ end architecture;
         allowable_extensions = list(accepted_extensions)
         allowable_extensions.extend([ext.upper() for ext in accepted_extensions])
         allowable_extensions.append(
-            VHDL_EXTENSIONS[0][0]
-            + VHDL_EXTENSIONS[0][1].upper()
-            + VHDL_EXTENSIONS[0][2:]
+            VHDL_EXTENSIONS[0][0] + VHDL_EXTENSIONS[0][1].upper() + VHDL_EXTENSIONS[0][2:]
         )  # mixed case
         for idx, ext in enumerate(allowable_extensions):
             file_name = self.create_entity_file(idx, ext)
@@ -241,9 +231,7 @@ end architecture;
     def test_no_exception_on_adding_zero_files_when_allowed(self):
         ui = self._create_ui()
         lib = ui.add_library("lib")
-        lib.add_source_files(
-            str(Path(__file__).parent / "missing.vhd"), allow_empty=True
-        )
+        lib.add_source_files(str(Path(__file__).parent / "missing.vhd"), allow_empty=True)
 
     def test_get_test_benchs_and_test(self):
         ui = self._create_ui()
@@ -292,9 +280,7 @@ end architecture;
             [test_bench.name for test_bench in lib.get_test_benches()],
             ["tb_ent", "tb_ent2"],
         )
-        self.assertEqual(
-            [test_bench.name for test_bench in lib.get_test_benches("*2")], ["tb_ent2"]
-        )
+        self.assertEqual([test_bench.name for test_bench in lib.get_test_benches("*2")], ["tb_ent2"])
 
         self.assertEqual(lib.test_bench("tb_ent").test("test1").name, "test1")
         self.assertEqual(lib.test_bench("tb_ent").test("test2").name, "test2")
@@ -303,12 +289,8 @@ end architecture;
             [test.name for test in lib.test_bench("tb_ent").get_tests()],
             ["test1", "test2"],
         )
-        self.assertEqual(
-            [test.name for test in lib.test_bench("tb_ent").get_tests("*1")], ["test1"]
-        )
-        self.assertEqual(
-            [test.name for test in lib.test_bench("tb_ent2").get_tests()], []
-        )
+        self.assertEqual([test.name for test in lib.test_bench("tb_ent").get_tests("*1")], ["test1"])
+        self.assertEqual([test.name for test in lib.test_bench("tb_ent2").get_tests()], [])
 
     def test_get_entities_case_insensitive(self):
         ui = self._create_ui()
@@ -400,9 +382,7 @@ end entity;
         ui = self._create_ui()
 
         source_files = ui.add_source_files_from_csv("test_returns.csv")
-        self.assertEqual(
-            [source_file.name for source_file in source_files], list_of_files
-        )
+        self.assertEqual([source_file.name for source_file in source_files], list_of_files)
 
     def test_add_source_files_errors(self):
         ui = self._create_ui()
@@ -414,9 +394,7 @@ end entity;
             lib.add_source_files,
             ["missing.vhd", "file.vhd"],
         )
-        self.assertRaisesRegex(
-            ValueError, r"missing\.vhd", lib.add_source_files, "missing.vhd"
-        )
+        self.assertRaisesRegex(ValueError, r"missing\.vhd", lib.add_source_files, "missing.vhd")
 
     def test_get_source_files(self):
         ui = self._create_ui()
@@ -526,35 +504,25 @@ Listed 2 files""".splitlines()
 
         ui = self._create_ui("--list", "--with-attribute=.attr0")
         setup(ui)
-        check_stdout(
-            ui, "lib.tb_filter.Test 1\n" "lib.tb_filter.Test 2\n" "Listed 2 tests"
-        )
+        check_stdout(ui, "lib.tb_filter.Test 1\n" "lib.tb_filter.Test 2\n" "Listed 2 tests")
 
         ui = self._create_ui("--list", "--with-attribute=.attr2")
         setup(ui)
         check_stdout(ui, "lib.tb_filter.Test 4\n" "Listed 1 tests")
 
-        ui = self._create_ui(
-            "--list", "--with-attributes", ".attr0", "--with-attributes", ".attr1"
-        )
+        ui = self._create_ui("--list", "--with-attributes", ".attr0", "--with-attributes", ".attr1")
         setup(ui)
         check_stdout(ui, "lib.tb_filter.Test 2\n" "Listed 1 tests")
 
         ui = self._create_ui("--list", "--without-attributes", ".attr0")
         setup(ui)
-        check_stdout(
-            ui, "lib.tb_filter.Test 3\n" "lib.tb_filter.Test 4\n" "Listed 2 tests"
-        )
+        check_stdout(ui, "lib.tb_filter.Test 3\n" "lib.tb_filter.Test 4\n" "Listed 2 tests")
 
-        ui = self._create_ui(
-            "--list", "--without-attributes", ".attr0", "--without-attributes", ".attr1"
-        )
+        ui = self._create_ui("--list", "--without-attributes", ".attr0", "--without-attributes", ".attr1")
         setup(ui)
         check_stdout(ui, "lib.tb_filter.Test 4\n" "Listed 1 tests")
 
-        ui = self._create_ui(
-            "--list", "--with-attributes", ".attr0", "--without-attributes", ".attr1"
-        )
+        ui = self._create_ui("--list", "--with-attributes", ".attr0", "--without-attributes", ".attr1")
         setup(ui)
         check_stdout(ui, "lib.tb_filter.Test 1\n" "Listed 1 tests")
 
@@ -587,17 +555,11 @@ Listed 2 files""".splitlines()
             data = json.load(fptr)
 
         # Check known keys
-        self.assertEqual(
-            set(data.keys()), set(["export_format_version", "files", "tests"])
-        )
+        self.assertEqual(set(data.keys()), set(["export_format_version", "files", "tests"]))
 
         # Check that export format is semantic version with integer values
-        self.assertEqual(
-            set(data["export_format_version"].keys()), set(("major", "minor", "patch"))
-        )
-        assert all(
-            isinstance(value, int) for value in data["export_format_version"].values()
-        )
+        self.assertEqual(set(data["export_format_version"].keys()), set(("major", "minor", "patch")))
+        assert all(isinstance(value, int) for value in data["export_format_version"].values())
 
         # Check the contents of the files section
         self.assertEqual(
@@ -612,10 +574,7 @@ Listed 2 files""".splitlines()
 
         # Check the contents of the tests section
         self.assertEqual(
-            {
-                item["name"]: (item["location"], item["attributes"])
-                for item in data["tests"]
-            },
+            {item["name"]: (item["location"], item["attributes"]) for item in data["tests"]},
             {
                 "lib1.tb_foo.all": (
                     {"file_name": file_name1, "offset": 180, "length": 18},
@@ -660,9 +619,7 @@ Listed 2 files""".splitlines()
             ui.get_source_files,
             non_existant_name,
         )
-        self.assertEqual(
-            len(ui.get_source_files(non_existant_name, allow_empty=True)), 0
-        )
+        self.assertEqual(len(ui.get_source_files(non_existant_name, allow_empty=True)), 0)
 
         self.assertRaisesRegex(
             ValueError,
@@ -733,9 +690,7 @@ Listed 2 files""".splitlines()
         foo_files.add_dependency_on(bar_file)
 
         for foo_file in foo_files:
-            self.assertEqual(
-                names(ui.get_compile_order([foo_file])), names([bar_file, foo_file])
-            )
+            self.assertEqual(names(ui.get_compile_order([foo_file])), names([bar_file, foo_file]))
 
     def _create_ui_with_mocked_project_add_source_file(self):
         """
@@ -773,16 +728,8 @@ Listed 2 files""".splitlines()
                 no_parse=False,
             )
 
-        check(
-            lambda ui, _: ui.add_source_files(
-                file_name, "lib", include_dirs=include_dirs
-            )
-        )
-        check(
-            lambda ui, _: ui.add_source_file(
-                file_name, "lib", include_dirs=include_dirs
-            )
-        )
+        check(lambda ui, _: ui.add_source_files(file_name, "lib", include_dirs=include_dirs))
+        check(lambda ui, _: ui.add_source_file(file_name, "lib", include_dirs=include_dirs))
         check(lambda _, lib: lib.add_source_files(file_name, include_dirs=include_dirs))
         check(lambda _, lib: lib.add_source_file(file_name, include_dirs=include_dirs))
 
@@ -915,9 +862,7 @@ Listed 2 files""".splitlines()
             elif method == 2:
                 source_file = ui.add_source_file(file_name, "lib", vhdl_standard="2008")
             elif method == 3:
-                source_file = ui.add_source_files(
-                    file_name, "lib", vhdl_standard="2008"
-                )[0]
+                source_file = ui.add_source_files(file_name, "lib", vhdl_standard="2008")[0]
 
             self.assertEqual(source_file.vhdl_standard, "2008")
 
@@ -1077,10 +1022,7 @@ endmodule
                 test_bench.scan_tests_from_file(tests_file_name)
 
                 self.assertEqual(
-                    [
-                        test.name
-                        for test in ui.library("lib").test_bench("tb_top").get_tests()
-                    ],
+                    [test.name for test in ui.library("lib").test_bench("tb_top").get_tests()],
                     ["test1", "test2"],
                 )
 
@@ -1101,9 +1043,7 @@ endmodule
         """,
         )
         lib.add_source_file(tb_file_name)
-        self.assertRaises(
-            ValueError, lib.test_bench("tb_top").scan_tests_from_file, "missing.sv"
-        )
+        self.assertRaises(ValueError, lib.test_bench("tb_top").scan_tests_from_file, "missing.sv")
 
     def test_can_list_tests_without_simulator(self):
         with set_env():
@@ -1121,9 +1061,7 @@ endmodule
             ui = self._create_ui_real_sim("--compile")
             self._run_main(ui, 1)
             self.assertEqual(len(logger.error.mock_calls), 1)
-            self.assertTrue(
-                "No available simulator detected" in str(logger.error.mock_calls)
-            )
+            self.assertTrue("No available simulator detected" in str(logger.error.mock_calls))
 
     @mock.patch("vunit.ui.LOGGER", autospec=True)
     def test_simulate_without_simulator_fails(self, logger):
@@ -1131,9 +1069,7 @@ endmodule
             ui = self._create_ui_real_sim()
             self._run_main(ui, 1)
             self.assertEqual(len(logger.error.mock_calls), 1)
-            self.assertTrue(
-                "No available simulator detected" in str(logger.error.mock_calls)
-            )
+            self.assertTrue("No available simulator detected" in str(logger.error.mock_calls))
 
     def test_set_sim_option_before_adding_file(self):
         """
@@ -1193,9 +1129,7 @@ end architecture;
         lib.add_source_file("tb_ent.vhd")
         lib.add_source_file("tb_ent2.vhd")
         simulator_if = ui._create_simulator_if()  # pylint: disable=protected-access
-        target_files = ui._get_testbench_files(  # pylint: disable=protected-access
-            simulator_if
-        )
+        target_files = ui._get_testbench_files(simulator_if)  # pylint: disable=protected-access
         expected = [
             lib.get_source_file(fname)._source_file  # pylint: disable=protected-access
             for fname in ["tb_ent2.vhd", "tb_ent.vhd"]
@@ -1300,9 +1234,7 @@ class VUnitfier(object):
     """
 
     def __init__(self):
-        self._report_pattern = re.compile(
-            r'^(?P<indent>\s*)report\s*(?P<note>"[^"]*")\s*;', MULTILINE
-        )
+        self._report_pattern = re.compile(r'^(?P<indent>\s*)report\s*(?P<note>"[^"]*")\s*;', MULTILINE)
 
     def run(self, code, file_name):  # pylint: disable=unused-argument
         return self._report_pattern.sub(
@@ -1341,9 +1273,7 @@ class MockSimulator(SimulatorInterface):
         return True
 
     @staticmethod
-    def simulate(  # pylint: disable=unused-argument
-        output_path, test_suite_name, config, elaborate_only
-    ):
+    def simulate(output_path, test_suite_name, config, elaborate_only):  # pylint: disable=unused-argument
         return True
 
 

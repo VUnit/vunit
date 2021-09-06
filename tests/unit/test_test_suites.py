@@ -106,9 +106,7 @@ test_suite_done""",
                 test_suite_name=None,
                 test_cases=expected,
             )
-            results = run._read_test_results(  # pylint: disable=protected-access
-                file_name=file_name
-            )
+            results = run._read_test_results(file_name=file_name)  # pylint: disable=protected-access
             self.assertEqual(results, expected)
             return results
 
@@ -183,9 +181,7 @@ test_suite_done""",
                 test_cases=expected,
             )
 
-            results = run._read_test_results(  # pylint: disable=protected-access
-                file_name=file_name
-            )
+            results = run._read_test_results(file_name=file_name)  # pylint: disable=protected-access
             self.assertEqual(
                 run._check_results(results, sim_ok),  # pylint: disable=protected-access
                 (waschecked, expected),

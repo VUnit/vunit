@@ -233,9 +233,7 @@ end entity;
         self.assertEqual(generics[0].identifier, "max_value")
         self.assertEqual(generics[0].init_value, "(2-19)*4")
         self.assertEqual(generics[0].mode, None)
-        self.assertEqual(
-            generics[0].subtype_indication.code, "integer range 2-2 to 2**10"
-        )
+        self.assertEqual(generics[0].subtype_indication.code, "integer range 2-2 to 2**10")
         self.assertEqual(generics[0].subtype_indication.type_mark, "integer")
         # @TODO does not work
         #        self.assertEqual(generics[0].subtypeIndication.constraint, "range 2-2 to 2**10")
@@ -321,9 +319,7 @@ end entity;
         self.assertEqual(ports[1].identifier, "data")
         self.assertEqual(ports[1].init_value, None)
         self.assertEqual(ports[1].mode, "out")
-        self.assertEqual(
-            ports[1].subtype_indication.code, "std_logic_vector(11-1 downto 0)"
-        )
+        self.assertEqual(ports[1].subtype_indication.code, "std_logic_vector(11-1 downto 0)")
         self.assertEqual(ports[1].subtype_indication.type_mark, "std_logic_vector")
         self.assertEqual(ports[1].subtype_indication.constraint, "(11-1 downto 0)")
 
@@ -480,10 +476,7 @@ type unconstrained_fish_array_t is array(integer range <>) of fish_t;
 type constrained_badgers_array_t is array ( -1 downto 0 ) of badger_t;
 type unconstrained_natural_array_t is array ( integer range <> ) of natural;
 """
-        arrays = {
-            e.identifier: e.subtype_indication.type_mark
-            for e in VHDLArrayType.find(code)
-        }
+        arrays = {e.identifier: e.subtype_indication.type_mark for e in VHDLArrayType.find(code)}
         expect = {
             "constrained_integer_array_t": "integer",
             "unconstrained_fish_array_t": "fish_t",
@@ -513,13 +506,9 @@ record
 
         self.assertIn("space_time_t", records)
         self.assertEqual(records["space_time_t"][0].identifier_list, ["x", "y", "z"])
-        self.assertEqual(
-            records["space_time_t"][0].subtype_indication.type_mark, "real"
-        )
+        self.assertEqual(records["space_time_t"][0].subtype_indication.type_mark, "real")
         self.assertEqual(records["space_time_t"][1].identifier_list, ["t"])
-        self.assertEqual(
-            records["space_time_t"][1].subtype_indication.type_mark, "time"
-        )
+        self.assertEqual(records["space_time_t"][1].subtype_indication.type_mark, "time")
 
         self.assertIn("complex_t", records)
         self.assertEqual(records["complex_t"][0].identifier_list, ["im", "re"])
@@ -527,12 +516,8 @@ record
 
         self.assertIn("foo", records)
         self.assertEqual(records["foo"][0].identifier_list, ["bar"])
-        self.assertEqual(
-            records["foo"][0].subtype_indication.type_mark, "std_logic_vector"
-        )
-        self.assertEqual(
-            records["foo"][0].subtype_indication.constraint, "(7 downto 0)"
-        )
+        self.assertEqual(records["foo"][0].subtype_indication.type_mark, "std_logic_vector")
+        self.assertEqual(records["foo"][0].subtype_indication.constraint, "(7 downto 0)")
         self.assertTrue(records["foo"][0].subtype_indication.array_type)
 
     def test_remove_comments(self):
@@ -579,13 +564,9 @@ record
         """
         Helper function to create a VHDLEntity
         """
-        data_width = VHDLInterfaceElement(
-            "data_width", VHDLSubtypeIndication.parse("natural := 16")
-        )
+        data_width = VHDLInterfaceElement("data_width", VHDLSubtypeIndication.parse("natural := 16"))
 
-        clk = VHDLInterfaceElement(
-            "clk", VHDLSubtypeIndication.parse("std_logic"), "in"
-        )
+        clk = VHDLInterfaceElement("clk", VHDLSubtypeIndication.parse("std_logic"), "in")
         data = VHDLInterfaceElement(
             "data",
             VHDLSubtypeIndication.parse("std_logic_vector(data_width-1 downto 0)"),

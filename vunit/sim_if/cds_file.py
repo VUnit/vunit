@@ -19,9 +19,7 @@ class CDSFile(dict):
     Only cares about 'define' but other lines are kept intact
     """
 
-    _re_define = re.compile(
-        r'\s*define\s+([a-zA-Z0-9_]+)\s+"?(.*?)"?(#|$)', re.IGNORECASE
-    )
+    _re_define = re.compile(r'\s*define\s+([a-zA-Z0-9_]+)\s+"?(.*?)"?(#|$)', re.IGNORECASE)
 
     @classmethod
     def parse(cls, file_name):
@@ -51,11 +49,5 @@ class CDSFile(dict):
         """
         Write cds file to file named 'file_name'
         """
-        contents = (
-            "\n".join(
-                self._other_lines
-                + ['define %s "%s"' % item for item in sorted(self.items())]
-            )
-            + "\n"
-        )
+        contents = "\n".join(self._other_lines + ['define %s "%s"' % item for item in sorted(self.items())]) + "\n"
         write_file(file_name, contents)

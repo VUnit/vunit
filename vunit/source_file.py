@@ -140,9 +140,7 @@ class VerilogSourceFile(SourceFile):
         self.module_dependencies = []
         self.include_dirs = include_dirs if include_dirs is not None else []
         self.defines = defines.copy() if defines is not None else {}
-        self._content_hash = file_content_hash(
-            self.name, encoding=HDL_FILE_ENCODING, database=database
-        )
+        self._content_hash = file_content_hash(self.name, encoding=HDL_FILE_ENCODING, database=database)
 
         for path in self.include_dirs:
             self._content_hash = hash_string(self._content_hash + hash_string(path))
@@ -230,9 +228,7 @@ class VHDLSourceFile(SourceFile):
             else:
                 self._add_design_file(design_file)
 
-        self._content_hash = file_content_hash(
-            self.name, encoding=HDL_FILE_ENCODING, database=database
-        )
+        self._content_hash = file_content_hash(self.name, encoding=HDL_FILE_ENCODING, database=database)
 
     def get_vhdl_standard(self) -> VHDLStandard:
         """
@@ -291,9 +287,7 @@ class VHDLSourceFile(SourceFile):
             result.append(ref)
 
         for configuration in design_file.configurations:
-            result.append(
-                VHDLReference("entity", self.library.name, configuration.entity, "all")
-            )
+            result.append(VHDLReference("entity", self.library.name, configuration.entity, "all"))
 
         return result
 
@@ -324,16 +318,10 @@ class VHDLSourceFile(SourceFile):
             )
 
         for configuration in design_file.configurations:
-            result.append(
-                VHDLDesignUnit(configuration.identifier, self, "configuration")
-            )
+            result.append(VHDLDesignUnit(configuration.identifier, self, "configuration"))
 
         for body in design_file.package_bodies:
-            result.append(
-                VHDLDesignUnit(
-                    body.identifier, self, "package body", False, body.identifier
-                )
-            )
+            result.append(VHDLDesignUnit(body.identifier, self, "package body", False, body.identifier))
 
         return result
 
@@ -342,11 +330,7 @@ class VHDLSourceFile(SourceFile):
         """
         Compute hash of contents and compile options
         """
-        return hash_string(
-            self._content_hash
-            + self._compile_options_hash()
-            + hash_string(str(self._vhdl_standard))
-        )
+        return hash_string(self._content_hash + self._compile_options_hash() + hash_string(str(self._vhdl_standard)))
 
     def add_to_library(self, library):
         """

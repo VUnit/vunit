@@ -28,9 +28,7 @@ class VsimSimulatorMixin(object):
         sim_cfg_file_name = str(Path(sim_cfg_file_name).resolve())
         self._sim_cfg_file_name = sim_cfg_file_name
 
-        prefix = (
-            self._prefix
-        )  # Avoid circular dependency inhibiting process destruction
+        prefix = self._prefix  # Avoid circular dependency inhibiting process destruction
         env = self.get_env()
 
         def create_process(ident):
@@ -93,9 +91,7 @@ class VsimSimulatorMixin(object):
             )
             % (recompile_command, str(Path(os.getcwd()).resolve())),
         ]
-        recompile_command_eval_tcl = " ".join(
-            ["{%s}" % part for part in recompile_command_eval]
-        )
+        recompile_command_eval_tcl = " ".join(["{%s}" % part for part in recompile_command_eval])
 
         tcl = """
 proc vunit_compile {} {
@@ -324,13 +320,9 @@ proc vunit_run {} {
 
         write_file(
             str(common_file_name),
-            self._create_common_script(
-                test_suite_name, config, script_path, output_path
-            ),
+            self._create_common_script(test_suite_name, config, script_path, output_path),
         )
-        write_file(
-            str(gui_file_name), self._create_gui_script(str(common_file_name), config)
-        )
+        write_file(str(gui_file_name), self._create_gui_script(str(common_file_name), config))
         write_file(
             str(batch_file_name),
             self._create_batch_script(str(common_file_name), elaborate_only),

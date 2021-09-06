@@ -21,9 +21,7 @@ VU.add_osvvm()
 
 SRC_PATH = Path(__file__).parent / "src"
 
-VU.add_library("lib").add_source_files(
-    [SRC_PATH / "*.vhd", SRC_PATH / "test" / "*.vhd"]
-)
+VU.add_library("lib").add_source_files([SRC_PATH / "*.vhd", SRC_PATH / "test" / "*.vhd"])
 
 VU.set_compile_option("ghdl.flags", ["-frelaxed"])
 VU.set_sim_option("ghdl.elab_flags", ["-frelaxed"])

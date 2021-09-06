@@ -72,9 +72,7 @@ end architecture;
 """,
         )
 
-        self.assert_has_entity(
-            file1, "foo", architecture_names=["arch", "arch2", "arch3"]
-        )
+        self.assert_has_entity(file1, "foo", architecture_names=["arch", "arch2", "arch3"])
         self.add_source_file(
             "lib",
             "file3.vhd",
@@ -85,9 +83,7 @@ end architecture;
 """,
         )
 
-        self.assert_has_entity(
-            file1, "foo", architecture_names=["arch", "arch2", "arch3", "arch4"]
-        )
+        self.assert_has_entity(file1, "foo", architecture_names=["arch", "arch2", "arch3", "arch4"])
         self.assert_has_architecture("file1.vhd", "arch", "foo")
         self.assert_has_architecture("file1.vhd", "arch2", "foo")
         self.assert_has_architecture("file2.vhd", "arch3", "foo")
@@ -357,8 +353,7 @@ use {use_clause}.PKG.all;
         except RuntimeError as exception:
             self.assertEqual(
                 str(exception),
-                "Library name 'lib' not case-insensitive unique. "
-                "Library name 'Lib' previously defined",
+                "Library name 'lib' not case-insensitive unique. " "Library name 'Lib' previously defined",
             )
         else:
             raise AssertionError("RuntimeError not raised")
@@ -855,9 +850,7 @@ end context;
 
     def test_error_on_adding_duplicate_library(self):
         self.project.add_library(logical_name="lib", directory="dir")
-        self.assertRaises(
-            ValueError, self.project.add_library, logical_name="lib", directory="dir"
-        )
+        self.assertRaises(ValueError, self.project.add_library, logical_name="lib", directory="dir")
 
     def test_warning_on_duplicate_verilog_module(self):
         self.project.add_library("lib", "lib_path")
@@ -935,18 +928,14 @@ endpackage
 
         self.project = Project()
         self.project.add_library("lib", "lib_path")
-        source_file = self.project.add_source_file(
-            "file_name.vhd", library_name="lib", vhdl_standard="2008"
-        )
+        source_file = self.project.add_source_file("file_name.vhd", library_name="lib", vhdl_standard="2008")
         self.assert_should_recompile([source_file])
         self.update(source_file)
         self.assert_should_recompile([])
 
         self.project = Project()
         self.project.add_library("lib", "lib_path")
-        source_file = self.project.add_source_file(
-            "file_name.vhd", library_name="lib", vhdl_standard="2002"
-        )
+        source_file = self.project.add_source_file("file_name.vhd", library_name="lib", vhdl_standard="2002")
         self.assert_should_recompile([source_file])
 
     def test_add_compile_option(self):
@@ -981,12 +970,8 @@ endpackage
         self.project.add_library("lib", "lib_path")
         source_file = self.add_source_file("lib", "file.vhd", "")
         self.assertRaises(ValueError, source_file.set_compile_option, "foo", None)
-        self.assertRaises(
-            ValueError, source_file.set_compile_option, "ghdl.flags", None
-        )
-        self.assertRaises(
-            ValueError, source_file.add_compile_option, "ghdl.flags", None
-        )
+        self.assertRaises(ValueError, source_file.set_compile_option, "ghdl.flags", None)
+        self.assertRaises(ValueError, source_file.add_compile_option, "ghdl.flags", None)
         self.assertRaises(ValueError, source_file.get_compile_option, "foo")
 
     def test_should_recompile_files_affected_by_change_with_later_timestamp(self):
@@ -1077,9 +1062,7 @@ end architecture;
 
         self.assert_has_component_instantiation("top.vhd", "foo")
         self.assert_has_component_instantiation("top.vhd", "foo2")
-        dependencies = self.project.get_dependencies_in_compile_order(
-            [top], implementation_dependencies=True
-        )
+        dependencies = self.project.get_dependencies_in_compile_order([top], implementation_dependencies=True)
         self.assertIn(comp1, dependencies)
         self.assertIn(comp1_arch, dependencies)
         self.assertIn(comp2, dependencies)
@@ -1179,9 +1162,7 @@ end package second_pkg;
                 )
             )
 
-        self.assertNotEqual(
-            self.hash_file_name_of(pkgs[0]), self.hash_file_name_of(pkgs[1])
-        )
+        self.assertNotEqual(self.hash_file_name_of(pkgs[0]), self.hash_file_name_of(pkgs[1]))
         self.assertEqual(len(self.project.get_files_in_compile_order()), 5)
         self.assert_compiles(other_pkg, before=pkgs[0])
         self.assert_compiles(other_pkg, before=pkgs[1])
@@ -1472,9 +1453,7 @@ endmodule
 
         self.project = Project()
         self.project.add_library("lib", "lib_path")
-        mod1 = self.add_source_file(
-            "lib", "module1.v", contents1, defines={"foo": "bar"}
-        )
+        mod1 = self.add_source_file("lib", "module1.v", contents1, defines={"foo": "bar"})
         mod2 = self.add_source_file("lib", "module2.v", contents2)
         self.assert_should_recompile([mod1])
         self.update(mod1)
@@ -1483,9 +1462,7 @@ endmodule
 
         self.project = Project()
         self.project.add_library("lib", "lib_path")
-        mod1 = self.add_source_file(
-            "lib", "module1.v", contents1, defines={"foo": "other_bar"}
-        )
+        mod1 = self.add_source_file("lib", "module1.v", contents1, defines={"foo": "other_bar"})
         mod2 = self.add_source_file("lib", "module2.v", contents2)
         self.assert_should_recompile([mod1])
         self.update(mod1)
@@ -1631,9 +1608,7 @@ end architecture;
         end architecture;
         """,
         )
-        self.project.get_dependencies_in_compile_order(
-            [file3], implementation_dependencies=True
-        )
+        self.project.get_dependencies_in_compile_order([file3], implementation_dependencies=True)
 
     def test_dependencies_on_multiple_libraries(self):
         """
@@ -1667,9 +1642,7 @@ component buffer1 port (D : in  std_logic;Q : out std_logic);end component buffe
 begin  my_buffer_i : buffer1 port map (D => D,Q => Q);end architecture;
         """,
         )
-        dep_files = self.project.get_dependencies_in_compile_order(
-            [file3], implementation_dependencies=True
-        )
+        dep_files = self.project.get_dependencies_in_compile_order([file3], implementation_dependencies=True)
         self.assertNotIn(lib2_file1_vhd, dep_files)
 
     def test_dependencies_on_separated_architecture(self):
@@ -1725,9 +1698,7 @@ my_buffer_i : entity work.buffer1
 end architecture;
         """,
         )
-        dep_files = self.project.get_dependencies_in_compile_order(
-            [file3], implementation_dependencies=True
-        )
+        dep_files = self.project.get_dependencies_in_compile_order([file3], implementation_dependencies=True)
         self.assertIn(file1_arch_vhd, dep_files)
 
     def test_dependencies_on_verilog_component(self):
@@ -1757,9 +1728,7 @@ component buffer1 port (D : in  std_logic;Q : out std_logic);end component buffe
 begin my_buffer_i : buffer1 port map (D => D,Q => Q);end architecture;
         """,
         )
-        dep_files = self.project.get_dependencies_in_compile_order(
-            [file3], implementation_dependencies=True
-        )
+        dep_files = self.project.get_dependencies_in_compile_order([file3], implementation_dependencies=True)
         self.assertIn(file1_v, dep_files)
 
     def create_dummy_three_file_project(self, update_file1=False):
@@ -1832,9 +1801,7 @@ end architecture;
         for std in ("93", "2002", "2008", "2019"):
             project = Project()
             project.add_library("lib", "lib_path")
-            source_file = project.add_source_file(
-                "file.vhd", library_name="lib", file_type="vhdl", vhdl_standard=std
-            )
+            source_file = project.add_source_file("file.vhd", library_name="lib", file_type="vhdl", vhdl_standard=std)
             self.assertEqual(source_file.get_vhdl_standard(), std)
 
     def test_add_source_file_has_no_parse_vhdl(self):
@@ -1909,9 +1876,7 @@ use builtin_lib.all;
         try:
             self.project.add_library("lib3", "lib_path3", is_external=True)
         except ValueError as err:
-            self.assertEqual(
-                str(err), "External library must be a directory. Got 'lib_path3'"
-            )
+            self.assertEqual(str(err), "External library must be a directory. Got 'lib_path3'")
         else:
             assert False, "ValueError not raised"
 
@@ -1929,9 +1894,7 @@ use builtin_lib.all;
         """
         Get the hash file name of a source_file
         """
-        return self.project._hash_file_name_of(  # pylint: disable=protected-access
-            source_file
-        )
+        return self.project._hash_file_name_of(source_file)  # pylint: disable=protected-access
 
     def update(self, source_file):
         """
@@ -1968,9 +1931,7 @@ use builtin_lib.all;
         """
         Assert that there is a package body with package_name withing source_file_name
         """
-        unit = self._find_design_unit(
-            source_file_name, "package body", package_name, False, package_name
-        )
+        unit = self._find_design_unit(source_file_name, "package body", package_name, False, package_name)
         self.assertIsNotNone(unit)
 
     def assert_has_package(self, source_file_name, name):
@@ -1980,9 +1941,7 @@ use builtin_lib.all;
         unit = self._find_design_unit(source_file_name, "package", name)
         self.assertIsNotNone(unit)
 
-    def assert_has_entity(
-        self, source_file, name, generic_names=None, architecture_names=None
-    ):
+    def assert_has_entity(self, source_file, name, generic_names=None, architecture_names=None):
         """
         Assert that there is an entity with name withing source_file
         that has architectures with architecture_names.
@@ -2002,9 +1961,7 @@ use builtin_lib.all;
         """
         Assert that there is an architecture with name of entity_name within source_file_name
         """
-        unit = self._find_design_unit(
-            source_file_name, "architecture", name, False, entity_name
-        )
+        unit = self._find_design_unit(source_file_name, "architecture", name, False, entity_name)
         self.assertIsNotNone(unit)
 
     def assert_has_component_instantiation(self, source_file_name, component_name):
@@ -2044,9 +2001,7 @@ use builtin_lib.all;
                 self.assertEqual(design_unit.is_primary, is_primary)
                 self.assertEqual(source_file.name, source_file_name)
                 if not is_primary:
-                    self.assertEqual(
-                        design_unit.primary_design_unit, primary_design_unit_name
-                    )
+                    self.assertEqual(design_unit.primary_design_unit, primary_design_unit_name)
                 return design_unit
 
         return None

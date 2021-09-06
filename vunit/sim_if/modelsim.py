@@ -21,9 +21,7 @@ from .vsim_simulator_mixin import VsimSimulatorMixin, fix_path
 LOGGER = logging.getLogger(__name__)
 
 
-class ModelSimInterface(
-    VsimSimulatorMixin, SimulatorInterface
-):  # pylint: disable=too-many-instance-attributes
+class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disable=too-many-instance-attributes
     """
     Mentor Graphics ModelSim interface
 
@@ -108,9 +106,7 @@ class ModelSimInterface(
         if not file_exists(parent):
             os.makedirs(parent)
 
-        original_modelsim_ini = os.environ.get(
-            "VUNIT_MODELSIM_INI", str(Path(self._prefix).parent / "modelsim.ini")
-        )
+        original_modelsim_ini = os.environ.get("VUNIT_MODELSIM_INI", str(Path(self._prefix).parent / "modelsim.ini"))
         with Path(original_modelsim_ini).open("rb") as fread:
             with Path(self._sim_cfg_file_name).open("wb") as fwrite:
                 fwrite.write(fread.read())
@@ -212,9 +208,7 @@ class ModelSimInterface(
             os.makedirs(apath)
 
         if not file_exists(path):
-            proc = Process(
-                [str(Path(self._prefix) / "vlib"), "-unix", path], env=self.get_env()
-            )
+            proc = Process([str(Path(self._prefix) / "vlib"), "-unix", path], env=self.get_env())
             proc.consume_output(callback=None)
 
         if library_name in mapped_libraries and mapped_libraries[library_name] == path:
@@ -245,9 +239,7 @@ class ModelSimInterface(
                 for name, value in config.generics.items()
             )
         )
-        pli_str = " ".join(
-            "-pli {%s}" % fix_path(name) for name in config.sim_options.get("pli", [])
-        )
+        pli_str = " ".join("-pli {%s}" % fix_path(name) for name in config.sim_options.get("pli", []))
 
         if config.architecture_name is None:
             architecture_suffix = ""
@@ -257,9 +249,9 @@ class ModelSimInterface(
         if config.sim_options.get("enable_coverage", False):
             coverage_file = str(Path(output_path) / "coverage.ucdb")
             self._coverage_files.add(coverage_file)
-            coverage_save_cmd = (
-                "coverage save -onexit -testname {%s} -assert -directive -cvg -codeAll {%s}"
-                % (test_suite_name, fix_path(coverage_file))
+            coverage_save_cmd = "coverage save -onexit -testname {%s} -assert -directive -cvg -codeAll {%s}" % (
+                test_suite_name,
+                fix_path(coverage_file),
             )
             coverage_args = "-coverage"
         else:
@@ -320,12 +312,8 @@ proc vunit_load {{{{vsim_extra_args ""}}}} {{
 """.format(
             coverage_save_cmd=coverage_save_cmd,
             vsim_flags=" ".join(vsim_flags),
-            break_on_assert=vhdl_assert_stop_level_mapping[
-                config.vhdl_assert_stop_level
-            ],
-            no_warnings=1
-            if config.sim_options.get("disable_ieee_warnings", False)
-            else 0,
+            break_on_assert=vhdl_assert_stop_level_mapping[config.vhdl_assert_stop_level],
+            no_warnings=1 if config.sim_options.get("disable_ieee_warnings", False) else 0,
         )
 
         return tcl
@@ -374,9 +362,7 @@ proc _vunit_sim_restart {} {
         vsim_extra_args = config.sim_options.get("modelsim.vsim_flags", vsim_extra_args)
 
         if self._gui:
-            vsim_extra_args = config.sim_options.get(
-                "modelsim.vsim_flags.gui", vsim_extra_args
-            )
+            vsim_extra_args = config.sim_options.get("modelsim.vsim_flags.gui", vsim_extra_args)
 
         return " ".join(vsim_extra_args)
 
@@ -392,12 +378,7 @@ proc _vunit_sim_restart {} {
             args = []
 
         coverage_files = str(Path(self._output_path) / "coverage_files.txt")
-        vcover_cmd = (
-            [str(Path(self._prefix) / "vcover"), "merge", "-inputs"]
-            + [coverage_files]
-            + args
-            + [file_name]
-        )
+        vcover_cmd = [str(Path(self._prefix) / "vcover"), "merge", "-inputs"] + [coverage_files] + args + [file_name]
         with Path(coverage_files).open("w", encoding="utf-8") as fptr:
             for coverage_file in self._coverage_files:
                 if file_exists(coverage_file):

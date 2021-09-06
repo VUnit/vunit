@@ -155,9 +155,7 @@ class TestExternalRunScripts(unittest.TestCase):
             ],
         )
 
-    @unittest.skipUnless(
-        simulator_is("ghdl"), "Support complex JSON strings as generic"
-    )
+    @unittest.skipUnless(simulator_is("ghdl"), "Support complex JSON strings as generic")
     def test_vhdl_json4vhdl_example_project(self):
         self.check(str(ROOT / "examples" / "vhdl" / "json4vhdl" / "run.py"))
 
@@ -171,9 +169,7 @@ class TestExternalRunScripts(unittest.TestCase):
         self.check(str(ROOT / "examples" / "vhdl" / "axi_dma" / "run.py"))
 
     def test_vhdl_user_guide_example_project(self):
-        self.check(
-            str(ROOT / "examples" / "vhdl" / "user_guide" / "run.py"), exit_code=1
-        )
+        self.check(str(ROOT / "examples" / "vhdl" / "user_guide" / "run.py"), exit_code=1)
         check_report(
             self.report_file,
             [
@@ -185,9 +181,7 @@ class TestExternalRunScripts(unittest.TestCase):
 
     @unittest.skipUnless(simulator_supports_verilog(), "Verilog")
     def test_verilog_user_guide_example_project(self):
-        self.check(
-            str(ROOT / "examples" / "verilog" / "user_guide" / "run.py"), exit_code=1
-        )
+        self.check(str(ROOT / "examples" / "verilog" / "user_guide" / "run.py"), exit_code=1)
         check_report(
             self.report_file,
             [

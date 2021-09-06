@@ -88,31 +88,20 @@ def validate_new_release(version, pre_tag):
 
     release_note = release_note_file_name(version)
     if not release_note.exists():
-        print(
-            "Not releasing version %s since release note %s does not exist"
-            % (version, str(release_note))
-        )
+        print("Not releasing version %s since release note %s does not exist" % (version, str(release_note)))
         sys.exit(1)
 
     with release_note.open("r") as fptr:
         if not fptr.read():
-            print(
-                "Not releasing version %s since release note %s is empty"
-                % (version, str(release_note))
-            )
+            print("Not releasing version %s since release note %s is empty" % (version, str(release_note)))
             sys.exit(1)
 
     if pre_tag and check_tag(version):
-        print(
-            "Not creating new release %s since tag v%s already exist"
-            % (version, version)
-        )
+        print("Not creating new release %s since tag v%s already exist" % (version, version))
         sys.exit(1)
 
     if not pre_tag and not check_tag(version):
-        print(
-            "Not releasing version %s since tag v%s does not exist" % (version, version)
-        )
+        print("Not releasing version %s since tag v%s does not exist" % (version, version))
         sys.exit(1)
 
     with urlopen("https://pypi.python.org/pypi/vunit_hdl/json") as fptr:
@@ -139,9 +128,7 @@ def set_version(version):
         content = fptr.read()
 
     print("Set local version to %s" % version)
-    content = content.replace(
-        'VERSION = "%s"' % get_local_version(), 'VERSION = "%s"' % version
-    )
+    content = content.replace('VERSION = "%s"' % get_local_version(), 'VERSION = "%s"' % version)
 
     with ABOUT_PY.open("w") as fptr:
         fptr.write(content)
@@ -158,21 +145,13 @@ def get_local_version():
     Return the local python package version and check if corresponding release
     notes exist
     """
-    version = (
-        subprocess.check_output(
-            [sys.executable, str(REPO_ROOT / "setup.py"), "--version"]
-        )
-        .decode()
-        .strip()
-    )
+    version = subprocess.check_output([sys.executable, str(REPO_ROOT / "setup.py"), "--version"]).decode().strip()
 
     return version
 
 
 def check_tag(version):
-    return "v" + version in set(
-        subprocess.check_output([which("git"), "tag", "--list"]).decode().splitlines()
-    )
+    return "v" + version in set(subprocess.check_output([which("git"), "tag", "--list"]).decode().splitlines())
 
 
 def run(cmd):

@@ -73,10 +73,7 @@ class TestBench(ConfigurationVisitor):
         Get the default configuration of this test bench
         """
         if self._individual_tests:
-            raise RuntimeError(
-                "Test bench %s.%s has individually configured tests"
-                % (self.library_name, self.name)
-            )
+            raise RuntimeError("Test bench %s.%s has individually configured tests" % (self.library_name, self.name))
         return self._configs[DEFAULT_NAME]
 
     @staticmethod
@@ -87,9 +84,7 @@ class TestBench(ConfigurationVisitor):
         """
         if design_unit.is_entity:
             if not design_unit.architecture_names:
-                raise RuntimeError(
-                    "Test bench '%s' has no architecture." % design_unit.name
-                )
+                raise RuntimeError("Test bench '%s' has no architecture." % design_unit.name)
 
             if len(design_unit.architecture_names) > 1:
                 raise RuntimeError(
@@ -99,9 +94,7 @@ class TestBench(ConfigurationVisitor):
                         design_unit.name,
                         ", ".join(
                             "%s:%s" % (name, str(Path(fname).name))
-                            for name, fname in sorted(
-                                design_unit.architecture_names.items()
-                            )
+                            for name, fname in sorted(design_unit.architecture_names.items())
                         ),
                     )
                 )
@@ -235,13 +228,9 @@ class TestBench(ConfigurationVisitor):
             assert len(tests) == 1
             self._implicit_test = tests[0]
 
-        self._individual_tests = (
-            "run_all_in_same_sim" not in attribute_names and len(explicit_tests) > 0
-        )
+        self._individual_tests = "run_all_in_same_sim" not in attribute_names and len(explicit_tests) > 0
         self._test_cases = [
-            TestConfigurationVisitor(
-                test, self.design_unit, self._individual_tests, default_config.copy()
-            )
+            TestConfigurationVisitor(test, self.design_unit, self._individual_tests, default_config.copy())
             for test in explicit_tests
         ]
 
@@ -268,9 +257,7 @@ class FileLocation(object):
         """
         Create FileLocation with lineno computed from line offsets
         """
-        return FileLocation(
-            file_name, offset, length, _lookup_lineno(offset, line_offsets)
-        )
+        return FileLocation(file_name, offset, length, _lookup_lineno(offset, line_offsets))
 
     def __init__(self, file_name, offset, length, lineno):
         self.file_name = file_name
@@ -374,9 +361,7 @@ class TestConfigurationVisitor(ConfigurationVisitor):
 
     def _check_enabled(self):
         if not self._enable_configuration:
-            raise RuntimeError(
-                "Individual test configuration is not possible with run_all_in_same_sim"
-            )
+            raise RuntimeError("Individual test configuration is not possible with run_all_in_same_sim")
 
     def get_configuration_dicts(self):
         """
@@ -409,9 +394,7 @@ class TestConfigurationVisitor(ConfigurationVisitor):
             )
 
 
-_RE_VHDL_TEST_CASE = re.compile(
-    r'(\s|\()+run\s*\(\s*"(?P<name>.*?)"\s*\)', re.IGNORECASE
-)
+_RE_VHDL_TEST_CASE = re.compile(r'(\s|\()+run\s*\(\s*"(?P<name>.*?)"\s*\)', re.IGNORECASE)
 _RE_VERILOG_TEST_CASE = re.compile(r'`TEST_CASE\s*\(\s*"(?P<name>.*?)"\s*\)')
 _RE_VHDL_TEST_SUITE = re.compile(r"test_runner_setup\s*\(", re.IGNORECASE)
 _RE_VERILOG_TEST_SUITE = re.compile(r"`TEST_SUITE\b")
@@ -586,12 +569,8 @@ def _find_tests_and_attributes(content, file_name):
 
 
 _RE_ATTR_NAME = r"[a-zA-Z0-9_\-]+"
-_RE_ATTRIBUTE = re.compile(
-    r"vunit:\s*(?P<name>\.?" + _RE_ATTR_NAME + r")", re.IGNORECASE
-)
-_RE_PRAGMA_LEGACY = re.compile(
-    r"vunit_pragma\s+(?P<name>" + _RE_ATTR_NAME + ")", re.IGNORECASE
-)
+_RE_ATTRIBUTE = re.compile(r"vunit:\s*(?P<name>\.?" + _RE_ATTR_NAME + r")", re.IGNORECASE)
+_RE_PRAGMA_LEGACY = re.compile(r"vunit_pragma\s+(?P<name>" + _RE_ATTR_NAME + ")", re.IGNORECASE)
 _VALID_ATTRIBUTES = ["run_all_in_same_sim", "fail_on_warning"]
 
 
@@ -627,10 +606,7 @@ def _find_attributes(code, file_name, line_offsets=None):
             location = FileLocation.from_match(file_name, match, "name", line_offsets)
 
             if not _is_user_attribute(name) and name not in _VALID_ATTRIBUTES:
-                raise RuntimeError(
-                    "Invalid attribute '%s' in %s line %i"
-                    % (name, file_name, location.lineno)
-                )
+                raise RuntimeError("Invalid attribute '%s' in %s line %i" % (name, file_name, location.lineno))
 
             attributes.append(attr_class(name, value=None, location=location))
 
@@ -642,9 +618,7 @@ def _find_attributes(code, file_name, line_offsets=None):
 
 # Add value field to be forwards compatible with having attribute values
 Attribute = collections.namedtuple("Attribute", ["name", "value", "location"])
-LegacyAttribute = collections.namedtuple(
-    "LegacyAttribute", ["name", "value", "location"]
-)
+LegacyAttribute = collections.namedtuple("LegacyAttribute", ["name", "value", "location"])
 
 
 VERILOG_REMOVE_COMMENT_RE = re.compile(r"(//[^\n]*)|(/\*.*?\*/)", re.DOTALL)

@@ -41,10 +41,7 @@ def compile_standard_libraries(vunit_obj, output_path):
     simulator_class = SIMULATOR_FACTORY.select_simulator()
 
     if not done_token.exists():
-        print(
-            "Compiling standard libraries into %s ..."
-            % str(Path(output_path).resolve())
-        )
+        print("Compiling standard libraries into %s ..." % str(Path(output_path).resolve()))
         simname = simulator_class.name
 
         # Vivado calls rivierapro for riviera
@@ -61,10 +58,7 @@ def compile_standard_libraries(vunit_obj, output_path):
         )
 
     else:
-        print(
-            "Standard libraries already exists in %s, skipping"
-            % str(Path(output_path).resolve())
-        )
+        print("Standard libraries already exists in %s, skipping" % str(Path(output_path).resolve()))
 
     for library_name in ["unisim", "unimacro", "unifast", "secureip", "xpm"]:
         path = str(Path(output_path) / library_name)
@@ -88,13 +82,8 @@ def add_project_ip(vunit_obj, project_file, output_path, vivado_path=None, clean
     compile_order_file = str(Path(output_path) / "compile_order.txt")
 
     if clean or not Path(compile_order_file).exists():
-        create_compile_order_file(
-            project_file, compile_order_file, vivado_path=vivado_path
-        )
+        create_compile_order_file(project_file, compile_order_file, vivado_path=vivado_path)
     else:
-        print(
-            "Vivado project Compile order already exists, re-using: %s"
-            % str(Path(compile_order_file).resolve())
-        )
+        print("Vivado project Compile order already exists, re-using: %s" % str(Path(compile_order_file).resolve()))
 
     return add_from_compile_order_file(vunit_obj, compile_order_file)

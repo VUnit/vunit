@@ -162,6 +162,4 @@ there"''',
 
             return tokens
 
-        self.assertEqual(
-            preprocess(list(self.tokenizer.tokenize(code, "fn.v"))), tokens
-        )
+        self.assertEqual(preprocess(list(self.tokenizer.tokenize(code, "fn.v"))), tokens)

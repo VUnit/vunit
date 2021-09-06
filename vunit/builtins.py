@@ -47,10 +47,7 @@ class Builtins(object):
         """
         Add files with naming convention to indicate which standard is supported
         """
-        supports_context = (
-            self._simulator_class.supports_vhdl_contexts()
-            and self._vhdl_standard.supports_context
-        )
+        supports_context = self._simulator_class.supports_vhdl_contexts() and self._vhdl_standard.supports_context
 
         for file_name in get_checked_file_names_from_globs(pattern, allow_empty):
             base_file_name = Path(file_name).name
@@ -87,17 +84,8 @@ class Builtins(object):
 
         for key in ["string", "integer_vector"]:
             self._add_files(
-                pattern=str(
-                    VHDL_PATH
-                    / "data_types"
-                    / "src"
-                    / "api"
-                    / ("external_%s_pkg.vhd" % key)
-                )
-                if external is None
-                or key not in external
-                or not external[key]
-                or external[key] is True
+                pattern=str(VHDL_PATH / "data_types" / "src" / "api" / ("external_%s_pkg.vhd" % key))
+                if external is None or key not in external or not external[key] or external[key] is True
                 else external[key],
                 allow_empty=False,
             )
@@ -110,8 +98,7 @@ class Builtins(object):
             raise RuntimeError("Array util only supports vhdl 2008 and later")
 
         arr_deprecation_note = (
-            "'array_t' is deprecated and it will removed in future releases;"
-            "use 'integer_array_t' instead"
+            "'array_t' is deprecated and it will removed in future releases; use 'integer_array_t' instead"
         )
         warn(arr_deprecation_note, Warning)
 
@@ -131,9 +118,7 @@ class Builtins(object):
         Add com library
         """
         if not self._vhdl_standard >= VHDL.STD_2008:
-            raise RuntimeError(
-                "Communication package only supports vhdl 2008 and later"
-            )
+            raise RuntimeError("Communication package only supports vhdl 2008 and later")
 
         self._add_files(VHDL_PATH / "com" / "src" / "*.vhd")
 
@@ -142,9 +127,7 @@ class Builtins(object):
         Add verification component library
         """
         if not self._vhdl_standard >= VHDL.STD_2008:
-            raise RuntimeError(
-                "Verification component library only supports vhdl 2008 and later"
-            )
+            raise RuntimeError("Verification component library only supports vhdl 2008 and later")
         self._add_files(VHDL_PATH / "verification_components" / "src" / "*.vhd")
 
     def _add_osvvm(self):
@@ -159,9 +142,7 @@ class Builtins(object):
             library = self._vunit_obj.add_library(library_name)
 
         simulator_coverage_api = self._simulator_class.get_osvvm_coverage_api()
-        supports_vhdl_package_generics = (
-            self._simulator_class.supports_vhdl_package_generics()
-        )
+        supports_vhdl_package_generics = self._simulator_class.supports_vhdl_package_generics()
 
         if not osvvm_is_installed():
             raise RuntimeError(
@@ -179,12 +160,8 @@ in your VUnit Git repository? You have to do this first if installing using setu
             if (bname == "AlertLogPkg_body_BVUL.vhd") or ("2019" in bname):
                 continue
 
-            if (
-                (simulator_coverage_api != "rivierapro")
-                and (bname == "VendorCovApiPkg_Aldec.vhd")
-            ) or (
-                (simulator_coverage_api == "rivierapro")
-                and (bname == "VendorCovApiPkg.vhd")
+            if ((simulator_coverage_api != "rivierapro") and (bname == "VendorCovApiPkg_Aldec.vhd")) or (
+                (simulator_coverage_api == "rivierapro") and (bname == "VendorCovApiPkg.vhd")
             ):
                 continue
 

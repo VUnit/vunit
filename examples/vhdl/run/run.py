@@ -20,8 +20,6 @@ VU = VUnit.from_argv()
 
 LIB = VU.add_library("lib")
 LIB.add_source_files(ROOT / "*.vhd")
-LIB.entity("tb_with_lower_level_control").scan_tests_from_file(
-    ROOT / "test_control.vhd"
-)
+LIB.entity("tb_with_lower_level_control").scan_tests_from_file(ROOT / "test_control.vhd")
 
 VU.main()
