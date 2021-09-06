@@ -5,33 +5,7 @@
 -- Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
 
 library vunit_lib;
-
-use vunit_lib.types_pkg.all;
-use vunit_lib.integer_vector_ptr_pkg.all;
-use vunit_lib.integer_vector_ptr_pool_pkg.all;
-use vunit_lib.integer_array_pkg.all;
-use vunit_lib.queue_pkg.all;
-use vunit_lib.queue_pool_pkg.all;
-use vunit_lib.string_ptr_pkg.all;
-use vunit_lib.string_ptr_pool_pkg.all;
-use vunit_lib.byte_vector_ptr_pkg.all;
-use vunit_lib.dict_pkg.all;
-
-use vunit_lib.string_ops.all;
-use vunit_lib.dictionary.all;
-use vunit_lib.path.all;
-use vunit_lib.print_pkg.all;
-use vunit_lib.log_levels_pkg.all;
-use vunit_lib.logger_pkg.all;
-use vunit_lib.log_handler_pkg.all;
-use vunit_lib.log_deprecated_pkg.all;
-use vunit_lib.ansi_pkg.all;
-use vunit_lib.checker_pkg.all;
-use vunit_lib.check_pkg.all;
-use vunit_lib.check_deprecated_pkg.all;
-use vunit_lib.run_types_pkg.all;
 use vunit_lib.run_pkg.all;
-use vunit_lib.run_deprecated_pkg.all;
 
 entity tb_example_many is
   generic (runner_cfg : string);
