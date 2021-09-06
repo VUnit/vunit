@@ -183,6 +183,20 @@ class TestExternalRunScripts(unittest.TestCase):
             ],
         )
 
+    def test_vhdl_user_guide_93_example_project(self):
+        self.check(
+            str(ROOT / "examples" / "vhdl" / "user_guide" / "vhdl1993" / "run.py"),
+            exit_code=1,
+        )
+        check_report(
+            self.report_file,
+            [
+                ("passed", "lib.tb_example.all"),
+                ("passed", "lib.tb_example_many.test_pass"),
+                ("failed", "lib.tb_example_many.test_fail"),
+            ],
+        )
+
     @unittest.skipUnless(simulator_supports_verilog(), "Verilog")
     def test_verilog_user_guide_example_project(self):
         self.check(str(ROOT / "examples" / "verilog" / "user_guide" / "run.py"), exit_code=1)
