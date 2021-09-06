@@ -168,6 +168,10 @@ class TestExternalRunScripts(unittest.TestCase):
     def test_vhdl_axi_dma_example_project(self):
         self.check(str(ROOT / "examples" / "vhdl" / "axi_dma" / "run.py"))
 
+    @unittest.skipIf(
+        simulator_check(lambda simclass: not simclass.supports_vhdl_contexts()),
+        "This simulator/backend does not support VHDL contexts",
+    )
     def test_vhdl_user_guide_example_project(self):
         self.check(str(ROOT / "examples" / "vhdl" / "user_guide" / "run.py"), exit_code=1)
         check_report(
