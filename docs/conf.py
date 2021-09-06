@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
-import os
-import sys
+from sys import path as sys_path
+from os.path import abspath
 from pathlib import Path
+
+sys_path.insert(0, abspath("."))
 
 # -- Sphinx Options -----------------------------------------------------------
 
@@ -15,6 +17,7 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.todo",
     "sphinxarg.ext",  # Automatic argparse command line argument documentation
+    "exec",
 ]
 
 autodoc_default_options = {

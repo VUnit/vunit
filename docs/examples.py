@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -5,7 +7,7 @@
 # Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
 
 """
-Helper functions to generate examples.rst from docstrings in run.py files
+Helper functions to generate content in examples.rst from docstrings in run.py files
 """
 
 import sys
@@ -15,37 +17,35 @@ from os import listdir, remove
 from pathlib import Path
 from subprocess import check_call
 
+from io import StringIO
+from contextlib import redirect_stdout
+from textwrap import indent
+
 
 ROOT = Path(__file__).parent.parent / "docs"
 
 
-def examples():
+def examples(debug=False):
     """
     Traverses the examples directory and generates examples.rst with the docstrings
     """
     eg_path = ROOT.parent / "examples"
-    egs_fptr = (ROOT / "examples.rst").open("w+", encoding="utf-8")
-    egs_fptr.write(
-        "\n".join(
-            [
-                ".. _examples:\n",
-                "Examples",
-                "========\n",
-                ".. include:: examples_intro.rst\n",
-            ]
-        )
-    )
     for language, subdir in {"VHDL": "vhdl", "SystemVerilog": "verilog"}.items():
-        egs_fptr.write("\n".join([language, "~~~~~~~~~~~~~~~~~~~~~~~", "\n"]))
+        print("\n".join([language, "~~~~~~~~~~~~~~~~~~~~~~~", "\n"]))
         for item in listdir(str(eg_path / subdir)):
             loc = eg_path / subdir / item
             if loc.is_dir():
-                _data = _get_eg_doc(
-                    loc,
-                    f"https://github.com/VUnit/vunit/tree/master/examples/{subdir!s}/{item!s}",
-                )
+                f = StringIO()
+                with redirect_stdout(f):
+                    _data = _get_eg_doc(
+                        loc,
+                        f"https://github.com/VUnit/vunit/tree/master/examples/{subdir!s}/{item!s}",
+                    )
+                if debug:
+                    print(".. NOTE::")
+                    print(indent(f.getvalue(), "  * "))
                 if _data:
-                    egs_fptr.write(_data)
+                    print(_data)
 
 
 def _get_eg_doc(location: Path, ref):
@@ -81,16 +81,5 @@ def _get_eg_doc(location: Path, ref):
     return "\n".join([title, "-" * len(title), eg_doc.split("---\n", 1)[1], "\n"])
 
 
-def get_theme(path: Path, url: str):
-    """
-    Check if the theme is available locally, retrieve it with curl and tar otherwise
-    """
-    tpath = path / "_theme"
-    if not tpath.is_dir() or not (tpath / "theme.conf").is_file():
-        if not tpath.is_dir():
-            tpath.mkdir()
-        zpath = path / "theme.tgz"
-        if not zpath.is_file():
-            check_call(["curl", "-fsSL", url, "-o", str(zpath)])
-        tar_cmd = ["tar", "--strip-components=1", "-C", str(tpath), "-xvzf", str(zpath)]
-        check_call(tar_cmd)
+if __name__ == "__main__":
+    examples(True)
