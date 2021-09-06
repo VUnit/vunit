@@ -25,7 +25,16 @@ def examples():
     """
     eg_path = ROOT.parent / "examples"
     egs_fptr = (ROOT / "examples.rst").open("w+", encoding="utf-8")
-    egs_fptr.write("\n".join([".. _examples:\n", "Examples", "========", "\n"]))
+    egs_fptr.write(
+        "\n".join(
+            [
+                ".. _examples:\n",
+                "Examples",
+                "========\n",
+                ".. include:: examples_intro.rst\n",
+            ]
+        )
+    )
     for language, subdir in {"VHDL": "vhdl", "SystemVerilog": "verilog"}.items():
         egs_fptr.write("\n".join([language, "~~~~~~~~~~~~~~~~~~~~~~~", "\n"]))
         for item in listdir(str(eg_path / subdir)):

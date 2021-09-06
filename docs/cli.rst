@@ -211,9 +211,9 @@ The VHDL revision can be specified through the :ref:`python_interface`
 Alternatively, environment variable ``VUNIT_VHDL_STANDARD`` can be set to
 ``93``|``1993``, ``02``|``2002``, ``08``|``2008`` (default) or ``19``|``2019``.
 
-.. warning:: the specification of an unsupported revision produces an ERROR.
-             Moreover, take into account that `context`` statement is not supported
-             previous 2008, so it must be replace with multiple ``use`` statements.
+.. IMPORTANT::
+  Note that VHDL revision 2019 is unsupported by most vendors, and support of VHDL 2008 features is uneven.
+  Check the documentation of the simulator before using features requiring revisions equal or newer than 2008.
 
 .. _json_export:
 
