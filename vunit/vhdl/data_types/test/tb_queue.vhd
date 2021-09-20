@@ -36,6 +36,7 @@ begin
     variable integer_vector_ptr, integer_vector_ptr_copy : integer_vector_ptr_t;
     variable string_ptr, string_ptr_copy : string_ptr_t;
     variable integer_array, integer_array_copy: integer_array_t;
+    variable int : integer;
   begin
     test_runner_setup(runner, runner_cfg);
     if run("Test default queue is null") then
@@ -331,6 +332,32 @@ begin
       push_string(another_queue, "hello world");
       push_real(another_queue, 1.0);
       check(decode(encode(another_queue)) = another_queue);
+
+    elsif run("Test copy queue") then
+      queue := new_queue;
+      queue_copy := copy(queue);
+      assert length(queue_copy) = 0 report "Copy of empty queue is not empty";
+
+      for int in 1 to 3 loop
+        push(queue, int);
+      end loop;
+
+      queue_copy := copy(queue);
+      assert length(queue_copy) = length(queue) report "Copy of queue is not of same length";
+
+      int := pop(queue);
+      assert length(queue_copy) /= length(queue) report "Copy of queue is not independent of original";
+
+      for i in 1 to 3 loop
+        assert pop_integer(queue_copy) = i report "Queue copy doesn't have correct contents";
+      end loop;
+
+      queue_copy := copy(queue);
+
+      for i in 2 to 3 loop
+        assert pop_integer(queue_copy) = i report "Queue copy should only contain unpopped items";
+      end loop;
+
     end if;
 
     test_runner_cleanup(runner);

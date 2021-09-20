@@ -50,9 +50,10 @@ package body queue_pkg is
   ) return queue_t is
     constant result : queue_t := new_queue;
   begin
-    for i in 0 to length(queue) - 1 loop
+    for i in get(queue.p_meta, head_idx) to get(queue.p_meta, tail_idx) - 1 loop
       unsafe_push(result, get(queue.data, 1 + i));
     end loop;
+
     return result;
   end;
 
