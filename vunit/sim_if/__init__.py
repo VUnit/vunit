@@ -301,6 +301,8 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
 
         if failures:
             printer.write("Compile failed\n", fg="ri")
+            if continue_on_error:
+                return
             raise CompileError
 
         if source_files:
