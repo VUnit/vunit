@@ -223,7 +223,7 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
             command = None
             printer.write("failed", fg="ri")
             printer.write("\n")
-            printer.write("File type not supported by %s simulator\n" % (self.name))
+            printer.write(f"File type not supported by {self.name!s} simulator\n")
 
             return False
 
@@ -236,9 +236,9 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         except subprocess.CalledProcessError as err:
             printer.write("failed", fg="ri")
             printer.write("\n")
-            printer.write("=== Command used: ===\n%s\n" % (subprocess.list2cmdline(command)))
+            printer.write(f"=== Command used: ===\n{subprocess.list2cmdline(command)!s}\n")
             printer.write("\n")
-            printer.write("=== Command output: ===\n%s\n" % err.output)
+            printer.write(f"=== Command output: ===\n{err.output!s}\n")
 
             return False
 
@@ -273,11 +273,8 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
 
         for source_file in source_files:
             printer.write(
-                "Compiling into %s %s "
-                % (
-                    (source_file.library.name + ":").ljust(max_library_name + 1),
-                    simplify_path(source_file.name).ljust(max_source_file_name),
-                )
+                f"Compiling into {(source_file.library.name + ':').ljust(max_library_name + 1)!s} "
+                f"{simplify_path(source_file.name).ljust(max_source_file_name)!s} "
             )
             sys.stdout.flush()
 
@@ -359,7 +356,7 @@ class BooleanOption(Option):
 
     def validate(self, value):
         if value not in (True, False):
-            raise ValueError("Option %r must be a boolean. Got %r" % (self.name, value))
+            raise ValueError(f"Option {self.name!r} must be a boolean. Got {value!r}")
 
 
 class StringOption(Option):
@@ -369,7 +366,7 @@ class StringOption(Option):
 
     def validate(self, value):
         if not is_string_not_iterable(value):
-            raise ValueError("Option %r must be a string. Got %r" % (self.name, value))
+            raise ValueError(f"Option {self.name!r} must be a string. Got {value!r}")
 
 
 class ListOfStringOption(Option):
@@ -379,7 +376,7 @@ class ListOfStringOption(Option):
 
     def validate(self, value):
         def fail():
-            raise ValueError("Option %r must be a list of strings. Got %r" % (self.name, value))
+            raise ValueError(f"Option {self.name!r} must be a list of strings. Got {value!r}")
 
         if is_string_not_iterable(value):
             fail()
@@ -404,7 +401,7 @@ class VHDLAssertLevelOption(Option):
 
     def validate(self, value):
         if value not in self._legal_values:
-            raise ValueError("Option %r must be one of %s. Got %r" % (self.name, self._legal_values, value))
+            raise ValueError(f"Option {self.name!r} must be one of {self._legal_values!s}. Got {value!r}")
 
 
 def is_string_not_iterable(value):
