@@ -24,9 +24,9 @@ def version_is_ok():
 
 if not version_is_ok():
     print(
-        "Your Python version (%i.%i) is too old for VUnit. "
-        "Please consider upgrading." % (sys.version_info[0], sys.version_info[1])
+        f"Your Python version ({sys.version_info[0]}.{sys.version_info[1]}) is too old for VUnit. "
+        "Please consider upgrading."
     )
     print("VUnit supports versions:")
-    print(" - Python %i.%i or higher" % (MAJOR, MINOR))
+    print(f" - Python {MAJOR}.{MINOR} or higher")
     sys.exit(1)
