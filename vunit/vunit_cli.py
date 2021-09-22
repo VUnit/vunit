@@ -71,7 +71,7 @@ def _create_argument_parser(description=None, for_documentation=False):
     :returns: The created :mod:`argparse` parser object
     """
     if description is None:
-        description = "VUnit command line tool version %s" % version()
+        description = f"VUnit command line tool version {version()!s}"
 
     if for_documentation:
         default_output_path = "./vunit_out"
@@ -250,7 +250,7 @@ def positive_int(val):
         assert ival > 0
         return ival
     except (ValueError, AssertionError) as exv:
-        raise argparse.ArgumentTypeError("'%s' is not a valid positive int" % val) from exv
+        raise argparse.ArgumentTypeError(f"'{val!s}' is not a valid positive int") from exv
 
 
 def _parser_for_documentation():
