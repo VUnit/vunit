@@ -1062,12 +1062,7 @@ class VHDLReference(object):
         self.name_within = name_within
 
     def __repr__(self):
-        return "VHDLReference(%r, %r, %r, %r)" % (
-            self.reference_type,
-            self.library,
-            self.design_unit,
-            self.name_within,
-        )
+        return f"VHDLReference({self.reference_type!r}, {self.library!r}, {self.design_unit!r}, {self.name_within!r})"
 
     def __eq__(self, other):
         return (
