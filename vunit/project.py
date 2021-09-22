@@ -65,13 +65,13 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
             raise RuntimeError("Illegal library name 'work'")
 
         if library_name in self._libraries:
-            raise ValueError("Library %s already exists" % library_name)
+            raise ValueError(f"Library {library_name!s} already exists")
 
         lower_name = library_name.lower()
         if lower_name in self._lower_library_names_dict:
             raise RuntimeError(
-                "Library name %r not case-insensitive unique. Library name %r previously defined"
-                % (library_name, self._lower_library_names_dict[lower_name])
+                f"Library name {library_name!r} not case-insensitive unique. "
+                f"Library name {self._lower_library_names_dict[lower_name]!r} previously defined"
             )
 
     def add_builtin_library(self, logical_name):
@@ -98,10 +98,10 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
 
         if is_external:
             if not dpath.exists():
-                raise ValueError("External library %r does not exist" % dstr)
+                raise ValueError(f"External library {dstr!r} does not exist")
 
             if not dpath.is_dir():
-                raise ValueError("External library must be a directory. Got %r" % dstr)
+                raise ValueError(f"External library must be a directory. Got {dstr!r}")
 
         library = Library(logical_name, dstr, vhdl_standard, is_external=is_external)
         LOGGER.debug("Adding library %s with path %s", logical_name, dstr)
@@ -126,7 +126,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         """
         fname = file_name if isinstance(file_name, Path) else Path(file_name)
         if not fname.exists():
-            raise ValueError("File %r does not exist" % str(fname))
+            raise ValueError(f"File {str(fname)!r} does not exist")
 
         LOGGER.debug("Adding source file %s to library %s", str(fname), library_name)
         library = self._libraries[library_name]
