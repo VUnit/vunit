@@ -235,7 +235,7 @@ class Library(object):
         if file_type is None:
             file_type = file_type_of(file_name)
         elif file_type not in FILE_TYPES:
-            raise ValueError("file_type %r not in %r" % (file_type, FILE_TYPES))
+            raise ValueError(f"file_type {file_type!r} not in {FILE_TYPES!r}")
 
         if file_type in VERILOG_FILE_TYPES:
             include_dirs = include_dirs if include_dirs is not None else []
@@ -334,7 +334,7 @@ class Library(object):
         return check_not_empty(
             results,
             allow_empty,
-            "No test benches found within library %s" % self._library_name,
+            f"No test benches found within library {self._library_name!s}",
         )
 
     def _which_vhdl_standard(self, vhdl_standard: Optional[str]) -> VHDLStandard:
