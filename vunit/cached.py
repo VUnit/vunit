@@ -23,7 +23,7 @@ def cached(key, function, file_name, encoding, database=None, newline=None):
         content = read_file(file_name, encoding=encoding, newline=newline)
         return function(content)
 
-    function_key = ("%s(%s, newline=%s)" % (key, file_name, newline)).encode()
+    function_key = f"{key!s}({file_name!s}, newline={newline!s})".encode()
     content, content_hash = _file_content_hash(file_name, encoding, database, newline=newline)
 
     if function_key not in database:
@@ -71,7 +71,7 @@ def _file_content_hash(file_name, encoding, database=None, newline=None):
         content = read_file(file_name, encoding=encoding, newline=newline)
         return content, hash_string(content)
 
-    key = ("cached._file_content_hash(%s, newline=%s)" % (file_name, newline)).encode()
+    key = f"cached._file_content_hash({file_name!s}, newline={newline!s})".encode()
 
     if key not in database:
         content = read_file(file_name, encoding=encoding, newline=newline)
