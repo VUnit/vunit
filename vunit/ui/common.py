@@ -70,7 +70,7 @@ def get_checked_file_names_from_globs(pattern, allow_empty):
         check_not_empty(
             new_file_names,
             allow_empty,
-            "Pattern %r did not match any file" % pattern_instance,
+            f"Pattern {pattern_instance!r} did not match any file",
         )
         file_names += new_file_names
 
