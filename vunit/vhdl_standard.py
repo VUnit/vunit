@@ -28,7 +28,7 @@ class VHDLStandard(object):
                     self._standard = standard
                     break
             else:
-                raise ValueError("Unknown standard '%s'" % standard_name)
+                raise ValueError(f"Unknown standard '{standard_name!s}'")
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
@@ -45,7 +45,7 @@ class VHDLStandard(object):
         return self._standard
 
     def __repr__(self):
-        return "VHDLStandard(%r)" % self._standard
+        return f"VHDLStandard({self._standard!r})"
 
     def __hash__(self):
         return hash(self._standard)
