@@ -291,7 +291,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         if not self._project.has_library(library_name):
             self._project.add_library(library_name, str(path.resolve()), standard)
         elif not allow_duplicate:
-            raise ValueError("Library %s already added. Use allow_duplicate to ignore this error." % library_name)
+            raise ValueError(f"Library {library_name!s} already added. Use allow_duplicate to ignore this error.")
         return self.library(library_name)
 
     def library(self, library_name: str):
@@ -446,12 +446,12 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         files = self.get_source_files(fstr, library_name, allow_empty=True)
         if len(files) > 1:
-            raise ValueError("Found file named '%s' in multiple-libraries, " "add explicit library_name." % fstr)
+            raise ValueError(f"Found file named '{fstr!s}' in multiple-libraries, " "add explicit library_name.")
         if not files:
             if library_name is None:
-                raise ValueError("Found no file named '%s'" % fstr)
+                raise ValueError(f"Found no file named '{fstr!s}'")
 
-            raise ValueError("Found no file named '%s' in library '%s'" % (fstr, library_name))
+            raise ValueError(f"Found no file named '{fstr!s}' in library '{library_name!s}'")
         return files[0]
 
     def get_source_files(
@@ -485,8 +485,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         check_not_empty(
             results,
             allow_empty,
-            ("Pattern %r did not match any file" % pattern)
-            + (("within library %s" % library_name) if library_name is not None else ""),
+            f"Pattern {pattern!r} did not match any file"
+            + (f"within library {library_name!s}" if library_name is not None else ""),
         )
 
         return SourceFileList(results)
@@ -614,7 +614,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
             while ostools.file_exists(pp_file_name):
                 LOGGER.debug("Preprocessed file exists '%s', adding prefix", pp_file_name)
                 pp_file_name = str(
-                    Path(self._preprocessed_path) / library_name / ("%i_%s" % (idx, fname)),
+                    Path(self._preprocessed_path) / library_name / f"{idx}_{fname!s}",
                 )
                 idx += 1
 
@@ -775,7 +775,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         test_list = self._create_tests(simulator_if=None)
         for test_name in test_list.test_names:
             print(test_name)
-        print("Listed %i tests" % test_list.num_tests)
+        print(f"Listed {test_list.num_tests} tests")
         return True
 
     def _main_export_json(self, json_file_name: Union[str, Path]):  # pylint: disable=too-many-locals
@@ -839,8 +839,8 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         """
         files = self.get_compile_order()
         for source_file in files:
-            print("%s, %s" % (source_file.library.name, source_file.name))
-        print("Listed %i files" % len(files))
+            print(f"{source_file.library.name!s}, {source_file.name!s}")
+        print(f"Listed {len(files)} files")
         return True
 
     def _main_compile_only(self):
