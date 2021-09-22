@@ -38,7 +38,7 @@ def create_release_notes():
 
     with (source_path / "release_notes.rst").open("w") as fptr:
         fptr.write(
-            """
+            f"""
 .. _release_notes:
 
 Release notes
@@ -46,10 +46,9 @@ Release notes
 
 .. NOTE:: For installation instructions read :ref:`this <installing>`.
 
-`Commits since last release <https://github.com/VUnit/vunit/compare/%s...master>`__
+`Commits since last release <https://github.com/VUnit/vunit/compare/{latest_release.tag!s}...master>`__
 
 """
-            % latest_release.tag
         )
 
         fptr.write("\n\n")
@@ -60,27 +59,23 @@ Release notes
             if release.is_latest:
                 fptr.write(".. _latest_release:\n\n")
 
-            title = ":vunit_commit:`%s <%s>` - %s" % (
-                release.name,
-                release.tag,
-                release.date.strftime("%Y-%m-%d"),
-            )
+            title = f":vunit_commit:`{release.name!s} <{release.tag!s}>` - {release.date.strftime('%Y-%m-%d')!s}"
             if release.is_latest:
                 title += " (latest)"
             fptr.write(title + "\n")
             fptr.write("-" * len(title) + "\n\n")
 
-            fptr.write("\n`Download from PyPI <https://pypi.python.org/pypi/vunit_hdl/%s/>`__" % release.name)
+            fptr.write(f"\n`Download from PyPI <https://pypi.python.org/pypi/vunit_hdl/{release.name!s}/>`__")
 
             if not is_last:
                 fptr.write(
-                    " | `Commits since previous release <https://github.com/VUnit/vunit/compare/%s...%s>`__"
-                    % (releases[idx + 1].tag, release.tag)
+                    f" | `Commits since previous release "
+                    f"<https://github.com/VUnit/vunit/compare/{releases[idx + 1].tag!s}...{release.tag!s}>`__"
                 )
 
             fptr.write("\n\n")
 
-            fptr.write(".. include:: %s\n" % relpath(release.file_name, source_path))
+            fptr.write(f".. include:: {relpath(release.file_name, source_path)!s}\n")
 
 
 class Release(object):
@@ -100,7 +95,7 @@ class Release(object):
         except CalledProcessError:
             if self.is_latest:
                 # Release tag for latest release not yet created, assume HEAD will become release
-                print("Release tag %s not created yet, use HEAD for date" % self.tag)
+                print(f"Release tag {self.tag!s} not created yet, use HEAD for date")
                 self.date = _get_date("HEAD")
             else:
                 raise
