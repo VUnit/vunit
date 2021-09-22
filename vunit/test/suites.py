@@ -19,7 +19,7 @@ class IndependentSimTestCase(object):
     """
 
     def __init__(self, test, config, simulator_if, elaborate_only=False):
-        self._name = "%s.%s" % (config.library_name, config.design_unit_name)
+        self._name = f"{config.library_name!s}.{config.design_unit_name!s}"
 
         if not config.is_default:
             self._name += "." + config.name
@@ -79,7 +79,7 @@ class SameSimTestSuite(object):
     """
 
     def __init__(self, tests, config, simulator_if, elaborate_only=False):
-        self._name = "%s.%s" % (config.library_name, config.design_unit_name)
+        self._name = f"{config.library_name!s}.{config.design_unit_name!s}"
 
         if not config.is_default:
             self._name += "." + config.name
@@ -219,7 +219,7 @@ class TestRun(object):
         config = self._config.copy()
 
         if "output_path" in config.generic_names and "output_path" not in config.generics:
-            config.generics["output_path"] = "%s/" % output_path.replace("\\", "/")
+            config.generics["output_path"] = str(output_path.replace("\\", "/")) + "/"
 
         runner_cfg = {
             "enabled_test_cases": ",".join(
@@ -284,7 +284,7 @@ class TestRun(object):
 
         for test_name in results:
             if test_name not in self._test_cases:
-                raise RuntimeError("Got unknown test case %s" % test_name)
+                raise RuntimeError(f"Got unknown test case {test_name!s}")
 
         return results
 
@@ -312,7 +312,7 @@ def encode_dict(dictionary):
     encoded = []
     for key in sorted(dictionary.keys()):
         value = dictionary[key]
-        encoded.append("%s : %s" % (escape(key), escape(encode_dict_value(value))))
+        encoded.append(f"{escape(key)!s} : {escape(encode_dict_value(value))!s}")
     return ",".join(encoded)
 
 
