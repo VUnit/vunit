@@ -30,8 +30,8 @@ class CodecVHDLRecordType(VHDLRecordType):
         num_of_elements = 0
         for element in self.elements:
             for i in element.identifier_list:
-                element_encoding_list.append("encode(data.%s)" % i)
-                element_decoding_list.append("decode(code, index, result.%s);" % i)
+                element_encoding_list.append(f"encode(data.{i!s})")
+                element_decoding_list.append(f"decode(code, index, result.{i!s});")
 
                 num_of_elements += 1
         element_encodings = " & ".join(element_encoding_list)
