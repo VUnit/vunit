@@ -137,7 +137,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
                 return backend
 
         LOGGER.error("Could not detect known LLVM backend by parsing 'ghdl --version'")
-        print("Expected to find one of %r" % mapping.keys())
+        print(f"Expected to find one of {mapping.keys()!r}")
         print("== Output of 'ghdl --version'" + ("=" * 60))
         print(output)
         print("=============================" + ("=" * 60))
@@ -195,7 +195,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         if not vhdl_standards:
             self._vhdl_standard = VHDL.STD_2008
         elif len(vhdl_standards) != 1:
-            raise RuntimeError("GHDL cannot handle mixed VHDL standards, found %r" % list(vhdl_standards))
+            raise RuntimeError(f"GHDL cannot handle mixed VHDL standards, found {list(vhdl_standards)!r}")
         else:
             self._vhdl_standard = list(vhdl_standards)[0]
 
@@ -223,7 +223,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         if vhdl_standard == VHDL.STD_1993:
             return "93"
 
-        raise ValueError("Invalid VHDL standard %s" % vhdl_standard)
+        raise ValueError(f"Invalid VHDL standard {vhdl_standard!s}")
 
     def compile_vhdl_file_command(self, source_file):
         """
@@ -232,12 +232,12 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         cmd = [
             str(Path(self._prefix) / self.executable),
             "-a",
-            "--workdir=%s" % source_file.library.directory,
-            "--work=%s" % source_file.library.name,
-            "--std=%s" % self._std_str(source_file.get_vhdl_standard()),
+            f"--workdir={source_file.library.directory!s}",
+            f"--work={source_file.library.name!s}",
+            f"--std={self._std_str(source_file.get_vhdl_standard())!s}",
         ]
         for library in self._project.get_libraries():
-            cmd += ["-P%s" % library.directory]
+            cmd += [f"-P{library.directory!s}"]
 
         a_flags = source_file.compile_options.get("ghdl.a_flags", [])
         flags = source_file.compile_options.get("ghdl.flags", [])
@@ -264,17 +264,14 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         """
         cmd = [str(Path(self._prefix) / self.executable)]
 
-        if ghdl_e:
-            cmd += ["-e"]
-        else:
-            cmd += ["--elab-run"]
+        cmd += ["-e"] if ghdl_e else ["--elab-run"]
 
-        cmd += ["--std=%s" % self._std_str(self._vhdl_standard)]
-        cmd += ["--work=%s" % config.library_name]
-        cmd += ["--workdir=%s" % self._project.get_library(config.library_name).directory]
-        cmd += ["-P%s" % lib.directory for lib in self._project.get_libraries()]
+        cmd += [f"--std={self._std_str(self._vhdl_standard)!s}"]
+        cmd += [f"--work={config.library_name!s}"]
+        cmd += [f"--workdir={self._project.get_library(config.library_name).directory!s}"]
+        cmd += [f"-P{lib.directory!s}" for lib in self._project.get_libraries()]
 
-        bin_path = str(Path(output_path) / ("%s-%s" % (config.entity_name, config.architecture_name)))
+        bin_path = str(Path(output_path) / f"{config.entity_name!s}-{config.architecture_name!s}")
         if self._has_output_flag():
             cmd += ["-o", bin_path]
         cmd += config.sim_options.get("ghdl.elab_flags", [])
@@ -285,16 +282,16 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
 
         sim = config.sim_options.get("ghdl.sim_flags", [])
         for name, value in config.generics.items():
-            sim += ["-g%s=%s" % (name, value)]
-        sim += ["--assert-level=%s" % config.vhdl_assert_stop_level]
+            sim += [f"-g{name!s}={value!s}"]
+        sim += [f"--assert-level={config.vhdl_assert_stop_level!s}"]
         if config.sim_options.get("disable_ieee_warnings", False):
             sim += ["--ieee-asserts=disable"]
 
         if wave_file:
             if self._gtkwave_fmt == "ghw":
-                sim += ["--wave=%s" % wave_file]
+                sim += [f"--wave={wave_file!s}"]
             elif self._gtkwave_fmt == "vcd":
-                sim += ["--vcd=%s" % wave_file]
+                sim += [f"--vcd={wave_file!s}"]
 
         if not ghdl_e:
             cmd += sim
@@ -308,7 +305,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
             with (Path(output_path) / "args.json").open("w") as fname:
                 dump(
                     {
-                        "bin": str(Path(output_path) / ("%s-%s" % (config.entity_name, config.architecture_name))),
+                        "bin": str(Path(output_path) / f"{config.entity_name!s}-{config.architecture_name!s}"),
                         "build": cmd[1:],
                         "sim": sim,
                     },
@@ -330,7 +327,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         ghdl_e = elaborate_only and config.sim_options.get("ghdl.elab_e", False)
 
         if self._gtkwave_fmt is not None:
-            data_file_name = str(Path(script_path) / ("wave.%s" % self._gtkwave_fmt))
+            data_file_name = str(Path(script_path) / f"wave.{self._gtkwave_fmt!s}")
             if Path(data_file_name).exists():
                 remove(data_file_name)
         else:
@@ -358,9 +355,9 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
 
             init_file = config.sim_options.get(self.name + ".gtkwave_script.gui", None)
             if init_file is not None:
-                cmd += ["--script", "{}".format(str(Path(init_file).resolve()))]
+                cmd += ["--script", str(Path(init_file).resolve())]
 
-            stdout.write("%s\n" % " ".join(cmd))
+            stdout.write(" ".join(cmd) + "\n")
             subprocess.call(cmd)
 
         return status
