@@ -63,7 +63,7 @@ def create_compile_order_file(project_file, compile_order_file, vivado_path=None
     """
     Create compile file from Vivado project
     """
-    print("Generating Vivado project compile order into %s ..." % str(Path(compile_order_file).resolve()))
+    print(f"Generating Vivado project compile order into {str(Path(compile_order_file).resolve())} ...")
 
     fpath = Path(compile_order_file)
     if not fpath.parent.exists():
@@ -115,7 +115,7 @@ def run_vivado(tcl_file_name, tcl_args=None, cwd=None, vivado_path=None):
     Note: the shell=True is important in windows where Vivado is just a bat file.
     """
     vivado = "vivado" if vivado_path is None else str(Path(vivado_path).resolve() / "bin" / "vivado")
-    cmd = "{} -nojournal -nolog -notrace -mode batch -source {}".format(vivado, str(Path(tcl_file_name).resolve()))
+    cmd = f"{vivado} -nojournal -nolog -notrace -mode batch -source {str(Path(tcl_file_name).resolve())}"
     if tcl_args is not None:
         cmd += " -tclargs " + " ".join([str(val) for val in tcl_args])
 
