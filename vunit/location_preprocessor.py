@@ -84,7 +84,7 @@ class LocationPreprocessor(object):
         Remove a subprogram name from the list of known names to preprocess
         """
         if subprogram not in self._subprograms_without_arguments + self._subprograms_with_arguments:
-            raise RuntimeError("Unable to remove unknown subprogram %s" % subprogram)
+            raise RuntimeError(f"Unable to remove unknown subprogram {subprogram!s}")
 
         if subprogram in self._subprograms_without_arguments:
             self._subprograms_without_arguments.remove(subprogram)
