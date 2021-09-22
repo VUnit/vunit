@@ -33,7 +33,7 @@ def examples():
             if loc.is_dir():
                 _data = _get_eg_doc(
                     loc,
-                    "https://github.com/VUnit/vunit/tree/master/examples/%s/%s" % (subdir, item),
+                    f"https://github.com/VUnit/vunit/tree/master/examples/{subdir!s}/{item!s}",
                 )
                 if _data:
                     egs_fptr.write(_data)
@@ -68,7 +68,7 @@ def _get_eg_doc(location: Path, ref):
         print("WARNING: 'run.py' file in example subdir '" + nstr + "' does not contain a docstring. Skipping...")
         return ""
 
-    title = "`%s <%s/>`_" % (eg_doc.split("---", 1)[0][0:-1], ref)
+    title = f"`{eg_doc.split('---', 1)[0][0:-1]!s} <{ref!s}/>`_"
     return "\n".join([title, "-" * len(title), eg_doc.split("---\n", 1)[1], "\n"])
 
 
