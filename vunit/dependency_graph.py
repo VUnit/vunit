@@ -135,4 +135,4 @@ class CircularDependencyException(Exception):
         self.path = path
 
     def __repr__(self):
-        return "CircularDependencyException(%r)" % self.path
+        return f"CircularDependencyException({self.path!r})"
