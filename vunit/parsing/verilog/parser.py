@@ -94,7 +94,7 @@ class VerilogParser(object):
         """
         Returns the database key for parse results of file_name
         """
-        return ("CachedVerilogParser.parse(%s)" % str(Path(file_name).resolve)).encode()
+        return f"CachedVerilogParser.parse({str(Path(file_name).resolve)})".encode()
 
     def _store_result(self, file_name, result, included_files, defines):
         """
