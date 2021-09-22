@@ -111,7 +111,7 @@ class VerilogPreprocessor(object):
                     included_files=included_files,
                 )
             except EOFException as exe:
-                raise LocationException.warning("EOF reached when parsing `%s" % token.value, token.location) from exe
+                raise LocationException.warning(f"EOF reached when parsing `{token.value!s}", token.location) from exe
 
         elif token.value in ("celldefine", "endcelldefine", "nounconnected_drive"):
             # Ignored
@@ -175,7 +175,7 @@ class VerilogPreprocessor(object):
         )
         if macro_point in self._macro_trace:
             raise LocationException.error(
-                "Circular macro expansion of %s detected" % macro_token.value,
+                f"Circular macro expansion of {macro_token.value!s} detected",
                 macro_token.location,
             )
         self._macro_trace.add(macro_point)
@@ -199,7 +199,7 @@ class VerilogPreprocessor(object):
             Check the define argument of an if statement
             """
             if arg.kind != IDENTIFIER:
-                raise LocationException.warning("Bad argument to `%s" % if_token.value, arg.location)
+                raise LocationException.warning(f"Bad argument to `{if_token.value!s}", arg.location)
             stream.skip_while(NEWLINE)
 
         def determine_if_taken(if_token, arg):
@@ -212,7 +212,7 @@ class VerilogPreprocessor(object):
             if if_token.value == "ifndef":
                 return arg.value not in defines
 
-            raise ValueError("Invalid if token %r" % if_token.value)
+            raise ValueError(f"Invalid if token {if_token.value!r}")
 
         result = []
         stream.skip_while(WHITESPACE)
@@ -275,7 +275,7 @@ class VerilogPreprocessor(object):
             # pylint crashes when trying to fix the warning below
             if len(expanded_tokens) == 0:  # pylint: disable=len-as-condition
                 raise LocationException.warning(
-                    "Verilog `include has bad argument, empty define `%s" % macro.name,
+                    f"Verilog `include has bad argument, empty define `{macro.name!s}",
                     tok.location,
                 )
 
@@ -294,7 +294,7 @@ class VerilogPreprocessor(object):
         if included_file is None:
             # Is debug message since there are so many builtin includes in tools
             raise LocationException.debug(
-                "Could not find `include file %s" % file_name_tok.value,
+                f"Could not find `include file {file_name_tok.value!s}",
                 file_name_tok.location,
             )
 
@@ -304,7 +304,7 @@ class VerilogPreprocessor(object):
         )
         if include_point in self._include_trace:
             raise LocationException.error(
-                "Circular `include of %s detected" % file_name_tok.value,
+                f"Circular `include of {file_name_tok.value!s} detected",
                 file_name_tok.location,
             )
         self._include_trace.add(include_point)
@@ -424,12 +424,7 @@ class Macro(object):
         return len(self.args)
 
     def __repr__(self):
-        return "Macro(%r, %r %r, %r)" % (
-            self.name,
-            self.tokens,
-            self.args,
-            self.defaults,
-        )
+        return f"Macro({self.name!r}, {self.tokens!r} {self.args!r}, {self.defaults!r})"
 
     def expand(self, values, previous):
         """
@@ -475,11 +470,11 @@ class Macro(object):
                     if name in self.defaults:
                         values.append(self.defaults[name])
                     else:
-                        raise LocationException.warning("Missing value for argument %s" % name, token.location)
+                        raise LocationException.warning(f"Missing value for argument {name!s}", token.location)
 
             elif len(values) > len(self.args):
                 raise LocationException.warning(
-                    "Too many arguments got %i expected %i" % (len(values), len(self.args)),
+                    f"Too many arguments got {len(values):d} expected {len(self.args):d}",
                     token.location,
                 )
 
