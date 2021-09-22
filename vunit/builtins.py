@@ -31,7 +31,7 @@ class Builtins(object):
         self._builtins_adder = BuiltinsAdder()
 
         def add(name, deps=tuple()):
-            self._builtins_adder.add_type(name, getattr(self, "_add_%s" % name), deps)
+            self._builtins_adder.add_type(name, getattr(self, f"_add_{name!s}"), deps)
 
         add("array_util")
         add("com")
@@ -84,7 +84,7 @@ class Builtins(object):
 
         for key in ["string", "integer_vector"]:
             self._add_files(
-                pattern=str(VHDL_PATH / "data_types" / "src" / "api" / ("external_%s_pkg.vhd" % key))
+                pattern=str(VHDL_PATH / "data_types" / "src" / "api" / f"external_{key!s}_pkg.vhd")
                 if external is None or key not in external or not external[key] or external[key] is True
                 else external[key],
                 allow_empty=False,
@@ -272,7 +272,7 @@ class BuiltinsAdder(object):
         old_args = self._already_added[name]
         if args != old_args:
             raise RuntimeError(
-                "Optional builtin %r added with arguments %r has already been added with arguments %r"
-                % (name, args, old_args)
+                f"Optional builtin {name!r} added with arguments {args!r} "
+                f"has already been added with arguments {old_args!r}"
             )
         return True
