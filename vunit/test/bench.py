@@ -73,7 +73,7 @@ class TestBench(ConfigurationVisitor):
         Get the default configuration of this test bench
         """
         if self._individual_tests:
-            raise RuntimeError("Test bench %s.%s has individually configured tests" % (self.library_name, self.name))
+            raise RuntimeError(f"Test bench {self.library_name!s}.{self.name!s} has individually configured tests")
         return self._configs[DEFAULT_NAME]
 
     @staticmethod
@@ -84,19 +84,14 @@ class TestBench(ConfigurationVisitor):
         """
         if design_unit.is_entity:
             if not design_unit.architecture_names:
-                raise RuntimeError("Test bench '%s' has no architecture." % design_unit.name)
+                raise RuntimeError(f"Test bench '{design_unit.name!s}' has no architecture.")
 
             if len(design_unit.architecture_names) > 1:
+                archs = ", ".join(
+                    f"{name!s}:{Path(fname).name!s}" for name, fname in sorted(design_unit.architecture_names.items())
+                )
                 raise RuntimeError(
-                    "Test bench not allowed to have multiple architectures. "
-                    "Entity %s has %s"
-                    % (
-                        design_unit.name,
-                        ", ".join(
-                            "%s:%s" % (name, str(Path(fname).name))
-                            for name, fname in sorted(design_unit.architecture_names.items())
-                        ),
-                    )
+                    "Test bench not allowed to have multiple architectures. " f"Entity {design_unit.name!s} has {archs}"
                 )
 
     def create_tests(self, simulator_if, elaborate_only, test_list=None):
@@ -176,7 +171,7 @@ class TestBench(ConfigurationVisitor):
         Scan file for test cases and attributes
         """
         if not file_exists(file_name):
-            raise ValueError("File %r does not exist" % file_name)
+            raise ValueError(f"File {file_name!r} does not exist")
 
         def parse(content):
             """
@@ -197,16 +192,16 @@ class TestBench(ConfigurationVisitor):
         for attr in attributes:
             if _is_user_attribute(attr.name):
                 raise RuntimeError(
-                    "File global attributes are not yet supported: %s in %s line %i"
-                    % (attr.name, file_name, attr.location.lineno)
+                    f"File global attributes are not yet supported: {attr.name!s} in "
+                    f"{file_name!s} line {attr.location.lineno:d}"
                 )
 
         for test in tests:
             for attr in test.attributes:
                 if attr.name in _VALID_ATTRIBUTES:
                     raise RuntimeError(
-                        "Attribute %s is global and cannot be associated with test %s: %s line %i"
-                        % (attr.name, test.name, file_name, attr.location.lineno)
+                        f"Attribute {attr.name!s} is global and cannot be associated with test {test.name!s}: "
+                        f"{file_name!s} line {attr.location.lineno:d}"
                     )
 
         attribute_names = [attr.name for attr in attributes]
@@ -501,18 +496,13 @@ def _check_duplicates(attrs, file_name, test_name=None):
     for attr in attrs:
         if attr.name in previous:
 
-            if test_name is None:
-                loc = "%s line %i" % (file_name, attr.location.lineno)
-            else:
-                loc = "test %s in %s line %i" % (
-                    test_name,
-                    file_name,
-                    attr.location.lineno,
-                )
+            loc = (
+                "" if test_name is None else f"test {test_name!s} in "
+            ) + f"{file_name!s} line {attr.location.lineno:d}"
 
             raise RuntimeError(
-                "Duplicate attribute %s of %s, previously defined on line %i"
-                % (attr.name, loc, previous[attr.name].location.lineno)
+                f"Duplicate attribute {attr.name!s} of {loc!s}, "
+                f"previously defined on line {previous[attr.name].location.lineno:d}"
             )
 
         previous[attr.name] = attr
@@ -606,7 +596,7 @@ def _find_attributes(code, file_name, line_offsets=None):
             location = FileLocation.from_match(file_name, match, "name", line_offsets)
 
             if not _is_user_attribute(name) and name not in _VALID_ATTRIBUTES:
-                raise RuntimeError("Invalid attribute '%s' in %s line %i" % (name, file_name, location.lineno))
+                raise RuntimeError(f"Invalid attribute '{name!s}' in {file_name!s} line {location.lineno:d}")
 
             attributes.append(attr_class(name, value=None, location=location))
 
