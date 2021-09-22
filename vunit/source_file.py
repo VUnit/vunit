@@ -68,7 +68,7 @@ class SourceFile(object):
         return hash(self.to_tuple())
 
     def __repr__(self):
-        return "SourceFile(%s, %s)" % (self.name, self.library.name)
+        return f"SourceFile({self.name!s}, {self.library.name!s})"
 
     def set_compile_option(self, name, value):
         """
@@ -362,4 +362,4 @@ def file_type_of(file_name):
     if ext.lower() in SYSTEM_VERILOG_EXTENSIONS:
         return "systemverilog"
 
-    raise RuntimeError("Unknown file ending '%s' of %s" % (ext, file_name))
+    raise RuntimeError(f"Unknown file ending '{ext!s}' of {file_name!s}")
