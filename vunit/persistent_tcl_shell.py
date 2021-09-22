@@ -67,7 +67,7 @@ class PersistentTclShell(object):
         Read a variable from the persistent TCL shell
         """
         process = self._process()
-        process.writeline("puts #VUNIT_READVAR=${%s}" % varname)
+        process.writeline(f"puts #VUNIT_READVAR=${varname!s}")
         consumer = ReadVarOutputConsumer()
         process.consume_output(consumer)
         return consumer.var
