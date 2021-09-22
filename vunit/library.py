@@ -55,7 +55,7 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
         if source_file.name in self._source_files:
             old_source_file = self._source_files[source_file.name]
             if old_source_file.content_hash != source_file.content_hash:
-                raise RuntimeError("%s already added to library %s" % (source_file.name, self.name))
+                raise RuntimeError(f"{source_file.name!s} already added to library {self.name!s}")
 
             LOGGER.info(
                 "Ignoring duplicate file %s added to library %s due to identical contents",
