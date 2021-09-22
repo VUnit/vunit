@@ -42,9 +42,9 @@ def generate_codecs(
         if "." in used_package:
             if used_package.split(".")[0] not in libraries:
                 libraries.append(used_package.split(".")[0])
-            use_clauses += "use %s.all;\n" % used_package
+            use_clauses += f"use {used_package!s}.all;\n"
         else:
-            use_clauses += "use work.%s.all;\n" % used_package
+            use_clauses += f"use work.{used_package!s}.all;\n"
     if libraries:
         use_clauses = "library " + ";\nlibrary ".join(libraries) + ";\n" + use_clauses
 
