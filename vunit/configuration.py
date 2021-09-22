@@ -50,7 +50,7 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
 
         # Fill in tb_path generic with location of test bench
         if "tb_path" in design_unit.generic_names:
-            self.generics["tb_path"] = "%s/" % self.tb_path.replace("\\", "/")
+            self.generics["tb_path"] = str(self.tb_path.replace("\\", "/")) + "/"
 
         self.pre_config = pre_config
         self.post_check = post_check
@@ -114,7 +114,7 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
                 "entity" if self._design_unit.is_entity else "module",
                 self._design_unit.library_name,
                 self._design_unit.name,
-                ", ".join("%s" % gname for gname in self._design_unit.generic_names),
+                ", ".join(str(gname) for gname in self._design_unit.generic_names),
             )
         else:
             self.generics[name] = value
@@ -255,11 +255,11 @@ class ConfigurationVisitor(object):
         self._check_enabled()
 
         if name in (DEFAULT_NAME, ""):
-            raise ValueError("Illegal configuration name %r. Must be non-empty string" % name)
+            raise ValueError(f"Illegal configuration name {name!r}. Must be non-empty string")
 
         for configs in self.get_configuration_dicts():
             if name in configs:
-                raise RuntimeError("Configuration name %s already defined" % name)
+                raise RuntimeError(f"Configuration name {name!s} already defined")
 
             # Copy default configuration
             config = configs[DEFAULT_NAME].copy()
