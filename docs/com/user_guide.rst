@@ -275,7 +275,6 @@ procedure. Below is a read procedure for our memory BFM.
     receive_reply(net, request_msg, reply_msg);
     msg_type := message_type(reply_msg);
     data := pop(reply_msg);
-    delete(reply_msg);
   end;
 
 ``receive_reply`` will block until the specified message is received. All other incoming messages will be ignored but
