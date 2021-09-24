@@ -186,8 +186,7 @@ A full list of test environments can be seen by issuing the following command:
 Making releases
 ~~~~~~~~~~~~~~~
 
-Releases are automatically made by Travic CI on any ``master`` commit
-which is tagged.
+Releases are automatically made by GitHub Actions on any ``master`` commit which is tagged.
 
 To create a new tagged release commit:
 
