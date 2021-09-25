@@ -23,10 +23,12 @@ class VsimSimulatorMixin(object):
     simulators such as modelsim and rivierapro
     """
 
-    def __init__(self, prefix, persistent, sim_cfg_file_name):
+    def __init__(self, prefix, persistent, sim_cfg_file_name, elaborate_only, precompiled):
         self._prefix = prefix
         sim_cfg_file_name = str(Path(sim_cfg_file_name).resolve())
         self._sim_cfg_file_name = sim_cfg_file_name
+        self.elaborate_only = elaborate_only
+        self.precompiled = precompiled
 
         prefix = self._prefix  # Avoid circular dependency inhibiting process destruction
         env = self.get_env()
@@ -308,10 +310,20 @@ proc vunit_run {} {
         except Process.NonZeroExitCode:
             return False
 
-    def simulate(self, output_path, test_suite_name, config, elaborate_only):
+    def simulate(self, output_path, test_suite_name, config):
         """
         Run a test bench
         """
+
+        if self.precompiled:
+            # This is only tested for riviera pro.
+            if self.name != "rivierapro":
+                raise NotImplementedError(
+                    "Support for precompiled binaries is currently " "limited to riviera pro and ghdl."
+                )
+            with open(self._sim_cfg_file_name, "w", encoding="utf-8") as ofile:
+                ofile.write('$INCLUDE = "%s"\n' % self.precompiled.resolve())
+
         script_path = Path(output_path) / self.name
 
         common_file_name = script_path / "common.do"
@@ -325,14 +337,14 @@ proc vunit_run {} {
         write_file(str(gui_file_name), self._create_gui_script(str(common_file_name), config))
         write_file(
             str(batch_file_name),
-            self._create_batch_script(str(common_file_name), elaborate_only),
+            self._create_batch_script(str(common_file_name), self.elaborate_only),
         )
 
         if self._gui:
             return self._run_batch_file(str(gui_file_name), gui=True)
 
         if self._persistent_shell is not None:
-            return self._run_persistent(str(common_file_name), load_only=elaborate_only)
+            return self._run_persistent(str(common_file_name), load_only=self.elaborate_only)
 
         return self._run_batch_file(str(batch_file_name))
 

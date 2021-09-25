@@ -44,7 +44,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
     ]
 
     @classmethod
-    def from_args(cls, args, output_path, **kwargs):
+    def from_args(cls, args, output_path, elaborate_only=False, precompiled=None, **kwargs):
         """
         Create new instance from command line arguments object
         """
@@ -55,6 +55,8 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
             output_path=output_path,
             persistent=persistent,
             gui=args.gui,
+            elaborate_only=elaborate_only,
+            precompiled=precompiled,
         )
 
     @classmethod
@@ -107,13 +109,23 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         """
         return True
 
-    def __init__(self, prefix, output_path, persistent=False, gui=False):
-        SimulatorInterface.__init__(self, output_path, gui)
+    def __init__(  # pylint: disable=too-many-arguments
+        self,
+        prefix,
+        output_path,
+        persistent=False,
+        gui=False,
+        elaborate_only=False,
+        precompiled=None,
+    ):
+        SimulatorInterface.__init__(self, output_path, gui, elaborate_only, precompiled)
         VsimSimulatorMixin.__init__(
             self,
             prefix,
             persistent,
             sim_cfg_file_name=str(Path(output_path) / "library.cfg"),
+            elaborate_only=elaborate_only,
+            precompiled=precompiled,
         )
         self._create_library_cfg()
         self._libraries = []

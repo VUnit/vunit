@@ -47,7 +47,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
     ]
 
     @classmethod
-    def from_args(cls, args, output_path, **kwargs):
+    def from_args(cls, args, output_path, elaborate_only=False, precompiled=None, **kwargs):
         """
         Create new instance from command line arguments object
         """
@@ -58,6 +58,8 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
             output_path=output_path,
             persistent=persistent,
             gui=args.gui,
+            elaborate_only=elaborate_only,
+            precompiled=precompiled,
         )
 
     @classmethod
@@ -85,13 +87,23 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         """
         return True
 
-    def __init__(self, prefix, output_path, persistent=False, gui=False):
-        SimulatorInterface.__init__(self, output_path, gui)
+    def __init__(  # pylint: disable=too-many-arguments
+        self,
+        prefix,
+        output_path,
+        persistent=False,
+        gui=False,
+        elaborate_only=False,
+        precompiled=None,
+    ):
+        SimulatorInterface.__init__(self, output_path, gui, elaborate_only, precompiled)
         VsimSimulatorMixin.__init__(
             self,
             prefix,
             persistent,
             sim_cfg_file_name=str(Path(output_path) / "modelsim.ini"),
+            elaborate_only=elaborate_only,
+            precompiled=precompiled,
         )
         self._libraries = []
         self._coverage_files = set()

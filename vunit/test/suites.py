@@ -18,7 +18,7 @@ class IndependentSimTestCase(object):
     A test case to be run in an independent simulation
     """
 
-    def __init__(self, test, config, simulator_if, elaborate_only=False):
+    def __init__(self, test, config, simulator_if):
         self._name = "%s.%s" % (config.library_name, config.design_unit_name)
 
         if not config.is_default:
@@ -37,7 +37,6 @@ class IndependentSimTestCase(object):
         self._run = TestRun(
             simulator_if=simulator_if,
             config=config,
-            elaborate_only=elaborate_only,
             test_suite_name=self._name,
             test_cases=[test.name],
         )
@@ -78,7 +77,7 @@ class SameSimTestSuite(object):
     A test suite where multiple test cases are run within the same simulation
     """
 
-    def __init__(self, tests, config, simulator_if, elaborate_only=False):
+    def __init__(self, tests, config, simulator_if):
         self._name = "%s.%s" % (config.library_name, config.design_unit_name)
 
         if not config.is_default:
@@ -90,7 +89,6 @@ class SameSimTestSuite(object):
         self._run = TestRun(
             simulator_if=simulator_if,
             config=config,
-            elaborate_only=elaborate_only,
             test_suite_name=self._name,
             test_cases=[test.name for test in tests],
         )
@@ -149,10 +147,9 @@ class TestRun(object):
     A single simulation run yielding the results for one or several test cases
     """
 
-    def __init__(self, simulator_if, config, elaborate_only, test_suite_name, test_cases):
+    def __init__(self, simulator_if, config, test_suite_name, test_cases):
         self._simulator_if = simulator_if
         self._config = config
-        self._elaborate_only = elaborate_only
         self._test_suite_name = test_suite_name
         self._test_cases = test_cases
 
@@ -177,7 +174,7 @@ class TestRun(object):
 
         sim_ok = self._simulate(output_path)
 
-        if self._elaborate_only:
+        if self._simulator_if.elaborate_only:
             status = PASSED if sim_ok else FAILED
             return dict((name, status) for name in self._test_cases)
 
@@ -238,7 +235,6 @@ class TestRun(object):
             output_path=output_path,
             test_suite_name=self._test_suite_name,
             config=config,
-            elaborate_only=self._elaborate_only,
         )
 
     def _read_test_results(self, file_name):

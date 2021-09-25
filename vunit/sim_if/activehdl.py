@@ -43,11 +43,17 @@ class ActiveHDLInterface(SimulatorInterface):
     ]
 
     @classmethod
-    def from_args(cls, args, output_path, **kwargs):
+    def from_args(cls, args, output_path, elaborate_only=False, precompiled=None, **kwargs):
         """
         Create new instance from command line arguments object
         """
-        return cls(prefix=cls.find_prefix(), output_path=output_path, gui=args.gui)
+        return cls(
+            prefix=cls.find_prefix(),
+            output_path=output_path,
+            gui=args.gui,
+            elaborate_only=elaborate_only,
+            precompiled=precompiled,
+        )
 
     @classmethod
     def find_prefix_from_path(cls):
@@ -73,8 +79,8 @@ class ActiveHDLInterface(SimulatorInterface):
         """
         return True
 
-    def __init__(self, prefix, output_path, gui=False):
-        SimulatorInterface.__init__(self, output_path, gui)
+    def __init__(self, prefix, output_path, gui=False, elaborate_only=False, precompiled=None):
+        SimulatorInterface.__init__(self, output_path, gui, elaborate_only, precompiled)
         self._library_cfg = str(Path(output_path) / "library.cfg")
         self._prefix = prefix
         self._create_library_cfg()
@@ -411,7 +417,7 @@ proc vunit_run {} {
             return False
         return True
 
-    def simulate(self, output_path, test_suite_name, config, elaborate_only):
+    def simulate(self, output_path, test_suite_name, config):
         """
         Run a test bench
         """
@@ -424,7 +430,7 @@ proc vunit_run {} {
         write_file(gui_file_name, self._create_gui_script(str(common_file_name), config))
         write_file(
             str(batch_file_name),
-            self._create_batch_script(str(common_file_name), elaborate_only),
+            self._create_batch_script(str(common_file_name), self.elaborate_only),
         )
 
         if self._gui:

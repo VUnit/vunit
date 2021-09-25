@@ -130,7 +130,6 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         self._test_filter = test_filter
         self._vhdl_standard: VHDLStandard = select_vhdl_standard(vhdl_standard)
-
         self._external_preprocessors = []  # type: ignore
         self._location_preprocessor = None
         self._check_preprocessor = None
@@ -692,7 +691,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         Create the test cases
         """
         self._test_bench_list.warn_when_empty()
-        test_list = self._test_bench_list.create_tests(simulator_if, self._args.elaborate)
+        test_list = self._test_bench_list.create_tests(simulator_if)
         test_list.keep_matches(self._test_filter)
         return test_list
 
@@ -713,7 +712,14 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         if self._args.compile:
             return self._main_compile_only()
 
-        all_ok = self._main_run(post_run)
+        simulator_if = self._create_simulator_if()
+        test_list = self._create_tests(simulator_if)
+
+        if not self._args.precompiled:
+            self._compile(simulator_if)
+            print()
+
+        all_ok = self._main_run(simulator_if, test_list, post_run)
         return all_ok
 
     def _create_simulator_if(self):
@@ -732,17 +738,26 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         if not Path(self._simulator_output_path).exists():
             os.makedirs(self._simulator_output_path)
 
-        return self._simulator_class.from_args(args=self._args, output_path=self._simulator_output_path)
+        sim_if_precompiled_support = ["ghdl", "rivierapro"]
+        if self._args.precompiled and self._simulator_class.name not in sim_if_precompiled_support:
+            LOGGER.error(
+                "The simulator class %s does not support precompiled artifacts yet.\n" "Available options are: %s\n",
+                self._simulator_class.name,
+                sim_if_precompiled_support,
+            )
+            sys.exit(1)
 
-    def _main_run(self, post_run):
+        return self._simulator_class.from_args(
+            args=self._args,
+            output_path=self._simulator_output_path,
+            elaborate_only=self._args.elaborate,
+            precompiled=self._args.precompiled,
+        )
+
+    def _main_run(self, simulator_if, test_list, post_run):
         """
         Main with running tests
         """
-        simulator_if = self._create_simulator_if()
-        test_list = self._create_tests(simulator_if)
-        self._compile(simulator_if)
-        print()
-
         start_time = ostools.get_time()
         report = TestReport(printer=self._printer)
 

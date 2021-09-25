@@ -49,9 +49,19 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
     # True if simulator supports ANSI colors in GUI mode
     supports_colors_in_gui = False
 
-    def __init__(self, output_path, gui):
+    def __init__(self, output_path, gui, elaborate_only, precompiled):
         self._output_path = output_path
         self._gui = gui
+        self._elaborate_only = elaborate_only
+        self._precompiled = precompiled
+
+    @property
+    def elaborate_only(self):
+        return self._elaborate_only
+
+    @property
+    def precompiled_artifact_path(self):
+        return self._precompiled
 
     @property
     def output_path(self):
@@ -203,7 +213,7 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         self.setup_library_mapping(project)
         self.compile_source_files(project, printer, continue_on_error, target_files=target_files)
 
-    def simulate(self, output_path, test_suite_name, config, elaborate_only):
+    def simulate(self, output_path, test_suite_name, config):
         """
         Simulate
         """

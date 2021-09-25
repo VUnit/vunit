@@ -21,7 +21,7 @@ from warnings import warn
 from ..exceptions import CompileError
 from ..ostools import Process
 from . import SimulatorInterface, ListOfStringOption, StringOption, BooleanOption
-from ..vhdl_standard import VHDL
+from ..vhdl_standard import VHDL, VHDLStandard
 
 LOGGER = logging.getLogger(__name__)
 
@@ -63,7 +63,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         group.add_argument("--gtkwave-args", default="", help="Arguments to pass to gtkwave")
 
     @classmethod
-    def from_args(cls, args, output_path, **kwargs):
+    def from_args(cls, args, output_path, elaborate_only, precompiled, **kwargs):
         """
         Create instance from args namespace
         """
@@ -75,6 +75,8 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
             gtkwave_fmt=args.gtkwave_fmt,
             gtkwave_args=args.gtkwave_args,
             backend=cls.determine_backend(prefix),
+            elaborate_only=elaborate_only,
+            precompiled=precompiled,
         )
 
     @classmethod
@@ -92,8 +94,10 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         gtkwave_fmt=None,
         gtkwave_args="",
         backend="llvm",
+        elaborate_only=False,
+        precompiled=None,
     ):
-        SimulatorInterface.__init__(self, output_path, gui)
+        SimulatorInterface.__init__(self, output_path, gui, elaborate_only, precompiled)
         self._prefix = prefix
         self._project = None
 
@@ -111,6 +115,8 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         """
         Return if the simulation should fail with nonzero exit codes
         """
+        if self.precompiled_artifact_path:
+            self._vhdl_standard = VHDLStandard(environ.get("VUNIT_VHDL_STANDARD", "2008"))
         return self._vhdl_standard >= VHDL.STD_2008
 
     @classmethod
@@ -258,29 +264,32 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         cmd += [source_file.name]
         return cmd
 
-    def _get_command(self, config, output_path, elaborate_only, ghdl_e, wave_file):  # pylint: disable=too-many-branches
+    def _get_command(self, config, output_path, ghdl_e, wave_file):  # pylint: disable=too-many-branches
         """
         Return GHDL simulation command
         """
         cmd = [str(Path(self._prefix) / self.executable)]
-
-        if ghdl_e:
-            cmd += ["-e"]
+        if self.precompiled_artifact_path:
+            cmd += ["-r"]
         else:
-            cmd += ["--elab-run"]
+            if ghdl_e:
+                cmd += ["-e"]
+            else:
+                cmd += ["--elab-run"]
 
-        cmd += ["--std=%s" % self._std_str(self._vhdl_standard)]
-        cmd += ["--work=%s" % config.library_name]
-        cmd += ["--workdir=%s" % self._project.get_library(config.library_name).directory]
-        cmd += ["-P%s" % lib.directory for lib in self._project.get_libraries()]
+            cmd += ["--std=%s" % self._std_str(self._vhdl_standard)]
+            cmd += ["--work=%s" % config.library_name]
+            cmd += ["--workdir=%s" % self._project.get_library(config.library_name).directory]
+            cmd += ["-P%s" % lib.directory for lib in self._project.get_libraries()]
 
-        bin_path = str(Path(output_path) / ("%s-%s" % (config.entity_name, config.architecture_name)))
-        if self._has_output_flag():
-            cmd += ["-o", bin_path]
-        cmd += config.sim_options.get("ghdl.elab_flags", [])
-        if config.sim_options.get("enable_coverage", False):
-            # Enable coverage in linker
-            cmd += ["-Wl,-lgcov"]
+            bin_path = str(Path(output_path) / ("%s-%s" % (config.entity_name, config.architecture_name)))
+            if self._has_output_flag():
+                cmd += ["-o", bin_path]
+            cmd += config.sim_options.get("ghdl.elab_flags", [])
+            if config.sim_options.get("enable_coverage", False):
+                # Enable coverage in linker
+                cmd += ["-Wl,-lgcov"]
+
         cmd += [config.entity_name, config.architecture_name]
 
         sim = config.sim_options.get("ghdl.sim_flags", [])
@@ -296,9 +305,13 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
             elif self._gtkwave_fmt == "vcd":
                 sim += ["--vcd=%s" % wave_file]
 
+        if self.precompiled_artifact_path:
+            cmd += sim
+            return cmd
+
         if not ghdl_e:
             cmd += sim
-            if elaborate_only:
+            if self.elaborate_only:
                 cmd += ["--no-run"]
         else:
             try:
@@ -317,7 +330,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
 
         return cmd
 
-    def simulate(self, output_path, test_suite_name, config, elaborate_only):  # pylint: disable=too-many-locals
+    def simulate(self, output_path, test_suite_name, config):  # pylint: disable=too-many-locals
         """
         Simulate with entity as top level using generics
         """
@@ -327,7 +340,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         if not Path(script_path).exists():
             makedirs(script_path)
 
-        ghdl_e = elaborate_only and config.sim_options.get("ghdl.elab_e", False)
+        ghdl_e = self.elaborate_only and config.sim_options.get("ghdl.elab_e", False)
 
         if self._gtkwave_fmt is not None:
             data_file_name = str(Path(script_path) / ("wave.%s" % self._gtkwave_fmt))
@@ -336,8 +349,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         else:
             data_file_name = None
 
-        cmd = self._get_command(config, script_path, elaborate_only, ghdl_e, data_file_name)
-
+        cmd = self._get_command(config, script_path, ghdl_e, data_file_name)
         status = True
 
         gcov_env = environ.copy()
@@ -348,12 +360,16 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
             self._coverage_test_dirs.add(coverage_dir)
 
         try:
-            proc = Process(cmd, env=gcov_env)
+            proc = Process(
+                cmd,
+                cwd=self.precompiled_artifact_path.parent.resolve() if self.precompiled_artifact_path else None,
+                env=gcov_env,
+            )
             proc.consume_output()
         except Process.NonZeroExitCode:
             status = False
 
-        if self._gui and not elaborate_only:
+        if self._gui and not self.elaborate_only:
             cmd = ["gtkwave"] + shlex.split(self._gtkwave_args) + [data_file_name]
 
             init_file = config.sim_options.get(self.name + ".gtkwave_script.gui", None)
