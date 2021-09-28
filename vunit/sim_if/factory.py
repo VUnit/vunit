@@ -80,7 +80,7 @@ class SimulatorFactory(object):
         known_options = sorted(list(self._sim_options.keys()))
 
         if name not in self._sim_options:
-            raise ValueError("Unknown sim_option %r, expected one of %r" % (name, known_options))
+            raise ValueError(f"Unknown sim_option {name!r}, expected one of {known_options!r}")
 
         self._sim_options[name].validate(value)
 
@@ -90,7 +90,7 @@ class SimulatorFactory(object):
         """
         known_options = sorted(list(self._compile_options.keys()))
         if name not in known_options:
-            raise ValueError("Unknown compile_option %r, expected one of %r" % (name, known_options))
+            raise ValueError(f"Unknown compile_option {name!r}, expected one of {known_options!r}")
 
     def check_compile_option(self, name, value):
         """
