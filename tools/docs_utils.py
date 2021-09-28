@@ -24,7 +24,7 @@ def examples():
     Traverses the examples directory and generates examples.rst with the docstrings
     """
     eg_path = ROOT.parent / "examples"
-    egs_fptr = (ROOT / "examples.rst").open("w+")
+    egs_fptr = (ROOT / "examples.rst").open("w+", encoding="utf-8")
     egs_fptr.write("\n".join([".. _examples:\n", "Examples", "========", "\n"]))
     for language, subdir in {"VHDL": "vhdl", "SystemVerilog": "verilog"}.items():
         egs_fptr.write("\n".join([language, "~~~~~~~~~~~~~~~~~~~~~~~", "\n"]))

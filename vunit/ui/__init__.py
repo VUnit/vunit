@@ -248,7 +248,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         ppath = Path(project_csv_path)
 
-        with ppath.open() as csv_path_file:
+        with ppath.open("r", encoding="utf-8") as csv_path_file:
             for row in csv.reader(csv_path_file):
                 if len(row) == 2:
                     lib_name = row[0].strip()
@@ -828,7 +828,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
             tests=tests,
         )
 
-        with Path(json_file_name).open("w") as fptr:
+        with Path(json_file_name).open("w", encoding="utf-8") as fptr:
             json.dump(json_data, fptr, sort_keys=True, indent=4, separators=(",", ": "))
 
         return True

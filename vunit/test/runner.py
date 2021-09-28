@@ -307,7 +307,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         """
         Print contents of output file if it exists
         """
-        with Path(output_file_name).open("r") as fread:
+        with Path(output_file_name).open("r", encoding="utf-8") as fread:
             for line in fread.readlines():
                 self._stdout_ansi.write(line)
 
