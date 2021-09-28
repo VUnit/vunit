@@ -164,7 +164,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
 
             return "-2019"
 
-        return "-%s" % vhdl_standard
+        return f"-{vhdl_standard!s}"
 
     def compile_vhdl_file_command(self, source_file):
         """
@@ -204,11 +204,11 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         for library in self._libraries:
             args += ["-l", library.name]
         for include_dir in source_file.include_dirs:
-            args += ["+incdir+%s" % include_dir]
+            args += [f"+incdir+{include_dir!s}"]
         for key, value in source_file.defines.items():
-            args += ["+define+%s" % key]
+            args += [f"+define+{key!s}"]
             if value:
-                args[-1] += "=%s" % value
+                args[-1] += f"={value!s}"
         return args
 
     def create_library(self, library_name, path, mapped_libraries=None):
@@ -248,7 +248,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
             return
 
         with Path(self._sim_cfg_file_name).open("w", encoding="utf-8") as ofile:
-            ofile.write('$INCLUDE = "%s"\n' % self._builtin_library_cfg)
+            ofile.write(f'$INCLUDE = "{self._builtin_library_cfg!s}"\n')
 
     @property
     def _builtin_library_cfg(self):
@@ -279,15 +279,12 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         Create the vunit_load TCL function that runs the vsim command and loads the design
         """
         set_generic_str = " ".join(
-            (
-                "-g/%s/%s=%s" % (config.entity_name, name, format_generic(value))
-                for name, value in config.generics.items()
-            )
+            (f"-g/{config.entity_name!s}/{name!s}={format_generic(value)!s}" for name, value in config.generics.items())
         )
-        pli_str = " ".join('-pli "%s"' % fix_path(name) for name in config.sim_options.get("pli", []))
+        pli_str = " ".join(f'-pli "{fix_path(name)}"' for name in config.sim_options.get("pli", []))
 
         vsim_flags = [
-            "-dataset {%s}" % fix_path(str(Path(output_path) / "dataset.asdb")),
+            f"-dataset {{{fix_path(str(Path(output_path) / 'dataset.asdb'))!s}}}",
             pli_str,
             set_generic_str,
         ]
@@ -295,7 +292,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         if config.sim_options.get("enable_coverage", False):
             coverage_file_path = str(Path(output_path) / "coverage.acdb")
             self._coverage_files.add(coverage_file_path)
-            vsim_flags += ["-acdb_file {%s}" % coverage_file_path]
+            vsim_flags += [f"-acdb_file {{{coverage_file_path!s}}}"]
 
         vsim_flags += [self._vsim_extra_args(config)]
 
@@ -398,27 +395,30 @@ proc _vunit_sim_restart {} {
 
         for coverage_file in self._coverage_files:
             if file_exists(coverage_file):
-                merge_command += " -i {%s}" % coverage_file.replace("\\", "/")
+                cfile = coverage_file.replace("\\", "/")
+                merge_command += f" -i {{{cfile}}}"
             else:
                 LOGGER.warning("Missing coverage file: %s", coverage_file)
 
         if args is not None:
-            merge_command += " " + " ".join("{%s}" % arg for arg in args)
+            merge_command += " " + " ".join(f"{{{arg!s}}}" for arg in args)
 
-        merge_command += " -o {%s}" % file_name.replace("\\", "/")
+        fname = file_name.replace("\\", "/")
+        merge_command += f" -o {{{fname}}}"
 
         merge_script_name = Path(self._output_path) / "acdb_merge.tcl"
         with merge_script_name.open("w", encoding="utf-8") as fptr:
             fptr.write(merge_command + "\n")
 
+        mscript = str(merge_script_name).replace("\\", "/")
         vcover_cmd = [
             str(Path(self._prefix) / "vsim"),
             "-c",
             "-do",
-            "source {%s}; quit;" % str(merge_script_name).replace("\\", "/"),
+            f"source {{{mscript}}}; quit;",
         ]
 
-        print("Merging coverage files into %s..." % file_name)
+        print(f"Merging coverage files into {file_name!s}...")
         vcover_merge_process = Process(vcover_cmd, env=self.get_env())
         vcover_merge_process.consume_output()
         print("Done merging coverage files")
@@ -429,9 +429,7 @@ def format_generic(value):
     Generic values with space in them need to be quoted
     """
     value_str = str(value)
-    if " " in value_str:
-        return '"%s"' % value_str
-    return value_str
+    return f'"{value_str!s}"' if " " in value_str else value_str
 
 
 class VersionConsumer(object):
