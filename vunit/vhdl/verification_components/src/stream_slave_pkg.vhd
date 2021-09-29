@@ -13,6 +13,7 @@ context work.vunit_context;
 context work.com_context;
 
 use work.vc_pkg.all;
+use work.sync_pkg.all;
 
 package stream_slave_pkg is
   -- Stream slave handle
@@ -32,6 +33,7 @@ package stream_slave_pkg is
   ) return stream_slave_t;
 
   function get_std_cfg(slave : stream_slave_t) return std_cfg_t;
+  impure function as_sync(slave : stream_slave_t) return sync_handle_t;
 
   -- Reference to future stream result
   alias stream_reference_t is msg_t;

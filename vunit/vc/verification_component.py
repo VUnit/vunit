@@ -99,11 +99,12 @@ class VerificationComponent:
             return vc_code
 
     @staticmethod
-    def create_vhdl_testbench_template(vc_lib_name, vc_path, vci_path):
+    def create_vhdl_testbench_template(vc_lib_name, vci_lib_name, vc_path, vci_path):
         """
         Creates a template for a VC compliance testbench.
 
-        :param vc_lib_name: Name of the library containing the verification component and its interface.
+        :param vc_lib_name: Name of the library containing the verification component.
+        :param vci_lib_name: Name of the library containing the verification component interface.
         :param vc_path: Path to the file containing the verification component entity.
         :param vci_path: Path to the file containing the verification component interface package.
 
@@ -209,8 +210,9 @@ class VerificationComponent:
 
         initial_package_refs = set(
             [
+                "vunit_lib.vc_pkg.all",
                 "vunit_lib.sync_pkg.all",
-                "%s.%s.all" % (vc_lib_name, vci_code.packages[0].identifier),
+                "%s.%s.all" % (vci_lib_name, vci_code.packages[0].identifier),
             ]
         )
         context_items = create_context_items(
@@ -385,6 +387,7 @@ class VerificationComponent:
         else:
             template_code, _ = self.create_vhdl_testbench_template(
                 self.vc_facade.library,
+                self.vci.vci_facade.library,
                 self.vc_facade.source_file.name,
                 self.vci.vci_facade.source_file.name,
             )

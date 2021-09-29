@@ -12,6 +12,7 @@ use ieee.std_logic_1164.all;
 context work.vunit_context;
 context work.com_context;
 use work.vc_pkg.all;
+use work.sync_pkg.all;
 
 package stream_master_pkg is
   -- Stream master handle
@@ -31,6 +32,7 @@ package stream_master_pkg is
   ) return stream_master_t;
 
   function get_std_cfg(master : stream_master_t) return std_cfg_t;
+  impure function as_sync(master : stream_master_t) return sync_handle_t;
 
   -- Push a data value to the stream
   procedure push_stream(signal net : inout network_t;

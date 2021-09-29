@@ -18,7 +18,7 @@ from vunit.vc import VerificationComponent, VerificationComponentInterface
 def _create_vc_template(args):
     """Creates VC testbench template from args."""
     template_code, vc_name = VerificationComponent.create_vhdl_testbench_template(
-        args.vc_lib_name, args.vc_path, args.vci_path
+        args.vc_lib_name, args.vci_lib_name, args.vc_path, args.vci_path
     )
     if not template_code or not vc_name:
         sys.exit(1)
@@ -46,13 +46,13 @@ def _create_vci_template(args):
         template_code,
         vci_name,
     ) = VerificationComponentInterface.create_vhdl_testbench_template(
-        args.vc_lib_name, args.vci_path, args.vc_handle_t
+        args.vci_lib_name, args.vci_path, args.vc_handle_t
     )
     if not template_code or not vci_name:
         sys.exit(1)
 
     if not args.output_path:
-        output_dir = args.vci_path.parent / ".vc" / vci_name
+        output_dir = args.vc_path.parent / ".vc" / vci_name
         if not output_dir.exists():
             output_dir.mkdir(parents=True)
 
@@ -60,7 +60,7 @@ def _create_vci_template(args):
     elif args.output_path.is_dir():
         output_dir = args.output_path / vci_name
         if not output_dir.exists():
-            output_dir.mkdir(parents=True)
+            output_dir.exists(parents=True)
         output_path = output_dir / ("tb_%s_compliance_template.vhd" % args.vc_handle_t)
     else:
         output_path = args.output_path
@@ -79,9 +79,13 @@ def main():
             "create-vc", help="Creates a VC compliance test template"
         )
         parser.add_argument(
-            "-l",
             "--vc-lib-name",
-            help="Name of library hosting the VC and the VCI (default: vc_lib)",
+            help="Name of library hosting the VC (default: vc_lib)",
+            default="vc_lib",
+        )
+        parser.add_argument(
+            "--vci-lib-name",
+            help="Name of library hosting the VCI (default: vc_lib)",
             default="vc_lib",
         )
         parser.add_argument(
@@ -102,9 +106,8 @@ def main():
             "create-vci", help="Creates a VCI compliance test template"
         )
         parser.add_argument(
-            "-l",
-            "--vc-lib-name",
-            help="Name of library hosting the VC and the VCI (default: vc_lib)",
+            "--vci-lib-name",
+            help="Name of library hosting the VCI (default: vc_lib)",
             default="vc_lib",
         )
         parser.add_argument(

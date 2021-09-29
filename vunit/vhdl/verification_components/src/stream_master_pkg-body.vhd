@@ -30,6 +30,11 @@ package body stream_master_pkg is
     return master.p_std_cfg;
   end;
 
+  impure function as_sync(master : stream_master_t) return sync_handle_t is
+  begin
+    return get_actor(master.p_std_cfg);
+  end;
+
   procedure push_stream(signal net : inout network_t;
                         stream : stream_master_t;
                         data : std_logic_vector;

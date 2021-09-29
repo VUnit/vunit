@@ -57,10 +57,10 @@ class VerificationComponentInterface:
     """Represents a Verification Component Interface (VCI)."""
 
     @classmethod
-    def find(cls, vc_lib, vci_name, vc_handle_t):
+    def find(cls, vci_lib, vci_name, vc_handle_t):
         """Finds the specified VCI if present.
 
-        :param vc_lib: Library object containing the VCI.
+        :param vci_lib: Library object containing the VCI.
         :param vci_name: Name of VCI package.
         :param vc_handle_t: Name of VC handle type.
 
@@ -68,7 +68,7 @@ class VerificationComponentInterface:
         """
 
         try:
-            vci_facade = vc_lib.package(vci_name)
+            vci_facade = vci_lib.package(vci_name)
         except KeyError:
             LOGGER.error("Failed to find VCI %s", vci_name)
             sys.exit(1)
@@ -91,6 +91,10 @@ class VerificationComponentInterface:
                 LOGGER.error("%s must contain a single VCI package", vci_path)
                 return None, None
 
+            if not cls._validate_as_sync(code, vc_handle_t):
+                LOGGER.error("%s must provide an as_sync function", vci_path)
+                return None, None
+
             vc_constructor = cls._validate_constructor(code, vc_handle_t)
             if not cls._validate_handle(code, vc_handle_t):
                 vc_constructor = None
@@ -100,6 +104,30 @@ class VerificationComponentInterface:
     def __init__(self, vci_facade, vc_constructor):
         self.vci_facade = vci_facade
         self.vc_constructor = vc_constructor
+
+    @staticmethod
+    def _validate_as_sync(code, vc_handle_t):
+        """Validates the existence and format of the as_sync function."""
+
+        for func in VHDLFunctionSpecification.find(code):
+            if not func.identifier.startswith("as_sync"):
+                continue
+
+            if func.return_type_mark != "sync_handle_t":
+                continue
+
+            if len(func.parameter_list) != 1:
+                continue
+
+            if len(func.parameter_list[0].identifier_list) != 1:
+                continue
+
+            if func.parameter_list[0].subtype_indication.type_mark != vc_handle_t:
+                continue
+
+            return func
+
+        return None
 
     @staticmethod
     def _validate_constructor(code, vc_handle_t):

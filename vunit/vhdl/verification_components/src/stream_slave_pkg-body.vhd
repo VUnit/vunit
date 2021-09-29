@@ -25,6 +25,11 @@ package body stream_slave_pkg is
     return slave.p_std_cfg;
   end;
 
+  impure function as_sync(slave : stream_slave_t) return sync_handle_t is
+  begin
+    return get_actor(slave.p_std_cfg);
+  end;
+
   procedure pop_stream(signal net : inout network_t;
                        stream : stream_slave_t;
                        variable reference : inout stream_reference_t) is

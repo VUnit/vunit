@@ -29,6 +29,10 @@ class TestComplianceTest(TestCase):  # pylint: disable=too-many-public-methods
     def setUp(self):
         self.tmp_dir = Path(__file__).parent / "vc_tmp"
         renew_path(str(self.tmp_dir))
+        self.vc_dir = self.tmp_dir / "vc"
+        renew_path(str(self.vc_dir))
+        self.vci_dir = self.tmp_dir / "vci"
+        renew_path(str(self.vci_dir))
         self.vc_contents = """
 library ieee
 use ieee.std_logic_1164.all;
@@ -45,7 +49,7 @@ entity vc is
 
 end entity;
 """
-        self.vc_path = self.make_file("vc.vhd", self.vc_contents)
+        self.vc_path = self.make_file("vc.vhd", self.vc_contents, self.vc_dir)
 
         self.vci_contents = """
 package vc_pkg is
@@ -59,32 +63,38 @@ package vc_pkg is
     checker : checker_t := null_checker;
     unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail
   ) return vc_handle_t;
+
+  function as_sync(handle : vc_handle_t) return sync_handle_t;
 end package;
 """
-        self.vci_path = self.make_file("vci.vhd", self.vci_contents)
+        self.vci_path = self.make_file("vci.vhd", self.vci_contents, self.vci_dir)
 
         self.ui = VUnit.from_argv([])
 
         self.vc_lib = self.ui.add_library("vc_lib")
-        self.vc_lib.add_source_files(str(self.tmp_dir / "*.vhd"))
+        self.vc_lib.add_source_files(str(self.vc_dir / "*.vhd"))
+
+        self.vci_lib = self.ui.add_library("vci_lib")
+        self.vci_lib.add_source_files(str(self.vci_dir / "*.vhd"))
 
     def tearDown(self):
         if self.tmp_dir.exists():
             rmtree(self.tmp_dir)
 
-    def make_file(self, file_name, contents):
+    def make_file(self, file_name, contents, directory=None):
         """
         Create a file in the temporary directory with contents
         Returns the absolute path to the file.
         """
-        full_file_name = (self.tmp_dir / file_name).resolve()
+        directory = directory if directory is not None else self.tmp_dir
+        full_file_name = (directory / file_name).resolve()
         with full_file_name.open("w") as outfile:
             outfile.write(contents)
         return str(full_file_name)
 
     @mock.patch("vunit.vc.verification_component_interface.LOGGER.error")
     def test_not_finding_vc(self, error_mock):
-        vci = VerificationComponentInterface.find(self.vc_lib, "vc_pkg", "vc_handle_t")
+        vci = VerificationComponentInterface.find(self.vci_lib, "vc_pkg", "vc_handle_t")
         self.assertRaises(
             SystemExit, VerificationComponent.find, self.vc_lib, "other_vc", vci
         )
@@ -95,7 +105,7 @@ end package;
         self.assertRaises(
             SystemExit,
             VerificationComponentInterface.find,
-            self.vc_lib,
+            self.vci_lib,
             "other_vc_pkg",
             "vc_handle_t",
         )
@@ -113,7 +123,7 @@ entity vc2 is
 end entity;
 """
         self.vc_lib.add_source_file(self.make_file("vc1_2.vhd", vc_contents))
-        vci = VerificationComponentInterface.find(self.vc_lib, "vc_pkg", "vc_handle_t")
+        vci = VerificationComponentInterface.find(self.vci_lib, "vc_pkg", "vc_handle_t")
         self.assertRaises(
             SystemExit, VerificationComponent.find, self.vc_lib, "vc1", vci
         )
@@ -121,7 +131,7 @@ end entity;
             "%s must contain a single VC entity", self.tmp_dir / "vc1_2.vhd"
         )
 
-        vci = VerificationComponentInterface.find(self.vc_lib, "vc_pkg", "vc_handle_t")
+        vci = VerificationComponentInterface.find(self.vci_lib, "vc_pkg", "vc_handle_t")
         self.assertRaises(
             SystemExit, VerificationComponent.find, self.vc_lib, "vc2", vci
         )
@@ -167,7 +177,7 @@ entity vc1 is
 end entity;
 """
         self.vc_lib.add_source_file(self.make_file("vc1.vhd", vc1_contents))
-        vci = VerificationComponentInterface.find(self.vc_lib, "vc_pkg", "vc_handle_t")
+        vci = VerificationComponentInterface.find(self.vci_lib, "vc_pkg", "vc_handle_t")
         self.assertRaises(
             SystemExit, VerificationComponent.find, self.vc_lib, "vc1", vci
         )
@@ -179,7 +189,7 @@ entity vc2 is
 end entity;
 """
         self.vc_lib.add_source_file(self.make_file("vc2.vhd", vc2_contents))
-        vci = VerificationComponentInterface.find(self.vc_lib, "vc_pkg", "vc_handle_t")
+        vci = VerificationComponentInterface.find(self.vci_lib, "vc_pkg", "vc_handle_t")
         self.assertRaises(
             SystemExit, VerificationComponent.find, self.vc_lib, "vc2", vci
         )
@@ -191,7 +201,7 @@ entity vc3 is
 end entity;
 """
         self.vc_lib.add_source_file(self.make_file("vc3.vhd", vc3_contents))
-        vci = VerificationComponentInterface.find(self.vc_lib, "vc_pkg", "vc_handle_t")
+        vci = VerificationComponentInterface.find(self.vci_lib, "vc_pkg", "vc_handle_t")
         self.assertRaises(
             SystemExit, VerificationComponent.find, self.vc_lib, "vc3", vci
         )
@@ -206,6 +216,7 @@ package other_vc_pkg is
   end record;
 
   impure function create_vc return vc_handle_t;
+  function as_sync(handle : vc_handle_t) return sync_handle_t;
 end package;
 """
         self.vc_lib.add_source_file(self.make_file("other_vci.vhd", vci_contents))
@@ -230,6 +241,8 @@ package other_vc_pkg is
   end record;
 
   impure function new_vc return vc_t;
+  function as_sync(handle : vc_handle_t) return sync_handle_t;
+
 end package;
 """
         self.vc_lib.add_source_file(self.make_file("other_vci.vhd", vci_contents))
@@ -300,6 +313,7 @@ package other_vc_%d_pkg is
                 vci_contents[:-2]
                 + """
   ) return vc_handle_t;
+  function as_sync(handle : vc_handle_t) return sync_handle_t;
 end package;
 """
             )
@@ -348,6 +362,7 @@ package other_vc_pkg is
     checker : checker_t := null_checker;
     unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail
   ) return vc_handle_t;
+  function as_sync(handle : vc_handle_t) return sync_handle_t;
 end package;
 """
 
@@ -378,6 +393,7 @@ package other_vc_pkg is
     checker : checker_t := null_checker;
     unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail
   ) return vc_handle_t;
+  function as_sync(handle : vc_handle_t) return sync_handle_t;
 end package;
 """
 
@@ -432,6 +448,7 @@ package other_vc_%d_pkg is
                 vci_contents[:-2]
                 + """
   ) return vc_handle_t;
+  function as_sync(handle : vc_handle_t) return sync_handle_t;
 end package;
 """
             )
@@ -472,11 +489,11 @@ end entity;
 
         vc_path = self.make_file("vc2.vhd", vc_contents)
         template, _ = VerificationComponent.create_vhdl_testbench_template(
-            "vc_lib", vc_path, self.vci_path
+            "vc_lib", "vc_lib", vc_path, self.vci_path
         )
         template = VHDLDesignFile.parse(template)
         refs = template.references
-        self.assertEqual(len(refs), 13)
+        self.assertEqual(len(refs), 14)
         self.assertIn(VHDLReference("library", "vunit_lib"), refs)
         self.assertIn(VHDLReference("library", "vc_lib"), refs)
         self.assertIn(VHDLReference("library", "a_lib"), refs)
@@ -485,6 +502,7 @@ end entity;
         self.assertIn(VHDLReference("package", "vc_lib", "vc_pkg", "all"), refs)
         self.assertIn(VHDLReference("package", "a_lib", "x", "y"), refs)
         self.assertIn(VHDLReference("package", "vunit_lib", "sync_pkg", "all"), refs)
+        self.assertIn(VHDLReference("package", "vunit_lib", "vc_pkg", "all"), refs)
         self.assertIn(VHDLReference("context", "vc_lib", "spam"), refs)
         self.assertIn(VHDLReference("context", "a_lib", "eggs"), refs)
         self.assertIn(VHDLReference("context", "vunit_lib", "vunit_context"), refs)
@@ -510,7 +528,7 @@ end architecture;
 
         template_path = self.make_file("template.vhd", template_contents)
 
-        vci = VerificationComponentInterface.find(self.vc_lib, "vc_pkg", "vc_handle_t")
+        vci = VerificationComponentInterface.find(self.vci_lib, "vc_pkg", "vc_handle_t")
         vc = VerificationComponent.find(self.vc_lib, "vc", vci)
         self.assertRaises(RuntimeError, vc.create_vhdl_testbench, template_path)
 
@@ -532,7 +550,7 @@ end architecture;
 
         template_path = self.make_file("template.vhd", template_contents)
 
-        vci = VerificationComponentInterface.find(self.vc_lib, "vc_pkg", "vc_handle_t")
+        vci = VerificationComponentInterface.find(self.vci_lib, "vc_pkg", "vc_handle_t")
         vc = VerificationComponent.find(self.vc_lib, "vc", vci)
         self.assertRaises(RuntimeError, vc.create_vhdl_testbench, template_path)
 
@@ -555,7 +573,7 @@ end architecture;
 
         template_path = self.make_file("template.vhd", template_contents)
 
-        vci = VerificationComponentInterface.find(self.vc_lib, "vc_pkg", "vc_handle_t")
+        vci = VerificationComponentInterface.find(self.vci_lib, "vc_pkg", "vc_handle_t")
         vc = VerificationComponent.find(self.vc_lib, "vc", vci)
         self.assertRaises(RuntimeError, vc.create_vhdl_testbench, template_path)
 
@@ -578,7 +596,7 @@ end architecture;
 
         template_path = self.make_file("template.vhd", template_contents)
 
-        vci = VerificationComponentInterface.find(self.vc_lib, "vc_pkg", "vc_handle_t")
+        vci = VerificationComponentInterface.find(self.vci_lib, "vc_pkg", "vc_handle_t")
         vc = VerificationComponent.find(self.vc_lib, "vc", vci)
         self.assertRaises(RuntimeError, vc.create_vhdl_testbench, template_path)
 
@@ -667,7 +685,9 @@ end architecture;
             [
                 "compliance_test.py",
                 "create-vc",
-                "-l",
+                "--vc-lib-name",
+                "my_vc_lib",
+                "--vci-lib-name",
                 "my_vc_lib",
                 self.vc_path,
                 self.vci_path,
@@ -688,7 +708,7 @@ end architecture;
     def test_adding_vhdl_testbench(self):
         vc_test_lib = self.ui.add_library("vc_test_lib")
 
-        vci = VerificationComponentInterface.find(self.vc_lib, "vc_pkg", "vc_handle_t")
+        vci = VerificationComponentInterface.find(self.vci_lib, "vc_pkg", "vc_handle_t")
         vc = VerificationComponent.find(self.vc_lib, "vc", vci)
 
         vc.add_vhdl_testbench(vc_test_lib, str(self.tmp_dir / "compliance_test"))
