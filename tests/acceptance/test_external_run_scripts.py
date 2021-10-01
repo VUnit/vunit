@@ -9,6 +9,7 @@ Verify that all external run scripts work correctly
 """
 
 import unittest
+from pytest import mark
 from pathlib import Path
 from os import environ
 from subprocess import call
@@ -162,6 +163,10 @@ class TestExternalRunScripts(unittest.TestCase):
     def test_vhdl_array_example_project(self):
         self.check(str(ROOT / "examples" / "vhdl" / "array" / "run.py"))
 
+    @mark.xfail(
+        not simulator_is("ghdl"),
+        reason="Only simulators with PSL functionality",
+    )
     def test_vhdl_array_axis_vcs_example_project(self):
         self.check(str(ROOT / "examples" / "vhdl" / "array_axis_vcs" / "run.py"))
 
