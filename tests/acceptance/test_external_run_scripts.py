@@ -8,7 +8,7 @@
 Verify that all external run scripts work correctly
 """
 
-import unittest
+from unittest import TestCase
 from pytest import mark
 from pathlib import Path
 from os import environ
@@ -30,8 +30,8 @@ def simulator_supports_verilog():
 
 
 # pylint: disable=too-many-public-methods
-@unittest.skipUnless(has_simulator(), "Requires simulator")
-class TestExternalRunScripts(unittest.TestCase):
+@mark.skipif(not has_simulator(), reason="Requires simulator")
+class TestExternalRunScripts(TestCase):
     """
     Verify that example projects run correctly
     """
@@ -39,11 +39,12 @@ class TestExternalRunScripts(unittest.TestCase):
     def test_vhdl_uart_example_project(self):
         self.check(str(ROOT / "examples" / "vhdl" / "uart" / "run.py"))
 
-    @unittest.skipUnless(simulator_supports_verilog(), "Verilog")
+    @mark.skipif(not simulator_supports_verilog(), reason="Verilog")
     def test_verilog_uart_example_project(self):
         self.check(str(ROOT / "examples" / "verilog" / "uart" / "run.py"))
 
-    @unittest.skipUnless(simulator_supports_verilog(), "Verilog")
+    @mark.skipif(not simulator_supports_verilog(), reason="Verilog")
+    @mark.xfail(reason="Requires AMS")
     def test_verilog_ams_example(self):
         self.check(str(ROOT / "examples" / "verilog" / "verilog_ams" / "run.py"))
         check_report(
@@ -122,9 +123,9 @@ class TestExternalRunScripts(unittest.TestCase):
     def test_vhdl_check_example_project(self):
         self.check(str(ROOT / "examples" / "vhdl" / "check" / "run.py"))
 
-    @unittest.skipIf(
+    @mark.skipif(
         simulator_check(lambda simclass: not simclass.supports_coverage()),
-        "This simulator/backend does not support coverage",
+        reason="This simulator/backend does not support coverage",
     )
     def test_vhdl_coverage_example_project(self):
         self.check(str(ROOT / "examples" / "vhdl" / "coverage" / "run.py"))
@@ -156,7 +157,7 @@ class TestExternalRunScripts(unittest.TestCase):
             ],
         )
 
-    @unittest.skipUnless(simulator_is("ghdl"), "Support complex JSON strings as generic")
+    @mark.skipif(not simulator_is("ghdl"), reason="Support complex JSON strings as generic")
     def test_vhdl_json4vhdl_example_project(self):
         self.check(str(ROOT / "examples" / "vhdl" / "json4vhdl" / "run.py"))
 
@@ -173,9 +174,9 @@ class TestExternalRunScripts(unittest.TestCase):
     def test_vhdl_axi_dma_example_project(self):
         self.check(str(ROOT / "examples" / "vhdl" / "axi_dma" / "run.py"))
 
-    @unittest.skipIf(
+    @mark.skipif(
         simulator_check(lambda simclass: not simclass.supports_vhdl_contexts()),
-        "This simulator/backend does not support VHDL contexts",
+        reason="This simulator/backend does not support VHDL contexts",
     )
     def test_vhdl_user_guide_example_project(self):
         self.check(str(ROOT / "examples" / "vhdl" / "user_guide" / "run.py"), exit_code=1)
@@ -202,7 +203,7 @@ class TestExternalRunScripts(unittest.TestCase):
             ],
         )
 
-    @unittest.skipUnless(simulator_supports_verilog(), "Verilog")
+    @mark.skipif(not simulator_supports_verilog(), reason="Verilog")
     def test_verilog_user_guide_example_project(self):
         self.check(str(ROOT / "examples" / "verilog" / "user_guide" / "run.py"), exit_code=1)
         check_report(
