@@ -37,16 +37,16 @@ class TestExternalRunScripts(TestCase):
     """
 
     def test_vhdl_uart_example_project(self):
-        self.check(str(ROOT / "examples" / "vhdl" / "uart" / "run.py"))
+        self.check(ROOT / "examples/vhdl/uart/run.py")
 
     @mark.skipif(not simulator_supports_verilog(), reason="Requires a Verilog simulator")
     def test_verilog_uart_example_project(self):
-        self.check(str(ROOT / "examples" / "verilog" / "uart" / "run.py"))
+        self.check(ROOT / "examples/verilog/uart/run.py")
 
     @mark.skipif(not simulator_supports_verilog(), reason="Requires a Verilog simulator")
     @mark.xfail(reason="Requires AMS")
     def test_verilog_ams_example(self):
-        self.check(str(ROOT / "examples" / "verilog" / "verilog_ams" / "run.py"))
+        self.check(ROOT / "examples/verilog/verilog_ams/run.py")
         check_report(
             self.report_file,
             [
@@ -56,10 +56,10 @@ class TestExternalRunScripts(TestCase):
         )
 
     def test_vhdl_logging_example_project(self):
-        self.check(str(ROOT / "examples" / "vhdl" / "logging" / "run.py"))
+        self.check(ROOT / "examples/vhdl/logging/run.py")
 
     def test_vhdl_run_example_project(self):
-        self.check(str(ROOT / "examples" / "vhdl" / "run" / "run.py"), exit_code=1)
+        self.check(ROOT / "examples/vhdl/run/run.py", exit_code=1)
         check_report(
             self.report_file,
             [
@@ -102,7 +102,7 @@ class TestExternalRunScripts(TestCase):
 
     def test_vhdl_third_party_integration_example_project(self):
         self.check(
-            str(ROOT / "examples" / "vhdl" / "third_party_integration" / "run.py"),
+            ROOT / "examples/vhdl/third_party_integration/run.py",
             exit_code=1,
         )
         check_report(
@@ -121,17 +121,17 @@ class TestExternalRunScripts(TestCase):
         )
 
     def test_vhdl_check_example_project(self):
-        self.check(str(ROOT / "examples" / "vhdl" / "check" / "run.py"))
+        self.check(ROOT / "examples/vhdl/check/run.py")
 
     @mark.skipif(
         simulator_check(lambda simclass: not simclass.supports_coverage()),
         reason="This simulator/backend does not support coverage",
     )
     def test_vhdl_coverage_example_project(self):
-        self.check(str(ROOT / "examples" / "vhdl" / "coverage" / "run.py"))
+        self.check(ROOT / "examples/vhdl/coverage/run.py")
 
     def test_vhdl_generate_tests_example_project(self):
-        self.check(str(ROOT / "examples" / "vhdl" / "generate_tests" / "run.py"))
+        self.check(ROOT / "examples/vhdl/generate_tests/run.py")
         check_report(
             self.report_file,
             [
@@ -148,7 +148,7 @@ class TestExternalRunScripts(TestCase):
         )
 
     def test_vhdl_composite_generics_example_project(self):
-        self.check(str(ROOT / "examples" / "vhdl" / "composite_generics" / "run.py"))
+        self.check(ROOT / "examples/vhdl/composite_generics/run.py")
         check_report(
             self.report_file,
             [
@@ -159,27 +159,27 @@ class TestExternalRunScripts(TestCase):
 
     @mark.skipif(not simulator_is("ghdl"), reason="Support complex JSON strings as generic")
     def test_vhdl_json4vhdl_example_project(self):
-        self.check(str(ROOT / "examples" / "vhdl" / "json4vhdl" / "run.py"))
+        self.check(ROOT / "examples/vhdl/json4vhdl/run.py")
 
     def test_vhdl_array_example_project(self):
-        self.check(str(ROOT / "examples" / "vhdl" / "array" / "run.py"))
+        self.check(ROOT / "examples/vhdl/array/run.py")
 
     @mark.xfail(
         not simulator_is("ghdl"),
         reason="Only simulators with PSL functionality",
     )
     def test_vhdl_array_axis_vcs_example_project(self):
-        self.check(str(ROOT / "examples" / "vhdl" / "array_axis_vcs" / "run.py"))
+        self.check(ROOT / "examples/vhdl/array_axis_vcs/run.py")
 
     def test_vhdl_axi_dma_example_project(self):
-        self.check(str(ROOT / "examples" / "vhdl" / "axi_dma" / "run.py"))
+        self.check(ROOT / "examples/vhdl/axi_dma/run.py")
 
     @mark.skipif(
         simulator_check(lambda simclass: not simclass.supports_vhdl_contexts()),
         reason="This simulator/backend does not support VHDL contexts",
     )
     def test_vhdl_user_guide_example_project(self):
-        self.check(str(ROOT / "examples" / "vhdl" / "user_guide" / "run.py"), exit_code=1)
+        self.check(ROOT / "examples/vhdl/user_guide/run.py", exit_code=1)
         check_report(
             self.report_file,
             [
@@ -191,7 +191,7 @@ class TestExternalRunScripts(TestCase):
 
     def test_vhdl_user_guide_93_example_project(self):
         self.check(
-            str(ROOT / "examples" / "vhdl" / "user_guide" / "vhdl1993" / "run.py"),
+            ROOT / "examples/vhdl/user_guide/vhdl1993/run.py",
             exit_code=1,
         )
         check_report(
@@ -205,7 +205,7 @@ class TestExternalRunScripts(TestCase):
 
     @mark.skipif(not simulator_supports_verilog(), reason="Requires a Verilog simulator")
     def test_verilog_user_guide_example_project(self):
-        self.check(str(ROOT / "examples" / "verilog" / "user_guide" / "run.py"), exit_code=1)
+        self.check(ROOT / "examples/verilog/user_guide/run.py", exit_code=1)
         check_report(
             self.report_file,
             [
@@ -223,79 +223,79 @@ class TestExternalRunScripts(TestCase):
         )
 
     def test_vhdl_com_example_project(self):
-        self.check(str(ROOT / "examples" / "vhdl" / "com" / "run.py"))
+        self.check(ROOT / "examples/vhdl/com/run.py")
 
     def test_array_vhdl_2008(self):
-        self.check(str(VHDL_PATH / "array" / "run.py"))
+        self.check(VHDL_PATH / "array/run.py")
 
     def test_data_types_vhdl_2008(self):
-        self.check(str(VHDL_PATH / "data_types" / "run.py"))
+        self.check(VHDL_PATH / "data_types/run.py")
 
     def test_data_types_vhdl_2002(self):
-        self.check(str(VHDL_PATH / "data_types" / "run.py"), vhdl_standard="2002")
+        self.check(VHDL_PATH / "data_types/run.py", vhdl_standard="2002")
 
     def test_data_types_vhdl_93(self):
-        self.check(str(VHDL_PATH / "data_types" / "run.py"), vhdl_standard="93")
+        self.check(VHDL_PATH / "data_types/run.py", vhdl_standard="93")
 
     def test_random_vhdl_2008(self):
-        self.check(str(VHDL_PATH / "random" / "run.py"))
+        self.check(VHDL_PATH / "random/run.py")
 
     def test_check_vhdl_2008(self):
-        self.check(str(VHDL_PATH / "check" / "run.py"))
+        self.check(VHDL_PATH / "check/run.py")
 
     def test_check_vhdl_2002(self):
-        self.check(str(VHDL_PATH / "check" / "run.py"), vhdl_standard="2002")
+        self.check(VHDL_PATH / "check/run.py", vhdl_standard="2002")
 
     def test_check_vhdl_93(self):
-        self.check(str(VHDL_PATH / "check" / "run.py"), vhdl_standard="93")
+        self.check(VHDL_PATH / "check/run.py", vhdl_standard="93")
 
     def test_logging_vhdl_2008(self):
-        self.check(str(VHDL_PATH / "logging" / "run.py"))
+        self.check(VHDL_PATH / "logging/run.py")
 
     def test_logging_vhdl_2002(self):
-        self.check(str(VHDL_PATH / "logging" / "run.py"), vhdl_standard="2002")
+        self.check(VHDL_PATH / "logging/run.py", vhdl_standard="2002")
 
     def test_logging_vhdl_93(self):
-        self.check(str(VHDL_PATH / "logging" / "run.py"), vhdl_standard="93")
+        self.check(VHDL_PATH / "logging/run.py", vhdl_standard="93")
 
     def test_run_vhdl_2008(self):
-        self.check(str(VHDL_PATH / "run" / "run.py"))
+        self.check(VHDL_PATH / "run/run.py")
 
     def test_run_vhdl_2002(self):
-        self.check(str(VHDL_PATH / "run" / "run.py"), vhdl_standard="2002")
+        self.check(VHDL_PATH / "run/run.py", vhdl_standard="2002")
 
     def test_run_vhdl_93(self):
-        self.check(str(VHDL_PATH / "run" / "run.py"), vhdl_standard="93")
+        self.check(VHDL_PATH / "run/run.py", vhdl_standard="93")
 
     def test_string_ops_vhdl_2008(self):
-        self.check(str(VHDL_PATH / "string_ops" / "run.py"))
+        self.check(VHDL_PATH / "string_ops/run.py")
 
     def test_string_ops_vhdl_2002(self):
-        self.check(str(VHDL_PATH / "string_ops" / "run.py"), vhdl_standard="2002")
+        self.check(VHDL_PATH / "string_ops/run.py", vhdl_standard="2002")
 
     def test_string_ops_vhdl_93(self):
-        self.check(str(VHDL_PATH / "string_ops" / "run.py"), vhdl_standard="93")
+        self.check(VHDL_PATH / "string_ops/run.py", vhdl_standard="93")
 
     def test_dictionary_vhdl_2008(self):
-        self.check(str(VHDL_PATH / "dictionary" / "run.py"))
+        self.check(VHDL_PATH / "dictionary/run.py")
 
     def test_dictionary_vhdl_2002(self):
-        self.check(str(VHDL_PATH / "dictionary" / "run.py"), vhdl_standard="2002")
+        self.check(VHDL_PATH / "dictionary/run.py", vhdl_standard="2002")
 
     def test_dictionary_vhdl_93(self):
-        self.check(str(VHDL_PATH / "dictionary" / "run.py"), vhdl_standard="93")
+        self.check(VHDL_PATH / "dictionary/run.py", vhdl_standard="93")
 
     def test_path_vhdl_2008(self):
-        self.check(str(VHDL_PATH / "path" / "run.py"))
+        self.check(VHDL_PATH / "path/run.py")
 
     def test_path_vhdl_2002(self):
-        self.check(str(VHDL_PATH / "path" / "run.py"), vhdl_standard="2002")
+        self.check(VHDL_PATH / "path/run.py", vhdl_standard="2002")
 
     def test_path_vhdl_93(self):
-        self.check(str(VHDL_PATH / "path" / "run.py"), vhdl_standard="93")
+        self.check(VHDL_PATH / "path/run.py", vhdl_standard="93")
 
     def test_com_vhdl_2008(self):
-        self.check(str(VHDL_PATH / "com" / "run.py"))
+        self.check(VHDL_PATH / "com/run.py")
 
     def setUp(self):
         self.output_path = str(Path(__file__).parent / "external_run_out")
