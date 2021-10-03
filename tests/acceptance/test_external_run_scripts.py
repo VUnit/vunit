@@ -36,8 +36,24 @@ class TestExternalRunScripts(TestCase):
     Verify that example projects run correctly
     """
 
-    def test_vhdl_uart_example_project(self):
-        self.check(ROOT / "examples/vhdl/uart/run.py")
+    @mark.skipif(not simulator_supports_verilog(), reason="Requires a Verilog simulator")
+    def test_verilog_user_guide_example_project(self):
+        self.check(ROOT / "examples/verilog/user_guide/run.py", exit_code=1)
+        check_report(
+            self.report_file,
+            [
+                ("passed", "lib.tb_example_basic.all"),
+                ("passed", "lib.tb_example.Test that a successful test case passes"),
+                (
+                    "failed",
+                    "lib.tb_example.Test that a failing test case actually fails",
+                ),
+                (
+                    "failed",
+                    "lib.tb_example.Test that a test case that takes too long time fails with a timeout",
+                ),
+            ],
+        )
 
     @mark.skipif(not simulator_supports_verilog(), reason="Requires a Verilog simulator")
     def test_verilog_uart_example_project(self):
@@ -54,6 +70,9 @@ class TestExternalRunScripts(TestCase):
                 ("failed", "lib.tb_dut.Test that fail"),
             ],
         )
+
+    def test_vhdl_uart_example_project(self):
+        self.check(ROOT / "examples/vhdl/uart/run.py")
 
     def test_vhdl_logging_example_project(self):
         self.check(ROOT / "examples/vhdl/logging/run.py")
@@ -200,25 +219,6 @@ class TestExternalRunScripts(TestCase):
                 ("passed", "lib.tb_example.all"),
                 ("passed", "lib.tb_example_many.test_pass"),
                 ("failed", "lib.tb_example_many.test_fail"),
-            ],
-        )
-
-    @mark.skipif(not simulator_supports_verilog(), reason="Requires a Verilog simulator")
-    def test_verilog_user_guide_example_project(self):
-        self.check(ROOT / "examples/verilog/user_guide/run.py", exit_code=1)
-        check_report(
-            self.report_file,
-            [
-                ("passed", "lib.tb_example_basic.all"),
-                ("passed", "lib.tb_example.Test that a successful test case passes"),
-                (
-                    "failed",
-                    "lib.tb_example.Test that a failing test case actually fails",
-                ),
-                (
-                    "failed",
-                    "lib.tb_example.Test that a test case that takes too long time fails with a timeout",
-                ),
             ],
         )
 
