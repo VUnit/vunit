@@ -39,11 +39,11 @@ class TestExternalRunScripts(TestCase):
     def test_vhdl_uart_example_project(self):
         self.check(str(ROOT / "examples" / "vhdl" / "uart" / "run.py"))
 
-    @mark.skipif(not simulator_supports_verilog(), reason="Verilog")
+    @mark.skipif(not simulator_supports_verilog(), reason="Requires a Verilog simulator")
     def test_verilog_uart_example_project(self):
         self.check(str(ROOT / "examples" / "verilog" / "uart" / "run.py"))
 
-    @mark.skipif(not simulator_supports_verilog(), reason="Verilog")
+    @mark.skipif(not simulator_supports_verilog(), reason="Requires a Verilog simulator")
     @mark.xfail(reason="Requires AMS")
     def test_verilog_ams_example(self):
         self.check(str(ROOT / "examples" / "verilog" / "verilog_ams" / "run.py"))
@@ -203,7 +203,7 @@ class TestExternalRunScripts(TestCase):
             ],
         )
 
-    @mark.skipif(not simulator_supports_verilog(), reason="Verilog")
+    @mark.skipif(not simulator_supports_verilog(), reason="Requires a Verilog simulator")
     def test_verilog_user_guide_example_project(self):
         self.check(str(ROOT / "examples" / "verilog" / "user_guide" / "run.py"), exit_code=1)
         check_report(
