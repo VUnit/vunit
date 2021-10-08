@@ -149,9 +149,9 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         Convert standard to format of Modelsim command line flag
         """
         if vhdl_standard <= VHDL.STD_2008:
-            return "-%s" % vhdl_standard
+            return f"-{vhdl_standard!s}"
 
-        raise ValueError("Invalid VHDL standard %s" % vhdl_standard)
+        raise ValueError(f"Invalid VHDL standard {vhdl_standard!s}")
 
     def compile_vhdl_file_command(self, source_file):
         """
@@ -191,9 +191,9 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         for library in self._libraries:
             args += ["-L", library.name]
         for include_dir in source_file.include_dirs:
-            args += ["+incdir+%s" % include_dir]
+            args += [f"+incdir+{include_dir!s}"]
         for key, value in source_file.defines.items():
-            args += ["+define+%s=%s" % (key, value)]
+            args += [f"+define+{key!s}={value!s}"]
         return args
 
     def create_library(self, library_name, path, mapped_libraries=None):
@@ -235,23 +235,23 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
 
         set_generic_str = " ".join(
             (
-                "-g/%s/%s=%s" % (config.entity_name, name, encode_generic_value(value))
+                f"-g/{config.entity_name!s}/{name!s}={encode_generic_value(value)!s}"
                 for name, value in config.generics.items()
             )
         )
-        pli_str = " ".join("-pli {%s}" % fix_path(name) for name in config.sim_options.get("pli", []))
+        pli_str = " ".join(f"-pli {{{fix_path(name)!s}}}" for name in config.sim_options.get("pli", []))
 
         if config.architecture_name is None:
             architecture_suffix = ""
         else:
-            architecture_suffix = "(%s)" % config.architecture_name
+            architecture_suffix = f"({config.architecture_name!s})"
 
         if config.sim_options.get("enable_coverage", False):
             coverage_file = str(Path(output_path) / "coverage.ucdb")
             self._coverage_files.add(coverage_file)
-            coverage_save_cmd = "coverage save -onexit -testname {%s} -assert -directive -cvg -codeAll {%s}" % (
-                test_suite_name,
-                fix_path(coverage_file),
+            coverage_save_cmd = (
+                f"coverage save -onexit -testname {{{test_suite_name!s}}} -assert -directive "
+                f"-cvg -codeAll {{{fix_path(coverage_file)!s}}}"
             )
             coverage_args = "-coverage"
         else:
@@ -259,7 +259,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
             coverage_args = ""
 
         vsim_flags = [
-            "-wlf {%s}" % fix_path(str(Path(output_path) / "vsim.wlf")),
+            f"-wlf {{{fix_path(str(Path(output_path) / 'vsim.wlf'))!s}}}",
             "-quiet",
             "-t ps",
             # for correct handling of verilog fatal/finish
@@ -274,7 +274,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         # There is a known bug in modelsim that prevents the -modelsimini flag from accepting
         # a space in the path even with escaping, see issue #36
         if " " not in self._sim_cfg_file_name:
-            vsim_flags.insert(0, "-modelsimini %s" % fix_path(self._sim_cfg_file_name))
+            vsim_flags.insert(0, f"-modelsimini {fix_path(self._sim_cfg_file_name)!s}")
 
         for library in self._libraries:
             vsim_flags += ["-L", library.name]
@@ -386,7 +386,7 @@ proc _vunit_sim_restart {} {
                 else:
                     LOGGER.warning("Missing coverage file: %s", coverage_file)
 
-        print("Merging coverage files into %s..." % file_name)
+        print(f"Merging coverage files into {file_name!s}...")
         vcover_merge_process = Process(vcover_cmd, env=self.get_env())
         vcover_merge_process.consume_output()
         print("Done merging coverage files")
@@ -410,9 +410,9 @@ def encode_generic_value(value):
     """
     s_value = str(value)
     if " " in s_value:
-        return '{"%s"}' % s_value
+        return f'{{"{s_value!s}"}}'
     if "," in s_value:
-        return '"%s"' % s_value
+        return f'"{s_value!s}"'
     return s_value
 
 

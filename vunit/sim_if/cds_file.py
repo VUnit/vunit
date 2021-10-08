@@ -49,5 +49,7 @@ class CDSFile(dict):
         """
         Write cds file to file named 'file_name'
         """
-        contents = "\n".join(self._other_lines + ['define %s "%s"' % item for item in sorted(self.items())]) + "\n"
+        contents = (
+            "\n".join(self._other_lines + [f'define {item[0]!s} "{item[1]!s}"' for item in sorted(self.items())]) + "\n"
+        )
         write_file(file_name, contents)
