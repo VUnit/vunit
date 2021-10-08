@@ -16,7 +16,7 @@ my_logger.csv
 /dist/
 /docs/_build
 /docs/_theme
-/docs/examples.rst
+/docs/license.rst
 /docs/release_notes.rst
 /examples/vhdl/array_axis_vcs/src/test/data/out.csv
 /tests/acceptance/*_out
