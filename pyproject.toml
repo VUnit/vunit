@@ -45,5 +45,5 @@ commands=
     docs:        {envpython} tools/build_docs.py {envtmpdir}/docsbuild {posargs}
     acceptance:  {envpython} -m pytest -v -ra tests/acceptance {posargs}
     vcomponents: {envpython} vunit/vhdl/verification_components/run.py --clean
-    coverage:    {envpython} -m coverage run --branch --source vunit/ -m unittest discover tests/
+    coverage:    {envpython} -m coverage run --branch --source vunit/ -m pytest tests/
 """
