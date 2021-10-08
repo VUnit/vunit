@@ -12,7 +12,6 @@ line-length = 120
 legacy_tox_ini = """
 [tox]
 envlist = py{36,37,38,39}-{fmt,unit,lint,docs}, py{36,37,38,39}-{acceptance,vcomponents}-{activehdl,ghdl,modelsim,rivierapro}, py{36,37,38,39}-coverage
-skip_missing_interpreters = True
 isolated_build = True
 
 [testenv]
