@@ -156,6 +156,13 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         )
 
     @classmethod
+    def supports_vhdl_package_generics(cls):
+        """
+        Returns True when this simulator supports VHDL package generics
+        """
+        return True
+
+    @classmethod
     def supports_vhpi(cls):
         """
         Returns True when the simulator supports VHPI
