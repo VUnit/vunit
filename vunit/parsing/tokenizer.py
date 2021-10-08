@@ -13,7 +13,7 @@ import re
 from vunit.ostools import read_file, file_exists, simplify_path
 
 
-TokenType = collections.namedtuple("Token", ["kind", "value", "location"])
+TokenType = collections.namedtuple("TokenType", ["kind", "value", "location"])
 
 
 def Token(kind, value="", location=None):  # pylint: disable=invalid-name
