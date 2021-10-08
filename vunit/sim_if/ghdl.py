@@ -309,7 +309,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
                 makedirs(output_path, mode=0o777)
             except OSError:
                 pass
-            with (Path(output_path) / "args.json").open("w") as fname:
+            with (Path(output_path) / "args.json").open("w", encoding="utf-8") as fname:
                 dump(
                     {
                         "bin": str(Path(output_path) / f"{config.entity_name!s}-{config.architecture_name!s}"),
