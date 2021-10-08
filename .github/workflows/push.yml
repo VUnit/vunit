@@ -27,7 +27,7 @@ jobs:
     - name: '🐍 Setup Python'
       uses: actions/setup-python@v2
       with:
-        python-version: 3.9
+        python-version: '3.10'
 
     - name: '🐍 Install dependencies'
       run: |
@@ -35,7 +35,7 @@ jobs:
         pip install -U virtualenv tox --progress-bar off
 
     - name: '🐍 Run black'
-      run: tox -e py39-fmt -- --check
+      run: tox -e py310-fmt -- --check
 
 #
 # Linux linting and unit tests
@@ -47,11 +47,10 @@ jobs:
       fail-fast: false
       max-parallel: 2
       matrix:
-        task: [
-          39-lint,
-          36-unit,
-          39-unit,
-        ]
+        include:
+          - { py: '3.10' , task: 310-lint }
+          - { py: '3.6'  , task: 36-unit }
+          - { py: '3.10' , task: 310-unit }
     name: '🐧 Ubuntu · ${{ matrix.task }}'
     steps:
 
@@ -61,7 +60,7 @@ jobs:
     - name: '🐍 Setup Python'
       uses: actions/setup-python@v2
       with:
-        python-version: 3.9
+        python-version: ${{ matrix.py }}
 
     - name: '🐍 Install dependencies'
       run: |
@@ -82,8 +81,8 @@ jobs:
       max-parallel: 2
       matrix:
         task: [
-          {do: 39-acceptance,  tag: llvm},
-          {do: 39-vcomponents, tag: mcode},
+          {do: 310-acceptance,  tag: llvm},
+          {do: 310-vcomponents, tag: mcode},
         ]
     name: '🛳️ Container · ${{ matrix.task.do }} · ${{ matrix.task.tag }}'
     steps:
@@ -168,7 +167,7 @@ jobs:
     - name: '🐍 Setup Python'
       uses: actions/setup-python@v2
       with:
-        python-version: 3.9
+        python-version: '3.10'
 
     - name: '🐍 Install dependencies'
       run: |
@@ -209,7 +208,7 @@ jobs:
     - name: '🐍 Setup Python'
       uses: actions/setup-python@v2
       with:
-        python-version: 3.9
+        python-version: '3.10'
 
     - name: '🐍 Install dependencies'
       run: |
