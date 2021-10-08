@@ -45,7 +45,6 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      max-parallel: 2
       matrix:
         include:
           - { py: '3.10' , task: 310-lint }
@@ -78,7 +77,6 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      max-parallel: 2
       matrix:
         task: [
           {do: 310-acceptance,  tag: llvm},
@@ -103,7 +101,6 @@ jobs:
     runs-on: windows-latest
     strategy:
       fail-fast: false
-      max-parallel: 3
       matrix:
         task: [
           39-acceptance-ghdl,
@@ -148,7 +145,6 @@ jobs:
     runs-on: windows-latest
     strategy:
       fail-fast: false
-      max-parallel: 3
       matrix:
         task: [
           36-acceptance-ghdl,
