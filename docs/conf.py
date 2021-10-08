@@ -81,6 +81,7 @@ htmlhelp_basename = "VUnitDoc"
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3.8/", None),
+    "pytest": ("https://docs.pytest.org/en/latest/", None),
 }
 
 # -- ExtLinks -------------------------------------------------------------

@@ -47,7 +47,10 @@ The test suite is divided into three parts:
 
 The test suites must pass with Python 3.x as well as with all supported simulators.
 
-For running the test locally we recommend using `pytest <https://pypi.python.org/pypi/pytest>`__.
+For running the tests locally we recommend using `pytest <https://pypi.python.org/pypi/pytest>`__.
+In fact, ``pytest`` is required for running the acceptance tests, because some specific features are used for allowing
+certain tests to fail.
+See :doc:`pytest:how-to/skipping`.
 
 Example
 '''''''
