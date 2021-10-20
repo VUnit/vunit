@@ -228,9 +228,6 @@ class TestExternalRunScripts(TestCase):
     def test_vhdl_com_example_project(self):
         self.check(ROOT / "examples/vhdl/com/run.py")
 
-    def test_array_vhdl_2008(self):
-        self.check(VHDL_PATH / "array/run.py")
-
     def test_data_types_vhdl_2008(self):
         self.check(VHDL_PATH / "data_types/run.py")
 
