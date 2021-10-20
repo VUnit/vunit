@@ -109,7 +109,7 @@ class ActiveHDLInterface(SimulatorInterface):
         """
         Convert standard to format of Active-HDL command line flag
         """
-        if vhdl_standard <= VHDL.STD_2008:
+        if vhdl_standard <= VHDL.STD_2019:
             return f"-{vhdl_standard!s}"
 
         raise ValueError(f"Invalid VHDL standard {vhdl_standard!s}")
