@@ -16,11 +16,10 @@ List of types that are currently in the external VHDL API:
 * **string_ptr**, and **byte_vector_ptr** as an alias (:ref:`External string API <ext_string_pkg>`)
 * **integer_vector_ptr** (:ref:`External integer vector API <ext_integer_vector_pkg>`)
 
-.. important:: By default, bodies of the external API functions/procedures include forced failure assertions. Hence, using ``mode/=internal`` without providing a *bridge* to a foreign language will make tests fail. Bridges must be provided through `vu.add_builtins(external=<Options>)`, where `<Options>` defaults to ``{"string": False, "integer_vector": False}``. Each field should contain a list of VHDL files to replace the *dummy* default. See `VUnit/cosim <https://github.com/VUnit/cosim>`_ for reference implementations of bridges and examples.
+.. important:: By default, bodies of the external API functions/procedures include forced failure assertions. Hence, using ``mode/=internal`` without providing a *bridge* to a foreign language will make tests fail. Bridges must be provided through `vu.add_vhdl_builtins(external=<Options>)`, where `<Options>` defaults to ``{"string": False, "integer_vector": False}``. Each field should contain a list of VHDL files to replace the *dummy* default. See `VUnit/cosim <https://github.com/VUnit/cosim>`_ for reference implementations of bridges and examples.
 
 .. toctree::
    :hidden:
 
    ext_string
    ext_integer_vector
-

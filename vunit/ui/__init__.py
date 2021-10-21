@@ -159,12 +159,12 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         self._builtins = Builtins(self, self._vhdl_standard, simulator_class)
         if compile_builtins:
-            self.add_builtins()
+            self.add_vhdl_builtins()
             builtins_deprecation_note = (
                 "'compile_builtins' (which defaults to 'True') is deprecated "
                 "and it will be removed in future releases; "
                 "preserve the functionality using "
-                "'compile_builtins=False' and 'VU.add_builtins'"
+                "'compile_builtins=False' and 'VU.add_vhdl_builtins'"
             )
             warn(builtins_deprecation_note, Warning)
 
@@ -934,9 +934,15 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         )
         runner.run(test_cases)
 
-    def add_builtins(self, external=None):
+    def add_verilog_builtins(self):
         """
-        Add vunit VHDL builtin libraries
+        Add VUnit Verilog builtin libraries
+        """
+        self._builtins.add_verilog_builtins()
+
+    def add_vhdl_builtins(self, external=None):
+        """
+        Add VUnit VHDL builtin libraries
 
         :param external: struct to provide bridges for the external VHDL API.
 
@@ -944,7 +950,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
 
         .. code-block:: python
 
-            VU.add_builtins(external={
+            VU.add_vhdl_builtins(external={
                 'string': ['path/to/custom/file'],
                 'integer': ['path/to/custom/file']}
             )
