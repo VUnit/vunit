@@ -930,10 +930,15 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         Add vunit VHDL builtin libraries
 
         :param external: struct to provide bridges for the external VHDL API.
-                         {
-                             'string': ['path/to/custom/file'],
-                             'integer': ['path/to/custom/file']
-                         }.
+
+        :example:
+
+        .. code-block:: python
+
+            VU.add_builtins(external={
+                'string': ['path/to/custom/file'],
+                'integer': ['path/to/custom/file']}
+            )
         """
         self._builtins.add_vhdl_builtins(external=external)
 

@@ -224,10 +224,15 @@ in your VUnit Git repository? You have to do this first if installing using setu
         Add vunit VHDL builtin libraries
 
         :param external: struct to provide bridges for the external VHDL API.
-                         {
-                             'string': ['path/to/custom/file'],
-                             'integer': ['path/to/custom/file']
-                         }.
+
+        :example:
+
+        .. code-block:: python
+
+            Builtins.add_vhdl_builtins(external={
+                'string': ['path/to/custom/file'],
+                'integer': ['path/to/custom/file']
+            })
         """
         self._add_data_types(external=external)
         self._add_files(VHDL_PATH / "*.vhd")
