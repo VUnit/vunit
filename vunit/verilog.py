@@ -21,3 +21,7 @@ class VUnit(VUnitVHDL):
         Add vunit Verilog builtin libraries
         """
         self._builtins.add_verilog_builtins()
+        builtins_deprecation_note = (
+            "class 'verilog' is deprecated and it will be removed in future releases"
+        )
+        warn(builtins_deprecation_note, Warning)
