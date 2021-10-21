@@ -15,11 +15,13 @@ usage on a typical module.
 """
 
 from pathlib import Path
-from vunit.verilog import VUnit
+from vunit import VUnit
 
 SRC_PATH = Path(__file__).parent / "src"
 
 VU = VUnit.from_argv()
+VU.add_verilog_builtins()
+
 VU.add_library("uart_lib").add_source_files(SRC_PATH / "*.sv")
 VU.add_library("tb_uart_lib").add_source_files(SRC_PATH / "test" / "*.sv")
 

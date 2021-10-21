@@ -15,11 +15,13 @@ the :ref:`User Guide <user_guide>`.
 """
 
 from pathlib import Path
-from vunit.verilog import VUnit
+from vunit import VUnit
 
 ROOT = Path(__file__).parent
 
 VU = VUnit.from_argv()
+VU.add_verilog_builtins()
+
 VU.add_library("lib").add_source_files(ROOT / "*.sv")
 
 VU.main()

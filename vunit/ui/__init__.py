@@ -993,8 +993,8 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         Add VUnit Verilog builtin libraries.
 
         .. IMPORTANT::
-          Class ``vunit.verilog`` is deprecated and it will be removed in an upcoming release.
-          Verilog users will need to call this method explicitly in order to preserve the functionality.
+          As of VUnit v5, class ``vunit.verilog`` is removed.
+          Verilog users need to call this method explicitly in order to preserve the functionality.
           See :vunit_issue:`777`.
         """
         self._builtins.add_verilog_builtins()
