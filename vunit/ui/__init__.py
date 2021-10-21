@@ -19,6 +19,8 @@ import os
 from typing import Optional, Set, Union
 from pathlib import Path
 from fnmatch import fnmatch
+from warnings import warn
+
 from ..database import PickledDataBase, DataBase
 from .. import ostools
 from ..vunit_cli import VUnitCLI
@@ -158,6 +160,13 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self._builtins = Builtins(self, self._vhdl_standard, simulator_class)
         if compile_builtins:
             self.add_builtins()
+            builtins_deprecation_note = (
+                "'compile_builtins' (which defaults to 'True') is deprecated "
+                "and it will be removed in future releases; "
+                "preserve the functionality using "
+                "'compile_builtins=False' and 'VU.add_builtins'"
+            )
+            warn(builtins_deprecation_note, Warning)
 
     def _create_database(self):
         """
