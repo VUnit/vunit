@@ -49,6 +49,7 @@ class TestDependencies(unittest.TestCase):
                 argv.append("--clean")
 
             ui = VUnit.from_argv(argv=argv)
+            ui.add_vhdl_builtins()
             lib = ui.add_library("lib")
             lib.add_source_files(tb_pkg_file_name)
             lib.add_source_files(pkg_file_name)

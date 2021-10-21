@@ -11,10 +11,12 @@ from vunit import VUnit
 root = Path(__file__).parent
 
 vu = VUnit.from_argv()
+vu.add_vhdl_builtins()
+
 lib = vu.add_library("lib")
 lib2 = vu.add_library("lib2")
-files = glob(str(root / "*.vhd"))
-for file in files:
+
+for file in glob(str(root / "*.vhd")):
     if "tb_set_generic" in file:
         lib2.add_source_files(file)
     else:

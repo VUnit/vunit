@@ -35,6 +35,7 @@ is provided as an optional add-on to VUnit. It is compiled to the
 .. code-block:: python
 
     prj = VUnit.from_argv()
+    prj.add_vhdl_builtins()
     prj.add_com()
 
 The VHDL functionality is provided to your testbench with the

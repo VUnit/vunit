@@ -15,6 +15,7 @@ def main():
     root = Path(__file__).parent
 
     ui = VUnit.from_argv()
+    ui.add_vhdl_builtins()
 
     vunit_lib = ui.library("vunit_lib")
     files = glob.glob(str(root / "test" / "*.vhd"))

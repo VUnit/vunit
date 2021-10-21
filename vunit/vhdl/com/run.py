@@ -10,7 +10,9 @@ from vunit import VUnit
 ROOT = Path(__file__).parent
 
 UI = VUnit.from_argv()
+UI.add_vhdl_builtins()
 UI.add_com()
+
 TB_COM_LIB = UI.add_library("tb_com_lib")
 TB_COM_LIB.add_source_files(ROOT / "test" / "*.vhd")
 TB_COM_LIB.package("custom_types_pkg").generate_codecs(

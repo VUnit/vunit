@@ -11,6 +11,8 @@ from vunit import VUnit
 ROOT = Path(__file__).parent
 
 VU = VUnit.from_argv()
+VU.add_vhdl_builtins()
+
 LIB = VU.library("vunit_lib")
 LIB.add_source_files(ROOT / ".." / "logging" / "test" / "test_support_pkg.vhd")
 for fname in glob(str(ROOT / "test" / "*.vhd")):

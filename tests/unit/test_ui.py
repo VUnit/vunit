@@ -1281,7 +1281,6 @@ end architecture;
         """Create an instance of the VUnit public interface class"""
         return VUnit.from_argv(
             argv=["--output-path=%s" % self._output_path, "--clean"] + list(args),
-            compile_builtins=False,
         )
 
     def _run_main(self, ui, code=0, post_run=None):

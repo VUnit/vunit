@@ -63,6 +63,8 @@ def generate_tests(obj, signs, data_widths):
 
 
 VU = VUnit.from_argv()
+VU.add_vhdl_builtins()
+
 LIB = VU.add_library("lib")
 LIB.add_source_files(Path(__file__).parent / "test" / "*.vhd")
 

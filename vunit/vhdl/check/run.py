@@ -16,6 +16,7 @@ generate_check_equal.main()
 generate_check_match.main()
 
 VU = VUnit.from_argv()
+VU.add_vhdl_builtins()
 
 LIB = VU.add_library("lib")
 LIB.add_source_files(Path(ROOT) / "vunit" / "vhdl" / "check" / "test" / "test_support.vhd")

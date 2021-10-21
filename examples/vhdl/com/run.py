@@ -19,6 +19,7 @@ from pathlib import Path
 from vunit import VUnit
 
 VU = VUnit.from_argv()
+VU.add_vhdl_builtins()
 VU.add_com()
 VU.add_verification_components()
 VU.add_osvvm()
