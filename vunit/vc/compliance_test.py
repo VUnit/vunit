@@ -28,14 +28,14 @@ def _create_vc_template(args):
         if not output_dir.exists():
             output_dir.mkdir(parents=True)
 
-        output_path = output_dir / ("tb_%s_compliance_template.vhd" % vc_name)
+        output_path = output_dir / (f"tb_{vc_name!s}_compliance_template.vhd")
     elif args.output_path.is_dir():
-        output_path = args.output_path / ("tb_%s_compliance_template.vhd" % vc_name)
+        output_path = args.output_path / (f"tb_{vc_name!s}_compliance_template.vhd")
     else:
         output_path = args.output_path
 
     output_path.write_text(template_code)
-    print("Open %s and read the TODOs to complete the template." % output_path.resolve())
+    print(f"Open {output_path.resolve()!s} and read the TODOs to complete the template.")
 
 
 def _create_vci_template(args):
@@ -51,17 +51,17 @@ def _create_vci_template(args):
         if not output_dir.exists():
             output_dir.mkdir(parents=True)
 
-        output_path = output_dir / ("tb_%s_compliance_template.vhd" % args.vc_handle_t)
+        output_path = output_dir / (f"tb_{args.vc_handle_t!s}_compliance_template.vhd")
     elif args.output_path.is_dir():
         output_dir = args.output_path / vci_name
         if not output_dir.exists():
             output_dir.exists(parents=True)
-        output_path = output_dir / ("tb_%s_compliance_template.vhd" % args.vc_handle_t)
+        output_path = output_dir / (f"tb_{args.vc_handle_t!s}_compliance_template.vhd")
     else:
         output_path = args.output_path
 
     output_path.write_text(template_code)
-    print("Open %s and read the TODOs to complete the template." % output_path.resolve())
+    print(f"Open {output_path.resolve()!s} and read the TODOs to complete the template.")
 
 
 def main():
