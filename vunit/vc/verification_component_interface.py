@@ -80,7 +80,7 @@ class VerificationComponentInterface:
         """Validates the existence and contents of the verification component interface."""
         vci_path = Path(vci_path)
 
-        with vci_path.open() as fptr:
+        with vci_path.open("r", encoding="utf-8") as fptr:
             code = remove_comments(fptr.read())
             vci_code = VHDLDesignFile.parse(code)
             if len(vci_code.packages) != 1:
@@ -318,7 +318,7 @@ class VerificationComponentInterface:
                 self.vc_constructor.return_type_mark,
             )
         else:
-            with template_path.open() as fptr:
+            with template_path.open("r", encoding="utf-8") as fptr:
                 template_code = fptr.read()
 
         test_runner_body_pattern = re.compile(r"\s+-- DO NOT modify this line and the lines below.")
