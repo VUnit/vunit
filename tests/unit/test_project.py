@@ -970,7 +970,7 @@ endpackage
         self.update(file3)
         self.assert_should_recompile([])
 
-        file2.set_compile_option("ghdl.flags", ["--no-vital-checks"])
+        file2.set_compile_option("ghdl.a_flags", ["--no-vital-checks"])
         self.assert_should_recompile([file2, file3])
 
     def test_should_recompile_files_after_changing_vhdl_standard(self):
@@ -991,37 +991,37 @@ endpackage
     def test_add_compile_option(self):
         self.project.add_library("lib", "lib_path")
         file1 = self.add_source_file("lib", "file.vhd", "")
-        file1.add_compile_option("ghdl.flags", ["--foo"])
-        self.assertEqual(file1.get_compile_option("ghdl.flags"), ["--foo"])
-        file1.add_compile_option("ghdl.flags", ["--bar"])
-        self.assertEqual(file1.get_compile_option("ghdl.flags"), ["--foo", "--bar"])
-        file1.set_compile_option("ghdl.flags", ["--xyz"])
-        self.assertEqual(file1.get_compile_option("ghdl.flags"), ["--xyz"])
+        file1.add_compile_option("ghdl.a_flags", ["--foo"])
+        self.assertEqual(file1.get_compile_option("ghdl.a_flags"), ["--foo"])
+        file1.add_compile_option("ghdl.a_flags", ["--bar"])
+        self.assertEqual(file1.get_compile_option("ghdl.a_flags"), ["--foo", "--bar"])
+        file1.set_compile_option("ghdl.a_flags", ["--xyz"])
+        self.assertEqual(file1.get_compile_option("ghdl.a_flags"), ["--xyz"])
 
     def test_add_compile_option_does_not_mutate_argument(self):
         self.project.add_library("lib", "lib_path")
         file1 = self.add_source_file("lib", "file.vhd", "")
         options = ["--foo"]
-        file1.add_compile_option("ghdl.flags", options)
+        file1.add_compile_option("ghdl.a_flags", options)
         options[0] = "--xyz"
-        self.assertEqual(file1.get_compile_option("ghdl.flags"), ["--foo"])
-        file1.add_compile_option("ghdl.flags", ["--bar"])
+        self.assertEqual(file1.get_compile_option("ghdl.a_flags"), ["--foo"])
+        file1.add_compile_option("ghdl.a_flags", ["--bar"])
         self.assertEqual(options, ["--xyz"])
 
     def test_set_compile_option_does_not_mutate_argument(self):
         self.project.add_library("lib", "lib_path")
         file1 = self.add_source_file("lib", "file.vhd", "")
         options = ["--foo"]
-        file1.set_compile_option("ghdl.flags", options)
+        file1.set_compile_option("ghdl.a_flags", options)
         options[0] = "--xyz"
-        self.assertEqual(file1.get_compile_option("ghdl.flags"), ["--foo"])
+        self.assertEqual(file1.get_compile_option("ghdl.a_flags"), ["--foo"])
 
     def test_compile_option_validation(self):
         self.project.add_library("lib", "lib_path")
         source_file = self.add_source_file("lib", "file.vhd", "")
         self.assertRaises(ValueError, source_file.set_compile_option, "foo", None)
-        self.assertRaises(ValueError, source_file.set_compile_option, "ghdl.flags", None)
-        self.assertRaises(ValueError, source_file.add_compile_option, "ghdl.flags", None)
+        self.assertRaises(ValueError, source_file.set_compile_option, "ghdl.a_flags", None)
+        self.assertRaises(ValueError, source_file.add_compile_option, "ghdl.a_flags", None)
         self.assertRaises(ValueError, source_file.get_compile_option, "foo")
 
     def test_should_recompile_files_affected_by_change_with_later_timestamp(self):

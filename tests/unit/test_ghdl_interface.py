@@ -204,7 +204,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         project = Project()
         project.add_library("lib", "lib_path")
         source_file = project.add_source_file("file.vhd", "lib", file_type="vhdl")
-        source_file.set_compile_option("ghdl.flags", ["custom", "flags"])
+        source_file.set_compile_option("ghdl.a_flags", ["custom", "flags"])
         simif.compile_project(project)
         check_output.assert_called_once_with(
             [
