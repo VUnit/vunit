@@ -10,6 +10,7 @@ import sys
 import re
 import logging
 from pathlib import Path
+from itertools import chain
 from vunit.vc.vci_template import TB_TEMPLATE_TEMPLATE, TB_EPILOGUE_TEMPLATE
 from vunit.vhdl_parser import (
     VHDLDesignFile,
@@ -35,18 +36,11 @@ def create_context_items(code, lib_name, initial_library_names, initial_context_
             if ref.is_package_reference():
                 initial_package_refs.add(f"{library_name!s}.{ref.design_unit_name!s}.{ref.name_within!s}")
 
-    context_items = ""
-    for library in sorted(initial_library_names):
-        if library not in ["std", "work"]:
-            context_items += f"library {library!s};\n"
-
-    for context_ref in sorted(initial_context_refs):
-        context_items += f"context {context_ref!s};\n"
-
-    for package_ref in sorted(initial_package_refs):
-        context_items += f"use {package_ref!s};\n"
-
-    return context_items
+    return "".join(
+        [f"library {library!s};\n" for library in sorted(initial_library_names) if library not in ["std", "work"]]
+        + [f"context {context_ref!s};\n" for context_ref in sorted(initial_context_refs)]
+        + [f"use {package_ref!s};\n" for package_ref in sorted(initial_package_refs)]
+    )
 
 
 class VerificationComponentInterface:
@@ -106,21 +100,14 @@ class VerificationComponentInterface:
         """Validates the existence and format of the as_sync function."""
 
         for func in VHDLFunctionSpecification.find(code):
-            if not func.identifier.startswith("as_sync"):
+            if (
+                (not func.identifier.startswith("as_sync"))
+                or (func.return_type_mark != "sync_handle_t")
+                or (len(func.parameter_list) != 1)
+                or (len(func.parameter_list[0].identifier_list) != 1)
+                or (func.parameter_list[0].subtype_indication.type_mark != vc_handle_t)
+            ):
                 continue
-
-            if func.return_type_mark != "sync_handle_t":
-                continue
-
-            if len(func.parameter_list) != 1:
-                continue
-
-            if len(func.parameter_list[0].identifier_list) != 1:
-                continue
-
-            if func.parameter_list[0].subtype_indication.type_mark != vc_handle_t:
-                continue
-
             return func
 
         return None
@@ -128,28 +115,6 @@ class VerificationComponentInterface:
     @staticmethod
     def _validate_constructor(code, vc_handle_t):
         """Validates the existence and format of the verification component constructor."""
-
-        def create_messages(required_parameter_types, expected_default_value):
-            messages = [
-                "Failed to find a constructor function%s for %s starting with new_",
-                "Found constructor function %s but not with the correct return type %s",
-            ]
-
-            for parameter_name, parameter_type in required_parameter_types.items():
-                messages += [
-                    f"Found constructor function %s for %s but the {parameter_name!s} parameter is missing",
-                    (
-                        f"Found constructor function %s for %s but the {parameter_name} "
-                        f"parameter is not of type {parameter_type}"
-                    ),
-                    f"Found constructor function %s for %s but {parameter_name} is lacking a default value",
-                    (
-                        f"Found constructor function %s for %s but {expected_default_value[parameter_name]} "
-                        f"is the only allowed default value for the {parameter_name} parameter"
-                    ),
-                ]
-
-            return messages
 
         def log_error_message(function_score, messages):
             high_score = 0
@@ -176,7 +141,31 @@ class VerificationComponentInterface:
             unexpected_msg_type_policy=None,
         )
 
-        messages = create_messages(required_parameter_types, expected_default_value)
+        messages = list(
+            chain.from_iterable(
+                [
+                    [
+                        "Failed to find a constructor function%s for %s starting with new_",
+                        "Found constructor function %s but not with the correct return type %s",
+                    ]
+                ]
+                + [
+                    [
+                        f"Found constructor function %s for %s but the {parameter_name!s} parameter is missing",
+                        (
+                            f"Found constructor function %s for %s but the {parameter_name} "
+                            f"parameter is not of type {parameter_type}"
+                        ),
+                        f"Found constructor function %s for %s but {parameter_name} is lacking a default value",
+                        (
+                            f"Found constructor function %s for %s but {expected_default_value[parameter_name]} "
+                            f"is the only allowed default value for the {parameter_name} parameter"
+                        ),
+                    ]
+                    for parameter_name, parameter_type in required_parameter_types.items()
+                ]
+            )
+        )
 
         function_score = {}
         for func in VHDLFunctionSpecification.find(code):
@@ -340,28 +329,36 @@ class VerificationComponentInterface:
         ):
             mark = self.vc_constructor.return_type_mark
             handle_assignment = f"    constant {handle_name!s} : {mark!s} := {self.vc_constructor.identifier!s}(\n"
+
             for parameter in unspecified_parameters:
-                for identifier in parameter.identifier_list:
-                    if identifier in [
-                        "actor",
-                        "logger",
-                        "checker",
-                        "unexpected_msg_type_policy",
-                    ]:
-                        continue
-                    handle_assignment += f"      {identifier!s} => {identifier!s},\n"
-            for formal, actual in dict(
-                actor=actor,
-                logger=logger,
-                checker=checker,
-                unexpected_msg_type_policy=unexpected_msg_type_policy,
-            ).items():
-                if actual:
-                    handle_assignment += f"      {formal!s} => {actual!s},\n"
+                handle_assignment += "".join(
+                    [
+                        f"      {identifier!s} => {identifier!s},\n"
+                        for identifier in parameter.identifier_list
+                        if identifier
+                        not in [
+                            "actor",
+                            "logger",
+                            "checker",
+                            "unexpected_msg_type_policy",
+                        ]
+                    ]
+                )
 
-            handle_assignment = handle_assignment[:-2] + "\n    );"
+            handle_assignment += "".join(
+                [
+                    f"      {formal!s} => {actual!s},\n"
+                    for formal, actual in dict(
+                        actor=actor,
+                        logger=logger,
+                        checker=checker,
+                        unexpected_msg_type_policy=unexpected_msg_type_policy,
+                    ).items()
+                    if actual
+                ]
+            )
 
-            return handle_assignment
+            return handle_assignment[:-2] + "\n    );"
 
         testbench_code = template_code[: match.start()] + TB_EPILOGUE_TEMPLATE.substitute(
             vc_handle_t=self.vc_constructor.return_type_mark,
