@@ -35,17 +35,12 @@ def _create_vc_template(args):
         output_path = args.output_path
 
     output_path.write_text(template_code)
-    print(
-        "Open %s and read the TODOs to complete the template." % output_path.resolve()
-    )
+    print("Open %s and read the TODOs to complete the template." % output_path.resolve())
 
 
 def _create_vci_template(args):
     """Creates VCI testbench template from args."""
-    (
-        template_code,
-        vci_name,
-    ) = VerificationComponentInterface.create_vhdl_testbench_template(
+    (template_code, vci_name,) = VerificationComponentInterface.create_vhdl_testbench_template(
         args.vci_lib_name, args.vci_path, args.vc_handle_t
     )
     if not template_code or not vci_name:
@@ -66,18 +61,14 @@ def _create_vci_template(args):
         output_path = args.output_path
 
     output_path.write_text(template_code)
-    print(
-        "Open %s and read the TODOs to complete the template." % output_path.resolve()
-    )
+    print("Open %s and read the TODOs to complete the template." % output_path.resolve())
 
 
 def main():
     """Parses the command line arguments and acts accordingly."""
 
     def create_vc_parser(subparsers):
-        parser = subparsers.add_parser(
-            "create-vc", help="Creates a VC compliance test template"
-        )
+        parser = subparsers.add_parser("create-vc", help="Creates a VC compliance test template")
         parser.add_argument(
             "--vc-lib-name",
             help="Name of library hosting the VC (default: vc_lib)",
@@ -94,17 +85,11 @@ def main():
             type=Path,
             help="Path to the template  (default: ./compliance_test/tb_<VC name>_compliance_template.vhd)",
         )
-        parser.add_argument(
-            "vc_path", type=Path, help="Path to file containing the VC entity"
-        )
-        parser.add_argument(
-            "vci_path", type=Path, help="Path to file containing the VCI package"
-        )
+        parser.add_argument("vc_path", type=Path, help="Path to file containing the VC entity")
+        parser.add_argument("vci_path", type=Path, help="Path to file containing the VCI package")
 
     def create_vci_parser(subparsers):
-        parser = subparsers.add_parser(
-            "create-vci", help="Creates a VCI compliance test template"
-        )
+        parser = subparsers.add_parser("create-vci", help="Creates a VCI compliance test template")
         parser.add_argument(
             "--vci-lib-name",
             help="Name of library hosting the VCI (default: vc_lib)",
@@ -116,9 +101,7 @@ def main():
             type=Path,
             help="Path to the template  (default: ./compliance_test/tb_<VCI name>_compliance_template.vhd)",
         )
-        parser.add_argument(
-            "vci_path", type=Path, help="Path to file containing the VCI package"
-        )
+        parser.add_argument("vci_path", type=Path, help="Path to file containing the VCI package")
         parser.add_argument("vc_handle_t", help="VC handle type")
 
     parser = argparse.ArgumentParser(description="Compliance test tool")

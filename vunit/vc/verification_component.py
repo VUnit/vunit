@@ -89,10 +89,7 @@ class VerificationComponent:
 
             vc_entity = vc_code.entities[0]
 
-            if not (
-                (len(vc_entity.generics) == 1)
-                and (len(vc_entity.generics[0].identifier_list) == 1)
-            ):
+            if not ((len(vc_entity.generics) == 1) and (len(vc_entity.generics[0].identifier_list) == 1)):
                 LOGGER.error("%s must have a single generic", vc_entity.identifier)
                 return None
 
@@ -149,9 +146,7 @@ class VerificationComponent:
 
         def create_signal_declarations_and_vc_instantiation(vc_entity, vc_lib_name):
             signal_declarations = (
-                "  -- TODO: Constrain any unconstrained signal connecting to the DUT.\n"
-                if vc_entity.ports
-                else ""
+                "  -- TODO: Constrain any unconstrained signal connecting to the DUT.\n" if vc_entity.ports else ""
             )
             port_mappings = ""
             for port in vc_entity.ports:
@@ -197,9 +192,7 @@ class VerificationComponent:
         vc_code = VerificationComponent.validate(vc_path)
         vc_entity = vc_code.entities[0]
         vc_handle_t = vc_entity.generics[0].subtype_indication.type_mark
-        vci_code, vc_constructor = VerificationComponentInterface.validate(
-            vci_path, vc_handle_t
-        )
+        vci_code, vc_constructor = VerificationComponentInterface.validate(vci_path, vc_handle_t)
         if (not vci_code) or (not vc_constructor):
             return None, None
 
@@ -219,9 +212,7 @@ class VerificationComponent:
             vc_code,
             vc_lib_name,
             initial_library_names=set(["std", "work", "vunit_lib", vc_lib_name]),
-            initial_context_refs=set(
-                ["vunit_lib.vunit_context", "vunit_lib.com_context"]
-            ),
+            initial_context_refs=set(["vunit_lib.vunit_context", "vunit_lib.com_context"]),
             initial_package_refs=initial_package_refs,
         )
 
@@ -267,9 +258,7 @@ class VerificationComponent:
                 )
 
             parameter_start_re = re.compile(r"\s*\(", MULTILINE | IGNORECASE | DOTALL)
-            parameter_start = parameter_start_re.match(
-                code[constructor_call_start.end() :]
-            )
+            parameter_start = parameter_start_re.match(code[constructor_call_start.end() :])
 
             if parameter_start:
                 closing_parenthesis_pos = find_closing_delimiter(
@@ -292,23 +281,13 @@ class VerificationComponent:
             else:
                 specified_parameters = ""
 
-            _constructor_call_end_re = re.compile(
-                r"\s*;", MULTILINE | IGNORECASE | DOTALL
-            )
+            _constructor_call_end_re = re.compile(r"\s*;", MULTILINE | IGNORECASE | DOTALL)
             if parameter_start:
-                search_start = (
-                    constructor_call_start.end()
-                    + parameter_start.end()
-                    + closing_parenthesis_pos
-                )
-                constructor_call_end_match = _constructor_call_end_re.match(
-                    code[search_start:]
-                )
+                search_start = constructor_call_start.end() + parameter_start.end() + closing_parenthesis_pos
+                constructor_call_end_match = _constructor_call_end_re.match(code[search_start:])
             else:
                 search_start = constructor_call_start.end()
-                constructor_call_end_match = _constructor_call_end_re.match(
-                    code[search_start:]
-                )
+                constructor_call_end_match = _constructor_call_end_re.match(code[search_start:])
 
             if not constructor_call_end_match:
                 raise RuntimeError(
@@ -328,22 +307,12 @@ class VerificationComponent:
                 vc_constructor_name=self.vci.vc_constructor.identifier,
                 specified_parameters=specified_parameters,
                 vc_handle_name=self.vc_entity.generics[0].identifier_list[0],
-                default_logger=default_values["logger"]
-                if default_values["logger"]
-                else 'get_logger("vc_logger")',
-                default_actor=default_values["actor"]
-                if default_values["actor"]
-                else 'new_actor("vc_actor")',
-                default_checker=default_values["checker"]
-                if default_values["checker"]
-                else 'new_checker("vc_checker")',
+                default_logger=default_values["logger"] if default_values["logger"] else 'get_logger("vc_logger")',
+                default_actor=default_values["actor"] if default_values["actor"] else 'new_actor("vc_actor")',
+                default_checker=default_values["checker"] if default_values["checker"] else 'new_checker("vc_checker")',
             )
 
-            return (
-                code[: constructor_call_start.start()]
-                + architecture_declarations
-                + code[constructor_call_end:]
-            )
+            return code[: constructor_call_start.start()] + architecture_declarations + code[constructor_call_end:]
 
         def update_test_runner(code):
             _test_runner_re = re.compile(
@@ -356,29 +325,18 @@ class VerificationComponent:
                 vc_handle_name=self.vc_entity.generics[0].identifier_list[0]
             )
 
-            code, num_found_test_runners = subn(
-                _test_runner_re, new_test_runner, code, 1
-            )
+            code, num_found_test_runners = subn(_test_runner_re, new_test_runner, code, 1)
             if not num_found_test_runners:
-                raise RuntimeError(
-                    "Failed to find test runner in template_path %s" % template_path
-                )
+                raise RuntimeError("Failed to find test runner in template_path %s" % template_path)
 
             return code
 
         def update_generics(code):
-            _runner_cfg_re = re.compile(
-                r"\brunner_cfg\s*:\s*string", MULTILINE | IGNORECASE | DOTALL
-            )
+            _runner_cfg_re = re.compile(r"\brunner_cfg\s*:\s*string", MULTILINE | IGNORECASE | DOTALL)
 
-            code, num_found_runner_cfg = subn(
-                _runner_cfg_re, GENERICS_TEMPLATE, code, 1
-            )
+            code, num_found_runner_cfg = subn(_runner_cfg_re, GENERICS_TEMPLATE, code, 1)
             if not num_found_runner_cfg:
-                raise RuntimeError(
-                    "Failed to find runner_cfg generic in template_path %s"
-                    % template_path
-                )
+                raise RuntimeError("Failed to find runner_cfg generic in template_path %s" % template_path)
 
             return code
 
@@ -396,14 +354,8 @@ class VerificationComponent:
             template_code = template_code.lower()
 
         design_file = VHDLDesignFile.parse(template_code)
-        if (
-            design_file.entities[0].identifier
-            != "tb_%s_compliance" % self.vc_facade.name
-        ):
-            raise RuntimeError(
-                "%s is not a template_path for %s"
-                % (template_path, self.vc_facade.name)
-            )
+        if design_file.entities[0].identifier != "tb_%s_compliance" % self.vc_facade.name:
+            raise RuntimeError("%s is not a template_path for %s" % (template_path, self.vc_facade.name))
 
         tb_code = update_architecture_declarations(template_code)
         tb_code = update_test_runner(tb_code)
@@ -434,10 +386,7 @@ class VerificationComponent:
 
         try:
             vc_test_lib.test_bench("tb_%s_compliance" % self.vc_entity.identifier)
-            raise RuntimeError(
-                "tb_%s_compliance already exists in %s"
-                % (self.vc_entity.identifier, vc_test_lib.name)
-            )
+            raise RuntimeError("tb_%s_compliance already exists in %s" % (self.vc_entity.identifier, vc_test_lib.name))
         except KeyError:
             pass
 
@@ -451,9 +400,7 @@ class VerificationComponent:
         tb_path.write_text(testbench_code)
 
         tb_file = vc_test_lib.add_source_file(str(tb_path))
-        testbench = vc_test_lib.test_bench(
-            "tb_%s_compliance" % self.vc_entity.identifier
-        )
+        testbench = vc_test_lib.test_bench("tb_%s_compliance" % self.vc_entity.identifier)
         test = testbench.test("Test that the actor can be customised")
         test.set_generic("use_custom_actor", True)
 

@@ -71,9 +71,7 @@ def configure_tb_set_generic(ui):
     tb.set_generic("str_quote_val", 'a"b')
     str_long_num = 512
     tb.set_generic("str_long_num", str_long_num)
-    tb.set_generic(
-        "str_long_val", "".join(["0123456789abcdef" for x in range(str_long_num)])
-    )
+    tb.set_generic("str_long_val", "".join(["0123456789abcdef" for x in range(str_long_num)]))
 
 
 def configure_tb_assert_stop_level(ui):
@@ -81,10 +79,7 @@ def configure_tb_assert_stop_level(ui):
 
     for vhdl_assert_stop_level in ["warning", "error", "failure"]:
         for report_level in ["warning", "error", "failure"]:
-            test = tb.test(
-                "Report %s when VHDL assert stop level = %s"
-                % (report_level, vhdl_assert_stop_level)
-            )
+            test = tb.test("Report %s when VHDL assert stop level = %s" % (report_level, vhdl_assert_stop_level))
             test.set_sim_option("vhdl_assert_stop_level", vhdl_assert_stop_level)
 
 
@@ -94,16 +89,12 @@ configure_tb_set_generic(VU)
 configure_tb_assert_stop_level(VU)
 LIB.entity("tb_no_generic_override").set_generic("g_val", False)
 LIB.entity("tb_ieee_warning").test("pass").set_sim_option("disable_ieee_warnings", True)
-LIB.entity("tb_other_file_tests").scan_tests_from_file(
-    str(ROOT / "other_file_tests.vhd")
-)
+LIB.entity("tb_other_file_tests").scan_tests_from_file(str(ROOT / "other_file_tests.vhd"))
 
 TEST_LIB = VU.add_library("test_lib")
 
 VCI = VerificationComponentInterface.find(LIB, "vc_pkg", "vc_handle_t")
-VerificationComponent.find(LIB, "vc", VCI).add_vhdl_testbench(
-    TEST_LIB, ROOT / "compliance_test"
-)
+VerificationComponent.find(LIB, "vc", VCI).add_vhdl_testbench(TEST_LIB, ROOT / "compliance_test")
 
 VCI = VerificationComponentInterface.find(LIB, "vc_pkg_with_template", "vc_handle_t")
 VerificationComponent.find(LIB, "vc_with_template", VCI).add_vhdl_testbench(
@@ -113,9 +104,7 @@ VerificationComponent.find(LIB, "vc_with_template", VCI).add_vhdl_testbench(
 )
 
 
-vci = VerificationComponentInterface.find(
-    LIB, "vc_not_supporting_sync_pkg", "vc_not_supporting_sync_handle_t"
-)
+vci = VerificationComponentInterface.find(LIB, "vc_not_supporting_sync_pkg", "vc_not_supporting_sync_handle_t")
 VerificationComponent.find(LIB, "vc_not_supporting_sync", vci).add_vhdl_testbench(
     TEST_LIB,
     ROOT / "compliance_test",
@@ -124,9 +113,7 @@ VerificationComponent.find(LIB, "vc_not_supporting_sync", vci).add_vhdl_testbenc
 vci = VerificationComponentInterface.find(
     LIB, "vc_not_supporting_custom_actor_pkg", "vc_not_supporting_custom_actor_handle_t"
 )
-VerificationComponent.find(
-    LIB, "vc_not_supporting_custom_actor", vci
-).add_vhdl_testbench(
+VerificationComponent.find(LIB, "vc_not_supporting_custom_actor", vci).add_vhdl_testbench(
     TEST_LIB,
     ROOT / "compliance_test",
 )
@@ -136,9 +123,7 @@ vci = VerificationComponentInterface.find(
     "vc_not_supporting_custom_logger_pkg",
     "vc_not_supporting_custom_logger_handle_t",
 )
-VerificationComponent.find(
-    LIB, "vc_not_supporting_custom_logger", vci
-).add_vhdl_testbench(
+VerificationComponent.find(LIB, "vc_not_supporting_custom_logger", vci).add_vhdl_testbench(
     TEST_LIB,
     ROOT / "compliance_test",
 )
@@ -148,9 +133,7 @@ vci = VerificationComponentInterface.find(
     "vc_not_supporting_unexpected_msg_handling_pkg",
     "vc_not_supporting_unexpected_msg_handling_handle_t",
 )
-VerificationComponent.find(
-    LIB, "vc_not_supporting_unexpected_msg_handling", vci
-).add_vhdl_testbench(
+VerificationComponent.find(LIB, "vc_not_supporting_unexpected_msg_handling", vci).add_vhdl_testbench(
     TEST_LIB,
     ROOT / "compliance_test",
 )

@@ -21,9 +21,7 @@ from vunit.vhdl_parser import (
 LOGGER = logging.getLogger(__name__)
 
 
-def create_context_items(
-    code, lib_name, initial_library_names, initial_context_refs, initial_package_refs
-):
+def create_context_items(code, lib_name, initial_library_names, initial_context_refs, initial_package_refs):
     """Creates a VHDL snippet with context items found in the provided code and the initial_ arguments."""
     for ref in code.references:
         if ref.is_package_reference() or ref.is_context_reference():
@@ -35,9 +33,7 @@ def create_context_items(
                 initial_context_refs.add("%s.%s" % (library_name, ref.design_unit_name))
 
             if ref.is_package_reference():
-                initial_package_refs.add(
-                    "%s.%s.%s" % (library_name, ref.design_unit_name, ref.name_within)
-                )
+                initial_package_refs.add("%s.%s.%s" % (library_name, ref.design_unit_name, ref.name_within))
 
     context_items = ""
     for library in sorted(initial_library_names):
@@ -141,9 +137,7 @@ class VerificationComponentInterface:
 
             for parameter_name, parameter_type in required_parameter_types.items():
                 messages.append(
-                    "Found constructor function %s for %s but the {} parameter is missing".format(
-                        parameter_name
-                    )
+                    "Found constructor function %s for %s but the {} parameter is missing".format(parameter_name)
                 )
                 messages.append(
                     "Found constructor function %s for %s but the {} parameter is not of type {}".format(
@@ -151,15 +145,11 @@ class VerificationComponentInterface:
                     )
                 )
                 messages.append(
-                    "Found constructor function %s for %s but {} is lacking a default value".format(
-                        parameter_name
-                    )
+                    "Found constructor function %s for %s but {} is lacking a default value".format(parameter_name)
                 )
                 messages.append(
                     "Found constructor function %s for %s but {} is the only allowed default "
-                    "value for the {} parameter".format(
-                        expected_default_value[parameter_name], parameter_name
-                    )
+                    "value for the {} parameter".format(expected_default_value[parameter_name], parameter_name)
                 )
 
             return messages
@@ -213,10 +203,7 @@ class VerificationComponentInterface:
                     break
                 function_score[func.identifier] += 1
 
-                if (
-                    parameters[parameter_name].subtype_indication.type_mark
-                    != parameter_type
-                ):
+                if parameters[parameter_name].subtype_indication.type_mark != parameter_type:
                     break
                 function_score[func.identifier] += 1
 
@@ -225,8 +212,7 @@ class VerificationComponentInterface:
                 function_score[func.identifier] += 1
 
                 if expected_default_value[parameter_name] and (
-                    parameters[parameter_name].init_value
-                    != expected_default_value[parameter_name]
+                    parameters[parameter_name].init_value != expected_default_value[parameter_name]
                 ):
                     break
                 function_score[func.identifier] += 1
@@ -280,9 +266,7 @@ class VerificationComponentInterface:
             vci_code,
             vci_lib_name,
             initial_library_names=set(["std", "work", "vunit_lib", vci_lib_name]),
-            initial_context_refs=set(
-                ["vunit_lib.vunit_context", "vunit_lib.com_context"]
-            ),
+            initial_context_refs=set(["vunit_lib.vunit_context", "vunit_lib.com_context"]),
             initial_package_refs=set(
                 [
                     "vunit_lib.vc_pkg.all",
@@ -291,11 +275,7 @@ class VerificationComponentInterface:
             ),
         )
 
-        unspecified_parameters = [
-            parameter
-            for parameter in vc_constructor.parameter_list
-            if not parameter.init_value
-        ]
+        unspecified_parameters = [parameter for parameter in vc_constructor.parameter_list if not parameter.init_value]
         if unspecified_parameters:
             constant_declarations = ""
             for parameter in unspecified_parameters:
@@ -345,18 +325,14 @@ class VerificationComponentInterface:
             with template_path.open() as fptr:
                 template_code = fptr.read()
 
-        test_runner_body_pattern = re.compile(
-            r"\s+-- DO NOT modify this line and the lines below."
-        )
+        test_runner_body_pattern = re.compile(r"\s+-- DO NOT modify this line and the lines below.")
         match = test_runner_body_pattern.search(template_code)
         if not match:
             LOGGER.error("Failed to find body of test_runner in template code.")
             return None
 
         unspecified_parameters = [
-            parameter
-            for parameter in self.vc_constructor.parameter_list
-            if not parameter.init_value
+            parameter for parameter in self.vc_constructor.parameter_list if not parameter.init_value
         ]
 
         def create_handle_assignment(
@@ -398,9 +374,7 @@ class VerificationComponentInterface:
 
             return handle_assignment
 
-        testbench_code = template_code[
-            : match.start()
-        ] + TB_EPILOGUE_TEMPLATE.substitute(
+        testbench_code = template_code[: match.start()] + TB_EPILOGUE_TEMPLATE.substitute(
             vc_handle_t=self.vc_constructor.return_type_mark,
             vc_constructor_name=self.vc_constructor.identifier,
             handle1=create_handle_assignment(
@@ -478,23 +452,16 @@ class VerificationComponentInterface:
 
         try:
             vci_test_lib.test_bench(
-                "tb_%s_%s_compliance"
-                % (self.vci_facade.name, self.vc_constructor.return_type_mark)
+                "tb_%s_%s_compliance" % (self.vci_facade.name, self.vc_constructor.return_type_mark)
             )
-            raise RuntimeError(
-                "tb_%s_compliance already exists in %s"
-                % (self.vci_facade.name, vci_test_lib.name)
-            )
+            raise RuntimeError("tb_%s_compliance already exists in %s" % (self.vci_facade.name, vci_test_lib.name))
         except KeyError:
             pass
 
         if not test_dir.exists():
             test_dir.mkdir(parents=True)
 
-        tb_path = test_dir / (
-            "tb_%s_%s_compliance.vhd"
-            % (self.vci_facade.name, self.vc_constructor.return_type_mark)
-        )
+        tb_path = test_dir / ("tb_%s_%s_compliance.vhd" % (self.vci_facade.name, self.vc_constructor.return_type_mark))
         testbench_code = self.create_vhdl_testbench(template_path)
         if not testbench_code:
             return None

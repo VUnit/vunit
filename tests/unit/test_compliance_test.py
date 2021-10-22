@@ -95,9 +95,7 @@ end package;
     @mock.patch("vunit.vc.verification_component_interface.LOGGER.error")
     def test_not_finding_vc(self, error_mock):
         vci = VerificationComponentInterface.find(self.vci_lib, "vc_pkg", "vc_handle_t")
-        self.assertRaises(
-            SystemExit, VerificationComponent.find, self.vc_lib, "other_vc", vci
-        )
+        self.assertRaises(SystemExit, VerificationComponent.find, self.vc_lib, "other_vc", vci)
         error_mock.assert_called_once_with("Failed to find VC %s", "other_vc")
 
     @mock.patch("vunit.vc.verification_component_interface.LOGGER.error")
@@ -124,20 +122,12 @@ end entity;
 """
         self.vc_lib.add_source_file(self.make_file("vc1_2.vhd", vc_contents))
         vci = VerificationComponentInterface.find(self.vci_lib, "vc_pkg", "vc_handle_t")
-        self.assertRaises(
-            SystemExit, VerificationComponent.find, self.vc_lib, "vc1", vci
-        )
-        error_mock.assert_called_once_with(
-            "%s must contain a single VC entity", self.tmp_dir / "vc1_2.vhd"
-        )
+        self.assertRaises(SystemExit, VerificationComponent.find, self.vc_lib, "vc1", vci)
+        error_mock.assert_called_once_with("%s must contain a single VC entity", self.tmp_dir / "vc1_2.vhd")
 
         vci = VerificationComponentInterface.find(self.vci_lib, "vc_pkg", "vc_handle_t")
-        self.assertRaises(
-            SystemExit, VerificationComponent.find, self.vc_lib, "vc2", vci
-        )
-        error_mock.assert_called_with(
-            "%s must contain a single VC entity", self.tmp_dir / "vc1_2.vhd"
-        )
+        self.assertRaises(SystemExit, VerificationComponent.find, self.vc_lib, "vc2", vci)
+        error_mock.assert_called_with("%s must contain a single VC entity", self.tmp_dir / "vc1_2.vhd")
 
     @mock.patch("vunit.vc.verification_component_interface.LOGGER.error")
     def test_failing_on_multiple_package(self, error_mock):
@@ -156,9 +146,7 @@ end package;
             "vc_pkg1",
             "vc_handle_t",
         )
-        error_mock.assert_called_once_with(
-            "%s must contain a single VCI package", self.tmp_dir / "vci1_2.vhd"
-        )
+        error_mock.assert_called_once_with("%s must contain a single VCI package", self.tmp_dir / "vci1_2.vhd")
         self.assertRaises(
             SystemExit,
             VerificationComponentInterface.find,
@@ -166,9 +154,7 @@ end package;
             "vc_pkg2",
             "vc_handle_t",
         )
-        error_mock.assert_called_with(
-            "%s must contain a single VCI package", self.tmp_dir / "vci1_2.vhd"
-        )
+        error_mock.assert_called_with("%s must contain a single VCI package", self.tmp_dir / "vci1_2.vhd")
 
     @mock.patch("vunit.vc.verification_component_interface.LOGGER.error")
     def test_evaluating_vc_generics(self, error_mock):
@@ -178,9 +164,7 @@ end entity;
 """
         self.vc_lib.add_source_file(self.make_file("vc1.vhd", vc1_contents))
         vci = VerificationComponentInterface.find(self.vci_lib, "vc_pkg", "vc_handle_t")
-        self.assertRaises(
-            SystemExit, VerificationComponent.find, self.vc_lib, "vc1", vci
-        )
+        self.assertRaises(SystemExit, VerificationComponent.find, self.vc_lib, "vc1", vci)
         error_mock.assert_called_once_with("%s must have a single generic", "vc1")
 
         vc2_contents = """
@@ -190,9 +174,7 @@ end entity;
 """
         self.vc_lib.add_source_file(self.make_file("vc2.vhd", vc2_contents))
         vci = VerificationComponentInterface.find(self.vci_lib, "vc_pkg", "vc_handle_t")
-        self.assertRaises(
-            SystemExit, VerificationComponent.find, self.vc_lib, "vc2", vci
-        )
+        self.assertRaises(SystemExit, VerificationComponent.find, self.vc_lib, "vc2", vci)
         error_mock.assert_called_with("%s must have a single generic", "vc2")
 
         vc3_contents = """
@@ -202,9 +184,7 @@ end entity;
 """
         self.vc_lib.add_source_file(self.make_file("vc3.vhd", vc3_contents))
         vci = VerificationComponentInterface.find(self.vci_lib, "vc_pkg", "vc_handle_t")
-        self.assertRaises(
-            SystemExit, VerificationComponent.find, self.vc_lib, "vc3", vci
-        )
+        self.assertRaises(SystemExit, VerificationComponent.find, self.vc_lib, "vc3", vci)
         error_mock.assert_called_with("%s must have a single generic", "vc3")
 
     @mock.patch("vunit.vc.verification_component_interface.LOGGER.error")
@@ -228,9 +208,7 @@ end package;
             "other_vc_pkg",
             "vc_handle_t",
         )
-        error_mock.assert_called_once_with(
-            "Failed to find a constructor function for vc_handle_t starting with new_"
-        )
+        error_mock.assert_called_once_with("Failed to find a constructor function for vc_handle_t starting with new_")
 
     @mock.patch("vunit.vc.verification_component_interface.LOGGER.error")
     def test_failing_with_wrong_constructor_return_type(self, error_mock):
@@ -272,9 +250,7 @@ end package;
             "invalid_default_value",
         ]
 
-        for iteration, (invalid_parameter, invalid_reason) in enumerate(
-            product(parameters, reasons_for_failure)
-        ):
+        for iteration, (invalid_parameter, invalid_reason) in enumerate(product(parameters, reasons_for_failure)):
             if (invalid_parameter in ["unexpected_msg_type_policy", "logger"]) and (
                 invalid_reason == "invalid_default_value"
             ):
@@ -317,9 +293,7 @@ package other_vc_%d_pkg is
 end package;
 """
             )
-            self.vc_lib.add_source_file(
-                self.make_file("other_vci_%d.vhd" % iteration, vci_contents)
-            )
+            self.vc_lib.add_source_file(self.make_file("other_vci_%d.vhd" % iteration, vci_contents))
 
             if invalid_reason == "missing_parameter":
                 error_msg = (
@@ -334,8 +308,7 @@ end package;
             elif invalid_reason == "invalid_default_value":
                 error_msg = (
                     "Found constructor function new_vc for vc_handle_t but null_%s is the only allowed "
-                    "default value for the %s parameter"
-                    % (invalid_parameter, invalid_parameter)
+                    "default value for the %s parameter" % (invalid_parameter, invalid_parameter)
                 )
 
             self.assertRaises(
@@ -375,9 +348,7 @@ end package;
             "other_vc_pkg",
             "vc_handle_t",
         )
-        error_mock.assert_called_once_with(
-            "%s in %s doesn't start with p_", "foo", "vc_handle_t"
-        )
+        error_mock.assert_called_once_with("%s in %s doesn't start with p_", "foo", "vc_handle_t")
 
     @mock.patch("vunit.vc.verification_component_interface.LOGGER.error")
     def test_failing_on_missing_handle_record(self, error_mock):
@@ -452,9 +423,7 @@ package other_vc_%d_pkg is
 end package;
 """
             )
-            self.vc_lib.add_source_file(
-                self.make_file("other_vci_%d.vhd" % iteration, vci_contents)
-            )
+            self.vc_lib.add_source_file(self.make_file("other_vci_%d.vhd" % iteration, vci_contents))
 
             with mock.patch.object(LOGGER, "error") as error_mock:
                 self.assertRaises(
@@ -488,9 +457,7 @@ end entity;
 """
 
         vc_path = self.make_file("vc2.vhd", vc_contents)
-        template, _ = VerificationComponent.create_vhdl_testbench_template(
-            "vc_lib", "vc_lib", vc_path, self.vci_path
-        )
+        template, _ = VerificationComponent.create_vhdl_testbench_template("vc_lib", "vc_lib", vc_path, self.vci_path)
         template = VHDLDesignFile.parse(template)
         refs = template.references
         self.assertEqual(len(refs), 14)
@@ -601,16 +568,10 @@ end architecture;
         self.assertRaises(RuntimeError, vc.create_vhdl_testbench, template_path)
 
     def test_creating_template_without_output_path(self):
-        with mock.patch(
-            "sys.argv", ["compliance_test.py", "create-vc", self.vc_path, self.vci_path]
-        ):
+        with mock.patch("sys.argv", ["compliance_test.py", "create-vc", self.vc_path, self.vci_path]):
             main()
 
-            self.assertTrue(
-                (
-                    Path(self.vc_path).parent / ".vc" / "tb_vc_compliance_template.vhd"
-                ).exists()
-            )
+            self.assertTrue((Path(self.vc_path).parent / ".vc" / "tb_vc_compliance_template.vhd").exists())
 
     def test_creating_template_with_output_dir(self):
         output_dir = self.tmp_dir / "template"
@@ -664,13 +625,9 @@ end architecture;
             self.assertRaises(IOError, main)
 
     def test_creating_template_with_default_vc_lib(self):
-        with mock.patch(
-            "sys.argv", ["compliance_test.py", "create-vc", self.vc_path, self.vci_path]
-        ):
+        with mock.patch("sys.argv", ["compliance_test.py", "create-vc", self.vc_path, self.vci_path]):
             main()
-            with (
-                Path(self.vc_path).parent / ".vc" / "tb_vc_compliance_template.vhd"
-            ).open() as fptr:
+            with (Path(self.vc_path).parent / ".vc" / "tb_vc_compliance_template.vhd").open() as fptr:
                 self.assertIsNotNone(
                     re.search(
                         r"library\s+vc_lib\s*;",
@@ -694,9 +651,7 @@ end architecture;
             ],
         ):
             main()
-            with (
-                Path(self.vc_path).parent / ".vc" / "tb_vc_compliance_template.vhd"
-            ).open() as fptr:
+            with (Path(self.vc_path).parent / ".vc" / "tb_vc_compliance_template.vhd").open() as fptr:
                 self.assertIsNotNone(
                     re.search(
                         r"library\s+my_vc_lib\s*;",
@@ -713,9 +668,7 @@ end architecture;
 
         vc.add_vhdl_testbench(vc_test_lib, str(self.tmp_dir / "compliance_test"))
 
-        self.assertTrue(
-            (self.tmp_dir / "compliance_test" / "tb_vc_compliance.vhd").exists()
-        )
+        self.assertTrue((self.tmp_dir / "compliance_test" / "tb_vc_compliance.vhd").exists())
         self.assertRaises(
             RuntimeError,
             vc.add_vhdl_testbench,
