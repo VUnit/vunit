@@ -107,42 +107,37 @@ class VerificationComponent:
 
         :returns: The template string and the name of the verification component entity.
         """
-        vc_path = Path(vc_path)
-        vci_path = Path(vci_path)
+        vc_path = Path(vc_path).resolve()
+        vci_path = Path(vci_path).resolve()
 
         def create_constructor(vc_entity, vc_handle_t, vc_constructor):
-            unspecified_parameters = []
-            for parameter in vc_constructor.parameter_list:
-                if not parameter.init_value:
-                    unspecified_parameters += parameter.identifier_list
+            unspecified_parameters = [
+                parameter.identifier_list for parameter in vc_constructor.parameter_list if not parameter.init_value
+            ]
 
-            constructor = (
-                "  -- TODO: Specify a value for all listed parameters. Keep all parameters on separate lines\n"
-                if unspecified_parameters
-                else ""
-            )
-            constructor += "  constant %s : %s := %s" % (
-                vc_entity.generics[0].identifier_list[0],
-                vc_handle_t,
-                vc_constructor.identifier,
+            constant = (
+                f"{vc_entity.generics[0].identifier_list[0]!s} : {vc_handle_t!s} := {vc_constructor.identifier!s}"
             )
 
             if not unspecified_parameters:
-                constructor += ";\n"
-            else:
-                constructor += "(\n"
-                for parameter in unspecified_parameters:
-                    if parameter in [
-                        "actor",
-                        "logger",
-                        "checker",
-                        "unexpected_msg_type_policy",
-                    ]:
-                        continue
-                    constructor += f"    {parameter!s} => ,\n"
-                constructor = constructor[:-2] + "\n  );\n"
-
-            return constructor
+                return f"  constant {constant!s};\n"
+            return (
+                "  -- TODO: Specify a value for all listed parameters. Keep all parameters on separate lines\n"
+                + f"  constant {constant!s}(\n"
+                + "".join(
+                    [
+                        f"    {parameter!s} => ,\n"
+                        for parameter in unspecified_parameters
+                        if parameter
+                        not in [
+                            "actor",
+                            "logger",
+                            "checker",
+                            "unexpected_msg_type_policy",
+                        ]
+                    ]
+                )
+            )[:-2] + "\n  );\n"
 
         def create_signal_declarations_and_vc_instantiation(vc_entity, vc_lib_name):
             signal_declarations = (
@@ -151,40 +146,24 @@ class VerificationComponent:
             port_mappings = ""
             for port in vc_entity.ports:
                 if (port.mode != "out") and port.init_value:
-                    for identifier in port.identifier_list:
-                        port_mappings += f"      {identifier!s} => open,\n"
-                else:
-                    signal_declarations += "  signal %s : %s;\n" % (
-                        ", ".join(port.identifier_list),
-                        port.subtype_indication,
+                    port_mappings += "".join(
+                        [f"      {identifier!s} => open,\n" for identifier in port.identifier_list]
                     )
-                    for identifier in port.identifier_list:
-                        port_mappings += f"      {identifier!s} => {identifier!s},\n"
+                else:
+                    signal_declarations += (
+                        f"  signal {', '.join(port.identifier_list)!s} : {port.subtype_indication!s};\n"
+                    )
+                    port_mappings += "".join(
+                        [f"      {identifier!s} => {identifier!s},\n" for identifier in port.identifier_list]
+                    )
 
-            vc_instantiation = """  -- DO NOT modify the VC instantiation.
-  vc_inst: entity %s.%s
-    generic map(%s)""" % (
-                vc_lib_name,
-                vc_entity.identifier,
-                vc_entity.generics[0].identifier_list[0],
+            return (
+                signal_declarations,
+                f"""  -- DO NOT modify the VC instantiation.
+  vc_inst: entity {vc_lib_name!s}.{vc_entity.identifier!s}
+    generic map({vc_entity.generics[0].identifier_list[0]!s})"""
+                + (("\n    port map(\n" + port_mappings[:-2] + "\n    );\n") if len(vc_entity.ports) > 0 else ";\n"),
             )
-
-            if len(vc_entity.ports) > 0:
-                vc_instantiation = (
-                    vc_instantiation
-                    + """
-    port map(
-"""
-                )
-
-                vc_instantiation += port_mappings[:-2] + "\n    );\n"
-            else:
-                vc_instantiation += ";\n"
-
-            return signal_declarations, vc_instantiation
-
-        vc_path = Path(vc_path).resolve()
-        vci_path = Path(vci_path).resolve()
 
         vc_code = VerificationComponent.validate(vc_path)
         vc_entity = vc_code.entities[0]
@@ -198,23 +177,21 @@ class VerificationComponent:
             vc_instantiation,
         ) = create_signal_declarations_and_vc_instantiation(vc_entity, vc_lib_name)
 
-        context_items = create_context_items(
-            vc_code,
-            vc_lib_name,
-            initial_library_names=set(["std", "work", "vunit_lib", vc_lib_name]),
-            initial_context_refs=set(["vunit_lib.vunit_context", "vunit_lib.com_context"]),
-            initial_package_refs=set(
-                [
-                    "vunit_lib.vc_pkg.all",
-                    "vunit_lib.sync_pkg.all",
-                    f"{vci_lib_name!s}.{vci_code.packages[0].identifier!s}.all",
-                ]
-            ),
-        )
-
         return (
             TB_TEMPLATE_TEMPLATE.substitute(
-                context_items=context_items,
+                context_items=create_context_items(
+                    vc_code,
+                    vc_lib_name,
+                    initial_library_names=set(["std", "work", "vunit_lib", vc_lib_name]),
+                    initial_context_refs=set(["vunit_lib.vunit_context", "vunit_lib.com_context"]),
+                    initial_package_refs=set(
+                        [
+                            "vunit_lib.vc_pkg.all",
+                            "vunit_lib.sync_pkg.all",
+                            f"{vci_lib_name!s}.{vci_code.packages[0].identifier!s}.all",
+                        ]
+                    ),
+                ),
                 vc_name=vc_entity.identifier,
                 constructor=create_constructor(vc_entity, vc_handle_t, vc_constructor),
                 signal_declarations=signal_declarations,
@@ -231,26 +208,23 @@ class VerificationComponent:
 
         :returns: The testbench code as a string.
         """
-        template_path = Path(template_path) if template_path is not None else None
-
-        if template_path:
-            template_path = Path(template_path).resolve()
+        template_path = Path(template_path).resolve() if template_path is not None else None
 
         def update_architecture_declarations(code):
-            constant = rf"\bconstant\s+{self.vc_entity.generics[0].identifier_list[0]}\s*:\s*{self.vc_handle_t}\s*"
-            _constructor_call_start_re = re.compile(
-                rf"{constant!s}:=\s*{self.vci.vc_constructor.identifier}",
+            releft = rf"\bconstant\s+{self.vc_entity.generics[0].identifier_list[0]}\s*:\s*{self.vc_handle_t}\s*"
+            constructor_call_start = re.compile(
+                rf"{releft!s}:=\s*{self.vci.vc_constructor.identifier!s}",
                 MULTILINE | IGNORECASE | DOTALL,
-            )
+            ).search(code)
 
-            constructor_call_start = _constructor_call_start_re.search(code)
             if not constructor_call_start:
                 raise RuntimeError(
                     f"Failed to find call to {self.vci.vc_constructor.identifier!s} in template_path {template_path!s}"
                 )
 
-            parameter_start_re = re.compile(r"\s*\(", MULTILINE | IGNORECASE | DOTALL)
-            parameter_start = parameter_start_re.match(code[constructor_call_start.end() :])
+            parameter_start = re.compile(r"\s*\(", MULTILINE | IGNORECASE | DOTALL).match(
+                code[constructor_call_start.end() :]
+            )
 
             if parameter_start:
                 closing_parenthesis_pos = find_closing_delimiter(
@@ -292,42 +266,43 @@ class VerificationComponent:
                 for identifier in parameter.identifier_list:
                     default_values[identifier] = parameter.init_value
 
-            architecture_declarations = ARCHITECTURE_DECLARATIONS_TEMPLATE.substitute(
-                vc_handle_t=self.vc_handle_t,
-                vc_constructor_name=self.vci.vc_constructor.identifier,
-                specified_parameters=specified_parameters,
-                vc_handle_name=self.vc_entity.generics[0].identifier_list[0],
-                default_logger=default_values["logger"] if default_values["logger"] else 'get_logger("vc_logger")',
-                default_actor=default_values["actor"] if default_values["actor"] else 'new_actor("vc_actor")',
-                default_checker=default_values["checker"] if default_values["checker"] else 'new_checker("vc_checker")',
+            return (
+                code[: constructor_call_start.start()]
+                + ARCHITECTURE_DECLARATIONS_TEMPLATE.substitute(
+                    vc_handle_t=self.vc_handle_t,
+                    vc_constructor_name=self.vci.vc_constructor.identifier,
+                    specified_parameters=specified_parameters,
+                    vc_handle_name=self.vc_entity.generics[0].identifier_list[0],
+                    default_logger=default_values["logger"] if default_values["logger"] else 'get_logger("vc_logger")',
+                    default_actor=default_values["actor"] if default_values["actor"] else 'new_actor("vc_actor")',
+                    default_checker=default_values["checker"]
+                    if default_values["checker"]
+                    else 'new_checker("vc_checker")',
+                )
+                + code[constructor_call_end:]
             )
-
-            return code[: constructor_call_start.start()] + architecture_declarations + code[constructor_call_end:]
 
         def update_test_runner(code):
-            _test_runner_re = re.compile(
-                r"\btest_runner\s*:\s*process.*?end\s+process\s+test_runner\s*;",
-                # r"\btest_runner\s*:\s*process",
-                MULTILINE | IGNORECASE | DOTALL,
+            code, num_found_test_runners = subn(
+                re.compile(
+                    r"\btest_runner\s*:\s*process.*?end\s+process\s+test_runner\s*;",
+                    # r"\btest_runner\s*:\s*process",
+                    MULTILINE | IGNORECASE | DOTALL,
+                ),
+                TEST_RUNNER_TEMPLATE.substitute(vc_handle_name=self.vc_entity.generics[0].identifier_list[0]),
+                code,
+                1,
             )
-
-            new_test_runner = TEST_RUNNER_TEMPLATE.substitute(
-                vc_handle_name=self.vc_entity.generics[0].identifier_list[0]
-            )
-
-            code, num_found_test_runners = subn(_test_runner_re, new_test_runner, code, 1)
             if not num_found_test_runners:
                 raise RuntimeError(f"Failed to find test runner in template_path {template_path!s}")
-
             return code
 
         def update_generics(code):
-            _runner_cfg_re = re.compile(r"\brunner_cfg\s*:\s*string", MULTILINE | IGNORECASE | DOTALL)
-
-            code, num_found_runner_cfg = subn(_runner_cfg_re, GENERICS_TEMPLATE, code, 1)
+            code, num_found_runner_cfg = subn(
+                re.compile(r"\brunner_cfg\s*:\s*string", MULTILINE | IGNORECASE | DOTALL), GENERICS_TEMPLATE, code, 1
+            )
             if not num_found_runner_cfg:
                 raise RuntimeError(f"Failed to find runner_cfg generic in template_path {template_path!s}")
-
             return code
 
         if template_path:
