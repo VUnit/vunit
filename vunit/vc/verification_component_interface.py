@@ -30,21 +30,21 @@ def create_context_items(code, lib_name, initial_library_names, initial_context_
             library_name = ref.library_name if ref.library_name != "work" else lib_name
 
             if ref.is_context_reference():
-                initial_context_refs.add("%s.%s" % (library_name, ref.design_unit_name))
+                initial_context_refs.add(f"{library_name!s}.{ref.design_unit_name!s}")
 
             if ref.is_package_reference():
-                initial_package_refs.add("%s.%s.%s" % (library_name, ref.design_unit_name, ref.name_within))
+                initial_package_refs.add(f"{library_name!s}.{ref.design_unit_name!s}.{ref.name_within!s}")
 
     context_items = ""
     for library in sorted(initial_library_names):
         if library not in ["std", "work"]:
-            context_items += "library %s;\n" % library
+            context_items += f"library {library!s};\n"
 
     for context_ref in sorted(initial_context_refs):
-        context_items += "context %s;\n" % context_ref
+        context_items += f"context {context_ref!s};\n"
 
     for package_ref in sorted(initial_package_refs):
-        context_items += "use %s;\n" % package_ref
+        context_items += f"use {package_ref!s};\n"
 
     return context_items
 
@@ -136,21 +136,18 @@ class VerificationComponentInterface:
             ]
 
             for parameter_name, parameter_type in required_parameter_types.items():
-                messages.append(
-                    "Found constructor function %s for %s but the {} parameter is missing".format(parameter_name)
-                )
-                messages.append(
-                    "Found constructor function %s for %s but the {} parameter is not of type {}".format(
-                        parameter_name, parameter_type
-                    )
-                )
-                messages.append(
-                    "Found constructor function %s for %s but {} is lacking a default value".format(parameter_name)
-                )
-                messages.append(
-                    "Found constructor function %s for %s but {} is the only allowed default "
-                    "value for the {} parameter".format(expected_default_value[parameter_name], parameter_name)
-                )
+                messages += [
+                    f"Found constructor function %s for %s but the {parameter_name!s} parameter is missing",
+                    (
+                        f"Found constructor function %s for %s but the {parameter_name} "
+                        f"parameter is not of type {parameter_type}"
+                    ),
+                    f"Found constructor function %s for %s but {parameter_name} is lacking a default value",
+                    (
+                        f"Found constructor function %s for %s but {expected_default_value[parameter_name]} "
+                        f"is the only allowed default value for the {parameter_name} parameter"
+                    ),
+                ]
 
             return messages
 
@@ -270,7 +267,7 @@ class VerificationComponentInterface:
             initial_package_refs=set(
                 [
                     "vunit_lib.vc_pkg.all",
-                    "%s.%s.all" % (vci_lib_name, vci_code.packages[0].identifier),
+                    f"{vci_lib_name!s}.{vci_code.packages[0].identifier!s}.all",
                 ]
             ),
         )
@@ -287,9 +284,8 @@ class VerificationComponentInterface:
                         "unexpected_msg_type_policy",
                     ]:
                         continue
-                    constant_declarations += "    constant %s : %s := ;\n" % (
-                        identifier,
-                        parameter.subtype_indication.type_mark,
+                    constant_declarations += (
+                        f"    constant {identifier!s} : {parameter.subtype_indication.type_mark!s} := ;\n"
                     )
         else:
             constant_declarations = "\n"
@@ -342,12 +338,8 @@ class VerificationComponentInterface:
             checker=None,
             unexpected_msg_type_policy="fail",
         ):
-
-            handle_assignment = "    constant %s : %s := %s(\n" % (
-                handle_name,
-                self.vc_constructor.return_type_mark,
-                self.vc_constructor.identifier,
-            )
+            mark = self.vc_constructor.return_type_mark
+            handle_assignment = f"    constant {handle_name!s} : {mark!s} := {self.vc_constructor.identifier!s}(\n"
             for parameter in unspecified_parameters:
                 for identifier in parameter.identifier_list:
                     if identifier in [
@@ -357,10 +349,7 @@ class VerificationComponentInterface:
                         "unexpected_msg_type_policy",
                     ]:
                         continue
-                    handle_assignment += "      %s => %s,\n" % (
-                        identifier,
-                        identifier,
-                    )
+                    handle_assignment += f"      {identifier!s} => {identifier!s},\n"
             for formal, actual in dict(
                 actor=actor,
                 logger=logger,
@@ -368,7 +357,7 @@ class VerificationComponentInterface:
                 unexpected_msg_type_policy=unexpected_msg_type_policy,
             ).items():
                 if actual:
-                    handle_assignment += "      %s => %s,\n" % (formal, actual)
+                    handle_assignment += f"      {formal!s} => {actual!s},\n"
 
             handle_assignment = handle_assignment[:-2] + "\n    );"
 
@@ -443,30 +432,22 @@ class VerificationComponentInterface:
            prj.add_vhdl_testbench("test_lib", ROOT / "test", ROOT / ".vc" / "vc_template.vhd")
 
         """
-        test_dir = Path(test_dir)
-        template_path = Path(template_path) if template_path is not None else None
-
+        template_path = Path(template_path).resolve() if template_path is not None else None
         test_dir = Path(test_dir).resolve()
-        if template_path:
-            template_path = Path(template_path).resolve()
 
         try:
-            vci_test_lib.test_bench(
-                "tb_%s_%s_compliance" % (self.vci_facade.name, self.vc_constructor.return_type_mark)
-            )
-            raise RuntimeError("tb_%s_compliance already exists in %s" % (self.vci_facade.name, vci_test_lib.name))
+            vci_test_lib.test_bench(f"tb_{self.vci_facade.name!s}_{self.vc_constructor.return_type_mark!s}_compliance")
+            raise RuntimeError(f"tb_{self.vci_facade.name!s}_compliance already exists in {vci_test_lib.name!s}")
         except KeyError:
             pass
 
         if not test_dir.exists():
             test_dir.mkdir(parents=True)
 
-        tb_path = test_dir / ("tb_%s_%s_compliance.vhd" % (self.vci_facade.name, self.vc_constructor.return_type_mark))
+        tb_path = test_dir / (f"tb_{self.vci_facade.name!s}_{self.vc_constructor.return_type_mark!s}_compliance.vhd")
         testbench_code = self.create_vhdl_testbench(template_path)
         if not testbench_code:
             return None
         tb_path.write_text(testbench_code)
 
-        tb_file = vci_test_lib.add_source_file(tb_path)
-
-        return tb_file
+        return vci_test_lib.add_source_file(tb_path)
