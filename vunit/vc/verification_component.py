@@ -139,7 +139,7 @@ class VerificationComponent:
                         "unexpected_msg_type_policy",
                     ]:
                         continue
-                    constructor += "    %s => ,\n" % parameter
+                    constructor += f"    {parameter!s} => ,\n"
                 constructor = constructor[:-2] + "\n  );\n"
 
             return constructor
@@ -152,17 +152,14 @@ class VerificationComponent:
             for port in vc_entity.ports:
                 if (port.mode != "out") and port.init_value:
                     for identifier in port.identifier_list:
-                        port_mappings += "      %s => open,\n" % identifier
+                        port_mappings += f"      {identifier!s} => open,\n"
                 else:
                     signal_declarations += "  signal %s : %s;\n" % (
                         ", ".join(port.identifier_list),
                         port.subtype_indication,
                     )
                     for identifier in port.identifier_list:
-                        port_mappings += "      %s => %s,\n" % (
-                            identifier,
-                            identifier,
-                        )
+                        port_mappings += f"      {identifier!s} => {identifier!s},\n"
 
             vc_instantiation = """  -- DO NOT modify the VC instantiation.
   vc_inst: entity %s.%s
@@ -201,19 +198,18 @@ class VerificationComponent:
             vc_instantiation,
         ) = create_signal_declarations_and_vc_instantiation(vc_entity, vc_lib_name)
 
-        initial_package_refs = set(
-            [
-                "vunit_lib.vc_pkg.all",
-                "vunit_lib.sync_pkg.all",
-                "%s.%s.all" % (vci_lib_name, vci_code.packages[0].identifier),
-            ]
-        )
         context_items = create_context_items(
             vc_code,
             vc_lib_name,
             initial_library_names=set(["std", "work", "vunit_lib", vc_lib_name]),
             initial_context_refs=set(["vunit_lib.vunit_context", "vunit_lib.com_context"]),
-            initial_package_refs=initial_package_refs,
+            initial_package_refs=set(
+                [
+                    "vunit_lib.vc_pkg.all",
+                    "vunit_lib.sync_pkg.all",
+                    f"{vci_lib_name!s}.{vci_code.packages[0].identifier!s}.all",
+                ]
+            ),
         )
 
         return (
@@ -241,20 +237,16 @@ class VerificationComponent:
             template_path = Path(template_path).resolve()
 
         def update_architecture_declarations(code):
+            constant = rf"\bconstant\s+{self.vc_entity.generics[0].identifier_list[0]}\s*:\s*{self.vc_handle_t}\s*"
             _constructor_call_start_re = re.compile(
-                r"\bconstant\s+{vc_handle_name}\s*:\s*{vc_handle_t}\s*:=\s*{vc_constructor_name}".format(
-                    vc_handle_name=self.vc_entity.generics[0].identifier_list[0],
-                    vc_handle_t=self.vc_handle_t,
-                    vc_constructor_name=self.vci.vc_constructor.identifier,
-                ),
+                rf"{constant!s}:=\s*{self.vci.vc_constructor.identifier}",
                 MULTILINE | IGNORECASE | DOTALL,
             )
 
             constructor_call_start = _constructor_call_start_re.search(code)
             if not constructor_call_start:
                 raise RuntimeError(
-                    "Failed to find call to %s in template_path %s"
-                    % (self.vci.vc_constructor.identifier, template_path)
+                    f"Failed to find call to {self.vci.vc_constructor.identifier!s} in template_path {template_path!s}"
                 )
 
             parameter_start_re = re.compile(r"\s*\(", MULTILINE | IGNORECASE | DOTALL)
@@ -290,10 +282,8 @@ class VerificationComponent:
                 constructor_call_end_match = _constructor_call_end_re.match(code[search_start:])
 
             if not constructor_call_end_match:
-                raise RuntimeError(
-                    "Missing trailing semicolon for %s in template_path %s"
-                    % (self.vci.vc_constructor.identifier, template_path)
-                )
+                identifier = self.vci.vc_constructor.identifier
+                raise RuntimeError(f"Missing trailing semicolon for {identifier!s} in template_path {template_path!s}")
 
             constructor_call_end = search_start + constructor_call_end_match.end()
 
@@ -327,7 +317,7 @@ class VerificationComponent:
 
             code, num_found_test_runners = subn(_test_runner_re, new_test_runner, code, 1)
             if not num_found_test_runners:
-                raise RuntimeError("Failed to find test runner in template_path %s" % template_path)
+                raise RuntimeError(f"Failed to find test runner in template_path {template_path!s}")
 
             return code
 
@@ -336,7 +326,7 @@ class VerificationComponent:
 
             code, num_found_runner_cfg = subn(_runner_cfg_re, GENERICS_TEMPLATE, code, 1)
             if not num_found_runner_cfg:
-                raise RuntimeError("Failed to find runner_cfg generic in template_path %s" % template_path)
+                raise RuntimeError(f"Failed to find runner_cfg generic in template_path {template_path!s}")
 
             return code
 
@@ -354,8 +344,8 @@ class VerificationComponent:
             template_code = template_code.lower()
 
         design_file = VHDLDesignFile.parse(template_code)
-        if design_file.entities[0].identifier != "tb_%s_compliance" % self.vc_facade.name:
-            raise RuntimeError("%s is not a template_path for %s" % (template_path, self.vc_facade.name))
+        if design_file.entities[0].identifier != f"tb_{self.vc_facade.name!s}_compliance":
+            raise RuntimeError(f"{template_path!s} is not a template_path for {self.vc_facade.name!s}")
 
         tb_code = update_architecture_declarations(template_code)
         tb_code = update_test_runner(tb_code)
@@ -385,22 +375,22 @@ class VerificationComponent:
         template_path = Path(template_path) if template_path is not None else None
 
         try:
-            vc_test_lib.test_bench("tb_%s_compliance" % self.vc_entity.identifier)
-            raise RuntimeError("tb_%s_compliance already exists in %s" % (self.vc_entity.identifier, vc_test_lib.name))
+            vc_test_lib.test_bench(f"tb_{self.vc_entity.identifier!s}_compliance")
+            raise RuntimeError(f"tb_{self.vc_entity.identifier!s}_compliance already exists in {vc_test_lib.name!s}")
         except KeyError:
             pass
 
         if not test_dir.exists():
             test_dir.mkdir(parents=True)
 
-        tb_path = test_dir / ("tb_%s_compliance.vhd" % self.vc_entity.identifier)
+        tb_path = test_dir / (f"tb_{self.vc_entity.identifier!s}_compliance.vhd")
         testbench_code = self.create_vhdl_testbench(template_path)
         if not testbench_code:
             return None
         tb_path.write_text(testbench_code)
 
         tb_file = vc_test_lib.add_source_file(str(tb_path))
-        testbench = vc_test_lib.test_bench("tb_%s_compliance" % self.vc_entity.identifier)
+        testbench = vc_test_lib.test_bench(f"tb_{self.vc_entity.identifier!s}_compliance")
         test = testbench.test("Test that the actor can be customised")
         test.set_generic("use_custom_actor", True)
 
