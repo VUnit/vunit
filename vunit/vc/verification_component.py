@@ -80,7 +80,7 @@ class VerificationComponent:
     def validate(vc_path):
         """Validates the existence and contents of the verification component."""
         vc_path = Path(vc_path)
-        with vc_path.open() as fptr:
+        with vc_path.open("r", encoding="utf-8") as fptr:
             vc_code = VHDLDesignFile.parse(fptr.read())
 
             if len(vc_code.entities) != 1:
@@ -331,7 +331,7 @@ class VerificationComponent:
             return code
 
         if template_path:
-            template_code = template_path.read_text().lower()
+            template_code = template_path.read_text(encoding="utf-8").lower()
         else:
             template_code, _ = self.create_vhdl_testbench_template(
                 self.vc_facade.library,
