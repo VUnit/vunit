@@ -63,27 +63,24 @@ Any bug reports, feature requests or questions about the usage of VUnit can be m
 Credits and License
 -------------------
 
--  Founders:
+Substantial contributors are shown in the table below, but many others contributed with minor patches.
+Find a list at `github.com/VUnit/vunit/graphs/contributors <https://github.com/VUnit/vunit/graphs/contributors>`__.
 
-  -  `Lars Asplund <https://github.com/LarsAsplund>`_
+With apologies to anyone who ought to be either on this table or in the GitHub contributor list, but isn't.
+Thanks also to all those who have reported bugs and support issues, and often patches and testcases.
 
-  -  `Olof Kraigher <https://github.com/kraigher>`_
+================================================================================ ================================================================================================================================================================================================
+Contributor [#f1]_                                                               Role
+================================================================================ ================================================================================================================================================================================================
+Asplund, Lars [`@LarsAsplund <https://github.com/LarsAsplund>`__] [#f2]_         Founder and main author of VUnit as a whole
+Kraigher, Olof [`@kraigher <https://github.com/kraigher>`__]                     Founder and main author of VUnit until v4
+Marquardt, Colin [`@cmarqu <https://github.com/cmarqu>`__]                       Cadence Incisive support
+Martinez-Corral, Unai [`@umarcor <https://github.com/umarcor>`__] [#f2]_         Continuous Integration (CI), Co-simulation with GHDL's VHPIDIRECT interface (`VUnit/cosim <https://github.com/VUnit/cosim>`_, based on `ghdl/ghdl-cosim <https://github.com/ghdl/ghdl-cosim>`_)
+Siluk, Sławomir [`@slaweksiluk <https://github.com/slaweksiluk>`__]              Verification Components (such as Avalon and Wishbone)
+================================================================================ ================================================================================================================================================================================================
 
--  Notable contributors:
-
-  -  `Colin Marquardt <https://github.com/cmarqu>`_:
-
-    -  Cadence Incisive support
-
-  -  `Sławomir Siluk <https://github.com/slaweksiluk>`_:
-
-    -  Verification Components (such as Avalon and Wishbone)
-
-  -  `Unai Martinez-Corral <https://github.com/umarcor>`_:
-
-    -  Co-simulation with GHDL's VHPIDIRECT interface (`VUnit/cosim <https://github.com/VUnit/cosim>`_, based on `ghdl/ghdl-cosim <https://github.com/ghdl/ghdl-cosim>`_)
-
-    -  Continuous Integration (CI)
+.. [#f1] In alphabetical order
+.. [#f2] Maintainer
 
 .. include:: license.rst
 
