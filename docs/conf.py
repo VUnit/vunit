@@ -75,7 +75,8 @@ else:
 
 html_static_path = ["_static"]
 
-html_logo = str(Path(html_static_path[0]) / "VUnit_logo_175x175.png")
+html_logo = str(Path(html_static_path[0]) / "VUnit_logo.png")
+
 html_favicon = str(Path(html_static_path[0]) / "vunit.ico")
 
 # Output file base name for HTML help builder.
