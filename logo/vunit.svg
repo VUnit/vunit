@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="505.28503"
+   height="505.28503"
+   version="1.1"
+   id="svg11"
+   sodipodi:docname="vunit.svg"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <defs
+     id="defs15" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     id="namedview13"
+     showgrid="false"
+     inkscape:zoom="1.3350176"
+     inkscape:cx="381.64291"
+     inkscape:cy="264.79052"
+     inkscape:window-x="-8"
+     inkscape:window-y="1072"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg11"
+     inkscape:pagecheckerboard="1"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0" />
+  <metadata
+     id="metadata7">image/svg+xml<rdf:RDF>
+  <cc:Work
+     rdf:about="">
+    <dc:format>image/svg+xml</dc:format>
+    <dc:type
+       rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+  </cc:Work>
+</rdf:RDF>
+</metadata>
+  <path
+     style="fill:#0c479d;fill-opacity:1;fill-rule:nonzero;stroke-width:1.01508"
+     inkscape:connector-curvature="0"
+     id="path918"
+     d="M 29.468134,0 C 21.64633,0 14.14798,3.0921551 8.6201945,8.6199523 3.0924097,14.147983 0,21.646344 0,29.458033 V 475.81666 c 0,7.81167 3.0924097,15.31028 8.6201945,20.83806 5.5277855,5.52781 13.0261355,8.63032 20.8479395,8.63032 H 475.81677 c 7.8218,0 15.3203,-3.10251 20.84806,-8.63032 5.52779,-5.52778 8.62021,-13.02638 8.62021,-20.83806 V 29.458033 c 0,-7.811689 -3.09242,-15.31004 -8.62021,-20.8380807 C 491.13707,3.0921653 483.63857,0 475.81677,0 Z"
+     inkscape:export-xdpi="37.998356"
+     inkscape:export-ydpi="37.998356"
+     inkscape:export-filename="D:\data-dev\umarcor\dbhi\dbhi-gh\VUnit\vunit\docs\_static\VUnit_logo.png" />
+  <path
+     style="fill:#ffffff;fill-rule:nonzero;stroke-width:0.999896"
+     inkscape:connector-curvature="0"
+     id="white_boarder"
+     d="m 32.805861,3.7803169 c -7.70479,0 -15.090966,3.04589 -20.536055,8.4909801 -5.4450893,5.44532 -8.4912367,12.83149 -8.4912367,20.5263 V 472.47778 c 0,7.69479 3.0461474,15.08121 8.4912367,20.52628 5.445089,5.4451 12.831265,8.50119 20.536055,8.50119 H 472.47713 c 7.70479,0 15.09111,-3.05609 20.53618,-8.50119 5.4451,-5.44507 8.49124,-12.83148 8.49124,-20.52628 V 32.797597 c 0,-7.69481 -3.04614,-15.08097 -8.49124,-20.5263 -5.44507,-5.4450801 -12.83139,-8.4909801 -20.53618,-8.4909801 z"
+     inkscape:export-xdpi="37.998356"
+     inkscape:export-ydpi="37.998356"
+     inkscape:export-filename="D:\data-dev\umarcor\dbhi\dbhi-gh\VUnit\vunit\docs\_static\VUnit_logo.png" />
+  <path
+     style="fill:#0c479d;fill-rule:nonzero"
+     inkscape:connector-curvature="0"
+     d="m 20.650269,468.28643 c 0,4.3212 1.7127,8.46304 4.75983,11.50977 3.05685,3.05649 7.18946,4.76923 11.51096,4.76923 H 468.4102 c 4.32175,0 8.45413,-1.71274 11.51123,-4.76923 3.047,-3.04672 4.75983,-7.18857 4.75983,-11.50977 V 36.860347 c 0,-4.32097 -1.71283,-8.46304 -4.75983,-11.5098 -3.0571,-3.05647 -7.18948,-4.75901 -11.51123,-4.75901 H 36.921059 c -4.3215,0 -8.45412,1.70253 -11.51096,4.75901 -3.04713,3.04675 -4.75983,7.18882 -4.75983,11.5098 z"
+     id="blue_background"
+     inkscape:export-xdpi="37.998356"
+     inkscape:export-ydpi="37.998356"
+     inkscape:export-filename="D:\data-dev\umarcor\dbhi\dbhi-gh\VUnit\vunit\docs\_static\VUnit_logo.png" />
+  <polygon
+     style="fill:#ffffff"
+     points="301.03222,437.34089 199.18294,437.34089 80.223104,62.535785 151.92495,62.535785 250.51508,371.3426 348.29058,62.535785 419.99239,62.535785 "
+     id="v"
+     inkscape:export-xdpi="37.998356"
+     inkscape:export-ydpi="37.998356"
+     transform="translate(2.6456693,2.5851969)"
+     inkscape:export-filename="D:\data-dev\umarcor\dbhi\dbhi-gh\VUnit\vunit\docs\_static\VUnit_logo.png" />
+</svg>
