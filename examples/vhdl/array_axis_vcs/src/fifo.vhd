@@ -38,10 +38,8 @@ begin
   -- If your simulator chokes on the following block,
   -- see https://electronics.stackexchange.com/questions/540769/what-kind-of-vhdl-process-is-this/
   PslChecks : block is
-    constant dx : std_logic_vector(d'left downto 0) := (others => 'X');
-    constant du : std_logic_vector(d'left downto 0) := (others => 'U');
   begin
-    assert always (not rst and wr -> not (d ?= dx or d ?= du))@rising_edge(clkw)
+    assert always (not rst and wr -> not is_x(d))@rising_edge(clkw)
       report "wrote X|U to FIFO";
     assert always (not rst and f -> not wr)@rising_edge(clkw)
       report "Wrote to FIFO while full";
