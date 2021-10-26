@@ -165,13 +165,16 @@ in your VUnit Git repository? You have to do this first if installing using setu
             ):
                 continue
 
-            if not supports_vhdl_package_generics and (
-                bname
-                in [
-                    "ScoreboardGenericPkg.vhd",
-                    "ScoreboardPkg_int.vhd",
-                    "ScoreboardPkg_slv.vhd",
-                ]
+            if (supports_vhdl_package_generics and str(bname).endswith("_c.vhd")) or (
+                not supports_vhdl_package_generics
+                and (
+                    bname
+                    in [
+                        "ScoreboardGenericPkg.vhd",
+                        "ScoreboardPkg_int.vhd",
+                        "ScoreboardPkg_slv.vhd",
+                    ]
+                )
             ):
                 continue
 
