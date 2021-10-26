@@ -175,6 +175,15 @@ in your VUnit Git repository? You have to do this first if installing using setu
             ):
                 continue
 
+            if supports_vhdl_package_generics and (
+                bname
+                in [
+                    "ScoreboardPkg_int_c.vhd",
+                    "ScoreboardPkg_slv_c.vhd",
+                ]
+            ):
+                continue
+
             library.add_source_files(file_name, preprocessors=[])
 
     def _add_json4vhdl(self):
