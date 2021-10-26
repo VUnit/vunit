@@ -11,8 +11,13 @@ Functions to add builtin VHDL code to a project for compilation
 from pathlib import Path
 from glob import glob
 from warnings import warn
+import logging
+
 from vunit.vhdl_standard import VHDL, VHDLStandard
 from vunit.ui.common import get_checked_file_names_from_globs
+
+
+LOGGER = logging.getLogger(__name__)
 
 VHDL_PATH = (Path(__file__).parent / "vhdl").resolve()
 VERILOG_PATH = (Path(__file__).parent / "verilog").resolve()
@@ -130,16 +135,26 @@ class Builtins(object):
             raise RuntimeError("Verification component library only supports vhdl 2008 and later")
         self._add_files(VHDL_PATH / "verification_components" / "src" / "*.vhd")
 
+    def _add_library_if_not_exist(self, library_name, message):
+        """
+        Check if a library name exists in the project. If not, add it and return a handle.
+        """
+        if library_name.lower() in [
+            library.lower() for library in self._vunit_obj._project._libraries  # pylint: disable=protected-access
+        ]:
+            LOGGER.warning(message)
+            return None
+        return self._vunit_obj.add_library(library_name)
+
     def _add_osvvm(self):
         """
         Add osvvm library
         """
-        library_name = "osvvm"
-
-        try:
-            library = self._vunit_obj.library(library_name)
-        except KeyError:
-            library = self._vunit_obj.add_library(library_name)
+        library = self._add_library_if_not_exist(
+            "osvvm", "Library 'OSVVM' previously defined. Skipping addition of builtin OSVVM (2021.09)."
+        )
+        if library is None:
+            return
 
         simulator_coverage_api = self._simulator_class.get_osvvm_coverage_api()
         supports_vhdl_package_generics = self._simulator_class.supports_vhdl_package_generics()
@@ -190,12 +205,11 @@ in your VUnit Git repository? You have to do this first if installing using setu
         """
         Add JSON-for-VHDL library
         """
-        library_name = "JSON"
-
-        try:
-            library = self._vunit_obj.library(library_name)
-        except KeyError:
-            library = self._vunit_obj.add_library(library_name)
+        library = self._add_library_if_not_exist(
+            "JSON", "Library 'JSON' previously defined. Skipping addition of builtin JSON-for-VHDL (c8a6f51)."
+        )
+        if library is None:
+            return
 
         library.add_source_files(VHDL_PATH / "JSON-for-VHDL" / "src" / "*.vhdl")
 
