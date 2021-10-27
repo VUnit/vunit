@@ -109,7 +109,7 @@ class LocationPreprocessor(object):
 
     _already_fixed_file_name_pattern = re.compile(r"file_name\s*=>", re.MULTILINE)
     _already_fixed_line_num_pattern = re.compile(r"line_num\s*=>", re.MULTILINE)
-    _subprogram_declaration_start_backwards_pattern = re.compile(r"\s+(erudecorp|noitcnuf)")
+    _subprogram_declaration_start_backwards_pattern = re.compile(r"\s+(erudecorp|noitcnuf)", re.IGNORECASE)
     _assignment_pattern = re.compile(r"\s*(:=|<=)", re.MULTILINE)
 
     def run(self, code, file_name):
