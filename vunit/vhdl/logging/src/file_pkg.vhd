@@ -7,6 +7,7 @@
 use std.textio.all;
 use work.integer_vector_ptr_pkg.all;
 use work.string_ptr_pkg.all;
+use work.common_log_pkg.all;
 
 package file_pkg is
   -- NOTE: This package is private, do not use outside of VUnit
@@ -23,8 +24,16 @@ package file_pkg is
   procedure file_close(file_id : file_id_t);
   procedure file_open_for_write(file_id : inout file_id_t;
                                 file_name : string);
-  procedure writeline(file_id : file_id_t;
-                      l : inout line);
+
+  procedure write_to_log(
+    file_id : file_id_t;
+    msg : string;
+    log_time : time;
+    log_level : string;
+    log_source_name : string;
+    str_1: string;
+    val_1, val_2, val_3, val_4, val_5 : integer);
+
 end package;
 
 package body file_pkg is
@@ -210,52 +219,65 @@ package body file_pkg is
     assert_status(status, file_name);
   end;
 
-  procedure writeline(file_id : file_id_t;
-                      l : inout line) is
-    variable id : natural := get(file_id.p_data, id_idx);
+  procedure write_to_log(
+    file_id : file_id_t;
+    msg : string;
+    log_time : time;
+    log_level : string;
+    log_source_name : string;
+    str_1: string;
+    val_1, val_2, val_3, val_4, val_5 : integer) is
+
+    constant id : natural := get(file_id.p_data, id_idx);
     variable name_ptr : string_ptr_t;
     file ftmp : text;
     variable status : file_open_status;
+
+    procedure write_to_log_i(file log_destination : text) is
+    begin
+      write_to_log(log_destination, msg, log_time, log_level, log_source_name, val_1 => val_1, val_2 => val_2,
+        val_3 => val_3, val_4 => val_4, val_5 => val_5, str_1 => str_1);
+    end;
   begin
     case id is
-      when 0 => writeline(f0, l);
-      when 1 => writeline(f1, l);
-      when 2 => writeline(f2, l);
-      when 3 => writeline(f3, l);
-      when 4 => writeline(f4, l);
-      when 5 => writeline(f5, l);
-      when 6 => writeline(f6, l);
-      when 7 => writeline(f7, l);
-      when 8 => writeline(f8, l);
-      when 9 => writeline(f9, l);
-      when 10 => writeline(f10, l);
-      when 11 => writeline(f11, l);
-      when 12 => writeline(f12, l);
-      when 13 => writeline(f13, l);
-      when 14 => writeline(f14, l);
-      when 15 => writeline(f15, l);
-      when 16 => writeline(f16, l);
-      when 17 => writeline(f17, l);
-      when 18 => writeline(f18, l);
-      when 19 => writeline(f19, l);
-      when 20 => writeline(f20, l);
-      when 21 => writeline(f21, l);
-      when 22 => writeline(f22, l);
-      when 23 => writeline(f23, l);
-      when 24 => writeline(f24, l);
-      when 25 => writeline(f25, l);
-      when 26 => writeline(f26, l);
-      when 27 => writeline(f27, l);
-      when 28 => writeline(f28, l);
-      when 29 => writeline(f29, l);
-      when 30 => writeline(f30, l);
-      when 31 => writeline(f31, l);
+      when 0 => write_to_log_i(f0);
+      when 1 => write_to_log_i(f1);
+      when 2 => write_to_log_i(f2);
+      when 3 => write_to_log_i(f3);
+      when 4 => write_to_log_i(f4);
+      when 5 => write_to_log_i(f5);
+      when 6 => write_to_log_i(f6);
+      when 7 => write_to_log_i(f7);
+      when 8 => write_to_log_i(f8);
+      when 9 => write_to_log_i(f9);
+      when 10 => write_to_log_i(f10);
+      when 11 => write_to_log_i(f11);
+      when 12 => write_to_log_i(f12);
+      when 13 => write_to_log_i(f13);
+      when 14 => write_to_log_i(f14);
+      when 15 => write_to_log_i(f15);
+      when 16 => write_to_log_i(f16);
+      when 17 => write_to_log_i(f17);
+      when 18 => write_to_log_i(f18);
+      when 19 => write_to_log_i(f19);
+      when 20 => write_to_log_i(f20);
+      when 21 => write_to_log_i(f21);
+      when 22 => write_to_log_i(f22);
+      when 23 => write_to_log_i(f23);
+      when 24 => write_to_log_i(f24);
+      when 25 => write_to_log_i(f25);
+      when 26 => write_to_log_i(f26);
+      when 27 => write_to_log_i(f27);
+      when 28 => write_to_log_i(f28);
+      when 29 => write_to_log_i(f29);
+      when 30 => write_to_log_i(f30);
+      when 31 => write_to_log_i(f31);
 
       when others =>
         name_ptr := to_string_ptr(get(file_id.p_data, name_idx));
         file_open(status, ftmp, to_string(name_ptr), append_mode);
         assert_status(status, to_string(name_ptr));
-        writeline(ftmp, l);
+        write_to_log_i(ftmp);
         file_close(ftmp);
     end case;
 
