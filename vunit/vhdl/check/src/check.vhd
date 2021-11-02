@@ -169,7 +169,7 @@ package body check_pkg is
   begin
     -- pragma translate_off
     wait_on_edge(clock, en, active_clock_edge);
-    check(checker, to_x01(expr) = '1', msg, level, path_offset, line_num, file_name);
+    check(checker, to_x01(expr) = '1', msg, level, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -187,13 +187,13 @@ package body check_pkg is
     if expr then
       pass := true;
       if is_pass_visible(checker) then
-        passing_check(checker, std_msg("Check passed", msg, ""), path_offset, line_num, file_name);
+        passing_check(checker, std_msg("Check passed", msg, ""), path_offset + 1, line_num, file_name);
       else
         passing_check(checker);
       end if;
     else
       pass := false;
-      failing_check(checker, std_msg("Check failed", msg, ""), level, path_offset, line_num, file_name);
+      failing_check(checker, std_msg("Check failed", msg, ""), level, path_offset + 1, line_num, file_name);
     end if;
   -- pragma translate_on
   end;
@@ -209,7 +209,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check(checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check(checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -223,7 +223,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check(default_checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check(default_checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -237,7 +237,7 @@ package body check_pkg is
     constant file_name   : in  string      := "") is
   begin
     -- pragma translate_off
-    check(default_checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check(default_checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -252,7 +252,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check(default_checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check(default_checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
     -- pragma translate_on
     return pass;
   end;
@@ -269,7 +269,7 @@ package body check_pkg is
     constant file_name         : in string      := "") is
   begin
     -- pragma translate_off
-    check(default_checker, clock, en, expr, msg, level, active_clock_edge, path_offset, line_num, file_name);
+    check(default_checker, clock, en, expr, msg, level, active_clock_edge, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -285,7 +285,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check(checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check(checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
     -- pragma translate_on
     return pass;
   end;
@@ -301,7 +301,7 @@ package body check_pkg is
   begin
     -- pragma translate_off
     if is_pass_visible(checker) then
-      passing_check(checker, std_msg("Unconditional check passed", msg, ""), path_offset, line_num, file_name);
+      passing_check(checker, std_msg("Unconditional check passed", msg, ""), path_offset + 1, line_num, file_name);
     else
       passing_check(checker);
     end if;
@@ -315,7 +315,7 @@ package body check_pkg is
     constant file_name   : in string  := "") is
   begin
     -- pragma translate_off
-    check_passed(default_checker, msg, path_offset, line_num, file_name);
+    check_passed(default_checker, msg, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -331,7 +331,7 @@ package body check_pkg is
     constant file_name   : in string      := "") is
   begin
     -- pragma translate_off
-    failing_check(checker, std_msg("Unconditional check failed", msg, ""), level, path_offset, line_num, file_name);
+    failing_check(checker, std_msg("Unconditional check failed", msg, ""), level, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -343,7 +343,7 @@ package body check_pkg is
     constant file_name   : in string      := "") is
   begin
     -- pragma translate_off
-    failing_check(default_checker, std_msg("Unconditional check failed", msg, ""), level, path_offset, line_num, file_name);
+    failing_check(default_checker, std_msg("Unconditional check failed", msg, ""), level, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -364,7 +364,7 @@ package body check_pkg is
   begin
     -- pragma translate_off
     wait_on_edge(clock, en, active_clock_edge);
-    check_true(checker, to_x01(expr) = '1', msg, level, path_offset, line_num, file_name);
+    check_true(checker, to_x01(expr) = '1', msg, level, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -382,13 +382,13 @@ package body check_pkg is
     if expr then
       pass := true;
       if is_pass_visible(checker) then
-        passing_check(checker, std_msg("True check passed", msg, ""), path_offset, line_num, file_name);
+        passing_check(checker, std_msg("True check passed", msg, ""), path_offset + 1, line_num, file_name);
       else
         passing_check(checker);
       end if;
     else
       pass := false;
-      failing_check(checker, std_msg("True check failed", msg, ""), level, path_offset, line_num, file_name);
+      failing_check(checker, std_msg("True check failed", msg, ""), level, path_offset + 1, line_num, file_name);
     end if;
   -- pragma translate_on
   end;
@@ -404,7 +404,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_true(checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check_true(checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -418,7 +418,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_true(default_checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check_true(default_checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -432,7 +432,7 @@ package body check_pkg is
     constant file_name   : in  string      := "") is
   begin
     -- pragma translate_off
-    check_true(default_checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check_true(default_checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -447,7 +447,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_true(default_checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check_true(default_checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
     -- pragma translate_on
     return pass;
   end;
@@ -464,7 +464,7 @@ package body check_pkg is
     constant file_name         : in string      := "") is
   begin
     -- pragma translate_off
-    check_true(default_checker, clock, en, expr, msg, level, active_clock_edge, path_offset, line_num, file_name);
+    check_true(default_checker, clock, en, expr, msg, level, active_clock_edge, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -480,7 +480,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_true(checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check_true(checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
     -- pragma translate_on
     return pass;
   end;
@@ -501,7 +501,7 @@ package body check_pkg is
   begin
     -- pragma translate_off
     wait_on_edge(clock, en, active_clock_edge);
-    check_false(checker, to_x01(expr) /= '0', msg, level, path_offset, line_num, file_name);
+    check_false(checker, to_x01(expr) /= '0', msg, level, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -519,13 +519,13 @@ package body check_pkg is
     if not expr then
       pass := true;
       if is_pass_visible(checker) then
-        passing_check(checker, std_msg("False check passed", msg, ""), path_offset, line_num, file_name);
+        passing_check(checker, std_msg("False check passed", msg, ""), path_offset + 1, line_num, file_name);
       else
         passing_check(checker);
       end if;
     else
       pass := false;
-      failing_check(checker, std_msg("False check failed", msg, ""), level, path_offset, line_num, file_name);
+      failing_check(checker, std_msg("False check failed", msg, ""), level, path_offset + 1, line_num, file_name);
     end if;
   -- pragma translate_on
   end;
@@ -541,7 +541,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_false(checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check_false(checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -555,7 +555,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_false(default_checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check_false(default_checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -569,7 +569,7 @@ package body check_pkg is
     constant file_name   : in  string      := "") is
   begin
     -- pragma translate_off
-    check_false(default_checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check_false(default_checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -584,7 +584,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_false(default_checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check_false(default_checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
     -- pragma translate_on
     return pass;
   end;
@@ -601,7 +601,7 @@ package body check_pkg is
     constant file_name         : in string      := "") is
   begin
     -- pragma translate_off
-    check_false(default_checker, clock, en, expr, msg, level, active_clock_edge, path_offset, line_num, file_name);
+    check_false(default_checker, clock, en, expr, msg, level, active_clock_edge, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -617,7 +617,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_false(checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check_false(checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
     -- pragma translate_on
     return pass;
   end;
@@ -642,7 +642,7 @@ package body check_pkg is
     -- pragma translate_off
     wait_on_edge(clock, en, active_clock_edge);
     check_implication(checker, pass, to_x01(antecedent_expr) /= '0',
-                      to_x01(consequent_expr) = '1', msg, level, path_offset, line_num, file_name);
+                      to_x01(consequent_expr) = '1', msg, level, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -672,7 +672,7 @@ package body check_pkg is
       end if;
     else
       pass := false;
-      failing_check(checker, std_msg("Implication check failed", msg, ""), level, path_offset, line_num, file_name);
+      failing_check(checker, std_msg("Implication check failed", msg, ""), level, path_offset + 1, line_num, file_name);
     end if;
   -- pragma translate_on
   end;
@@ -690,7 +690,7 @@ package body check_pkg is
     constant file_name         : in string      := "") is
   begin
     -- pragma translate_off
-    check_implication(default_checker, clock, en, antecedent_expr, consequent_expr, msg, level, active_clock_edge, path_offset, line_num, file_name);
+    check_implication(default_checker, clock, en, antecedent_expr, consequent_expr, msg, level, active_clock_edge, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -706,7 +706,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_implication(checker, pass, antecedent_expr, consequent_expr, msg, level, path_offset, line_num, file_name);
+    check_implication(checker, pass, antecedent_expr, consequent_expr, msg, level, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -721,7 +721,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_implication(default_checker, pass, antecedent_expr, consequent_expr, msg, level, path_offset, line_num, file_name);
+    check_implication(default_checker, pass, antecedent_expr, consequent_expr, msg, level, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -736,7 +736,7 @@ package body check_pkg is
     constant file_name       : in  string      := "") is
   begin
     -- pragma translate_off
-    check_implication(default_checker, pass, antecedent_expr, consequent_expr, msg, level, path_offset, line_num, file_name);
+    check_implication(default_checker, pass, antecedent_expr, consequent_expr, msg, level, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -752,7 +752,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_implication(default_checker, pass, antecedent_expr, consequent_expr, msg, level, path_offset, line_num, file_name);
+    check_implication(default_checker, pass, antecedent_expr, consequent_expr, msg, level, path_offset + 1, line_num, file_name);
     -- pragma translate_on
     return pass;
   end;
@@ -770,7 +770,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_implication(checker, pass, antecedent_expr, consequent_expr, msg, level, path_offset, line_num, file_name);
+    check_implication(checker, pass, antecedent_expr, consequent_expr, msg, level, path_offset + 1, line_num, file_name);
     -- pragma translate_on
     return pass;
   end;
@@ -823,14 +823,14 @@ package body check_pkg is
         failing_check(checker,
                       std_msg("Stability check failed", msg,
                               "Start event is " & format(start_event) & "."),
-                      level, path_offset, line_num, file_name);
+                      level, path_offset + 1, line_num, file_name);
       elsif is_x(expr) then
         open_ok := false;
         failing_check(checker,
                       std_msg("Stability check failed", msg,
                               "Got " & format(expr) &
                               " at 1st active and enabled clock edge."),
-                      level, path_offset, line_num, file_name);
+                      level, path_offset + 1, line_num, file_name);
       end if;
     end procedure;
 
@@ -843,7 +843,7 @@ package body check_pkg is
         failing_check(checker,
                       std_msg("Stability check failed", msg,
                               "End event is " & format(end_event) & "."),
-                      level, path_offset, line_num, file_name);
+                      level, path_offset + 1, line_num, file_name);
       end if;
 
       if close_ok then
@@ -898,7 +898,7 @@ package body check_pkg is
                                 "Got " & format(expr) &
                                 " at " & to_ordinal_number(clock_edge_counter) &
                                 " active and enabled clock edge. Expected " &
-                                format(ref) & "."), level, path_offset, line_num, file_name);
+                                format(ref) & "."), level, path_offset + 1, line_num, file_name);
         end if;
 
         if to_x01(end_event) /= '0' then
@@ -937,7 +937,7 @@ package body check_pkg is
       wait_on_edge(clock, en, active_clock_edge);
 
       run_stability_check(checker, start_event, end_event, expr, msg, level, active_clock_edge,
-                          allow_restart, path_offset, line_num, file_name, state, ref, clock_edge_counter,
+                          allow_restart, path_offset + 1, line_num, file_name, state, ref, clock_edge_counter,
                           is_stable, exit_stability_check);
       exit when exit_stability_check;
     end loop;
@@ -960,7 +960,7 @@ package body check_pkg is
   begin
     -- pragma translate_off
     check_stable(default_checker, clock, en, start_event, end_event, expr, msg, level, active_clock_edge,
-                 allow_restart, path_offset, line_num, file_name);
+                 allow_restart, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -990,7 +990,7 @@ package body check_pkg is
       wait_on_edge(clock, en, active_clock_edge);
 
       run_stability_check(checker, start_event, end_event, (0 => expr), msg, level, active_clock_edge,
-                          allow_restart, path_offset, line_num, file_name, state, ref, clock_edge_counter,
+                          allow_restart, path_offset + 1, line_num, file_name, state, ref, clock_edge_counter,
                           is_stable, exit_stability_check);
       exit when exit_stability_check;
     end loop;
@@ -1013,7 +1013,7 @@ package body check_pkg is
   begin
     -- pragma translate_off
     check_stable(default_checker, clock, en, start_event, end_event, expr, msg, level, active_clock_edge,
-                 allow_restart, path_offset, line_num, file_name);
+                 allow_restart, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -1035,7 +1035,7 @@ package body check_pkg is
   begin
     -- pragma translate_off
     wait_on_edge(clock, en, active_clock_edge);
-    check_not_unknown(checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check_not_unknown(checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -1067,7 +1067,7 @@ package body check_pkg is
                     std_msg("Not unknown check failed",
                             msg,
                             "Got " & to_nibble_string(expr) & "."),
-                    level, path_offset, line_num, file_name);
+                    level, path_offset + 1, line_num, file_name);
     end if;
   -- pragma translate_on
   end;
@@ -1084,7 +1084,7 @@ package body check_pkg is
     constant file_name         : in string      := "") is
   begin
     -- pragma translate_off
-    check_not_unknown(default_checker, clock, en, expr, msg, level, active_clock_edge, path_offset, line_num, file_name);
+    check_not_unknown(default_checker, clock, en, expr, msg, level, active_clock_edge, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -1099,7 +1099,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_not_unknown(checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check_not_unknown(checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -1113,7 +1113,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_not_unknown(default_checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check_not_unknown(default_checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -1127,7 +1127,7 @@ package body check_pkg is
     constant file_name   : in  string      := "") is
   begin
     -- pragma translate_off
-    check_not_unknown(default_checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check_not_unknown(default_checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -1142,7 +1142,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_not_unknown(default_checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check_not_unknown(default_checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
     -- pragma translate_on
     return pass;
   end;
@@ -1159,7 +1159,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_not_unknown(checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check_not_unknown(checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
     -- pragma translate_on
     return pass;
   end;
@@ -1179,7 +1179,7 @@ package body check_pkg is
   begin
     -- pragma translate_off
     wait_on_edge(clock, en, active_clock_edge);
-    check_not_unknown(checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check_not_unknown(checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -1211,7 +1211,7 @@ package body check_pkg is
                     std_msg("Not unknown check failed",
                             msg,
                             "Got " & std_logic'image(expr)(2) & "."),
-                    level, path_offset, line_num, file_name);
+                    level, path_offset + 1, line_num, file_name);
     end if;
   -- pragma translate_on
   end;
@@ -1228,7 +1228,7 @@ package body check_pkg is
     constant file_name         : in string      := "") is
   begin
     -- pragma translate_off
-    check_not_unknown(default_checker, clock, en, expr, msg, level, active_clock_edge, path_offset, line_num, file_name);
+    check_not_unknown(default_checker, clock, en, expr, msg, level, active_clock_edge, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -1243,7 +1243,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_not_unknown(checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check_not_unknown(checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -1257,7 +1257,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_not_unknown(default_checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check_not_unknown(default_checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -1271,7 +1271,7 @@ package body check_pkg is
     constant file_name   : in  string      := "") is
   begin
     -- pragma translate_off
-    check_not_unknown(default_checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check_not_unknown(default_checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -1286,7 +1286,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_not_unknown(default_checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check_not_unknown(default_checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
     -- pragma translate_on
     return pass;
   end;
@@ -1303,7 +1303,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_not_unknown(checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check_not_unknown(checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
     -- pragma translate_on
     return pass;
   end;
@@ -1345,7 +1345,7 @@ package body check_pkg is
   begin
     -- pragma translate_off
     wait_on_edge(clock, en, active_clock_edge);
-    check_zero_one_hot(checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check_zero_one_hot(checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -1375,7 +1375,7 @@ package body check_pkg is
       failing_check(checker,
                     std_msg("Zero one-hot check failed", msg,
                             "Got " & to_nibble_string(expr) & "."),
-                    level, path_offset, line_num, file_name);
+                    level, path_offset + 1, line_num, file_name);
     end if;
   -- pragma translate_on
   end;
@@ -1392,7 +1392,7 @@ package body check_pkg is
     constant file_name         : in string      := "") is
   begin
     -- pragma translate_off
-    check_zero_one_hot(default_checker, clock, en, expr, msg, level, active_clock_edge, path_offset, line_num, file_name);
+    check_zero_one_hot(default_checker, clock, en, expr, msg, level, active_clock_edge, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -1406,7 +1406,7 @@ package body check_pkg is
     constant file_name   : in  string      := "") is
   begin
     -- pragma translate_off
-    check_zero_one_hot(default_checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check_zero_one_hot(default_checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -1421,7 +1421,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_zero_one_hot(default_checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check_zero_one_hot(default_checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
     -- pragma translate_on
     return pass;
   end;
@@ -1437,7 +1437,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_zero_one_hot(checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check_zero_one_hot(checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -1451,7 +1451,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_zero_one_hot(default_checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check_zero_one_hot(default_checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -1467,7 +1467,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_zero_one_hot(checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check_zero_one_hot(checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
     -- pragma translate_on
     return pass;
   end;
@@ -1490,7 +1490,7 @@ package body check_pkg is
   begin
     -- pragma translate_off
     wait_on_edge(clock, en, active_clock_edge);
-    check_one_hot(checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check_one_hot(checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -1520,7 +1520,7 @@ package body check_pkg is
       failing_check(checker,
                     std_msg("One-hot check failed", msg,
                             "Got " & to_nibble_string(expr) & "."),
-                    level, path_offset, line_num, file_name);
+                    level, path_offset + 1, line_num, file_name);
     end if;
   -- pragma translate_on
   end;
@@ -1537,7 +1537,7 @@ package body check_pkg is
     constant file_name         : in string      := "") is
   begin
     -- pragma translate_off
-    check_one_hot(default_checker, clock, en, expr, msg, level, active_clock_edge, path_offset, line_num, file_name);
+    check_one_hot(default_checker, clock, en, expr, msg, level, active_clock_edge, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -1551,7 +1551,7 @@ package body check_pkg is
     constant file_name   : in  string      := "") is
   begin
     -- pragma translate_off
-    check_one_hot(default_checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check_one_hot(default_checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -1566,7 +1566,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_one_hot(default_checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check_one_hot(default_checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
     -- pragma translate_on
     return pass;
   end;
@@ -1582,7 +1582,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_one_hot(checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check_one_hot(checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -1596,7 +1596,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_one_hot(default_checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check_one_hot(default_checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -1612,7 +1612,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_one_hot(checker, pass, expr, msg, level, path_offset, line_num, file_name);
+    check_one_hot(checker, pass, expr, msg, level, path_offset + 1, line_num, file_name);
     -- pragma translate_on
     return pass;
   end;
@@ -1673,7 +1673,7 @@ package body check_pkg is
     begin
       if to_x01(expr) = '1' then
         if is_pass_visible(checker) then
-          passing_check(checker, std_msg("Next check passed", msg, ""), path_offset, line_num, file_name);
+          passing_check(checker, std_msg("Next check passed", msg, ""), path_offset + 1, line_num, file_name);
         else
           passing_check(checker);
         end if;
@@ -1683,7 +1683,7 @@ package body check_pkg is
                               "Got " & std_logic'image(expr)(2) &
                               " at the " & to_ordinal_number(to_unsigned(num_cks, 32)) &
                               " active and enabled clock edge."),
-                      level, path_offset, line_num, file_name);
+                      level, path_offset + 1, line_num, file_name);
       end if;
     end procedure check_expr;
 
@@ -1700,7 +1700,7 @@ package body check_pkg is
                                 "Got overlapping start event at the " &
                                 to_ordinal_number(to_unsigned(clock_cycles_after_start_event, 32)) &
                                 " active and enabled clock edge."),
-                        level, path_offset, line_num, file_name);
+                        level, path_offset + 1, line_num, file_name);
         else
           schedule_check(schedule, num_cks);
           clock_cycles_after_start_event := 0;
@@ -1709,7 +1709,7 @@ package body check_pkg is
         failing_check(checker,
                       std_msg("Next check failed", msg,
                               "Start event is " & std_logic'image(start_event)(2) & "."),
-                      level, path_offset, line_num, file_name);
+                      level, path_offset + 1, line_num, file_name);
       end if;
 
       if check_is_scheduled(schedule) then
@@ -1718,7 +1718,7 @@ package body check_pkg is
         failing_check(checker,
                       std_msg("Next check failed", msg,
                               "Missing start event for true expression."),
-                      level, path_offset, line_num, file_name);
+                      level, path_offset + 1, line_num, file_name);
       end if;
 
 
@@ -1744,7 +1744,7 @@ package body check_pkg is
   begin
     -- pragma translate_off
     check_next(default_checker, clock, en, start_event, expr, msg, num_cks, allow_overlapping,
-               allow_missing_start, level, active_clock_edge, path_offset, line_num, file_name);
+               allow_missing_start, level, active_clock_edge, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -1808,7 +1808,7 @@ package body check_pkg is
         failing_check(checker,
                       std_msg("Sequence check failed", msg,
                               "Got " & to_nibble_string(seq) & "."),
-                      level, path_offset, line_num, file_name);
+                      level, path_offset + 1, line_num, file_name);
       end if;
     end find_new_and_update_existing_tracks;
 
@@ -1837,10 +1837,10 @@ package body check_pkg is
                                   "Missing required event at " &
                                   to_ordinal_number(to_unsigned(i, 32)) &
                                   " active and enabled clock edge."),
-                          level, path_offset, line_num, file_name);
+                          level, path_offset + 1, line_num, file_name);
           elsif i = seq'right then
             if is_pass_visible(checker) then
-              passing_check(checker, std_msg("Sequence check passed", msg, ""), path_offset, line_num, file_name);
+              passing_check(checker, std_msg("Sequence check passed", msg, ""), path_offset + 1, line_num, file_name);
             else
               passing_check(checker);
             end if;
@@ -1858,7 +1858,7 @@ package body check_pkg is
                     std_msg("Sequence check failed", msg,
                             "Event sequence length must be at least 2. Got " &
                             natural'image(event_sequence'length) & "."),
-                    level, path_offset, line_num, file_name);
+                    level, path_offset + 1, line_num, file_name);
     end if;
 
     wait_on_edge(clock, en, active_clock_edge);
@@ -1906,7 +1906,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_relation(checker, pass, expr, msg, level, context_msg, path_offset, line_num, file_name);
+    check_relation(checker, pass, expr, msg, level, context_msg, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -1925,13 +1925,13 @@ package body check_pkg is
     if expr then
       pass := true;
       if is_pass_visible(checker) then
-        passing_check(checker, std_msg("Relation check passed", msg, context_msg), path_offset, line_num, file_name);
+        passing_check(checker, std_msg("Relation check passed", msg, context_msg), path_offset + 1, line_num, file_name);
       else
         passing_check(checker);
       end if;
     else
       pass := false;
-      failing_check(checker, std_msg("Relation check failed", msg, context_msg), level, path_offset, line_num, file_name);
+      failing_check(checker, std_msg("Relation check failed", msg, context_msg), level, path_offset + 1, line_num, file_name);
     end if;
   -- pragma translate_on
   end;
@@ -1947,7 +1947,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_relation(default_checker, pass, expr, msg, level, context_msg, path_offset, line_num, file_name);
+    check_relation(default_checker, pass, expr, msg, level, context_msg, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -1962,7 +1962,7 @@ package body check_pkg is
     constant file_name   : in  string      := "") is
   begin
     -- pragma translate_off
-    check_relation(default_checker, pass, expr, msg, level, context_msg, path_offset, line_num, file_name);
+    check_relation(default_checker, pass, expr, msg, level, context_msg, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -1978,7 +1978,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_relation(default_checker, pass, expr, msg, level, context_msg, path_offset, line_num, file_name);
+    check_relation(default_checker, pass, expr, msg, level, context_msg, path_offset + 1, line_num, file_name);
     -- pragma translate_on
     return pass;
   end;
@@ -1996,7 +1996,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_relation(checker, pass, expr, msg, level, context_msg, path_offset, line_num, file_name);
+    check_relation(checker, pass, expr, msg, level, context_msg, path_offset + 1, line_num, file_name);
     -- pragma translate_on
     return pass;
   end;
@@ -2013,7 +2013,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_relation(checker, pass, (expr = '1'), msg, level, context_msg, path_offset, line_num, file_name);
+    check_relation(checker, pass, (expr = '1'), msg, level, context_msg, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -2029,7 +2029,7 @@ package body check_pkg is
     constant file_name   : in  string      := "") is
   begin
     -- pragma translate_off
-    check_relation(checker, pass, (expr = '1'), msg, level, context_msg, path_offset, line_num, file_name);
+    check_relation(checker, pass, (expr = '1'), msg, level, context_msg, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -2044,7 +2044,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_relation(default_checker, pass, (expr = '1'), msg, level, context_msg, path_offset, line_num, file_name);
+    check_relation(default_checker, pass, (expr = '1'), msg, level, context_msg, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -2059,7 +2059,7 @@ package body check_pkg is
     constant file_name   : in  string      := "") is
   begin
     -- pragma translate_off
-    check_relation(default_checker, pass, (expr = '1'), msg, level, context_msg, path_offset, line_num, file_name);
+    check_relation(default_checker, pass, (expr = '1'), msg, level, context_msg, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -2075,7 +2075,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_relation(default_checker, pass, (expr = '1'), msg, level, context_msg, path_offset, line_num, file_name);
+    check_relation(default_checker, pass, (expr = '1'), msg, level, context_msg, path_offset + 1, line_num, file_name);
     -- pragma translate_on
     return pass;
   end;
@@ -2093,7 +2093,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_relation(checker, pass, (expr = '1'), msg, level, context_msg, path_offset, line_num, file_name);
+    check_relation(checker, pass, (expr = '1'), msg, level, context_msg, path_offset + 1, line_num, file_name);
     -- pragma translate_on
     return pass;
   end;
@@ -2110,7 +2110,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_relation(checker, pass, (expr = '1'), msg, level, context_msg, path_offset, line_num, file_name);
+    check_relation(checker, pass, (expr = '1'), msg, level, context_msg, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -2126,7 +2126,7 @@ package body check_pkg is
     constant file_name   : in  string      := "") is
   begin
     -- pragma translate_off
-    check_relation(checker, pass, (expr = '1'), msg, level, context_msg, path_offset, line_num, file_name);
+    check_relation(checker, pass, (expr = '1'), msg, level, context_msg, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -2141,7 +2141,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_relation(default_checker, pass, (expr = '1'), msg, level, context_msg, path_offset, line_num, file_name);
+    check_relation(default_checker, pass, (expr = '1'), msg, level, context_msg, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -2156,7 +2156,7 @@ package body check_pkg is
     constant file_name   : in  string      := "") is
   begin
     -- pragma translate_off
-    check_relation(default_checker, pass, (expr = '1'), msg, level, context_msg, path_offset, line_num, file_name);
+    check_relation(default_checker, pass, (expr = '1'), msg, level, context_msg, path_offset + 1, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -2172,7 +2172,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_relation(default_checker, pass, (expr = '1'), msg, level, context_msg, path_offset, line_num, file_name);
+    check_relation(default_checker, pass, (expr = '1'), msg, level, context_msg, path_offset + 1, line_num, file_name);
     -- pragma translate_on
     return pass;
   end;
@@ -2190,7 +2190,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_relation(default_checker, pass, (expr = '1'), msg, level, context_msg, path_offset, line_num, file_name);
+    check_relation(default_checker, pass, (expr = '1'), msg, level, context_msg, path_offset + 1, line_num, file_name);
     -- pragma translate_on
     return pass;
   end;
@@ -2374,7 +2374,7 @@ package body check_pkg is
     constant file_name   : in string      := "") is
   begin
     -- pragma translate_off
-    check_equal(default_checker, got, expected, msg, max_diff, level, path_offset, line_num, file_name);
+    check_equal(default_checker, got, expected, msg, max_diff, level, path_offset + 1, line_num, file_name);
     -- pragma translate_on
   end;
 
@@ -2408,7 +2408,7 @@ package body check_pkg is
         std_msg(
           "Equality check failed", msg,
           "Got abs (" & real'image(got) & " - " & real'image(expected) & ") > " & real'image(max_diff) & "."),
-        level, path_offset, line_num, file_name);
+        level, path_offset + 1, line_num, file_name);
     end if;
     -- pragma translate_on
   end;
