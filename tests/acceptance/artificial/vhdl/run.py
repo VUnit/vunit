@@ -19,6 +19,8 @@ lib2 = vu.add_library("lib2")
 for file in glob(str(root / "*.vhd")):
     if "tb_set_generic" in file:
         lib2.add_source_files(file)
+    elif "other_logging_framework" in file:
+        continue
     else:
         lib.add_source_files(file)
 

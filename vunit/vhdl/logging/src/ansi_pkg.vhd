@@ -5,9 +5,7 @@
 -- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
 
 use std.textio.all;
-
-library vunit_lib;
-use vunit_lib.string_ptr_pkg.all;
+use work.string_ptr_pkg.all;
 
 package ansi_pkg is
 

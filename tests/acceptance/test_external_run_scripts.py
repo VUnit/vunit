@@ -196,6 +196,13 @@ class TestExternalRunScripts(TestCase):
     def test_vhdl_axi_dma_example_project(self):
         self.check(ROOT / "examples/vhdl/axi_dma/run.py")
 
+    def test_vhdl_osvvm_log_integration(self):
+        self.check(ROOT / "examples/vhdl/osvvm_log_integration/run.py", exit_code=1)
+        check_report(
+            self.report_file,
+            [("failed", "lib.tb_example.all")],
+        )
+
     @mark.skipif(
         simulator_check(lambda simclass: not simclass.supports_vhdl_contexts()),
         reason="This simulator/backend does not support VHDL contexts",

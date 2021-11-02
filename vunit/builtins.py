@@ -245,7 +245,7 @@ in your VUnit Git repository? You have to do this first if installing using setu
         """
         self._vunit_lib.add_source_files(VERILOG_PATH / "vunit_pkg.sv")
 
-    def add_vhdl_builtins(self, external=None):
+    def add_vhdl_builtins(self, external=None, use_external_log=None):
         """
         Add vunit VHDL builtin libraries
 
@@ -272,6 +272,14 @@ in your VUnit Git repository? You have to do this first if installing using setu
             "path",
         ):
             self._add_files(VHDL_PATH / path / "src" / "*.vhd")
+
+        logging_files = glob(str(VHDL_PATH / "logging" / "src" / "*.vhd"))
+        for logging_file in logging_files:
+            if logging_file.endswith("common_log_pkg-body.vhd") and use_external_log:
+                self._add_files(Path(use_external_log))
+                continue
+
+            self._add_files(Path(logging_file))
 
 
 def osvvm_is_installed():
@@ -304,6 +312,7 @@ class BuiltinsAdder(object):
         """
         Add builtin with arguments
         """
+
         args = {} if args is None else args
 
         if not self._add_check(name, args):
