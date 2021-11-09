@@ -35,7 +35,7 @@ often"* approach through automation. :ref:`Read more <about>`
    user_guide
    cli
    py/ui
-   vhdl_libraries
+   hdl_libraries
    examples
 
 .. toctree::

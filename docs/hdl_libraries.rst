@@ -1,4 +1,4 @@
-.. _vhdl_libraries:
+.. _hdl_libraries:
 
 VHDL Libraries
 ==============

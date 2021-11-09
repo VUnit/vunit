@@ -175,7 +175,7 @@ Solution:
 prj = VUnit.from_argv()
 prj.add_vhdl_builtins()  # <- Add this line!
 
-See https://github.com/VUnit/vunit/issues/777 and http://vunit.github.io/vhdl_libraries.html.
+See https://github.com/VUnit/vunit/issues/777 and http://vunit.github.io/hdl_libraries.html.
 
 """,
             fg="bi",
