@@ -161,17 +161,25 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self._test_bench_list = TestBenchList(database=database)
 
         self._builtins = Builtins(self, self._vhdl_standard, simulator_class)
-        if compile_builtins:
-            self.add_vhdl_builtins()
-            hline = "=" * 75
-            print(hline)
-            LOGGER.warning(
-                """As of VUnit v5, option ``compile_builtins`` of methods 'from_args' and 'from_argv' is removed.
-HDL builtins need to be added explicitly.
-See https://github.com/VUnit/vunit/issues/777.
-"""
-            )
-            print(hline)
+
+        self._printer.write(
+            """\
+Important!
+
+As of VUnit v5, HDL builtins are not compiled by default.
+To preserve the functionality, the run script is now required to explicitly use
+methods add_vhdl_builtins or add_verilog_builtins.
+
+Solution:
+
+prj = VUnit.from_argv()
+prj.add_vhdl_builtins()  # <- Add this line!
+
+See https://github.com/VUnit/vunit/issues/777 and http://vunit.github.io/vhdl_libraries.html.
+
+""",
+            fg="bi",
+        )
 
     def _create_database(self):
         """
