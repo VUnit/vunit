@@ -71,6 +71,7 @@ def _get_eg_doc(location: Path, ref):
     title = eg_doc.split("---", 1)[0][0:-1]
     return "\n".join(
         [
+            f".. _examples:{location.parent.name}:{location.name}:\n",
             title,
             "-" * len(title),
             f":vunit_example:`➚ examples/{ref} <{ref!s}>`\n",

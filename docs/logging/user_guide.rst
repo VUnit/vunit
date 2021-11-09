@@ -1,7 +1,7 @@
 .. _logging_library:
 
-Logging Library
-===============
+Logging Library User Guide
+==========================
 
 Introduction
 ------------

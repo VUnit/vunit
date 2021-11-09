@@ -1,7 +1,7 @@
 .. _data_types_library:
 
-Data Types
-##########
+Data Types User Guide
+#####################
 
 VUnit comes with a number of convenient data types included:
 

@@ -13,7 +13,7 @@ Array and AXI4 Stream Verification Components
 Shows how to use ``integer_array_t``, ``axi_stream_master_t`` and ``axi_stream_slave_t``.
 A CSV file is read, the content is sent in a row-major order to an AXI Stream buffer
 (FIFO) and it is received back to be saved in a different file. Further information can
-be found in the :ref:`verification component library user guide <vc_library>`,
+be found in the :ref:`verification component library user guide <vc_user_guide>`,
 in subsection :ref:`Stream <stream_vci>` and in
 :vunit_file:`vhdl/verification_components/test/tb_axi_stream.vhd <vunit/vhdl/verification_components/test/tb_axi_stream.vhd>`.
 """

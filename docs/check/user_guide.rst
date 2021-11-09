@@ -1,7 +1,7 @@
 .. _check_library:
 
-Check Library
-=============
+Check Library User Guide
+========================
 
 Introduction
 ------------

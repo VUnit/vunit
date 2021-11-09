@@ -1,8 +1,8 @@
 .. _com_user_guide:
 
-#####################
-Communication Library
-#####################
+################################
+Communication Library User Guide
+################################
 
 ************
 Introduction
