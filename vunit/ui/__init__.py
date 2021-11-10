@@ -162,25 +162,6 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         self._builtins = Builtins(self, self._vhdl_standard, simulator_class)
 
-        self._printer.write(
-            """\
-Important!
-
-As of VUnit v5, HDL builtins are not compiled by default.
-To preserve the functionality, the run script is now required to explicitly use
-methods add_vhdl_builtins or add_verilog_builtins.
-
-Solution:
-
-prj = VUnit.from_argv()
-prj.add_vhdl_builtins()  # <- Add this line!
-
-See https://github.com/VUnit/vunit/issues/777 and http://vunit.github.io/hdl_libraries.html.
-
-""",
-            fg="bi",
-        )
-
     def _create_database(self):
         """
         Create a persistent database to store expensive parse results

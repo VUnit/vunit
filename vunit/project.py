@@ -168,7 +168,67 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         self._manual_dependencies.append((source_file, depends_on))
 
     @staticmethod
-    def _find_primary_secondary_design_unit_dependencies(source_file):
+    def _failed_to_find_primary_design_unit_in_library(source_file_name, primary_design_unit, library_name):
+        """
+        Show a warning about a primary unit not found in a library.
+
+        Guess whether the error is produced because of missing builtins.
+        """
+        LOGGER.warning(
+            "%s: failed to find a primary design unit '%s' in library '%s'",
+            source_file_name,
+            primary_design_unit,
+            library_name,
+        )
+        # From there on, we try to guess whether the error is produced because of missing builtins.
+        if library_name != "vunit_lib":
+            # If the library is not VUnit's, we assume it's unrelated.
+            return
+
+        # We get the main script (the one executed by the user), and we read all the content.
+        import __main__  # pylint: disable=import-outside-toplevel
+
+        rscript = Path(__main__.__file__)
+        with rscript.open("r", encoding="utf-8") as fptr:
+            content = list(fptr)
+
+        for line in content:
+            if "add_vhdl_builtins" in line:
+                # If the user is already aware of the feature, but it is commented/hidden, we assume it's known.
+                return
+
+        # Find the line where 'from_args' or 'from_argv' are used.
+        for num, line in enumerate(content, 1):
+            if ".from_arg" in line:
+                # Print a block message telling the user which file and line to modify.
+                solution = f"""
+Solution - Add a call to 'add_vhdl_builtins()' after the following location:
+
+  File: {rscript!s}
+  Line: {num}
+
+As shown below:
+
+{num-1}|  {content[num-2].rstrip()}
+{num}|  {line.rstrip()}
+{num+1}|+ {line.split('=')[0].rstrip()}.add_vhdl_builtins()  # Add this line!
+{num+2}|  {content[num].rstrip()}
+{num+3}|  {content[num+1].rstrip()}
+"""
+                hline = "=" * 75
+                print(hline)
+                LOGGER.critical(
+                    """As of VUnit v5, HDL builtins are not compiled by default.
+To preserve the functionality, the run script is now required to explicitly use
+methods 'add_vhdl_builtins()' or 'add_verilog_builtins()'.
+%s
+See https://github.com/VUnit/vunit/issues/777 and http://vunit.github.io/hdl_libraries.html.""",
+                    solution,
+                )
+                print(hline)
+                break
+
+    def _find_primary_secondary_design_unit_dependencies(self, source_file):
         """
         Iterate over dependencies between the primary design units of the source_file
         and their secondary design units
@@ -182,8 +242,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
             try:
                 primary_unit = library.primary_design_units[unit.primary_design_unit]
             except KeyError:
-                LOGGER.warning(
-                    "%s: failed to find a primary design unit '%s' in library '%s'",
+                self._failed_to_find_primary_design_unit_in_library(
                     source_file.name,
                     unit.primary_design_unit,
                     library.name,
@@ -238,8 +297,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
                 primary_unit = library.primary_design_units[ref.design_unit]
             except KeyError:
                 if not library.is_external:
-                    LOGGER.warning(
-                        "%s: failed to find a primary design unit '%s' in library '%s'",
+                    self._failed_to_find_primary_design_unit_in_library(
                         source_file.name,
                         ref.design_unit,
                         library.name,
