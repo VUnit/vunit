@@ -19,7 +19,6 @@ import os
 from typing import Optional, Set, Union
 from pathlib import Path
 from fnmatch import fnmatch
-from warnings import warn
 
 from ..database import PickledDataBase, DataBase
 from .. import ostools
@@ -160,13 +159,22 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self._builtins = Builtins(self, self._vhdl_standard, simulator_class)
         if compile_builtins:
             self.add_vhdl_builtins()
-            builtins_deprecation_note = (
-                "'compile_builtins' (which defaults to 'True') is deprecated "
-                "and it will be removed in future releases; "
-                "preserve the functionality using "
-                "'compile_builtins=False' and 'VU.add_vhdl_builtins'"
+            hline = "=" * 75
+            print(hline)
+            LOGGER.warning(
+                """Option 'compile_builtins' of methods 'from_args' and 'from_argv' is deprecated.
+In future releases, it will be removed and builtins will need to be added explicitly.
+To prepare for upcoming changes, it is recommended to apply the following modifications in the run script now:
+
+* Use `from_argv(compile_builtins=False)` or `from_args(compile_builtins=False)`.
+* Add an explicit call to 'add_vhdl_builtins'.
+
+Refs:
+  * http://vunit.github.io/py/vunit.html#vunit.ui.VUnit.from_args
+  * http://vunit.github.io/py/vunit.html#vunit.ui.VUnit.from_argv
+"""
             )
-            warn(builtins_deprecation_note, Warning)
+            print(hline)
 
     def _create_database(self):
         """
