@@ -170,6 +170,8 @@ To prepare for upcoming changes, it is recommended to apply the following modifi
 * Add an explicit call to 'add_vhdl_builtins'.
 
 Refs:
+  * http://vunit.github.io/py/vunit.html#vunit.ui.VUnit.add_verilog_builtins
+  * http://vunit.github.io/py/vunit.html#vunit.ui.VUnit.add_vhdl_builtins
   * http://vunit.github.io/py/vunit.html#vunit.ui.VUnit.from_args
   * http://vunit.github.io/py/vunit.html#vunit.ui.VUnit.from_argv
 """
