@@ -73,11 +73,23 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         :example:
 
-        .. code-block:: python
+          .. code-block:: python
 
-           from vunit import VUnit
-           prj = VUnit.from_argv()
+             from vunit import VUnit
+             prj = VUnit.from_argv()
 
+        .. IMPORTANT::
+          Option ``compile_builtins`` is deprecated and it will be removed in an upcoming release.
+          VHDL users will need to call method :meth:`add_vhdl_builtins` explicitly in order to preserve the
+          functionality.
+          See :vunit_issue:`777`.
+          It is therefore recommended to now use the following procedure:
+
+          .. code-block:: python
+
+             from vunit import VUnit
+             prj = VUnit.from_argv(compile_builtins=False)
+             prj.add_vhdl_builtins()
         """
         args = VUnitCLI().parse_args(argv=argv)
         return cls.from_args(args, compile_builtins=compile_builtins, vhdl_standard=vhdl_standard)
@@ -101,6 +113,11 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                               if None the VUNIT_VHDL_STANDARD environment variable is used
         :returns: A :class:`.VUnit` object instance
 
+        .. IMPORTANT::
+          Option ``compile_builtins`` is deprecated and it will be removed in an upcoming release.
+          VHDL users will need to call method :meth:`add_vhdl_builtins` explicitly in order to preserve the
+          functionality.
+          See :vunit_issue:`777`.
         """
         return cls(args, compile_builtins=compile_builtins, vhdl_standard=vhdl_standard)
 
@@ -169,9 +186,7 @@ To prepare for upcoming changes, it is recommended to apply the following modifi
 * Use `from_argv(compile_builtins=False)` or `from_args(compile_builtins=False)`.
 * Add an explicit call to 'add_vhdl_builtins'.
 
-Refs:
-  * http://vunit.github.io/py/vunit.html#vunit.ui.VUnit.from_args
-  * http://vunit.github.io/py/vunit.html#vunit.ui.VUnit.from_argv
+See https://github.com/VUnit/vunit/issues/777.
 """
             )
             print(hline)
@@ -257,7 +272,7 @@ Refs:
                                  csv file
         :param vhdl_standard: The VHDL standard used to compile files,
                               if None, the VUNIT_VHDL_STANDARD environment variable is used
-        :returns: A list of files (:class `.SourceFileList`) that were added
+        :returns: A list of files (:class:`.SourceFileList`) that were added
 
         """
         libs: Set[str] = set()
@@ -944,13 +959,18 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
 
     def add_verilog_builtins(self):
         """
-        Add VUnit Verilog builtin libraries
+        Add VUnit Verilog builtin libraries.
+
+        .. IMPORTANT::
+          Class ``vunit.verilog`` is deprecated and it will be removed in an upcoming release.
+          Verilog users will need to call this method explicitly in order to preserve the functionality.
+          See :vunit_issue:`777`.
         """
         self._builtins.add_verilog_builtins()
 
     def add_vhdl_builtins(self, external=None):
         """
-        Add VUnit VHDL builtin libraries
+        Add VUnit VHDL builtin libraries.
 
         :param external: struct to provide bridges for the external VHDL API.
 
@@ -962,6 +982,12 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
                 'string': ['path/to/custom/file'],
                 'integer': ['path/to/custom/file']}
             )
+
+        .. IMPORTANT::
+          Option ``compile_builtins`` of methods :meth:`from_argv` and :meth:`from_args` is deprecated and it will be
+          removed in an upcoming release.
+          VHDL users will need to call this method explicitly in order to preserve the functionality.
+          See :vunit_issue:`777`.
         """
         self._builtins.add_vhdl_builtins(external=external)
 
