@@ -5,12 +5,14 @@
 # Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
 
 from pathlib import Path
-from vunit.verilog import VUnit
+from vunit import VUnit
 
 
 ROOT = Path(__file__).parent
 
 VU = VUnit.from_argv()
+VU.add_verilog_builtins()
+
 VU.add_library("lib").add_source_files(ROOT / "test" / "*.sv")
 VU.set_sim_option("modelsim.vsim_flags.gui", ["-novopt"])
 

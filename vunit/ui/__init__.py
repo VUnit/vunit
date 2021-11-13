@@ -19,6 +19,7 @@ import os
 from typing import Optional, Set, Union
 from pathlib import Path
 from fnmatch import fnmatch
+
 from ..database import PickledDataBase, DataBase
 from .. import ostools
 from ..vunit_cli import VUnitCLI
@@ -157,7 +158,23 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         self._builtins = Builtins(self, self._vhdl_standard, simulator_class)
         if compile_builtins:
-            self.add_builtins()
+            self.add_vhdl_builtins()
+            hline = "=" * 75
+            print(hline)
+            LOGGER.warning(
+                """Option 'compile_builtins' of methods 'from_args' and 'from_argv' is deprecated.
+In future releases, it will be removed and builtins will need to be added explicitly.
+To prepare for upcoming changes, it is recommended to apply the following modifications in the run script now:
+
+* Use `from_argv(compile_builtins=False)` or `from_args(compile_builtins=False)`.
+* Add an explicit call to 'add_vhdl_builtins'.
+
+Refs:
+  * http://vunit.github.io/py/vunit.html#vunit.ui.VUnit.from_args
+  * http://vunit.github.io/py/vunit.html#vunit.ui.VUnit.from_argv
+"""
+            )
+            print(hline)
 
     def _create_database(self):
         """
@@ -925,15 +942,26 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         )
         runner.run(test_cases)
 
-    def add_builtins(self, external=None):
+    def add_verilog_builtins(self):
         """
-        Add vunit VHDL builtin libraries
+        Add VUnit Verilog builtin libraries
+        """
+        self._builtins.add_verilog_builtins()
+
+    def add_vhdl_builtins(self, external=None):
+        """
+        Add VUnit VHDL builtin libraries
 
         :param external: struct to provide bridges for the external VHDL API.
-                         {
-                             'string': ['path/to/custom/file'],
-                             'integer': ['path/to/custom/file']
-                         }.
+
+        :example:
+
+        .. code-block:: python
+
+            VU.add_vhdl_builtins(external={
+                'string': ['path/to/custom/file'],
+                'integer': ['path/to/custom/file']}
+            )
         """
         self._builtins.add_vhdl_builtins(external=external)
 

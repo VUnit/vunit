@@ -8,6 +8,7 @@
 The main public Python interface of VUnit-Verilog.
 """
 
+from warnings import warn
 from vunit.ui import VUnit as VUnitVHDL
 
 
@@ -16,8 +17,15 @@ class VUnit(VUnitVHDL):
     VUnit Verilog interface
     """
 
-    def add_builtins(self, external=None):  # pylint: disable=arguments-differ
+    # This is a temporary workaround to avoid breaking the scripts of current verilog users
+    def add_vhdl_builtins(self):  # pylint: disable=arguments-differ
         """
         Add vunit Verilog builtin libraries
         """
         self._builtins.add_verilog_builtins()
+        builtins_deprecation_note = (
+            "class 'verilog' is deprecated and it will be removed in future releases; "
+            "preserve the functionality using the default vunit class, along with "
+            "'compile_builtins=False' and 'VU.add_verilog_builtins'"
+        )
+        warn(builtins_deprecation_note, Warning)
