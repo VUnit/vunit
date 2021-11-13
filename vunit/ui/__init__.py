@@ -272,7 +272,7 @@ See https://github.com/VUnit/vunit/issues/777.
                                  csv file
         :param vhdl_standard: The VHDL standard used to compile files,
                               if None, the VUNIT_VHDL_STANDARD environment variable is used
-        :returns: A list of files (:class `.SourceFileList`) that were added
+        :returns: A list of files (:class:`.SourceFileList`) that were added
 
         """
         libs: Set[str] = set()
