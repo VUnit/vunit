@@ -228,7 +228,7 @@ class CodecVHDLPackage(VHDLPackage):
                         else:
                             encoding_list.append(f"encode({element.subtype_indication.code!s}'({value!s}))")
 
-                if parameter_list == []:
+                if not parameter_list:
                     parameter_part = ""
                     alias_signature = value + "[return string];"
                 else:
