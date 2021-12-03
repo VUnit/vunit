@@ -623,6 +623,56 @@ end architecture;
         self.assert_compiles(ent_a1, before=top1)
         self.assert_compiles(ent_a2, before=top2)
 
+    def test_error_on_ambiguous_architecture(self):
+        self.project.add_library("lib", "lib_path")
+
+        self.add_source_file(
+            "lib",
+            "ent.vhd",
+            """
+entity ent is
+end entity;
+""",
+        )
+
+        self.add_source_file(
+            "lib",
+            "ent_a1.vhd",
+            """
+architecture a1 of ent is
+begin
+end architecture;
+""",
+        )
+
+        self.add_source_file(
+            "lib",
+            "ent_a2.vhd",
+            """
+architecture a2 of ent is
+begin
+end architecture;
+""",
+        )
+
+        self.add_source_file(
+            "lib",
+            "top.vhd",
+            """
+entity top is
+end entity;
+
+architecture a of top is
+begin
+  inst : entity work.ent;
+end architecture;
+""",
+        )
+        self.assertRaises(
+            RuntimeError,
+            self.project.create_dependency_graph,
+        )
+
     def test_work_library_reference_non_lower_case(self):
         """
         Bug discovered in #556
