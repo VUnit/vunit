@@ -14,6 +14,7 @@ use work.stream_master_pkg.all;
 use work.avalon_stream_pkg.all;
 use work.queue_pkg.all;
 use work.sync_pkg.all;
+use work.vc_pkg.all;
 
 library osvvm;
 use osvvm.RandomPkg.all;
@@ -39,13 +40,13 @@ begin
     variable rnd : RandomPType;
     variable avalon_stream_transaction : avalon_stream_transaction_t(data(data'range));
   begin
-    receive(net, source.p_actor, msg);
+    receive(net, get_actor(source.p_std_cfg), msg);
     msg_type := message_type(msg);
 
     handle_sync_message(net, msg_type, msg);
 
     if msg_type = stream_push_msg or msg_type = push_avalon_stream_msg then
-      while rnd.Uniform(0.0, 1.0) > source.valid_high_probability loop
+      while rnd.Uniform(0.0, 1.0) > source.p_valid_high_probability loop
         wait until rising_edge(clk);
       end loop;
       valid <= '1';
@@ -72,7 +73,7 @@ begin
       sop   <= '0';
       eop   <= '0';
     else
-      unexpected_msg_type(msg_type);
+      unexpected_msg_type(msg_type, source.p_std_cfg);
     end if;
   end process;
 

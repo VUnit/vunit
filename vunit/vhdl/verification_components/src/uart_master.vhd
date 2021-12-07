@@ -14,6 +14,7 @@ use vunit_lib.stream_master_pkg.all;
 use vunit_lib.uart_pkg.all;
 use vunit_lib.queue_pkg.all;
 use vunit_lib.sync_pkg.all;
+use vunit_lib.vc_pkg.all;
 
 entity uart_master is
   generic (
@@ -26,7 +27,8 @@ architecture a of uart_master is
 begin
 
   main : process
-    procedure uart_send(data : std_logic_vector;
+    constant logger : logger_t := get_logger(main'path_name, get_logger(uart.p_std_cfg));
+    procedure uart_send(data : std_logic_vector := x"00";
                         signal tx : out std_logic;
                         baud_rate  : integer) is
       constant time_per_bit : time := (10**9 / baud_rate) * 1 ns;
@@ -38,7 +40,9 @@ begin
       end procedure;
 
     begin
-      debug("Sending " & to_string(data));
+    if is_visible(logger, display_handler, debug) then
+        debug(logger, "Sending x""" & to_hstring(data) & """");
+    end if;
       send_bit(not uart.p_idle_state);
       for i in 0 to data'length-1 loop
         send_bit(data(i));
@@ -50,7 +54,7 @@ begin
     variable baud_rate : natural := uart.p_baud_rate;
     variable msg_type : msg_type_t;
   begin
-    receive(net, uart.p_actor, msg);
+    receive(net, get_actor(uart.p_std_cfg), msg);
     msg_type := message_type(msg);
 
     handle_sync_message(net, msg_type, msg);
@@ -60,7 +64,7 @@ begin
     elsif msg_type = uart_set_baud_rate_msg then
       baud_rate := pop(msg);
     else
-      unexpected_msg_type(msg_type);
+      unexpected_msg_type(msg_type, uart.p_std_cfg);
     end if;
   end process;
 

@@ -230,6 +230,9 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
                     LOGGER.warning("%s: failed to find library '%s'", source_file.name, ref.library)
                 continue
 
+            if ref.is_library_reference():
+                continue
+
             if ref.is_entity_reference() and ref.design_unit in library.modules:
                 # Is a verilog module instantiation
                 yield library.modules[ref.design_unit].source_file

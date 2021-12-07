@@ -12,6 +12,7 @@ context work.data_types_context;
 context work.com_context;
 use work.signal_checker_pkg.all;
 use work.sync_pkg.all;
+use work.vc_pkg.all;
 
 entity std_logic_checker is
   generic (
@@ -27,10 +28,9 @@ begin
 
   main : process
     variable request_msg : msg_t;
-    variable reply_msg : msg_t;
     variable msg_type : msg_type_t;
   begin
-    receive(net, signal_checker.p_actor, request_msg);
+    receive(net, get_actor(signal_checker.p_std_cfg), request_msg);
     msg_type := message_type(request_msg);
 
     if msg_type = expect_msg then
@@ -38,7 +38,7 @@ begin
       push_time(expect_queue, pop_time(request_msg));
       push_time(expect_queue, pop_time(request_msg));
 
-    elsif msg_type = wait_until_idle_msg then
+    elsif msg_type = wait_until_idle_msg or msg_type = wait_for_time_msg then
 
       while not is_empty(expect_queue) loop
         if value'event then
@@ -48,10 +48,9 @@ begin
         end if;
       end loop;
 
-      reply_msg := new_msg(wait_until_idle_reply_msg);
-      reply(net, request_msg, reply_msg);
+      handle_sync_message(net, msg_type, request_msg);
     else
-      unexpected_msg_type(msg_type);
+      unexpected_msg_type(msg_type, signal_checker.p_std_cfg);
     end if;
 
     delete(request_msg);
@@ -72,22 +71,22 @@ begin
   begin
     wait on value;
     if is_empty(expect_queue) then
-      error(signal_checker.p_logger, "Unexpected event with value = " & to_string(value));
+      error(get_logger(signal_checker.p_std_cfg), "Unexpected event with value = " & to_string(value));
     else
       expected_value := pop_std_ulogic_vector(expect_queue);
       event_time := pop_time(expect_queue);
       margin := pop_time(expect_queue);
 
       if value /= expected_value then
-        error(signal_checker.p_logger, "Got event with wrong value, got " & to_string(value) &
+        error(get_logger(signal_checker.p_std_cfg), "Got event with wrong value, got " & to_string(value) &
               " expected " & to_string(expected_value));
 
       elsif now < event_time - margin or now > event_time + margin then
-        error(signal_checker.p_logger, "Got event at wrong time, occured at " & time'image(now) &
+        error(get_logger(signal_checker.p_std_cfg), "Got event at wrong time, occured at " & time'image(now) &
               " expected at " & time'image(event_time) & margin_suffix);
 
       else
-        pass(signal_checker.p_logger, "Got expected event with value = " & to_string(value));
+        pass(get_logger(signal_checker.p_std_cfg), "Got expected event with value = " & to_string(value));
       end if;
     end if;
   end process;
