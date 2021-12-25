@@ -187,7 +187,8 @@ begin
     variable my_checker : checker_t;
     variable error_counter : natural := 0;
     constant test_runner_logger : logger_t := get_logger("test_runner");
-
+    file runner_cfg_fptr : text;
+    variable runner_cfg_line : line;
   begin
     banner("Should extract single enabled test case from input string");
     test_case_setup;
@@ -277,6 +278,23 @@ begin
     check(c, enabled("Should one"), "Expected ""Should one"" test case to be enabled");
     check(c, enabled("Should two"), "Expected ""Should two"" test case to be enabled");
     check(c, enabled("Should three"), "Expected ""Should three"" test case to be enabled");
+    test_case_cleanup;
+
+    ---------------------------------------------------------------------------
+    banner("Should read from file on null");
+    test_case_setup;
+    file_open(runner_cfg_fptr, "runner.cfg", write_mode);
+    write(
+      runner_cfg_line,
+      string'("active python runner : false,enabled_test_cases : __all__,output path : path1,tb path : path2")
+    );
+    writeline(runner_cfg_fptr, runner_cfg_line);
+    file_close(runner_cfg_fptr);
+    test_runner_setup(runner, null_runner_cfg);
+    check_false(c, active_python_runner(null_runner_cfg));
+    check(c, vunit_lib.run_pkg.output_path(null_runner_cfg) = "path1");
+    check(c, enabled_test_cases(null_runner_cfg) = "__all__");
+    check(c, tb_path(null_runner_cfg) = "path2");
     test_case_cleanup;
 
     ---------------------------------------------------------------------------

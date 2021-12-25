@@ -27,20 +27,36 @@ package body run_pkg is
     end if;
   end procedure notify;
 
+  impure function resolve_runner_cfg(runner_cfg : string) return string is
+    file runner_cfg_fptr : text;
+    variable status : file_open_status;
+    variable runner_cfg_line : line;
+
+  begin
+    if runner_cfg /= null_runner_cfg then
+      return runner_cfg;
+    end if;
+
+    file_open(status, runner_cfg_fptr, "runner.cfg", read_mode);
+    assert status = OPEN_OK report "Failed to find runner configuration" severity failure;
+    readline(runner_cfg_fptr, runner_cfg_line);
+    return runner_cfg_line.all;
+  end;
+
   procedure test_runner_setup (
     signal runner : inout runner_sync_t;
     constant runner_cfg : in string := runner_cfg_default) is
+    constant resolved_runner_cfg : string := resolve_runner_cfg(runner_cfg);
     variable test_case_candidates : lines_t;
     variable selected_enabled_test_cases : line;
   begin
-
     -- fake active python runner key is only used during testing in tb_run.vhd
     -- to avoid creating vunit_results file
     set_active_python_runner(runner_state,
-                             (active_python_runner(runner_cfg) and not has_key(runner_cfg, "fake active python runner")));
+                             (active_python_runner(resolved_runner_cfg) and not has_key(resolved_runner_cfg, "fake active python runner")));
 
     if has_active_python_runner(runner_state) then
-      core_pkg.setup(output_path(runner_cfg) & "vunit_results");
+      core_pkg.setup(output_path(resolved_runner_cfg) & "vunit_results");
     end if;
 
 
@@ -48,11 +64,11 @@ package body run_pkg is
       hide(runner_trace_logger, display_handler, info);
     end if;
 
-    if has_key(runner_cfg, "use_color") and boolean'value(get(runner_cfg, "use_color")) then
+    if has_key(resolved_runner_cfg, "use_color") and boolean'value(get(resolved_runner_cfg, "use_color")) then
       enable_colors;
     end if;
 
-    if not active_python_runner(runner_cfg) then
+    if not active_python_runner(resolved_runner_cfg) then
       set_stop_level(failure);
     end if;
 
@@ -67,14 +83,14 @@ package body run_pkg is
       deallocate(selected_enabled_test_cases);
     end if;
 
-    if has_key(runner_cfg, "enabled_test_cases") then
-      write(selected_enabled_test_cases, get(runner_cfg, "enabled_test_cases"));
+    if has_key(resolved_runner_cfg, "enabled_test_cases") then
+      write(selected_enabled_test_cases, get(resolved_runner_cfg, "enabled_test_cases"));
     else
       write(selected_enabled_test_cases, string'("__all__"));
     end if;
     test_case_candidates := split(replace(selected_enabled_test_cases.all, ",,", "__comma__"), ",");
 
-    set_cfg(runner_state, runner_cfg);
+    set_cfg(runner_state, resolved_runner_cfg);
 
     set_run_all(runner_state, strip(test_case_candidates(0).all) = "__all__");
     if get_run_all(runner_state) then
@@ -456,9 +472,10 @@ package body run_pkg is
   impure function active_python_runner (
     constant runner_cfg : string)
     return boolean is
+    constant resolved_runner_cfg : string := resolve_runner_cfg(runner_cfg);
   begin
-    if has_key(runner_cfg, "active python runner") then
-      return get(runner_cfg, "active python runner") = "true";
+    if has_key(resolved_runner_cfg, "active python runner") then
+      return get(resolved_runner_cfg, "active python runner") = "true";
     else
       return false;
     end if;
@@ -467,9 +484,10 @@ package body run_pkg is
   impure function output_path (
     constant runner_cfg : string)
     return string is
+    constant resolved_runner_cfg : string := resolve_runner_cfg(runner_cfg);
   begin
-    if has_key(runner_cfg, "output path") then
-      return get(runner_cfg, "output path");
+    if has_key(resolved_runner_cfg, "output path") then
+      return get(resolved_runner_cfg, "output path");
     else
       return "";
     end if;
@@ -478,9 +496,10 @@ package body run_pkg is
   impure function enabled_test_cases (
     constant runner_cfg : string)
     return test_cases_t is
+    constant resolved_runner_cfg : string := resolve_runner_cfg(runner_cfg);
   begin
-    if has_key(runner_cfg, "enabled_test_cases") then
-      return get(runner_cfg, "enabled_test_cases");
+    if has_key(resolved_runner_cfg, "enabled_test_cases") then
+      return get(resolved_runner_cfg, "enabled_test_cases");
     else
       return "__all__";
     end if;
@@ -489,13 +508,13 @@ package body run_pkg is
   impure function tb_path (
     constant runner_cfg : string)
     return string is
+    constant resolved_runner_cfg : string := resolve_runner_cfg(runner_cfg);
   begin
-    if has_key(runner_cfg, "tb path") then
-      return get(runner_cfg, "tb path");
+    if has_key(resolved_runner_cfg, "tb path") then
+      return get(resolved_runner_cfg, "tb path");
     else
       return "";
     end if;
   end;
-
 
 end package body run_pkg;

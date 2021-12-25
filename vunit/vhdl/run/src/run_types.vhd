@@ -22,6 +22,7 @@ package run_types_pkg is
 
   subtype runner_cfg_t is string; -- Subtype deprecated, use string instead
   constant runner_cfg_default : string := "enabled_test_cases : __all__, output path : , active python runner : false";
+  constant null_runner_cfg : string := "is_null : true";
   subtype test_cases_t is string;
 
   type runner_phase_t is (test_runner_entry, test_runner_setup, test_suite_setup, test_case_setup,
