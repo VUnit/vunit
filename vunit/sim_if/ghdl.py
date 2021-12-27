@@ -369,6 +369,9 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
 
         return status
 
+    def get_simulator_output_path(self, output_path):
+        return Path(".")
+
     def _compile_source_file(self, source_file, printer):
         """
         Runs parent command for compilation, and moves any .gcno files to the compilation output

@@ -208,6 +208,9 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         Simulate
         """
 
+    def get_simulator_output_path(self, output_path):
+        "Get current working directory for simulation"
+
     def setup_library_mapping(self, project):
         """
         Implemented by specific simulators

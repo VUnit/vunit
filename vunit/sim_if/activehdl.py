@@ -372,6 +372,9 @@ proc vunit_run {} {
         for library in self._libraries:
             tcl += f"vmap {library.name!s} {fix_path(library.directory)!s}\n"
 
+        tcl += "global sim_working_folder\n"
+        tcl += f"set sim_working_folder {fix_path(str(Path(common_file_name).parent / 'gui'))}\n"
+
         tcl += "vunit_load\n"
 
         init_file = config.sim_options.get(self.name + ".init_file.gui", None)
@@ -425,10 +428,22 @@ proc vunit_run {} {
 
         if self._gui:
             gui_path = str(script_path / "gui")
-            renew_path(gui_path)
+            if (script_path / "gui" / "runner.cfg").exists():
+                runner_cfg = (script_path / "gui" / "runner.cfg").read_text()
+                renew_path(gui_path)
+                (script_path / "gui" / "runner.cfg").write_text(runner_cfg)
+            else:
+                renew_path(gui_path)
+
             return self._run_batch_file(str(gui_file_name), gui=True, cwd=gui_path)
 
         return self._run_batch_file(str(batch_file_name), gui=False, cwd=str(Path(self._library_cfg).parent))
+
+    def get_simulator_output_path(self, output_path):
+        if self._gui:
+            return Path(output_path) / self.name / "gui"
+
+        return Path(self._library_cfg).parent
 
 
 @total_ordering
