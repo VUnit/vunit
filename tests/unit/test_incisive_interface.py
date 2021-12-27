@@ -21,6 +21,8 @@ from vunit.project import Project
 from vunit.ostools import renew_path, write_file, read_file
 from vunit.test.bench import Configuration
 from vunit.vhdl_standard import VHDL
+from tests.common import create_tempdir
+from tests.unit.test_test_bench import Entity
 
 
 class TestIncisiveInterface(unittest.TestCase):
@@ -956,6 +958,21 @@ define work "%s/libraries/work"
             ],
         )
 
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
+    def test_configuration_and_entity_selection(self, find_cds_root_irun, find_cds_root_virtuoso):
+        find_cds_root_irun.return_value = "cds_root_irun"
+        find_cds_root_virtuoso.return_value = None
+
+        with create_tempdir() as tempdir:
+            design_unit = Entity("tb_entity", file_name=str(Path(tempdir) / "file.vhd"))
+            design_unit.generic_names = ["runner_cfg"]
+            config = Configuration("name", design_unit, vhdl_configuration_name="cfg")
+            simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
+            self.assertEqual(simif._select_vhdl_top(config), "cfg")  # pylint: disable=protected-access
+            config = Configuration("name", design_unit)
+            self.assertEqual(simif._select_vhdl_top(config), "lib.tb_entity:arch")  # pylint: disable=protected-access
+
     def setUp(self):
         self.output_path = str(Path(__file__).parent / "test_incisive_out")
         renew_path(self.output_path)
@@ -985,4 +1002,5 @@ def make_config(sim_options=None, generics=None, verilog=False):
 
     cfg.sim_options = {} if sim_options is None else sim_options
     cfg.generics = {} if generics is None else generics
+    cfg.vhdl_configuration_name = None
     return cfg

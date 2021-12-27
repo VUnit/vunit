@@ -236,11 +236,14 @@ class ActiveHDLInterface(SimulatorInterface):
             set_generic_name_str,
             "-lib",
             config.library_name,
-            config.entity_name,
         ]
 
-        if config.architecture_name is not None:
-            vsim_flags.append(config.architecture_name)
+        if config.vhdl_configuration_name is None:
+            vsim_flags.append(config.entity_name)
+            if config.architecture_name is not None:
+                vsim_flags.append(config.architecture_name)
+        else:
+            vsim_flags.append(config.vhdl_configuration_name)
 
         if config.sim_options.get("enable_coverage", False):
             coverage_file_path = str(Path(output_path) / "coverage.acdb")
@@ -429,9 +432,9 @@ proc vunit_run {} {
         if self._gui:
             gui_path = str(script_path / "gui")
             if (script_path / "gui" / "runner.cfg").exists():
-                runner_cfg = (script_path / "gui" / "runner.cfg").read_text()
+                runner_cfg = (script_path / "gui" / "runner.cfg").read_text(encoding="utf-8")
                 renew_path(gui_path)
-                (script_path / "gui" / "runner.cfg").write_text(runner_cfg)
+                (script_path / "gui" / "runner.cfg").write_text(runner_cfg, encoding="utf-8")
             else:
                 renew_path(gui_path)
 

@@ -247,6 +247,10 @@ EXPECTED_REPORT = (
     ),
     (
         "passed",
-        "lib.tb_reading_runner_cfg_from_file.all",
+        "lib.tb_with_vhdl_configuration.cfg1",
+    ),
+    (
+        "passed",
+        "lib.tb_with_vhdl_configuration.cfg2",
     ),
 )

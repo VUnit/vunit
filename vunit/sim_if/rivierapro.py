@@ -299,12 +299,17 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         if config.sim_options.get("disable_ieee_warnings", False):
             vsim_flags.append("-ieee_nowarn")
 
-        # Add the the testbench top-level unit last as coverage is
-        # only collected for the top-level unit specified last
-        vsim_flags += ["-lib", config.library_name, config.entity_name]
+        vsim_flags += ["-lib", config.library_name]
 
-        if config.architecture_name is not None:
-            vsim_flags.append(config.architecture_name)
+        if config.vhdl_configuration_name is None:
+            # Add the the testbench top-level unit last as coverage is
+            # only collected for the top-level unit specified last
+            vsim_flags += [config.entity_name]
+
+            if config.architecture_name is not None:
+                vsim_flags.append(config.architecture_name)
+        else:
+            vsim_flags += [config.vhdl_configuration_name]
 
         tcl = """
 proc vunit_load {{}} {{

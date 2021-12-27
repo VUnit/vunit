@@ -285,7 +285,11 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         if config.sim_options.get("enable_coverage", False):
             # Enable coverage in linker
             cmd += ["-Wl,-lgcov"]
-        cmd += [config.entity_name, config.architecture_name]
+
+        if config.vhdl_configuration_name is not None:
+            cmd += [config.vhdl_configuration_name]
+        else:
+            cmd += [config.entity_name, config.architecture_name]
 
         sim = config.sim_options.get("ghdl.sim_flags", [])
         for name, value in config.generics.items():

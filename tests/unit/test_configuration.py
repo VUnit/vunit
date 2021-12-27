@@ -17,7 +17,7 @@ from pathlib import Path
 from unittest import mock
 from tests.common import with_tempdir, create_tempdir
 from tests.unit.test_test_bench import Entity
-from vunit.configuration import Configuration, AttributeException
+from vunit.configuration import Configuration, AttributeException, GenericAndVHDLConfigurationException
 
 
 class TestConfiguration(unittest.TestCase):
@@ -44,6 +44,13 @@ class TestConfiguration(unittest.TestCase):
     def test_error_on_setting_illegal_value_sim_option(self):
         with _create_config() as config:
             self.assertRaises(ValueError, config.set_sim_option, "vhdl_assert_stop_level", "illegal")
+
+    def test_error_on_both_generics_and_vhdl_configuration(self):
+        with _create_config(vhdl_configuration_name="cfg") as config:
+            self.assertRaises(GenericAndVHDLConfigurationException, config.set_generic, "foo", "bar")
+
+        with _create_config(generics=dict(foo=17)) as config:
+            self.assertRaises(GenericAndVHDLConfigurationException, config.set_vhdl_configuration_name, "bar")
 
     def test_sim_option_is_not_mutated(self):
         with _create_config() as config:

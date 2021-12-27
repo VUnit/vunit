@@ -14,6 +14,9 @@ from tests.common import create_tempdir
 from vunit.test.suites import TestRun
 from vunit.test.report import PASSED, SKIPPED, FAILED
 from vunit.sim_if import SimulatorInterface
+from vunit.test.bench import Configuration
+from vunit.ostools import renew_path
+from tests.unit.test_test_bench import Entity
 
 
 class TestTestSuites(TestCase):
@@ -186,3 +189,42 @@ test_suite_done""",
                 run._check_results(results, sim_ok),  # pylint: disable=protected-access
                 (waschecked, expected),
             )
+
+    def test_runner_cfg_location(self):
+        with create_tempdir() as tempdir:
+            design_unit = Entity("tb_entity", file_name=str(Path(tempdir) / "file.vhd"))
+            design_unit.generic_names = ["runner_cfg"]
+            output_path = str(Path(__file__).parent / "sim_out")
+            renew_path(output_path)
+
+            class TestSimIf(SimulatorInterface):
+                def __init__(self, output_path, gui, expect_runner_cfg_generic):
+                    super().__init__(output_path, gui)
+                    self._expect_runner_cfg_generic = expect_runner_cfg_generic
+
+                def simulate(self, output_path, test_suite_name, config, elaborate_only):
+                    tc = TestCase()
+                    if self._expect_runner_cfg_generic:
+                        tc.assertIn("runner_cfg", config.generics)
+                        tc.assertFalse((Path(output_path) / "test_sim" / "runner.cfg").exists())
+                    else:
+                        tc.assertNotIn("runner_cfg", config.generics)
+                        tc.assertTrue((Path(output_path) / "test_sim" / "runner.cfg").exists())
+
+                def get_simulator_output_path(self, output_path):
+                    return Path(output_path) / "test_sim"
+
+            for expect_runner_cfg_generic in [False, True]:
+                config = Configuration(
+                    "name", design_unit, vhdl_configuration_name=None if expect_runner_cfg_generic else "cfg"
+                )
+                sim_if = TestSimIf(output_path, gui=False, expect_runner_cfg_generic=expect_runner_cfg_generic)
+
+                run = TestRun(
+                    simulator_if=sim_if,
+                    config=config,
+                    elaborate_only=False,
+                    test_suite_name=None,
+                    test_cases=["foo"],
+                )
+                run._simulate(output_path)  # pylint: disable=protected-access
