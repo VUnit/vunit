@@ -130,6 +130,7 @@ class TestBench(object):
         post_check=None,
         sim_options=None,
         attributes=None,
+        vhdl_configuration_name=None,
     ):
         """
         Add a configuration of this test bench or to all test cases within it by copying the default configuration.
@@ -181,6 +182,7 @@ class TestBench(object):
             post_check=post_check,
             sim_options=sim_options,
             attributes=attributes,
+            vhdl_configuration_name=vhdl_configuration_name,
         )
 
     def test(self, name):

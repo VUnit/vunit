@@ -258,6 +258,12 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
             coverage_save_cmd = ""
             coverage_args = ""
 
+        simulation_target = (
+            config.library_name + "." + config.entity_name + architecture_suffix
+            if config.vhdl_configuration_name is None
+            else config.library_name + "." + config.vhdl_configuration_name
+        )
+
         vsim_flags = [
             f"-wlf {{{fix_path(str(Path(output_path) / 'vsim.wlf'))!s}}}",
             "-quiet",
@@ -266,7 +272,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
             "-onfinish stop",
             pli_str,
             set_generic_str,
-            config.library_name + "." + config.entity_name + architecture_suffix,
+            simulation_target,
             coverage_args,
             self._vsim_extra_args(config),
         ]

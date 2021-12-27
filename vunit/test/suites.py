@@ -231,20 +231,26 @@ class TestRun(object):
             "tb path": config.tb_path.replace("\\", "/") + "/",
         }
 
-        # TODO: remove file after?
         simulator_output_path = self._simulator_if.get_simulator_output_path(output_path) / "runner.cfg"
-        simulator_output_path.parent.mkdir(parents=True, exist_ok=True)
-        simulator_output_path.write_text(encode_dict(runner_cfg))
+        if config.vhdl_configuration_name is not None:
+            simulator_output_path.parent.mkdir(parents=True, exist_ok=True)
+            simulator_output_path.write_text(encode_dict(runner_cfg))
+        else:
+            # @TODO Warn if runner cfg already set?
+            config.generics["runner_cfg"] = encode_dict(runner_cfg)
 
-        # @TODO Warn if runner cfg already set?
-        config.generics["runner_cfg"] = encode_dict(runner_cfg)
+        try:
+            return_value = self._simulator_if.simulate(
+                output_path=output_path,
+                test_suite_name=self._test_suite_name,
+                config=config,
+                elaborate_only=self._elaborate_only,
+            )
+        finally:
+            if simulator_output_path.exists():
+                simulator_output_path.unlink()
 
-        return self._simulator_if.simulate(
-            output_path=output_path,
-            test_suite_name=self._test_suite_name,
-            config=config,
-            elaborate_only=self._elaborate_only,
-        )
+        return return_value
 
     def _read_test_results(self, file_name):  # pylint: disable=too-many-branches
         """
