@@ -347,6 +347,9 @@ define work "{self._output_path}/libraries/work"
                 return False
         return True
 
+    def get_simulator_output_path(self, output_path):
+        return Path(output_path) / self.name
+
     def _hdlvar_args(self):
         """
         Return hdlvar argument if available

@@ -231,6 +231,11 @@ class TestRun(object):
             "tb path": config.tb_path.replace("\\", "/") + "/",
         }
 
+        # TODO: remove file after?
+        simulator_output_path = self._simulator_if.get_simulator_output_path(output_path) / "runner.cfg"
+        simulator_output_path.parent.mkdir(parents=True, exist_ok=True)
+        simulator_output_path.write_text(encode_dict(runner_cfg))
+
         # @TODO Warn if runner cfg already set?
         config.generics["runner_cfg"] = encode_dict(runner_cfg)
 

@@ -331,6 +331,9 @@ proc vunit_run {} {
 
         return self._run_batch_file(str(batch_file_name))
 
+    def get_simulator_output_path(self, output_path):
+        return Path(self._sim_cfg_file_name).parent
+
 
 def fix_path(path):
     """

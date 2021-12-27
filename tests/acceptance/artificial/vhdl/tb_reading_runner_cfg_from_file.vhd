@@ -16,20 +16,9 @@ end entity;
 architecture tb of tb_reading_runner_cfg_from_file is
 begin
   test_runner : process
-    file runner_cfg_fptr : text;
-    variable runner_cfg_line : line;
   begin
-    file_open(runner_cfg_fptr, "runner.cfg", write_mode);
-    write(
-      runner_cfg_line,
-      string'("active python runner : true,enabled_test_cases : ,output path : " &
-      replace(output_path(runner_cfg), ":", "::") & ",tb path : " &
-      replace(tb_path(runner_cfg), ":", "::") & ",use_color : true")
-    );
-    writeline(runner_cfg_fptr, runner_cfg_line);
-    file_close(runner_cfg_fptr);
-
     test_runner_setup(runner, null_runner_cfg);
+
     check_true(active_python_runner(null_runner_cfg));
     check(output_path(null_runner_cfg) /= "");
     check(enabled_test_cases(null_runner_cfg) /= "__all__");
