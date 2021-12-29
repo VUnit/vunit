@@ -25,6 +25,7 @@ class TestBenchList(object):
     def __init__(self, database=None):
         self._libraries = OrderedDict()
         self._database = database
+        self._vhdl_configurations = {}
 
     def add_from_source_file(self, source_file):
         """
@@ -33,8 +34,25 @@ class TestBenchList(object):
         for design_unit in source_file.design_units:
             if design_unit.is_entity or design_unit.is_module:
                 if tb_filter is None or tb_filter(design_unit):
-                    if design_unit.is_module or design_unit.is_entity:
-                        self._add_test_bench(TestBench(design_unit, self._database))
+                    test_bench = TestBench(design_unit, self._database)
+                    self._add_test_bench(test_bench)
+                    if design_unit.is_entity:
+                        if design_unit.name not in self._vhdl_configurations:
+                            self._vhdl_configurations[design_unit.name] = dict(test_bench=None, configurations=[])
+
+                        self._vhdl_configurations[design_unit.name]["test_bench"] = test_bench
+                        for configuration in self._vhdl_configurations[design_unit.name]["configurations"]:
+                            test_bench.add_config(name=configuration, vhdl_configuration_name=configuration)
+
+            if design_unit.is_vhdl_configuration:
+                if design_unit.entity_name not in self._vhdl_configurations:
+                    self._vhdl_configurations[design_unit.entity_name] = dict(test_bench=None, configurations=[])
+
+                self._vhdl_configurations[design_unit.entity_name]["configurations"].append(design_unit.name)
+                if self._vhdl_configurations[design_unit.entity_name]["test_bench"]:
+                    self._vhdl_configurations[design_unit.entity_name]["test_bench"].add_config(
+                        name=design_unit.name, vhdl_configuration_name=design_unit.name
+                    )
 
     def _add_test_bench(self, test_bench):
         """

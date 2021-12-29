@@ -17,7 +17,7 @@ from vunit.hashing import hash_string
 from vunit.vhdl_parser import VHDLReference
 from vunit.cached import file_content_hash
 from vunit.parsing.encodings import HDL_FILE_ENCODING
-from vunit.design_unit import DesignUnit, VHDLDesignUnit, Entity, Module
+from vunit.design_unit import DesignUnit, VHDLDesignUnit, Entity, Module, VHDLConfiguration
 from vunit.vhdl_standard import VHDLStandard
 from vunit.library import Library
 
@@ -318,7 +318,7 @@ class VHDLSourceFile(SourceFile):
             )
 
         for configuration in design_file.configurations:
-            result.append(VHDLDesignUnit(configuration.identifier, self, "configuration"))
+            result.append(VHDLConfiguration(configuration.identifier, self, configuration.entity))
 
         for body in design_file.package_bodies:
             result.append(VHDLDesignUnit(body.identifier, self, "package body", False, body.identifier))
