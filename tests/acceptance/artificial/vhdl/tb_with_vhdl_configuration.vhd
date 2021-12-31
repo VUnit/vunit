@@ -38,7 +38,13 @@ begin
     writeline(result_fptr, result_line);
     file_close(result_fptr);
 
-    info(arch);
+    while test_suite loop
+      if run("test1") then
+        null;
+      elsif run("test2") then
+        null;
+      end if;
+    end loop;
 
     test_runner_cleanup(runner);
     wait;

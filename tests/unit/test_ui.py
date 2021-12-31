@@ -1090,6 +1090,70 @@ endmodule
             method("ghdl.elab_flags", [], allow_empty=True)
             self.assertRaises(ValueError, method, "ghdl.elab_flags", [])
 
+    def test_get_configurations(self):
+        ui = self._create_ui()
+        lib = ui.add_library("lib")
+        file_name = self.create_entity_file()
+        lib.add_source_file(file_name)
+        self.create_file(
+            "tb_ent.vhd",
+            """
+entity tb_ent is
+  generic (
+    runner_cfg : string;
+    a : integer := 0;
+    b : integer := 0
+  );
+end entity;
+
+architecture a of tb_ent is
+begin
+  main : process
+  begin
+    if run("test1") then
+    elsif run("test2") then
+    end if;
+  end process;
+end architecture;
+        """,
+        )
+        lib.add_source_file("tb_ent.vhd")
+
+        tb = lib.test_bench("tb_ent")
+        tb.add_config("cfg1", generics=dict(a=1))
+        test2 = tb.test("test2")
+        test2.add_config("cfg2", generics=dict(b=2))
+
+        cfgs = tb.get_configs("cfg*")
+        n_cfg1 = n_cfg2 = 0
+        for cfg_dict in cfgs.get_configuration_dicts():
+            for cfg_name, cfg in cfg_dict.items():
+                if cfg_name == "cfg1":
+                    self.assertEqual(cfg.generics["a"], 1)
+                    n_cfg1 += 1
+                else:
+                    self.assertEqual(cfg_name, "cfg2")
+                    self.assertEqual(cfg.generics["b"], 2)
+                    n_cfg2 += 1
+
+        self.assertEqual(n_cfg1, 2)
+        self.assertEqual(n_cfg2, 1)
+
+        cfgs = test2.get_configs("cfg2")
+        n_cfg1 = n_cfg2 = 0
+        for cfg_dict in cfgs.get_configuration_dicts():
+            for cfg_name, cfg in cfg_dict.items():
+                if cfg_name == "cfg1":
+                    self.assertEqual(cfg.generics["a"], 1)
+                    n_cfg1 += 1
+                else:
+                    self.assertEqual(cfg_name, "cfg2")
+                    self.assertEqual(cfg.generics["b"], 2)
+                    n_cfg2 += 1
+
+        self.assertEqual(n_cfg1, 0)
+        self.assertEqual(n_cfg2, 1)
+
     def test_get_testbench_files(self):
         ui = self._create_ui()
         lib = ui.add_library("lib")

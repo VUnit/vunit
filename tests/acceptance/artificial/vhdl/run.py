@@ -9,7 +9,8 @@ from vunit import VUnit
 
 ROOT = Path(__file__).parent
 
-VU = VUnit.from_argv()
+VU = VUnit.from_argv(compile_builtins=False)
+VU.add_vhdl_builtins()
 LIB = VU.add_library("lib")
 LIB.add_source_files(ROOT / "*.vhd")
 
@@ -81,10 +82,28 @@ def configure_tb_assert_stop_level(ui):
             test.set_sim_option("vhdl_assert_stop_level", vhdl_assert_stop_level)
 
 
+def configure_tb_with_vhdl_configuration(ui):
+    def make_post_check(expected_arch):
+        def post_check(output_path):
+            arch = (Path(output_path) / "result.txt").read_text()
+            if arch[:-1] != expected_arch:
+                raise RuntimeError(f"Error! Got {arch[: -1]}, expected {expected_arch}")
+
+            return True
+
+        return post_check
+
+    tb = ui.library("lib").test_bench("tb_with_vhdl_configuration")
+    tb.get_configs("cfg*").set_post_check(make_post_check("arch1"))
+    tb.test("test1").get_configs("cfg2").set_post_check(make_post_check("arch2"))
+    tb.test("test2").get_configs("cfg2").set_post_check(make_post_check("arch2"))
+
+
 configure_tb_with_generic_config()
 configure_tb_same_sim_all_pass(VU)
 configure_tb_set_generic(VU)
 configure_tb_assert_stop_level(VU)
+configure_tb_with_vhdl_configuration(VU)
 LIB.entity("tb_no_generic_override").set_generic("g_val", False)
 LIB.entity("tb_ieee_warning").test("pass").set_sim_option("disable_ieee_warnings", True)
 LIB.entity("tb_other_file_tests").scan_tests_from_file(str(ROOT / "other_file_tests.vhd"))
