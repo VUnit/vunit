@@ -9,6 +9,7 @@ UI class Test
 """
 
 from .common import lower_generics
+from .configuration import Configuration
 
 
 class Test(object):
@@ -87,6 +88,9 @@ class Test(object):
             sim_options=sim_options,
             attributes=attributes,
         )
+
+    def get_configs(self, pattern="*"):
+        return Configuration(self._test_case, pattern)
 
     def set_attribute(self, name, value):
         """

@@ -11,6 +11,7 @@ UI class TestBench
 from fnmatch import fnmatch
 from .common import lower_generics
 from .test import Test
+from .configuration import Configuration
 
 
 class TestBench(object):
@@ -182,6 +183,9 @@ class TestBench(object):
             sim_options=sim_options,
             attributes=attributes,
         )
+
+    def get_configs(self, pattern="*"):
+        return Configuration(self._test_bench, pattern)
 
     def test(self, name):
         """

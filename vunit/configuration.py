@@ -114,7 +114,7 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
         Set VHDL configuration name
         """
         if self.generics:
-            raise GenericAndVHDLConfigurationException
+            raise GenericAndVHDLConfigurationException("Generics can't be used with VHDL configurations.")
 
         self.vhdl_configuration_name = name
 
@@ -123,7 +123,7 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
         Set generic
         """
         if self.vhdl_configuration_name:
-            raise GenericAndVHDLConfigurationException
+            raise GenericAndVHDLConfigurationException("Generics can't be used with VHDL configurations.")
         if name not in self._design_unit.generic_names:
             LOGGER.warning(
                 "Generic '%s' set to value '%s' not found in %s '%s.%s'. Possible values are [%s]",

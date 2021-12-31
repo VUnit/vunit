@@ -94,10 +94,28 @@ def configure_tb_assert_stop_level(ui):
             test.set_sim_option("vhdl_assert_stop_level", vhdl_assert_stop_level)
 
 
+def configure_tb_with_vhdl_configuration(ui):
+    def make_post_check(expected_arch):
+        def post_check(output_path):
+            arch = (Path(output_path) / "result.txt").read_text()
+            if arch[:-1] != expected_arch:
+                raise RuntimeError(f"Error! Got {arch[: -1]}, expected {expected_arch}")
+
+            return True
+
+        return post_check
+
+    tb = ui.library("lib").test_bench("tb_with_vhdl_configuration")
+    tb.get_configs("cfg*").set_post_check(make_post_check("arch1"))
+    tb.test("test1").get_configs("cfg2").set_post_check(make_post_check("arch2"))
+    tb.test("test2").get_configs("cfg2").set_post_check(make_post_check("arch2"))
+
+
 configure_tb_with_generic_config()
 configure_tb_same_sim_all_pass(vu)
 configure_tb_set_generic(vu)
 configure_tb_assert_stop_level(vu)
+configure_tb_with_vhdl_configuration(vu)
 lib.entity("tb_no_generic_override").set_generic("g_val", False)
 lib.entity("tb_ieee_warning").test("pass").set_sim_option("disable_ieee_warnings", True)
 lib.entity("tb_other_file_tests").scan_tests_from_file(str(root / "other_file_tests.vhd"))
