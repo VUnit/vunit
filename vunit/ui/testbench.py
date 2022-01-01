@@ -185,6 +185,12 @@ class TestBench(object):
         )
 
     def get_configs(self, pattern="*"):
+        """
+        Get test bench configurations matching pattern.
+
+        :param pattern: A wildcard pattern matching the configuration name(s).
+        :returns: A :class:`.Configuration` object
+        """
         return Configuration(self._test_bench, pattern)
 
     def test(self, name):

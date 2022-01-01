@@ -90,6 +90,12 @@ class Test(object):
         )
 
     def get_configs(self, pattern="*"):
+        """
+        Get test configurations matching pattern.
+
+        :param pattern: A wildcard pattern matching the configuration name(s).
+        :returns: A :class:`.Configuration` object
+        """
         return Configuration(self._test_case, pattern)
 
     def set_attribute(self, name, value):
