@@ -35,6 +35,10 @@ class Configuration(ConfigurationVisitor):
         return self._selected_cfg_dicts
 
     def add_config(self, *args, **kwargs):
+        """
+        This method is inherited from the superclass but not defined for this class. New
+        configurations are added to :class:`.TestBench` or :class:`.Test` objects.
+        """
         raise RuntimeError(
             f"{type(self)} do not allow addition of new configurations, only modification of existing ones."
         )

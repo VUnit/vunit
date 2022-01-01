@@ -22,8 +22,7 @@ The code has the following important properties:
 
 * The VUnit functionality is located in the ``vunit_lib`` library and is included with the library and context
   statements in the first two lines.
-* The ``runner_cfg`` generic is used to control the testbench from PR. If the VR is used standalone, you will
-  need a default value, ``runner_cfg_default``, for the generic. Note that the generic **must** be named
+* The ``runner_cfg`` generic is used to control the testbench from PR. Note that the generic **must** be named
   ``runner_cfg`` for the testbench to be recognized by PR (there is an exception which we'll get to later).
 * Every VUnit testbench has a main controlling process. It's labelled ``test_runner`` in this example but the name is
   not important. The process starts by setting up VUnit using the ``test_runner_setup`` procedure with ``runner_cfg`` as
@@ -261,6 +260,43 @@ Note that VUnit cannot handle VHDL asserts in this mode of operation. If the sim
 it is possible to read out assert error counters and use ``check_equal`` to verify that these are zero before calling
 ``test_runner_cleanup``. Failures like division by zero or out of range operations are other examples that won't be
 handle gracefully in this mode, and not something that VHDL provides any solutions for.
+
+Testbenches with VHDL Configurations
+------------------------------------
+
+If there are VHDL configurations defined for the testbench entity, each configuration, and not the testbench
+entity, defines a top-level for the simulation. VUnit automatically detects these VHDL configurations and treat
+them as a special case of the larger testbench configuration concept provided by VUnit, see
+:ref:`configurations <configurations>`.
+
+VHDL doesn't allow setting generics when the top-level is a VHDL configuration which prevents the `runner_cfg`
+generic to be set by PR. To work around this limitation PR provides a `runner.cfg` file containing the same
+information. This file is read by `test_runner_setup` whenever its `runner_cfg` parameter is set to
+`null_runner_cfg`. An example is shown below.
+
+.. code-block:: vhdl
+
+    library vunit_lib;
+    context vunit_lib.vunit_context;
+
+    entity tb_minimal is
+      generic (runner_cfg : string := null_runner_cfg);
+    end entity;
+
+    architecture tb of tb_minimal is
+    begin
+      test_runner : process
+      begin
+        test_runner_setup(runner, runner_cfg);
+
+  ...
+
+        test_runner_cleanup(runner);
+      end process;
+    end architecture;
+
+Note that the `runner_cfg` generic must remain present since this is the token used by VUnit test scanning
+to distinguish testbench entities from other entities.
 
 Special Paths
 -------------
