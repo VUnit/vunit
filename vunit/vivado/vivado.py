@@ -13,11 +13,12 @@ from os import makedirs
 from pathlib import Path
 
 
-def add_from_compile_order_file(vunit_obj, compile_order_file, dependency_scan_defaultlib=True):
+def add_from_compile_order_file(vunit_obj, compile_order_file, dependency_scan_defaultlib=True,
+                                fail_on_non_hdl_files=True):
     """
     Add Vivado IP:s from a compile order file
     """
-    compile_order, libraries, include_dirs = _read_compile_order(compile_order_file)
+    compile_order, libraries, include_dirs = _read_compile_order(compile_order_file, fail_on_non_hdl_files)
 
     # Create libraries
     for library_name in libraries:
@@ -77,7 +78,7 @@ def create_compile_order_file(project_file, compile_order_file, vivado_path=None
     )
 
 
-def _read_compile_order(file_name):
+def _read_compile_order(file_name, fail_on_non_hdl_files):
     """
     Read the compile order file and filter out duplicate files
     """
@@ -90,7 +91,14 @@ def _read_compile_order(file_name):
 
         for line in ifile.readlines():
             library_name, file_type, file_name = line.strip().split(",", 2)
-            assert file_type in ("Verilog", "VHDL", "Verilog Header")
+
+            if not file_type in ("Verilog", "VHDL", "Verilog Header"):
+                if fail_on_non_hdl_files:
+                    raise RuntimeError("Unsupported compile order file: %s" % file_name)
+                else:
+                    print("Compile order file ignored: %s" % file_name)
+                    continue
+
             libraries.add(library_name)
 
             # Vivado generates duplicate files for different IP:s
