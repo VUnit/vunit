@@ -206,7 +206,7 @@ in your VUnit Git repository? You have to do this first if installing using setu
         Add JSON-for-VHDL library
         """
         library = self._add_library_if_not_exist(
-            "JSON", "Library 'JSON' previously defined. Skipping addition of builtin JSON-for-VHDL (c8a6f51)."
+            "JSON", "Library 'JSON' previously defined. Skipping addition of builtin JSON-for-VHDL (95e848b8)."
         )
         if library is None:
             return
