@@ -108,7 +108,12 @@ def configure_tb_with_vhdl_configuration(ui):
     tb = ui.library("lib").test_bench("tb_with_vhdl_configuration")
     tb.get_configs("cfg*").set_post_check(make_post_check("arch1"))
     tb.test("test1").get_configs("cfg2").set_post_check(make_post_check("arch2"))
-    tb.test("test2").get_configs("cfg2").set_post_check(make_post_check("arch2"))
+    for config in tb.test("test2").get_configs():
+        if config.name == "cfg2":
+            config.set_post_check(make_post_check("arch2"))
+    tb.test("test1").delete_config("cfg1")
+    tb.add_config("foo")
+    tb.delete_config("foo")
 
 
 configure_tb_with_generic_config()

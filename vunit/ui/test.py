@@ -9,7 +9,7 @@ UI class Test
 """
 
 from .common import lower_generics
-from .configuration import Configuration
+from .configuration import ConfigurationList
 
 
 class Test(object):
@@ -89,14 +89,22 @@ class Test(object):
             attributes=attributes,
         )
 
+    def delete_config(self, name):
+        """
+        Delete a configuration.
+
+        :param name: The name of the configuration.
+        """
+        self._test_case.delete_config(name)
+
     def get_configs(self, pattern="*"):
         """
         Get test configurations matching pattern.
 
         :param pattern: A wildcard pattern matching the configuration name(s).
-        :returns: A :class:`.Configuration` object
+        :returns: A :class:`.ConfigurationList` object
         """
-        return Configuration(self._test_case, pattern)
+        return ConfigurationList(self._test_case, pattern)
 
     def set_attribute(self, name, value):
         """

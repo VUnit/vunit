@@ -11,7 +11,7 @@ UI class TestBench
 from fnmatch import fnmatch
 from .common import lower_generics
 from .test import Test
-from .configuration import Configuration
+from .configuration import ConfigurationList
 
 
 class TestBench(object):
@@ -184,14 +184,22 @@ class TestBench(object):
             attributes=attributes,
         )
 
+    def delete_config(self, name):
+        """
+        Delete a configuration.
+
+        :param name: The name of the configuration.
+        """
+        self._test_bench.delete_config(name)
+
     def get_configs(self, pattern="*"):
         """
         Get test bench configurations matching pattern.
 
         :param pattern: A wildcard pattern matching the configuration name(s).
-        :returns: A :class:`.Configuration` object
+        :returns: A :class:`.ConfigurationList` object
         """
-        return Configuration(self._test_bench, pattern)
+        return ConfigurationList(self._test_bench, pattern)
 
     def test(self, name):
         """

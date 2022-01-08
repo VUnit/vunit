@@ -232,7 +232,7 @@ class TestRun(object):
         }
 
         simulator_output_path = self._simulator_if.get_simulator_output_path(output_path) / "runner.cfg"
-        if config.vhdl_configuration_name is not None:
+        if config.vhdl_config_name is not None:
             simulator_output_path.parent.mkdir(parents=True, exist_ok=True)
             simulator_output_path.write_text(encode_dict(runner_cfg))
         else:

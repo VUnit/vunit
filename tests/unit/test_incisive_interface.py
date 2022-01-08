@@ -967,7 +967,7 @@ define work "%s/libraries/work"
         with create_tempdir() as tempdir:
             design_unit = Entity("tb_entity", file_name=str(Path(tempdir) / "file.vhd"))
             design_unit.generic_names = ["runner_cfg"]
-            config = Configuration("name", design_unit, vhdl_configuration_name="cfg")
+            config = Configuration("name", design_unit, vhdl_config_name="cfg")
             simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
             self.assertEqual(simif._select_vhdl_top(config), "cfg")  # pylint: disable=protected-access
             config = Configuration("name", design_unit)
@@ -1002,5 +1002,5 @@ def make_config(sim_options=None, generics=None, verilog=False):
 
     cfg.sim_options = {} if sim_options is None else sim_options
     cfg.generics = {} if generics is None else generics
-    cfg.vhdl_configuration_name = None
+    cfg.vhdl_config_name = None
     return cfg

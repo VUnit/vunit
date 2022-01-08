@@ -247,10 +247,6 @@ EXPECTED_REPORT = (
     ),
     (
         "passed",
-        "lib.tb_with_vhdl_configuration.cfg1.test1",
-    ),
-    (
-        "passed",
         "lib.tb_with_vhdl_configuration.cfg1.test2",
     ),
     (

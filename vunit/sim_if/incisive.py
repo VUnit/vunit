@@ -280,10 +280,10 @@ define work "{self._output_path}/libraries/work"
     @staticmethod
     def _select_vhdl_top(config):
         "Select VHDL configuration or entity as top."
-        if config.vhdl_configuration_name is None:
+        if config.vhdl_config_name is None:
             return f"{config.library_name!s}.{config.entity_name!s}:{config.architecture_name!s}"
 
-        return f"{config.vhdl_configuration_name!s}"
+        return f"{config.vhdl_config_name!s}"
 
     def simulate(
         self, output_path, test_suite_name, config, elaborate_only=False

@@ -260,8 +260,8 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
 
         simulation_target = (
             config.library_name + "." + config.entity_name + architecture_suffix
-            if config.vhdl_configuration_name is None
-            else config.library_name + "." + config.vhdl_configuration_name
+            if config.vhdl_config_name is None
+            else config.library_name + "." + config.vhdl_config_name
         )
 
         vsim_flags = [

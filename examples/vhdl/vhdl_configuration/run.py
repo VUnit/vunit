@@ -19,24 +19,31 @@ lib.add_source_files(Path(__file__).parent / "handling_generics_limitation" / "*
 # VHDL configurations are detected automatically and are treated as a special
 # case of the broader VUnit configuration concept. As such the configuration
 # can be extended beyond the capabilities of a pure VHDL configuration. For example,
-# by adding a post_check function. The exception is generics since VHDL doesn't allow
-# generics to be combined with configurations. Workarounds for this limitation can be
-# found in the handling_generics_limitation directory
+# by adding a pre_config or post_check function hooks. The exception is generics since VHDL
+# doesn't allow generics to be combined with configurations.
+# Workarounds for this limitation can be found in the handling_generics_limitation directory
 
 # Get the VHDL-defined configurations from test or testbench objects using a pattern matching
 # configurations of interest.
 tb = lib.test_bench("tb_selecting_dut_with_vhdl_configuration")
-configurations = tb.get_configs("dff_*")
+configs = tb.get_configs("dff_*")
 
 
 # Remember to run the run script with the -v flag to see the message from the dummy post_check
-def post_check(output_path):
-    print("Running post-check")
+def make_hook(msg):
+    def hook(output_path):
+        print(msg)
 
-    return True
+        return True
+
+    return hook
 
 
-configurations.set_post_check(post_check)
+configs.set_post_check(make_hook("Common post_check"))
+
+# You can also loop over the matching configurations
+for config in configs:
+    config.set_pre_config(make_hook(f"pre_config for {config.name}"))
 
 # The testbenches in the handling_generics_limitation directory are examples of how the generics
 # limitation of VHDL configurations can be worked around. This allow us to create configurations

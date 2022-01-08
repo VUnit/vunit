@@ -308,7 +308,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
 
         vsim_flags += ["-lib", config.library_name]
 
-        if config.vhdl_configuration_name is None:
+        if config.vhdl_config_name is None:
             # Add the the testbench top-level unit last as coverage is
             # only collected for the top-level unit specified last
             vsim_flags += [config.entity_name]
@@ -316,7 +316,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
             if config.architecture_name is not None:
                 vsim_flags.append(config.architecture_name)
         else:
-            vsim_flags += [config.vhdl_configuration_name]
+            vsim_flags += [config.vhdl_config_name]
 
         tcl = """
 proc vunit_load {{}} {{

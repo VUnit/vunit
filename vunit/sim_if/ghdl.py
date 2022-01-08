@@ -280,8 +280,8 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
             # Enable coverage in linker
             cmd += ["-Wl,-lgcov"]
 
-        if config.vhdl_configuration_name is not None:
-            cmd += [config.vhdl_configuration_name]
+        if config.vhdl_config_name is not None:
+            cmd += [config.vhdl_config_name]
         else:
             cmd += [config.entity_name, config.architecture_name]
 

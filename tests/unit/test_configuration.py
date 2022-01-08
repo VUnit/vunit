@@ -46,11 +46,11 @@ class TestConfiguration(unittest.TestCase):
             self.assertRaises(ValueError, config.set_sim_option, "vhdl_assert_stop_level", "illegal")
 
     def test_error_on_both_generics_and_vhdl_configuration(self):
-        with _create_config(vhdl_configuration_name="cfg") as config:
+        with _create_config(vhdl_config_name="cfg") as config:
             self.assertRaises(GenericAndVHDLConfigurationException, config.set_generic, "foo", "bar")
 
         with _create_config(generics=dict(foo=17)) as config:
-            self.assertRaises(GenericAndVHDLConfigurationException, config.set_vhdl_configuration_name, "bar")
+            self.assertRaises(GenericAndVHDLConfigurationException, config.set_vhdl_config_name, "bar")
 
     def test_sim_option_is_not_mutated(self):
         with _create_config() as config:

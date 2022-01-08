@@ -35,6 +35,14 @@ Test
 
 .. autoclass:: vunit.ui.test.Test()
 
+ConfigurationList
+-----------------
+
+.. autoclass:: vunit.ui.configuration.ConfigurationList()
+   :special-members: __iter__
+   :inherited-members:
+
+
 Configuration
 -------------
 

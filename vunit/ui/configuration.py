@@ -5,7 +5,7 @@
 # Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
 
 """
-UI class Configuration
+UI classes ConfigurationList and Configuration
 """
 
 from fnmatch import fnmatch
@@ -15,30 +15,76 @@ from vunit.configuration import ConfigurationVisitor, DEFAULT_NAME
 
 class Configuration(ConfigurationVisitor):
     """
-    User interface for configuration sets.
+    User interface for a configuration.
+
+    Provides methods for modifying an existing configuration
+    """
+
+    def __init__(self, name, configuration):
+        self._name = name
+        self.configuration = configuration
+
+    @property
+    def name(self):
+        """
+        :returns: the name of the configuration
+        """
+        return self._name
+
+    def get_configuration_dicts(self):
+        return self.configuration
+
+    def add_config(self, *args, **kwargs):
+        """ """  # pylint: disable=empty-docstring
+        raise NotImplementedError(
+            f"{type(self)} do not allow addition of new configurations, only modification of existing ones."
+        )
+
+    def delete_config(self, *args, **kwargs):
+        """ """  # pylint: disable=empty-docstring
+        raise NotImplementedError(f"{type(self)} do not allow deletion of configurations, only modification.")
+
+
+class ConfigurationList(ConfigurationVisitor):
+    """
+    User interface for a list of configurations.
+
     Provides methods for modifying existing configurations
     """
 
     def __init__(self, test_object, pattern):
-        self._selected_cfg_dicts = []
+        self._selected_config_dicts = []
+        self._selected_configs = {}
         self._test_object = test_object
-        for cfg_dict in test_object.get_configuration_dicts():
-            selected_cfg_dict = OrderedDict()
-            for name, cfg in cfg_dict.items():
-                if fnmatch(name if name is not DEFAULT_NAME else "", pattern):
-                    selected_cfg_dict[name] = cfg
 
-            if selected_cfg_dict:
-                self._selected_cfg_dicts.append(selected_cfg_dict)
+        for config_dict in test_object.get_configuration_dicts():
+            selected_config_dict = OrderedDict()
+            for name, config in config_dict.items():
+                name_as_string = name if name is not DEFAULT_NAME else ""
+                if fnmatch(name_as_string, pattern):
+                    selected_config_dict[name_as_string] = config
+                    if name_as_string not in self._selected_configs:
+                        self._selected_configs[name_as_string] = []
+
+                    self._selected_configs[name_as_string].append(OrderedDict({name_as_string: config}))
+
+            if selected_config_dict:
+                self._selected_config_dicts.append(selected_config_dict)
+
+    def __iter__(self):
+        """Iterate over :class:`.Configuration` objects."""
+        for name, config in self._selected_configs.items():
+            yield Configuration(name, config)
 
     def get_configuration_dicts(self):
-        return self._selected_cfg_dicts
+        return self._selected_config_dicts
 
     def add_config(self, *args, **kwargs):
-        """
-        This method is inherited from the superclass but not defined for this class. New
-        configurations are added to :class:`.TestBench` or :class:`.Test` objects.
-        """
-        raise RuntimeError(
+        """ """  # pylint: disable=empty-docstring
+        raise NotImplementedError(
             f"{type(self)} do not allow addition of new configurations, only modification of existing ones."
         )
+
+    def delete_config(self, *args, **kwargs):
+        """ """  # pylint: disable=empty-docstring
+        raise NotImplementedError(f"{type(self)} do not allow deletion of configurations, only modification.")

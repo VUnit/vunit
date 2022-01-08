@@ -216,7 +216,7 @@ test_suite_done""",
 
             for expect_runner_cfg_generic in [False, True]:
                 config = Configuration(
-                    "name", design_unit, vhdl_configuration_name=None if expect_runner_cfg_generic else "cfg"
+                    "name", design_unit, vhdl_config_name=None if expect_runner_cfg_generic else "cfg"
                 )
                 sim_if = TestSimIf(output_path, gui=False, expect_runner_cfg_generic=expect_runner_cfg_generic)
 
