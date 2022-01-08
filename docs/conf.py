@@ -37,7 +37,7 @@ source_suffix = {
 master_doc = "index"
 
 project = "VUnit"
-copyright = "2014-2021, Lars Asplund"
+copyright = "2014-2022, Lars Asplund"
 author = "LarsAsplund, kraigher and contributors"
 
 version = ""
