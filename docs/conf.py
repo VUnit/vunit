@@ -4,6 +4,9 @@ from sys import path as sys_path
 from os.path import abspath
 from pathlib import Path
 
+
+ROOT = Path(__file__).resolve().parent
+
 sys_path.insert(0, abspath("."))
 
 # -- Sphinx Options -----------------------------------------------------------
@@ -50,28 +53,29 @@ todo_include_todos = False
 
 # -- Options for HTML output ----------------------------------------------
 
-html_theme_path = ["."]
-html_theme = "_theme"
-
-html_theme_options = {
-    "analytics_id": "UA-112393863-1",
-    "logo_only": True,
-    "vcs_pageview_mode": "blob",
-    "style_nav_header_background": "#0c479d",
-    "home_breadcrumbs": False,
-}
-html_context = {
-    "conf_py_path": "%s/" % Path(__file__).parent.name,
-    "display_github": True,
-    "github_user": "VUnit",
-    "github_repo": "vunit",
-    "github_version": "master/",
-}
+if (ROOT / "_theme").is_dir():
+    html_theme_path = ["."]
+    html_theme = "_theme"
+    html_theme_options = {
+        "analytics_id": "UA-112393863-1",
+        "logo_only": True,
+        "vcs_pageview_mode": "blob",
+        "style_nav_header_background": "#0c479d",
+        "home_breadcrumbs": False,
+    }
+    html_context = {
+        "conf_py_path": f"{ROOT.name}/",
+        "display_github": True,
+        "github_user": "VUnit",
+        "github_repo": "vunit",
+        "github_version": "master/",
+    }
+else:
+    html_theme = "alabaster"
 
 html_static_path = ["_static"]
 
 html_logo = str(Path(html_static_path[0]) / "VUnit_logo_175x175.png")
-
 html_favicon = str(Path(html_static_path[0]) / "vunit.ico")
 
 # Output file base name for HTML help builder.
