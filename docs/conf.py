@@ -36,9 +36,9 @@ source_suffix = {
 
 master_doc = "index"
 
-project = u"VUnit"
-copyright = u"2014-2021, Lars Asplund"
-author = u"LarsAsplund, kraigher and contributors"
+project = "VUnit"
+copyright = "2014-2021, Lars Asplund"
+author = "LarsAsplund, kraigher and contributors"
 
 version = ""
 release = ""
