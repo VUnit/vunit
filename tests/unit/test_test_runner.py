@@ -11,6 +11,7 @@ Test the test runner
 from pathlib import Path
 import unittest
 from unittest import mock
+from time import sleep
 from tests.common import with_tempdir
 from vunit.hashing import hash_string
 from vunit.test.runner import TestRunner
@@ -44,6 +45,27 @@ class TestTestRunner(unittest.TestCase):
         self.assertTrue(report.result_of("test1").passed)
         self.assertTrue(report.result_of("test2").failed)
         self.assertTrue(report.result_of("test3").passed)
+        self.assertEqual(test_case1.thread_id, 0)
+        self.assertEqual(test_case2.thread_id, 0)
+        self.assertEqual(test_case3.thread_id, 0)
+
+    @with_tempdir
+    def test_runs_testcases_in_multiple_threads(self, tempdir):
+        report = TestReport()
+        runner = TestRunner(report, tempdir, num_threads=3)
+
+        test_cases = [self.create_test(f"test{n}", True, delay=n / 2) for n in range(1, 6)]
+        test_list = TestList()
+        for test_case in test_cases:
+            test_list.add_test(test_case)
+
+        runner.run(test_list)
+
+        self.assertListEqual(
+            [test_case.thread_id for test_case in test_cases],
+            [1, 2, 0, 1, 2],
+            str([(test_case.name, test_case.thread_id) for test_case in test_cases]),
+        )
 
     @with_tempdir
     def test_fail_fast(self, tempdir):
@@ -68,6 +90,9 @@ class TestTestRunner(unittest.TestCase):
         self.assertEqual(order, ["test1", "test2"])
         self.assertTrue(report.result_of("test1").passed)
         self.assertTrue(report.result_of("test2").failed)
+        self.assertEqual(test_case1.thread_id, 0)
+        self.assertEqual(test_case2.thread_id, 0)
+        self.assertEqual(test_case3.thread_id, None)
 
     @with_tempdir
     def test_handles_python_exeception(self, tempdir):
@@ -196,7 +221,7 @@ class TestTestRunner(unittest.TestCase):
                 )
 
     @staticmethod
-    def create_test(name, passed, order=None):
+    def create_test(name, passed, order=None, delay=None):
         """
         Utility function to create a mocked test with name
         that is either passed or failed
@@ -208,6 +233,8 @@ class TestTestRunner(unittest.TestCase):
             """
             if order is not None:
                 order.append(name)
+            if delay is not None:
+                sleep(delay)
             return passed
 
         test_case = TestCaseMock(name=name, run_side_effect=run_side_effect)
@@ -223,10 +250,11 @@ class TestCaseMock(object):
         self.name = name
         self.output_path = None
         self.read_output = None
+        self.thread_id = None
         self.called = False
         self.run_side_effect = run_side_effect
 
-    def run(self, output_path, read_output):
+    def run(self, output_path, read_output, thread_id):
         """
         Mock run method that just records the arguments
         """
@@ -234,4 +262,5 @@ class TestCaseMock(object):
         self.called = True
         self.output_path = output_path
         self.read_output = read_output
+        self.thread_id = thread_id
         return self.run_side_effect(output_path=output_path, read_output=read_output)

@@ -194,37 +194,47 @@ test_suite_done""",
         with create_tempdir() as tempdir:
             design_unit = Entity("tb_entity", file_name=str(Path(tempdir) / "file.vhd"))
             design_unit.generic_names = ["runner_cfg"]
-            output_path = str(Path(__file__).parent / "sim_out")
-            renew_path(output_path)
+            vunit_output_path = str(Path(tempdir) / "vunit_out")
+            renew_path(vunit_output_path)
+            test_output_path = str(Path(vunit_output_path) / "test_out")
+            simulator_root = str(Path(vunit_output_path) / "my_simulator")
 
             class TestSimIf(SimulatorInterface):
-                def __init__(self, output_path, gui, expect_runner_cfg_generic):
+                def __init__(self, output_path, gui, expect_runner_cfg_generic, thread_id):
                     super().__init__(output_path, gui)
                     self._expect_runner_cfg_generic = expect_runner_cfg_generic
+                    self._thread_id = thread_id
 
-                def simulate(self, output_path, test_suite_name, config, elaborate_only):
+                def simulate(self, output_path, simulator_output_path, test_suite_name, config, elaborate_only):
                     tc = TestCase()
+                    tc.assertEqual(Path(output_path), Path(test_output_path))
+                    tc.assertEqual(Path(simulator_output_path), Path(simulator_root) / str(self._thread_id))
                     if self._expect_runner_cfg_generic:
                         tc.assertIn("runner_cfg", config.generics)
-                        tc.assertFalse((Path(output_path) / "test_sim" / "runner.cfg").exists())
+                        tc.assertFalse((Path(simulator_output_path) / "runner.cfg").exists())
                     else:
                         tc.assertNotIn("runner_cfg", config.generics)
-                        tc.assertTrue((Path(output_path) / "test_sim" / "runner.cfg").exists())
-
-                def get_simulator_output_path(self, output_path):
-                    return Path(output_path) / "test_sim"
+                        tc.assertTrue((Path(simulator_output_path) / "runner.cfg").exists())
 
             for expect_runner_cfg_generic in [False, True]:
-                config = Configuration(
-                    "name", design_unit, vhdl_config_name=None if expect_runner_cfg_generic else "cfg"
-                )
-                sim_if = TestSimIf(output_path, gui=False, expect_runner_cfg_generic=expect_runner_cfg_generic)
+                for thread_id in range(2):
+                    renew_path(test_output_path)
+                    renew_path(simulator_root)
+                    config = Configuration(
+                        "name", design_unit, vhdl_config_name=None if expect_runner_cfg_generic else "cfg"
+                    )
+                    sim_if = TestSimIf(
+                        simulator_root,
+                        gui=False,
+                        expect_runner_cfg_generic=expect_runner_cfg_generic,
+                        thread_id=thread_id,
+                    )
 
-                run = TestRun(
-                    simulator_if=sim_if,
-                    config=config,
-                    elaborate_only=False,
-                    test_suite_name=None,
-                    test_cases=["foo"],
-                )
-                run._simulate(output_path)  # pylint: disable=protected-access
+                    test_run = TestRun(
+                        simulator_if=sim_if,
+                        config=config,
+                        elaborate_only=False,
+                        test_suite_name=None,
+                        test_cases=["foo"],
+                    )
+                    test_run.run(test_output_path, thread_id=thread_id, read_output=None)

@@ -92,6 +92,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         gtkwave_args="",
         backend="llvm",
     ):
+
         SimulatorInterface.__init__(self, output_path, gui)
         self._prefix = prefix
         self._project = None
@@ -259,7 +260,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         cmd += [source_file.name]
         return cmd
 
-    def _get_command(self, config, output_path, elaborate_only, ghdl_e, wave_file):  # pylint: disable=too-many-branches
+    def _get_command(self, config, script_path, elaborate_only, ghdl_e, wave_file):  # pylint: disable=too-many-branches
         """
         Return GHDL simulation command
         """
@@ -272,7 +273,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         cmd += [f"--workdir={self._project.get_library(config.library_name).directory!s}"]
         cmd += [f"-P{lib.directory!s}" for lib in self._project.get_libraries()]
 
-        bin_path = str(Path(output_path) / f"{config.entity_name!s}-{config.architecture_name!s}")
+        bin_path = str(Path(script_path) / f"{config.entity_name!s}-{config.architecture_name!s}")
         if self._has_output_flag():
             cmd += ["-o", bin_path]
         cmd += config.sim_options.get("ghdl.elab_flags", [])
@@ -304,13 +305,13 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
                 cmd += ["--no-run"]
         else:
             try:
-                makedirs(output_path, mode=0o777)
+                makedirs(script_path, mode=0o777)
             except OSError:
                 pass
-            with (Path(output_path) / "args.json").open("w", encoding="utf-8") as fname:
+            with (Path(script_path) / "args.json").open("w", encoding="utf-8") as fname:
                 dump(
                     {
-                        "bin": str(Path(output_path) / f"{config.entity_name!s}-{config.architecture_name!s}"),
+                        "bin": str(Path(script_path) / f"{config.entity_name!s}-{config.architecture_name!s}"),
                         "build": cmd[1:],
                         "sim": sim,
                     },
@@ -319,7 +320,9 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
 
         return cmd
 
-    def simulate(self, output_path, test_suite_name, config, elaborate_only):  # pylint: disable=too-many-locals
+    def simulate(
+        self, output_path, simulator_output_path, test_suite_name, config, elaborate_only
+    ):  # pylint: disable=too-many-locals
         """
         Simulate with entity as top level using generics
         """
@@ -350,7 +353,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
             self._coverage_test_dirs.add(coverage_dir)
 
         try:
-            proc = Process(cmd, env=gcov_env)
+            proc = Process(cmd, env=gcov_env, cwd=simulator_output_path)
             proc.consume_output()
         except Process.NonZeroExitCode:
             status = False
@@ -363,12 +366,9 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
                 cmd += ["--script", str(Path(init_file).resolve())]
 
             stdout.write(" ".join(cmd) + "\n")
-            subprocess.call(cmd)
+            subprocess.call(cmd, cwd=simulator_output_path)
 
         return status
-
-    def get_simulator_output_path(self, output_path):
-        return Path(".")
 
     def _compile_source_file(self, source_file, printer):
         """

@@ -31,7 +31,7 @@ class VsimSimulatorMixin(object):
         prefix = self._prefix  # Avoid circular dependency inhibiting process destruction
         env = self.get_env()
 
-        def create_process(ident):
+        def create_process(ident, simulator_output_path):
             return Process(
                 [
                     str(Path(prefix) / "vsim"),
@@ -41,7 +41,7 @@ class VsimSimulatorMixin(object):
                     "-do",
                     str((Path(__file__).parent / "tcl_read_eval_loop.tcl").resolve()),
                 ],
-                cwd=str(Path(sim_cfg_file_name).parent),
+                cwd=str(simulator_output_path),
                 env=env,
             )
 
@@ -263,7 +263,7 @@ proc vunit_run {} {
         tcl += "}\n"
         return tcl
 
-    def _run_batch_file(self, batch_file_name, gui=False):
+    def _run_batch_file(self, batch_file_name, simulator_output_path, gui=False):
         """
         Run a test bench in batch by invoking a new vsim process from the command line
         """
@@ -278,32 +278,32 @@ proc vunit_run {} {
                 f'source "{fix_path(batch_file_name)!s}"',
             ]
 
-            proc = Process(args, cwd=str(Path(self._sim_cfg_file_name).parent))
+            proc = Process(args, cwd=simulator_output_path)
             proc.consume_output()
         except Process.NonZeroExitCode:
             return False
         return True
 
-    def _run_persistent(self, common_file_name, load_only=False):
+    def _run_persistent(self, common_file_name, simulator_output_path, load_only=False):
         """
         Run a test bench using the persistent vsim process
         """
         try:
-            self._persistent_shell.execute(f'source "{fix_path(common_file_name)!s}"')
-            self._persistent_shell.execute("set failed [vunit_load]")
-            if self._persistent_shell.read_bool("failed"):
+            self._persistent_shell.execute(f'source "{fix_path(common_file_name)!s}"', simulator_output_path)
+            self._persistent_shell.execute("set failed [vunit_load]", simulator_output_path)
+            if self._persistent_shell.read_bool("failed", simulator_output_path):
                 return False
 
             run_ok = True
             if not load_only:
-                self._persistent_shell.execute("set failed [vunit_run]")
-                run_ok = not self._persistent_shell.read_bool("failed")
-            self._persistent_shell.execute("quit -sim")
+                self._persistent_shell.execute("set failed [vunit_run]", simulator_output_path)
+                run_ok = not self._persistent_shell.read_bool("failed", simulator_output_path)
+            self._persistent_shell.execute("quit -sim", simulator_output_path)
             return run_ok
         except Process.NonZeroExitCode:
             return False
 
-    def simulate(self, output_path, test_suite_name, config, elaborate_only):
+    def simulate(self, output_path, simulator_output_path, test_suite_name, config, elaborate_only):
         """
         Run a test bench
         """
@@ -324,15 +324,12 @@ proc vunit_run {} {
         )
 
         if self._gui:
-            return self._run_batch_file(str(gui_file_name), gui=True)
+            return self._run_batch_file(str(gui_file_name), simulator_output_path, gui=True)
 
         if self._persistent_shell is not None:
-            return self._run_persistent(str(common_file_name), load_only=elaborate_only)
+            return self._run_persistent(str(common_file_name), simulator_output_path, load_only=elaborate_only)
 
-        return self._run_batch_file(str(batch_file_name))
-
-    def get_simulator_output_path(self, output_path):  # pylint: disable=unused-argument
-        return Path(self._sim_cfg_file_name).parent
+        return self._run_batch_file(str(batch_file_name), simulator_output_path)
 
 
 def fix_path(path):

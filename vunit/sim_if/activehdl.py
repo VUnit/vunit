@@ -365,7 +365,7 @@ proc vunit_run {} {
         batch_do += "quit -code 0\n"
         return batch_do
 
-    def _create_gui_script(self, common_file_name, config):
+    def _create_gui_script(self, common_file_name, config, simulator_output_path):
         """
         Create the user facing script which loads common functions and prints a help message
         """
@@ -379,7 +379,7 @@ proc vunit_run {} {
             tcl += f"vmap {library.name!s} {fix_path(library.directory)!s}\n"
 
         tcl += "global sim_working_folder\n"
-        tcl += f"set sim_working_folder {fix_path(str(Path(common_file_name).parent / 'gui'))}\n"
+        tcl += f"set sim_working_folder {fix_path(str(simulator_output_path))}\n"
 
         tcl += "vunit_load\n"
 
@@ -416,7 +416,7 @@ proc vunit_run {} {
             return False
         return True
 
-    def simulate(self, output_path, test_suite_name, config, elaborate_only):
+    def simulate(self, output_path, simulator_output_path, test_suite_name, config, elaborate_only):
         """
         Run a test bench
         """
@@ -425,31 +425,26 @@ proc vunit_run {} {
         batch_file_name = script_path / "batch.tcl"
         gui_file_name = script_path / "gui.tcl"
 
+        library_cfg_path = simulator_output_path / "library.cfg"
+        library_cfg_path.write_text('$INCLUDE = ".."\n')
         write_file(common_file_name, self._create_common_script(config, output_path))
-        write_file(gui_file_name, self._create_gui_script(str(common_file_name), config))
+        write_file(gui_file_name, self._create_gui_script(str(common_file_name), config, simulator_output_path))
         write_file(
             str(batch_file_name),
             self._create_batch_script(str(common_file_name), elaborate_only),
         )
 
         if self._gui:
-            gui_path = str(script_path / "gui")
-            if (script_path / "gui" / "runner.cfg").exists():
-                runner_cfg = (script_path / "gui" / "runner.cfg").read_text(encoding="utf-8")
-                renew_path(gui_path)
-                (script_path / "gui" / "runner.cfg").write_text(runner_cfg, encoding="utf-8")
+            if (simulator_output_path / "runner.cfg").exists():
+                runner_cfg = (simulator_output_path / "runner.cfg").read_text(encoding="utf-8")
+                renew_path(str(simulator_output_path))
+                (simulator_output_path / "runner.cfg").write_text(runner_cfg, encoding="utf-8")
             else:
-                renew_path(gui_path)
+                renew_path(str(simulator_output_path))
 
-            return self._run_batch_file(str(gui_file_name), gui=True, cwd=gui_path)
+            return self._run_batch_file(str(gui_file_name), gui=True, cwd=str(simulator_output_path))
 
-        return self._run_batch_file(str(batch_file_name), gui=False, cwd=str(Path(self._library_cfg).parent))
-
-    def get_simulator_output_path(self, output_path):
-        if self._gui:
-            return Path(output_path) / self.name / "gui"
-
-        return Path(self._library_cfg).parent
+        return self._run_batch_file(str(batch_file_name), gui=False, cwd=str(simulator_output_path))
 
 
 @total_ordering

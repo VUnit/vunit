@@ -159,7 +159,7 @@ class TestRun(object):
     def set_test_cases(self, test_cases):
         self._test_cases = test_cases
 
-    def run(self, output_path, read_output):
+    def run(self, output_path, read_output, thread_id):
         """
         Run selected test cases within the test suite
 
@@ -169,13 +169,15 @@ class TestRun(object):
         for name in self._test_cases:
             results[name] = FAILED
 
-        if not self._config.call_pre_config(output_path, self._simulator_if.output_path):
+        simulator_output_path = Path(self._simulator_if.output_path) / f"{thread_id}"
+        simulator_output_path.mkdir(parents=True, exist_ok=True)
+        if not self._config.call_pre_config(output_path, str(simulator_output_path)):
             return results
 
         # Ensure result file exists
         ostools.write_file(get_result_file_name(output_path), "")
 
-        sim_ok = self._simulate(output_path)
+        sim_ok = self._simulate(output_path, simulator_output_path)
 
         if self._elaborate_only:
             status = PASSED if sim_ok else FAILED
@@ -211,7 +213,7 @@ class TestRun(object):
 
         return False, results
 
-    def _simulate(self, output_path):
+    def _simulate(self, output_path, simulator_output_path):
         """
         Add runner_cfg generic values and run simulation
         """
@@ -231,26 +233,20 @@ class TestRun(object):
             "tb path": config.tb_path.replace("\\", "/") + "/",
         }
 
-        simulator_output_path = self._simulator_if.get_simulator_output_path(output_path) / "runner.cfg"
+        runner_cfg_path = simulator_output_path / "runner.cfg"
         if config.vhdl_config_name is not None:
-            simulator_output_path.parent.mkdir(parents=True, exist_ok=True)
-            simulator_output_path.write_text(encode_dict(runner_cfg))
+            runner_cfg_path.write_text(encode_dict(runner_cfg))
         else:
             # @TODO Warn if runner cfg already set?
             config.generics["runner_cfg"] = encode_dict(runner_cfg)
 
-        try:
-            return_value = self._simulator_if.simulate(
-                output_path=output_path,
-                test_suite_name=self._test_suite_name,
-                config=config,
-                elaborate_only=self._elaborate_only,
-            )
-        finally:
-            if simulator_output_path.exists():
-                simulator_output_path.unlink()
-
-        return return_value
+        return self._simulator_if.simulate(
+            output_path=output_path,
+            simulator_output_path=simulator_output_path,
+            test_suite_name=self._test_suite_name,
+            config=config,
+            elaborate_only=self._elaborate_only,
+        )
 
     def _read_test_results(self, file_name):  # pylint: disable=too-many-branches
         """

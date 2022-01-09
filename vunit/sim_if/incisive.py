@@ -286,13 +286,13 @@ define work "{self._output_path}/libraries/work"
         return f"{config.vhdl_config_name!s}"
 
     def simulate(
-        self, output_path, test_suite_name, config, elaborate_only=False
+        self, output_path, simulator_output_path, test_suite_name, config, elaborate_only=False
     ):  # pylint: disable=too-many-locals,too-many-branches
         """
         Elaborates and Simulates with entity as top level using generics
         """
 
-        script_path = str(Path(output_path) / self.name)
+        script_path = str(simulator_output_path)
         launch_gui = self._gui is not False and not elaborate_only
 
         if elaborate_only:
@@ -357,9 +357,6 @@ define work "{self._output_path}/libraries/work"
             ):
                 return False
         return True
-
-    def get_simulator_output_path(self, output_path):
-        return Path(output_path) / self.name
 
     def _hdlvar_args(self):
         """

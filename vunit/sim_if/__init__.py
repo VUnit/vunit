@@ -50,11 +50,20 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
     supports_colors_in_gui = False
 
     def __init__(self, output_path, gui):
+        """
+        Init function
+
+        :param output_path: Directory dedicated to the simulator.
+        :param gui: True if running with GUI.
+        """
         self._output_path = output_path
         self._gui = gui
 
     @property
     def output_path(self):
+        """
+        Directory dedicated to the simulator.
+        """
         return self._output_path
 
     @property
@@ -210,13 +219,13 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         self.setup_library_mapping(project)
         self.compile_source_files(project, printer, continue_on_error, target_files=target_files)
 
-    def simulate(self, output_path, test_suite_name, config, elaborate_only):
+    def simulate(self, output_path, simulator_output_path, test_suite_name, config, elaborate_only):
         """
         Simulate
-        """
 
-    def get_simulator_output_path(self, output_path):
-        "Get current working directory for simulation"
+        :param output_path: Directory dedicated for test input and output data.
+        :param simulator_output_path: Current working directory for simulation thread.
+        """
 
     def setup_library_mapping(self, project):
         """

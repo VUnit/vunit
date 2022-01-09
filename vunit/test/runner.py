@@ -107,16 +107,16 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
             sys.stderr = ThreadLocalOutput(self._local, self._stdout)
 
             # Start P-1 worker threads
-            for _ in range(self._num_threads - 1):
+            for thread_id in range(1, self._num_threads):
                 new_thread = threading.Thread(
                     target=self._run_thread,
-                    args=(write_stdout, scheduler, num_tests, False),
+                    args=(write_stdout, scheduler, num_tests, False, thread_id),
                 )
                 threads.append(new_thread)
                 new_thread.start()
 
             # Run one worker in main thread such that P=1 is not multithreaded
-            self._run_thread(write_stdout, scheduler, num_tests, True)
+            self._run_thread(write_stdout, scheduler, num_tests, True, thread_id=0)
 
             scheduler.wait_for_finish()
 
@@ -133,7 +133,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
             sys.stderr = self._stderr
             LOGGER.debug("TestRunner: Leaving")
 
-    def _run_thread(self, write_stdout, scheduler, num_tests, is_main):
+    def _run_thread(self, write_stdout, scheduler, num_tests, is_main, thread_id):
         """
         Run worker thread
         """
@@ -152,7 +152,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
                         print(f"Starting {test_name!s}")
                     print(f"Output file: {output_file_name!s}")
 
-                self._run_test_suite(test_suite, write_stdout, num_tests, output_path, output_file_name)
+                self._run_test_suite(test_suite, write_stdout, num_tests, output_path, output_file_name, thread_id)
 
             except StopIteration:
                 return
@@ -199,8 +199,8 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         self._add_results(test_suite, results, start_time, num_tests, output_file_name)
 
     def _run_test_suite(  # pylint: disable=too-many-locals
-        self, test_suite, write_stdout, num_tests, output_path, output_file_name
-    ):
+        self, test_suite, write_stdout, num_tests, output_path, output_file_name, thread_id
+    ):  # pylint: disable=too-many-arguments
         """
         Run the actual test suite
         """
@@ -241,7 +241,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
                 output_file.seek(prev)
                 return contents
 
-            results = test_suite.run(output_path=output_path, read_output=read_output)
+            results = test_suite.run(output_path=output_path, read_output=read_output, thread_id=thread_id)
         except KeyboardInterrupt as exk:
             self._add_skipped_tests(test_suite, results, start_time, num_tests, output_file_name)
             raise KeyboardInterrupt from exk

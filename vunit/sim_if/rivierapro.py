@@ -247,6 +247,13 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         )
         proc.consume_output(callback=None)
 
+    def simulate(self, output_path, simulator_output_path, test_suite_name, config, elaborate_only):
+        library_cfg_path = simulator_output_path / "library.cfg"
+        library_cfg_path.write_text('$INCLUDE = ".."\n')
+        return VsimSimulatorMixin.simulate(
+            self, output_path, simulator_output_path, test_suite_name, config, elaborate_only
+        )
+
     def _create_library_cfg(self):
         """
         Create the library.cfg file if it does not exist
