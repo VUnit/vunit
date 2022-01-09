@@ -60,6 +60,10 @@ Main Features
     `actor model <http://en.wikipedia.org/wiki/Actor_model>`__.
   * :doc:`Verification Components library <./verification_components/user_guide>` providing verification components (VCs)
     for interfaces such as AXI, Avalon or Wishbone, along with utilities for writing your own self-checking VCs.
+  * Third-party submodules:
+
+    * `OSVVM <https://github.com/OSVVM/OSVVM>`__
+    * `JSON-for-VHDL <https://github.com/Paebbels/JSON-for-VHDL>`__
 
 Overview
 --------
