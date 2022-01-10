@@ -92,12 +92,11 @@ def _read_compile_order(file_name, fail_on_non_hdl_files):
         for line in ifile.readlines():
             library_name, file_type, file_name = line.strip().split(",", 2)
 
-            if not file_type in ("Verilog", "VHDL", "Verilog Header"):
+            if file_type not in ("Verilog", "VHDL", "Verilog Header"):
                 if fail_on_non_hdl_files:
-                    raise RuntimeError("Unsupported compile order file: %s" % file_name)
-                else:
-                    print("Compile order file ignored: %s" % file_name)
-                    continue
+                    raise RuntimeError(f"Unsupported compile order file: {file_name}")
+                print(f"Compile order file ignored: {file_name}")
+                continue
 
             libraries.add(library_name)
 
