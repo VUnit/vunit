@@ -241,7 +241,7 @@ class TestRun(object):
             elaborate_only=self._elaborate_only,
         )
 
-    def _read_test_results(self, file_name):
+    def _read_test_results(self, file_name):  # pylint: disable=too-many-branches
         """
         Read test results from vunit_results file
         """
@@ -261,7 +261,8 @@ class TestRun(object):
 
             if line.startswith("test_start:"):
                 test_name = line[len("test_start:") :]
-                test_starts.append(test_name)
+                if test_name not in test_starts:
+                    test_starts.append(test_name)
 
             elif line.startswith("test_suite_done"):
                 test_suite_done = True
