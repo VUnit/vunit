@@ -50,6 +50,7 @@ end entity;
 
 architecture a of axi_lite_master is
   constant reply_queue, message_queue : queue_t := new_queue;
+  signal idle : boolean := true;
 begin
   main : process
     variable request_msg : msg_t;
@@ -61,7 +62,9 @@ begin
     if is_read(msg_type) or is_write(msg_type) then
       push(message_queue, request_msg);
     elsif msg_type = wait_until_idle_msg then
-      wait until ((bvalid and bready) = '1' or (rvalid and rready) = '1') and is_empty(message_queue) and rising_edge(aclk);
+      if not idle or not is_empty(message_queue) then
+        wait until idle and is_empty(message_queue) and rising_edge(aclk);
+      end if;
       handle_wait_until_idle(net, msg_type, request_msg);
     else
       unexpected_msg_type(msg_type);
@@ -76,6 +79,8 @@ begin
     variable expected_resp : axi_resp_t;
   begin
     wait until rising_edge(aclk) and not is_empty(message_queue);
+    idle <= false;
+    wait for 0 ps;
 
     request_msg := pop(message_queue);
     msg_type := message_type(request_msg);
@@ -137,6 +142,8 @@ begin
                 " to address 0x" & to_hstring(awaddr));
       end if;
     end if;
+
+    idle <= true;
   end process;
 
   -- Reply in separate process do not destroy alignment with the clock

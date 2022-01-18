@@ -58,6 +58,7 @@ begin
   main : process
     variable tmp : std_logic_vector(rdata'range);
     variable rnd : RandomPType;
+    variable timestamp : time;
   begin
     test_runner_setup(runner, runner_cfg);
     rnd.InitSeed("common_seed");
@@ -119,6 +120,24 @@ begin
                          rnd.RandSlv(axi_resp_t'length));
         end if;
       end loop;
+
+    elsif run("Test idle when idle") then
+      wait until rising_edge(clk);
+      write_bus(net, bus_handle, x"01234567", x"1122");
+      wait for 0 ps;
+      timestamp := now;
+      wait_until_idle(net, bus_handle);
+      check(now > timestamp, "Write: First wait did not have to wait");
+      timestamp := now;
+      wait_until_idle(net, bus_handle);
+      check_equal(timestamp, now, "Write: Second wait had to wait");
+
+      wait until rising_edge(clk);
+      read_bus(net, bus_handle, x"01234567", tmp);
+      timestamp := now;
+      wait_until_idle(net, bus_handle);
+      check_equal(timestamp, now, "Read: Second wait had to wait");
+
     end if;
 
     wait for 100 ns;
@@ -367,6 +386,42 @@ begin
         end if;
       end loop;
       done <= true;
+
+    elsif enabled("Test idle when idle") then
+      wait until rising_edge(clk);
+      awready <= '1';
+      wait until (awready and awvalid) = '1' and rising_edge(clk);
+      awready <= '0';
+      check_equal(awaddr, std_logic_vector'(x"01234567"), "awaddr");
+
+      wait until rising_edge(clk);
+      wready <= '1';
+      wait until (wready and wvalid) = '1' and rising_edge(clk);
+      wready <= '0';
+      check_equal(wdata, std_logic_vector'(x"1122"), "wdata");
+      check_equal(wstrb, std_logic_vector'("11"), "wstrb");
+
+      wait until rising_edge(clk);
+      bvalid <= '1';
+      bresp <= axi_resp_okay;
+      wait until (bready and bvalid) = '1' and rising_edge(clk);
+      bvalid <= '0';
+
+      wait until rising_edge(clk);
+      arready <= '1';
+      wait until (arready and arvalid) = '1' and rising_edge(clk);
+      arready <= '0';
+      check_equal(araddr, std_logic_vector'(x"01234567"), "araddr");
+
+      wait until rising_edge(clk);
+      rvalid <= '1';
+      rresp <= axi_resp_okay;
+      rdata <= x"5566";
+      wait until (rready and rvalid) = '1' and rising_edge(clk);
+      rvalid <= '0';
+
+      done <= true;
+
     end if;
   end process;
 
