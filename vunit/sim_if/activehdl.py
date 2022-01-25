@@ -54,15 +54,30 @@ class ActiveHDLInterface(SimulatorInterface):
         return cls.find_toolchain(["vsim", "avhdl"])
 
     @classmethod
-    def supports_vhdl_package_generics(cls):
+    def _get_version(cls):
         """
-        Returns True when this simulator supports VHDL package generics
+        Return Version of this simulator
         """
         proc = Process([str(Path(cls.find_prefix()) / "vcom"), "-version"], env=cls.get_env())
         consumer = VersionConsumer()
         proc.consume_output(consumer)
-        if consumer.version is not None:
-            return consumer.version >= Version(10, 1)
+        return consumer.version
+
+    @classmethod
+    def get_version(cls):
+        """
+        Returns the version of the simulator
+        """
+        return str(cls._get_version())
+
+    @classmethod
+    def supports_vhdl_package_generics(cls):
+        """
+        Returns True when this simulator supports VHDL package generics
+        """
+        version = cls._get_version()
+        if version is not None:
+            return version >= Version(10, 1)
 
         return False
 
@@ -468,6 +483,11 @@ class Version(object):
 
     def __eq__(self, other):
         return self._compare(other, greater_than=False, less_than=False, equal_to=True)
+
+    def __str__(self):
+        if self.minor_letter == "":
+            return "{}.{}".format(self.major, self.minor)
+        return "{}.{}.{}".format(self.major, self.minor, self.minor_letter)
 
 
 class VersionConsumer(object):

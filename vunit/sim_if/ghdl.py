@@ -144,6 +144,10 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         raise AssertionError("No known GHDL back-end could be detected from running 'ghdl --version'")
 
     @classmethod
+    def get_version(cls):
+        return str(cls.determine_version(cls.find_prefix_from_path()))
+
+    @classmethod
     def determine_version(cls, prefix):
         """
         Determine the GHDL version

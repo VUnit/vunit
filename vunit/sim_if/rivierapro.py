@@ -107,6 +107,9 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         """
         return True
 
+    def get_version(self):
+        return str(self._version)
+
     def __init__(self, prefix, output_path, persistent=False, gui=False):
         SimulatorInterface.__init__(self, output_path, gui)
         VsimSimulatorMixin.__init__(
@@ -440,12 +443,17 @@ class VersionConsumer(object):
     def __init__(self):
         self.year = None
         self.month = None
+        self.minor = None
 
-    _version_re = re.compile(r"(?P<year>\d+)\.(?P<month>\d+)\.\d+")
+    _version_re = re.compile(r"(?P<year>\d+)\.(?P<month>\d+)\.(?P<minor>\d+)")
 
     def __call__(self, line):
         match = self._version_re.search(line)
         if match is not None:
             self.year = int(match.group("year"))
             self.month = int(match.group("month"))
+            self.minor = int(match.group("minor"))
         return True
+
+    def __str__(self):
+        return "{}.{}.{}".format(self.year, self.month, self.minor)
