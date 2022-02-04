@@ -254,14 +254,14 @@ class TestOptions(unittest.TestCase):
     def test_string_option(self):
         option = StringOption("optname")
         self._test_ok(option, "hello")
-        self._test_ok(option, u"hello")
+        self._test_ok(option, "hello")
         self._test_not_ok(option, False, "Option 'optname' must be a string. Got False")
         self._test_not_ok(option, ["foo"], "Option 'optname' must be a string. Got ['foo']")
 
     def test_list_of_string_option(self):
         option = ListOfStringOption("optname")
         self._test_ok(option, ["hello", "foo"])
-        self._test_ok(option, [u"hello"])
+        self._test_ok(option, ["hello"])
         self._test_not_ok(option, [True], "Option 'optname' must be a list of strings. " "Got [True]")
         self._test_not_ok(
             option,

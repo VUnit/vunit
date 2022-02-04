@@ -92,7 +92,7 @@ def create_tempdir(path: Path = None):
     """
 
     if path is None:
-        path = Path(__file__).parent / ("tempdir_%i" % random.randint(0, 2 ** 64 - 1))
+        path = Path(__file__).parent / ("tempdir_%i" % random.randint(0, 2**64 - 1))
 
     if path.exists():
         shutil.rmtree(path)
