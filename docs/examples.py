@@ -39,7 +39,7 @@ def examples(debug=False):
                 with redirect_stdout(f):
                     _data = _get_eg_doc(
                         loc,
-                        f"https://github.com/VUnit/vunit/tree/master/examples/{subdir!s}/{item!s}",
+                        f":vunit_example:{subdir!s}/{item!s}",
                     )
                 if debug:
                     print(".. NOTE::")
