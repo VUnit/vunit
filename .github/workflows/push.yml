@@ -48,7 +48,7 @@ jobs:
       matrix:
         include:
           - { py: '3.10' , task: 310-lint }
-          - { py: '3.6'  , task: 36-unit }
+          - { py: '3.7'  , task: 37-unit }
           - { py: '3.10' , task: 310-unit }
     name: '🐧 Ubuntu · ${{ matrix.task }}'
     steps:
@@ -147,10 +147,10 @@ jobs:
       fail-fast: false
       matrix:
         task: [
-          36-acceptance-ghdl,
-          36-vcomponents-ghdl,
-          36-lint,
-          36-unit,
+          37-acceptance-ghdl,
+          37-vcomponents-ghdl,
+          37-lint,
+          37-unit,
         ]
     name: '🧊 Windows · tagged · ${{ matrix.task }}'
     steps:
