@@ -18,7 +18,7 @@ entity tb_selecting_dut_with_generate_statement is
   generic(
     runner_cfg : string;
     width : positive;
-    dff_arch : string
+    dut_arch : string
   );
 end entity;
 
@@ -64,7 +64,7 @@ begin
   begin
     clk <= not clk after clk_period / 2;
 
-    dut_selection : if dff_arch = "rtl" generate
+    dut_selection : if dut_arch = "rtl" generate
       dut : entity work.dff(rtl)
         generic map(
           width => width
@@ -76,7 +76,7 @@ begin
           q => q
         );
 
-    elsif dff_arch = "behavioral" generate
+    elsif dut_arch = "behavioral" generate
       dut : entity work.dff(behavioral)
         generic map(
           width => width
@@ -89,7 +89,7 @@ begin
         );
 
     else generate
-      error("Unknown DFF architecture");
+      error("Unknown DUT architecture");
     end generate;
   end block;
 end architecture;

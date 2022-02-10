@@ -32,16 +32,6 @@ begin
   end process;
 end;
 
-configuration dff_rtl of tb_selecting_dut_with_vhdl_configuration is
-  for tb
-    for test_fixture
-      for dut : dff
-        use entity work.dff(rtl);
-      end for;
-    end for;
-  end for;
-end;
-
 architecture behavioral of dff is
 begin
   process
@@ -49,14 +39,4 @@ begin
     wait until rising_edge(clk);
     q <= (others => '0') when reset else d;
   end process;
-end;
-
-configuration dff_behavioral of tb_selecting_dut_with_vhdl_configuration is
-  for tb
-    for test_fixture
-      for dut : dff
-        use entity work.dff(behavioral);
-      end for;
-    end for;
-  end for;
 end;

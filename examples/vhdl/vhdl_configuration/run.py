@@ -53,7 +53,7 @@ for config in configs:
 tb = lib.test_bench("tb_selecting_dut_with_generate_statement")
 for width in [8, 32]:
     for arch in ["rtl", "behavioral"]:
-        tb.add_config(name=f"dff_{arch}_width={width}", generics=dict(dff_arch=arch, width=width))
+        tb.add_config(name=f"dut_{arch}_width={width}", generics=dict(dut_arch=arch, width=width))
 
 # Instead of having a testbench containing a shared test fixture
 # and then use VHDL configurations to select different test runners implementing

@@ -46,6 +46,18 @@ architecture tb of tb_selecting_test_runner_with_vhdl_configuration is
     );
   end component;
 
+  component dff is
+    generic(
+      width : positive := width
+    );
+    port(
+      clk : in std_logic;
+      reset : in std_logic;
+      d : in std_logic_vector(width - 1 downto 0);
+      q : out std_logic_vector(width - 1 downto 0)
+    );
+  end component;
+
 begin
   test_runner_inst : test_runner
     generic map(
@@ -64,7 +76,7 @@ begin
   begin
     clk <= not clk after clk_period / 2;
 
-    dut : entity work.dff(rtl)
+    dut : component dff
       generic map(
         width => width
       )

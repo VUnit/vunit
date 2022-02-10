@@ -78,7 +78,7 @@ begin
   begin
     clk <= not clk after clk_period / 2;
 
-    dut : dff
+    dut : component dff
       generic map(
         width => width
       )
@@ -90,3 +90,23 @@ begin
       );
   end block;
 end architecture;
+
+configuration rtl of tb_selecting_dut_with_vhdl_configuration is
+  for tb
+    for test_fixture
+      for dut : dff
+        use entity work.dff(rtl);
+      end for;
+    end for;
+  end for;
+end;
+
+configuration behavioral of tb_selecting_dut_with_vhdl_configuration is
+  for tb
+    for test_fixture
+      for dut : dff
+        use entity work.dff(behavioral);
+      end for;
+    end for;
+  end for;
+end;
