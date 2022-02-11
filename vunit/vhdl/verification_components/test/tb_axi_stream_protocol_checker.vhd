@@ -42,7 +42,7 @@ architecture a of tb_axi_stream_protocol_checker is
   constant logger           : logger_t                      := get_logger("protocol_checker");
   constant protocol_checker : axi_stream_protocol_checker_t := new_axi_stream_protocol_checker(
     data_length => tdata'length, id_length => tid'length, dest_length => tdest'length, user_length => tuser'length,
-    logger => logger, actor => new_actor("protocol_checker"), max_waits => max_waits
+    logger => logger, actor => new_actor("protocol_checker"), max_waits => max_waits, allow_x_in_non_data_bytes => true
   );
   constant meta_values      : std_logic_vector(1 to 5)      := "-XWZU";
   constant valid_values     : std_logic_vector(1 to 4)      := "01LH";
@@ -165,6 +165,35 @@ begin
       for i in valid_values'range loop
         d <= (d'range => valid_values(i));
         wait until rising_edge(aclk);
+      end loop;
+    end;
+
+    procedure pass_masked_unknown_test(
+      signal d, k, s : out std_logic_vector;
+      signal e1, e2 : out std_logic) is
+      variable p : integer;
+    begin
+      wait until rising_edge(aclk);
+      e1 <= '1';
+      e2 <= '1';
+
+      for i in valid_values'range loop
+        for j in 0 to data_length/8*2-1 loop
+          for l in meta_values'range loop
+            k <= (k'range => '1');
+            s <= (s'range => '1');
+            if j < data_length/8 then
+              k(j) <= '0';
+              p := j;
+            else
+              p := j-data_length/8;
+            end if;
+            d <= (d'range => valid_values(i));
+            s(p) <= '0';
+            d(p*8+7 downto p*8) <= (others => meta_values(l));
+            wait until rising_edge(aclk);
+          end loop;
+        end loop;
       end loop;
     end;
 
@@ -315,7 +344,12 @@ begin
     elsif run("Test passing check of that tdata must not be unknown when tvalid is high") then
       pass_unknown_test(tdata, tvalid, tready);
 
+    elsif run("Test passing check of that valid tdata bytes must not be unknown when tvalid is high") then
+      pass_masked_unknown_test(tdata, tkeep, tstrb, tvalid, tready);
+
     elsif run("Test failing check of that tdata must not be unknown when tvalid is high") then
+      tkeep <= (others => '1');
+      tstrb <= (others => '1');
       fail_unknown_test(tdata, tvalid, tready, ":rule 5", "tdata", "tvalid");
 
     elsif run("Test passing check of that tlast must not be unknown when tvalid is high") then
