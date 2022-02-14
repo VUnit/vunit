@@ -39,7 +39,7 @@ def examples(debug=False):
                 with redirect_stdout(f):
                     _data = _get_eg_doc(
                         loc,
-                        f":vunit_example:{subdir!s}/{item!s}",
+                        f"{subdir!s}/{item!s}",
                     )
                 if debug:
                     print(".. NOTE::")
@@ -77,8 +77,14 @@ def _get_eg_doc(location: Path, ref):
         print("WARNING: 'run.py' file in example subdir '" + nstr + "' does not contain a docstring. Skipping...")
         return ""
 
-    title = f"`{eg_doc.split('---', 1)[0][0:-1]!s} <{ref!s}/>`_"
-    return "\n".join([title, "-" * len(title), eg_doc.split("---\n", 1)[1], "\n"])
+    title = eg_doc.split('---', 1)[0][0:-1]
+    return "\n".join([
+        title,
+        "-" * len(title),
+        f":vunit_example:`➚  examples/{ref} <{ref!s}>`\n",
+        eg_doc.split("---\n", 1)[1],
+        "\n",
+    ])
 
 
 if __name__ == "__main__":
