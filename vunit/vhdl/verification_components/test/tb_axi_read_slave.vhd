@@ -393,6 +393,23 @@ begin
   end process;
   test_runner_watchdog(runner, 1 ms);
 
+  check_not_valid : process
+    constant rid_invalid_value : std_logic_vector(rid'range) := (others => 'X');
+    constant rdata_invalid_value : std_logic_vector(rdata'range) := (others => 'X');
+    constant rresp_invalid_value : std_logic_vector(rresp'range) := (others => 'X');
+  begin
+    wait until rising_edge(clk);
+
+    -- All signals should be driven with 'X' when the channel is not valid
+    -- (AR has no outputs from the VC, except for handshake, so check is only for R).
+    if not rvalid then
+      check_equal(rid, rid_invalid_value, "RID not X when RVALID low");
+      check_equal(rdata, rdata_invalid_value, "RDATA not X when RVALID low");
+      check_equal(rresp, rresp_invalid_value, "RRESP not X when RVALID low");
+      check_equal(rlast, 'X', "RLAST not X when RVALID low");
+    end if;
+  end process;
+
   dut : entity work.axi_read_slave
     generic map (
       axi_slave => axi_slave)
