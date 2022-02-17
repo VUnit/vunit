@@ -613,6 +613,20 @@ begin
   end process;
   test_runner_watchdog(runner, 1 ms);
 
+  check_not_valid : process
+    constant bid_invalid_value : std_logic_vector(bid'range) := (others => 'X');
+    constant bresp_invalid_value : std_logic_vector(bresp'range) := (others => 'X');
+  begin
+    wait until rising_edge(clk);
+
+    -- All signals should be driven with 'X' when the channel is not valid
+    -- (AW and W have no outputs from the VC, except for handshake, so check is only for B).
+    if not bvalid then
+      check_equal(bid, bid_invalid_value, "BID not X when BVALID low");
+      check_equal(bresp, bresp_invalid_value, "BRESP not X when BVALID low");
+    end if;
+  end process;
+
   dut : entity work.axi_write_slave
     generic map (
       axi_slave => axi_slave)

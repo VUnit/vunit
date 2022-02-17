@@ -16,7 +16,10 @@ use work.memory_pkg.read_byte;
 
 entity axi_read_slave is
   generic (
-    axi_slave : axi_slave_t);
+    axi_slave : axi_slave_t;
+    drive_invalid : boolean := true;
+    drive_invalid_val : std_logic := 'X'
+  );
   port (
     aclk : in std_logic;
 
@@ -34,7 +37,7 @@ entity axi_read_slave is
     rdata : out std_logic_vector;
     rresp : out axi_resp_t;
     rlast : out std_logic
-    );
+  );
 end entity;
 
 architecture a of axi_read_slave is
@@ -51,6 +54,17 @@ begin
   end process;
 
   axi_process : process
+
+    procedure drive_r_invalid is
+    begin
+      if drive_invalid then
+        rid <= (rid'range => drive_invalid_val);
+        rdata <= (rdata'range => drive_invalid_val);
+        rresp <= (rresp'range => drive_invalid_val);
+        rlast <= drive_invalid_val;
+      end if;
+    end procedure;
+
     variable input_burst, burst : axi_burst_t;
     variable address : integer;
     variable idx : integer;
@@ -60,17 +74,17 @@ begin
     variable has_response_time : boolean := false;
   begin
     assert arid'length = rid'length report "arid vs rid data width mismatch";
+
     -- Initialization
-    rid <= (rid'range => '0');
-    rdata <= (rdata'range => '0');
-    rresp <= (rresp'range => '0');
-    rlast <= '0';
+    drive_r_invalid;
 
     wait on initialized until initialized;
 
     loop
       if (rready and rvalid) = '1' then
         rvalid <= '0';
+        drive_r_invalid;
+
         beats := beats - 1;
       end if;
 
@@ -90,18 +104,21 @@ begin
           has_response_time := false;
           burst := self.pop_burst;
           beats := burst.length;
-          rid <= std_logic_vector(to_unsigned(burst.id, rid'length));
-          rresp <= axi_resp_okay;
           address := burst.address;
         end if;
       end if;
 
       if beats > 0 and (rvalid = '0' or rready = '1') and not self.should_stall_data then
         rvalid <= '1';
+
+        rid <= std_logic_vector(to_unsigned(burst.id, rid'length));
+
         for j in 0 to burst.size-1 loop
           idx := (address + j) mod self.data_size;
           rdata(8*idx+7 downto 8*idx) <= std_logic_vector(to_unsigned(read_byte(axi_slave.p_memory, address+j), 8));
         end loop;
+
+        rresp <= axi_resp_okay;
 
         if burst.burst_type = axi_burst_type_incr then
           address := address + burst.size;
