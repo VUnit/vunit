@@ -87,7 +87,7 @@ class IncisiveInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         self, prefix, output_path, gui=False, log_level=None, cdslib=None, hdlvar=None
     ):
         SimulatorInterface.__init__(self, output_path, gui)
-        self._prefix = prefix
+        self.prefix = prefix
         self._libraries = []
         self._log_level = log_level
         if cdslib is None:
@@ -102,14 +102,14 @@ class IncisiveInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         """
         Finds irun cds root
         """
-        return subprocess.check_output([str(Path(self._prefix) / "cds_root"), "irun"]).splitlines()[0]
+        return subprocess.check_output([str(Path(self.prefix) / "cds_root"), "irun"]).splitlines()[0]
 
     def find_cds_root_virtuoso(self):
         """
         Finds virtuoso cds root
         """
         try:
-            return subprocess.check_output([str(Path(self._prefix) / "cds_root"), "virtuoso"]).splitlines()[0]
+            return subprocess.check_output([str(Path(self.prefix) / "cds_root"), "virtuoso"]).splitlines()[0]
         except subprocess.CalledProcessError:
             return None
 
@@ -182,7 +182,7 @@ define work "{self._output_path}/libraries/work"
         """
         Returns command to compile a VHDL file
         """
-        cmd = str(Path(self._prefix) / "irun")
+        cmd = str(Path(self.prefix) / "irun")
         args = []
         args += ["-compile"]
         args += ["-nocopyright"]
@@ -212,7 +212,7 @@ define work "{self._output_path}/libraries/work"
         """
         Returns commands to compile a Verilog file
         """
-        cmd = str(Path(self._prefix) / "irun")
+        cmd = str(Path(self.prefix) / "irun")
         args = []
         args += ["-compile"]
         args += ["-nocopyright"]
@@ -291,7 +291,7 @@ define work "{self._output_path}/libraries/work"
             steps = ["elaborate", "simulate"]
 
         for step in steps:
-            cmd = str(Path(self._prefix) / "irun")
+            cmd = str(Path(self.prefix) / "irun")
             args = []
             if step == "elaborate":
                 args += ["-elaborate"]

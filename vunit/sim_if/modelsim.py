@@ -106,7 +106,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         if not file_exists(parent):
             os.makedirs(parent)
 
-        original_modelsim_ini = os.environ.get("VUNIT_MODELSIM_INI", str(Path(self._prefix).parent / "modelsim.ini"))
+        original_modelsim_ini = os.environ.get("VUNIT_MODELSIM_INI", str(Path(self.prefix).parent / "modelsim.ini"))
         with Path(original_modelsim_ini).open("rb") as fread:
             with Path(self._sim_cfg_file_name).open("wb") as fwrite:
                 fwrite.write(fread.read())
@@ -159,7 +159,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         """
         return (
             [
-                str(Path(self._prefix) / "vcom"),
+                str(Path(self.prefix) / "vcom"),
                 "-quiet",
                 "-modelsimini",
                 self._sim_cfg_file_name,
@@ -178,7 +178,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         Returns the command to compile a verilog file
         """
         args = [
-            str(Path(self._prefix) / "vlog"),
+            str(Path(self.prefix) / "vlog"),
             "-quiet",
             "-modelsimini",
             self._sim_cfg_file_name,
@@ -208,7 +208,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
             os.makedirs(apath)
 
         if not file_exists(path):
-            proc = Process([str(Path(self._prefix) / "vlib"), "-unix", path], env=self.get_env())
+            proc = Process([str(Path(self.prefix) / "vlib"), "-unix", path], env=self.get_env())
             proc.consume_output(callback=None)
 
         if library_name in mapped_libraries and mapped_libraries[library_name] == path:
@@ -378,7 +378,7 @@ proc _vunit_sim_restart {} {
             args = []
 
         coverage_files = str(Path(self._output_path) / "coverage_files.txt")
-        vcover_cmd = [str(Path(self._prefix) / "vcover"), "merge", "-inputs"] + [coverage_files] + args + [file_name]
+        vcover_cmd = [str(Path(self.prefix) / "vcover"), "merge", "-inputs"] + [coverage_files] + args + [file_name]
         with Path(coverage_files).open("w", encoding="utf-8") as fptr:
             for coverage_file in self._coverage_files:
                 if file_exists(coverage_file):

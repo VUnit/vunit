@@ -173,7 +173,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
 
         return (
             [
-                str(Path(self._prefix) / "vcom"),
+                str(Path(self.prefix) / "vcom"),
                 "-quiet",
                 "-j",
                 str(Path(self._sim_cfg_file_name).parent),
@@ -192,7 +192,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         Returns the command to compile a Verilog file
         """
         args = [
-            str(Path(self._prefix) / "vlog"),
+            str(Path(self.prefix) / "vlog"),
             "-quiet",
             "-lc",
             self._sim_cfg_file_name,
@@ -224,7 +224,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
 
         if not file_exists(path):
             proc = Process(
-                [str(Path(self._prefix) / "vlib"), library_name, path],
+                [str(Path(self.prefix) / "vlib"), library_name, path],
                 cwd=str(Path(self._sim_cfg_file_name).parent),
                 env=self.get_env(),
             )
@@ -234,7 +234,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
             return
 
         proc = Process(
-            [str(Path(self._prefix) / "vmap"), library_name, path],
+            [str(Path(self.prefix) / "vmap"), library_name, path],
             cwd=str(Path(self._sim_cfg_file_name).parent),
             env=self.get_env(),
         )
@@ -252,7 +252,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
 
     @property
     def _builtin_library_cfg(self):
-        return str(Path(self._prefix).parent / "vlib" / "library.cfg")
+        return str(Path(self.prefix).parent / "vlib" / "library.cfg")
 
     _library_re = re.compile(r"([a-zA-Z_0-9]+)\s=\s(.*)")
 
@@ -261,7 +261,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         Get mapped libraries by running vlist on the working directory
         """
         lines = []
-        proc = Process([str(Path(self._prefix) / "vlist")], cwd=str(Path(library_cfg_file).parent))
+        proc = Process([str(Path(self.prefix) / "vlist")], cwd=str(Path(library_cfg_file).parent))
         proc.consume_output(callback=lines.append)
 
         libraries = {}
@@ -412,7 +412,7 @@ proc _vunit_sim_restart {} {
 
         mscript = str(merge_script_name).replace("\\", "/")
         vcover_cmd = [
-            str(Path(self._prefix) / "vsim"),
+            str(Path(self.prefix) / "vsim"),
             "-c",
             "-do",
             f"source {{{mscript}}}; quit;",
