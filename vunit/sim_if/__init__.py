@@ -328,7 +328,7 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         param: prefix: The prefix to use
         """
         if prefix is None:
-            self.prefix = None
+            self.prefix = self.__class__.find_prefix()
         else:
             self.prefix = prefix
 
