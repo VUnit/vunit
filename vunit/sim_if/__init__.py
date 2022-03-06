@@ -52,6 +52,8 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
     def __init__(self, output_path, gui):
         self._output_path = output_path
         self._gui = gui
+        self.id = None
+        self.prefix = None
 
     @property
     def output_path(self):
@@ -335,6 +337,25 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         Allows inheriting classes to overload this to modify environment variables. Return None for default environment
         """
 
+    def set_id(self, id):
+        """
+        Sets id of simulator, used for unique separate output directories for multiple versions of a class
+        param: id: The id to use
+        """
+        if id is None:
+            self.id = self.name
+        else:
+            self.id = id
+
+    def set_prefix(self, prefix):
+        """
+        Sets prefix of simulator, if set overrides PATH searching
+        param: prefix: The prefix to use
+        """
+        if prefix is None:
+            self.prefix = None
+        else:
+            self.prefix = prefix
 
 def isfile(file_name):
     """
