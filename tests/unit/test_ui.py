@@ -1143,6 +1143,16 @@ end architecture;
         ui = self._create_ui()
         self.assertEqual(ui.get_simulator_name(), "mock")
 
+    def test_set_simulator(self):
+        ui = self._create_ui()
+        prefix = ui.get_simulator_prefix()
+        # Just change it
+        prefix = Path("mock")
+        ui.set_simulator("modelsim", "modelsim_2021_2", prefix)
+        self.assertEqual(ui.get_simulator_name(), "modelsim")
+        self.assertEqual(ui.get_simulator_id(), "modelsim_2021_2")
+        self.assertEqual(ui.get_simulator_prefix(), prefix)
+
     def _create_ui(self, *args):
         """Create an instance of the VUnit public interface class"""
         with mock.patch(
