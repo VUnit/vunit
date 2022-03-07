@@ -128,18 +128,13 @@ class SimulatorFactory(object):
 
     def get_simulator(self, simulator):
         """
-	Get a simulator class by name
+        Get a simulator class by name
         param: simulator: Name of a supported simulator
         """
         supported_simulators = self.supported_simulators()
-        name_mapping = {
-            simulator_class.name: simulator_class
-            for simulator_class in self.supported_simulators()
-        }
+        name_mapping = {simulator_class.name: simulator_class for simulator_class in self.supported_simulators()}
         if simulator not in name_mapping:
-            raise ValueError(
-                f"Unknown simulator {simulator}, expected one of {supported_simulators}"
-            )
+            raise ValueError(f"Unknown simulator {simulator}, expected one of {supported_simulators}")
 
         simulator = name_mapping[simulator]
         return simulator

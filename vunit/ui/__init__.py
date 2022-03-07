@@ -752,7 +752,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
     def _create_simulator_if(self, for_init=False):
         """
         Create new simulator instance
-	    param: for_init: Allows missing simulator with a warning instead of an error
+            param: for_init: Allows missing simulator with a warning instead of an error
         """
 
         if self._simulator_class is None:
@@ -763,7 +763,8 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
             )
             if for_init:
                 LOGGER.warning(
-                    missing_simulator_msg + "Please set a simulator either through environment variables or through set_simulator"
+                    missing_simulator_msg
+                    + "Please set a simulator either through environment variables or through set_simulator"
                 )
                 return None
             else:
@@ -1111,19 +1112,16 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
             return None
         return self._simulator_class.supports_coverage()
 
-
     def set_simulator(self, simulator, id=None, prefix=None):
         """
         Set the simulator to use, alternative to using environment variables
-	Useful for frequent simulator switching
-	param: simulator: Name of simulator to use
-	param: id: Optionally specify unique name for this instance of this simulator
-	param: prefix: Optionally specify prefix of the simulator
+        Useful for frequent simulator switching
+        param: simulator: Name of simulator to use
+        param: id: Optionally specify unique name for this instance of this simulator
+        param: prefix: Optionally specify prefix of the simulator
         """
         self._simulator_class = SIMULATOR_FACTORY.get_simulator(simulator)
         self._simulator_if = self._create_simulator_if()
         self._simulator_if.set_id(id)
         self._simulator_if.set_prefix(prefix)
-        self._simulator_output_path = str(
-            Path(self._output_path) / self.get_simulator_id()
-        )
+        self._simulator_output_path = str(Path(self._output_path) / self.get_simulator_id())

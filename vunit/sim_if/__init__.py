@@ -332,6 +332,7 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         else:
             self.prefix = prefix
 
+
 def isfile(file_name):
     """
     Case insensitive Path.is_file()
