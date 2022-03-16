@@ -486,10 +486,15 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         param: target_files: List of type SourceFile, if the paramater is None all files are used
         """
         ###
+        # If target files are not provided then target them all
+        if target_files is None:
+            target_files = self.get_source_files_in_order()
+
+        ###
         # First get all files that are required to fullfill the dependencies for the target files
         dependency_graph = self.create_dependency_graph(True)
         dependency_files = self._get_affected_files(
-            target_files or self.get_source_files_in_order(),
+            target_files,
             dependency_graph.get_dependencies,
         )
 
