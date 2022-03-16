@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Test the location preprocessor
@@ -115,18 +115,18 @@ sub_prog_2;
 
     def test_that_sub_program_declarations_are_ignored(self):
         code = """
-procedure sub_prog(foo1);
- function  sub_prog (foo3) ;
+PROcedure sub_prog(foo1);
+ functION  sub_prog (foo3) ;
 """
         self._verify_result(code, expected_result=code)
 
     def test_that_sub_program_definitions_are_ignored(self):
         code = """
-procedure sub_prog(foo4) is
+procedURE sub_prog(foo4) is
 begin
     null;
 end;
-function sub_prog(foo4) return boolean is
+funCTIon sub_prog(foo4) return boolean is
 begin
     return true;
 end;
@@ -136,31 +136,31 @@ end;
 
     def test_that_already_located_calls_are_left_untouched(self):
         code = """
-procedure sub_prog(foo4) is
+proCEDure sub_prog(foo4) is
 begin
     sub_prog("foo", line_num=> 17);
 end;
-procedure sub_prog(foo4) is
+prOCedure sub_prog(foo4) is
 begin
     sub_prog("foo",
              file_name=>"foo.vhd");
 end;
-procedure sub_prog(foo4) is
+proceDUre sub_prog(foo4) is
 begin
     sub_prog("foo", line_num => 17, file_name => "foo.vhd");
 end;
 """
         expected_result = """
-procedure sub_prog(foo4) is
+proCEDure sub_prog(foo4) is
 begin
     sub_prog("foo", line_num=> 17, file_name => "foo.vhd");
 end;
-procedure sub_prog(foo4) is
+prOCedure sub_prog(foo4) is
 begin
     sub_prog("foo",
              file_name=>"foo.vhd", line_num => 8);
 end;
-procedure sub_prog(foo4) is
+proceDUre sub_prog(foo4) is
 begin
     sub_prog("foo", line_num => 17, file_name => "foo.vhd");
 end;

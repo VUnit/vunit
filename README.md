@@ -1,4 +1,9 @@
 <p align="center">
+  <a title="PyPI vunit_hdl"
+     href="https://pypi.org/project/vunit-hdl/"
+  ><img src="https://img.shields.io/pypi/v/vunit_hdl?longCache=true&style=flat-square&label=PyPI&logo=PyPI&logoColor=FFF"
+  /></a><!--
+  -->
   <a title="vunit.github.io"
      href="http://vunit.github.io"
   ><img src="https://img.shields.io/website.svg?label=vunit.github.io&longCache=true&style=flat-square&url=http%3A%2F%2Fvunit.github.io%2Findex.html"
@@ -6,7 +11,7 @@
   -->
   <a title="Join the chat at https://gitter.im/VUnit/vunit"
      href="https://gitter.im/VUnit/vunit"
-  ><img src="https://img.shields.io/gitter/room/VUnit/vunit.svg?longCache=true&style=flat-square&logo=gitter&logoColor=4db797&color=4db797"
+  ><img src="https://img.shields.io/gitter/room/VUnit/vunit.svg?longCache=true&style=flat-square&logo=gitter&logoColor=fff&color=4db797"
   /></a><!--
   -->
   <a title="@VUnitFramework"
@@ -16,11 +21,10 @@
 </p>
 
 <p align="center">
-  <a title="PyPI vunit_hdl"
-     href="https://pypi.org/project/vunit-hdl/"
-  ><img src="https://img.shields.io/pypi/v/vunit_hdl?longCache=true&style=flat-square&label=PyPI&logo=PyPI&logoColor=FFF"
-  /></a><!--
-  -->
+  <a href="http://vunit.github.io"><img width="450px" src="docs/_static/VUnit_banner.png"/></a>
+</p>
+
+<p align="center">
   <a title="Commits since latest release"
      href="https://github.com/VUnit/vunit/releases"
   ><img src="https://img.shields.io/github/commits-since/VUnit/vunit/latest.svg?longCache=true&style=flat-square&logo=git&logoColor=fff"
@@ -28,22 +32,22 @@
   -->
   <a title="'docs' workflow Status"
      href="https://github.com/VUnit/vunit/actions?query=workflow%3Adocs"
-  ><img alt="'docs' workflow Status" src="https://img.shields.io/github/workflow/status/VUnit/vunit/docs/master?longCache=true&style=flat-square&label=docs"
+  ><img alt="'docs' workflow Status" src="https://img.shields.io/github/workflow/status/VUnit/vunit/docs/master?longCache=true&style=flat-square&label=docs&logo=GitHub%20Actions&logoColor=fff"
   /></a><!--
   -->
   <a title="'images' workflow Status"
      href="https://github.com/VUnit/vunit/actions?query=workflow%3Aimages"
-  ><img alt="'images' workflow Status" src="https://img.shields.io/github/workflow/status/VUnit/vunit/images/master?longCache=true&style=flat-square&label=imgs"
+  ><img alt="'images' workflow Status" src="https://img.shields.io/github/workflow/status/VUnit/vunit/images/master?longCache=true&style=flat-square&label=imgs&logo=GitHub%20Actions&logoColor=fff"
   /></a><!--
   -->
   <a title="'push' workflow Status"
      href="https://github.com/VUnit/vunit/actions?query=workflow%3Apush"
-  ><img alt="'push' workflow Status" src="https://img.shields.io/github/workflow/status/VUnit/vunit/push/master?longCache=true&style=flat-square&label=push"
+  ><img alt="'push' workflow Status" src="https://img.shields.io/github/workflow/status/VUnit/vunit/push/master?longCache=true&style=flat-square&label=push&logo=GitHub%20Actions&logoColor=fff"
   /></a><!--
   -->
   <a title="'coverage' workflow Status"
      href="https://github.com/VUnit/vunit/actions?query=workflow%3Acoverage"
-  ><img alt="'coverage' workflow Status" src="https://img.shields.io/github/workflow/status/VUnit/vunit/coverage/master?longCache=true&style=flat-square&label=coverage"
+  ><img alt="'coverage' workflow Status" src="https://img.shields.io/github/workflow/status/VUnit/vunit/coverage/master?longCache=true&style=flat-square&label=coverage&logo=GitHub%20Actions&logoColor=fff"
   /></a>
 </p>
 
@@ -53,7 +57,7 @@ traditional testing methodologies by supporting a *test early and often* approac
 **Read more** [about VUnit](http://vunit.github.io/about.html).
 
 Contributing in the form of code, docs, feedback, ideas or bug reports is welcome.
-Read our [contribution guide](https://vunit.github.io/contributing.html) to get started.
+Read our [contributing guide](https://vunit.github.io/contributing.html) to get started.
 
 <p align="center">
   <a href="http://vunit.github.io"><img width="550px" src="docs/_static/vunit_demo.gif"/></a>
