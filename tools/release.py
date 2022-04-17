@@ -130,7 +130,7 @@ def set_version(version):
     print(f"Set local version to {version!s}")
     content = content.replace(f'VERSION = "{get_local_version()!s}"', f'VERSION = "{version!s}"')
 
-    with ABOUT_PY.open("w") as fptr:
+    with ABOUT_PY.open("w", encoding="utf-8") as fptr:
         fptr.write(content)
 
     assert get_local_version() == version

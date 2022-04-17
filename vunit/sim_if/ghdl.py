@@ -107,7 +107,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         self._vhdl_standard = None
         self._coverage_test_dirs = set()
 
-    def has_valid_exit_code(self):
+    def has_valid_exit_code(self):  # pylint: disable=arguments-differ
         """
         Return if the simulation should fail with nonzero exit codes
         """
