@@ -108,7 +108,7 @@ An actor waiting for a message uses the receive procedure
 
 This procedure returns immediately if there are pending message(s) in the receiver's inbox or blocks until the first
 message arrives. The returned message contains the oldest incoming message and its information can be retrieved using
-``pop`` functions. The code below will verify that the message has the expected content using the VUnit
+``pop`` and ``peek`` functions. The code below will verify that the message has the expected content using the VUnit
 :ref:`check_equal <equality_check>` procedure.
 
 .. code-block:: vhdl
@@ -117,7 +117,18 @@ message arrives. The returned message contains the oldest incoming message and i
   my_integer := pop(msg);
   check_equal(my_integer, 17);
 
-Just like ``push`` there are both ``pop`` functions and more verbose aliases on the form ``pop_<type>``.
+Just like ``push`` there are:
+- ``pop`` functions and more verbose aliases on the form ``pop_<type>``,
+- ``peek`` functions and more verbose aliases on the form ``peek_<type>``.
+
+Note that the ``peek`` functions returns the element at the front the message. It does not deletes the element in the message. Therefore, you can peek any number of time, it will return the exact same element.
+
+.. code-block:: vhdl
+
+  push_integer(msg, 17)
+  check_equal(peek_integer(msg), 17);
+  check_equal(peek_integer(msg), 17);
+  check_equal(peek_integer(msg), 17);
 
 Objects are always popped from the message in the same order they were pushed into the message and once all objects
 have been popped the message is empty. If you want to keep a message for later you can make a copy before popping.
@@ -738,7 +749,7 @@ value will be replaced with ``-``.
 Note that ``com`` has limited knowledge of the contents of a message. All data pushed into a message is encoded
 and is basically handled as a sequence of bytes without any overhead for type information. ``com`` doesn't
 know if four bytes represents an integer, four characters or something else. The interpretation of
-these bytes takes place when the user pops data using a type specific pop function. The exception is the message
+these bytes takes place when the user pops/peeks data using a type specific pop/peek function. The exception is the message
 type for which the type overhead is included to provide better debugging. Higher levels of debug information,
 for example that a message represents a read request to a specific address is something that the verification
 component using ``com`` provides.
