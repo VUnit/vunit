@@ -36,7 +36,7 @@ def create_release_notes():
     releases = get_releases(source_path)
     latest_release = releases[0]
 
-    with (source_path / "release_notes.rst").open("w") as fptr:
+    with (source_path / "release_notes.rst").open("w", encoding="utf-8") as fptr:
         fptr.write(
             f"""
 .. _release_notes:

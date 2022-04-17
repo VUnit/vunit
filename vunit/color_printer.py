@@ -29,8 +29,7 @@ class ColorPrinter(object):
     def __init__(self):
         pass
 
-    @staticmethod
-    def write(text, output_file=None, fg=None, bg=None):  # pylint: disable=unused-argument
+    def write(self, text, output_file=None, fg=None, bg=None):  # pylint: disable=unused-argument
         """
         Print the text in color to the output_file
         uses stdout if output_file is None
@@ -45,8 +44,7 @@ class NoColorPrinter(ColorPrinter):
     def __init__(self):
         ColorPrinter.__init__(self)
 
-    @staticmethod
-    def write(text, output_file=None, fg=None, bg=None):  # pylint: disable=unused-argument
+    def write(self, text, output_file=None, fg=None, bg=None):  # pylint: disable=unused-argument
         """
         Print the text in color to the output_file
         uses stdout if output_file is None

@@ -142,7 +142,7 @@ class TestBench(ConfigurationVisitor):
                 return test_case
         raise KeyError(name)
 
-    def get_configuration_dicts(self):
+    def get_configuration_dicts(self):  # pylint: disable=arguments-differ
         """
         Get all configurations within the test bench
 
@@ -358,7 +358,7 @@ class TestConfigurationVisitor(ConfigurationVisitor):
         if not self._enable_configuration:
             raise RuntimeError("Individual test configuration is not possible with run_all_in_same_sim")
 
-    def get_configuration_dicts(self):
+    def get_configuration_dicts(self):  # pylint: disable=arguments-differ
         """
         Get all configurations of this test
         """
