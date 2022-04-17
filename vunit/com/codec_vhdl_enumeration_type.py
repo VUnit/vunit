@@ -85,6 +85,11 @@ class EnumerationCodecTemplate(DatatypeCodecTemplate):
     push_fix_string(queue, encode(value));
   end;
 
+  impure function peek(queue : queue_t) return $type is
+  begin
+    return decode(peek_fix_string(queue, 1));
+  end;
+
   impure function pop(queue : queue_t) return $type is
   begin
     return decode(pop_fix_string(queue, 1));
@@ -93,6 +98,11 @@ class EnumerationCodecTemplate(DatatypeCodecTemplate):
   procedure push(msg : msg_t; value : $type) is
   begin
     push(msg.data, value);
+  end;
+
+  impure function peek(msg : msg_t) return $type is
+  begin
+    return peek(msg.data);
   end;
 
   impure function pop(msg : msg_t) return $type is

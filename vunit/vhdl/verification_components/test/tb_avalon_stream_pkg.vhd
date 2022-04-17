@@ -34,33 +34,41 @@ begin
     set_format(display_handler, verbose, true);
 
     wait until rising_edge(clk);
-    if run("test single transaction push and pop") then
+    if run("test single transaction push, peek and pop") then
       avalon_stream_transaction.data := x"ab";
       msg := new_avalon_stream_transaction_msg(avalon_stream_transaction);
       msg_type := message_type(msg);
+      peek_avalon_stream_transaction(msg, avalon_stream_transaction_tmp);
+      check_equal(avalon_stream_transaction_tmp.data, avalon_stream_transaction.data, "peek stream transaction data");
       handle_avalon_stream_transaction(msg_type, msg, avalon_stream_transaction_tmp);
       check_equal(avalon_stream_transaction_tmp.data, avalon_stream_transaction.data, "pop stream transaction data");
 
-    elsif run("test double transaction push and pop") then
+    elsif run("test double transaction push, peek and pop") then
       avalon_stream_transaction.data := x"a5";
       msg := new_avalon_stream_transaction_msg(avalon_stream_transaction);
       msg_type := message_type(msg);
+      peek_avalon_stream_transaction(msg, avalon_stream_transaction_tmp);
+      check_equal(avalon_stream_transaction_tmp.data, avalon_stream_transaction.data, "peek stream transaction data");
       handle_avalon_stream_transaction(msg_type, msg, avalon_stream_transaction_tmp);
       check_equal(avalon_stream_transaction_tmp.data, avalon_stream_transaction.data, "pop stream transaction data");
 
       avalon_stream_transaction.data := x"9e";
       msg := new_avalon_stream_transaction_msg(avalon_stream_transaction);
       msg_type := message_type(msg);
+      peek_avalon_stream_transaction(msg, avalon_stream_transaction_tmp);
+      check_equal(avalon_stream_transaction_tmp.data, avalon_stream_transaction.data, "peek stream transaction data");
       handle_avalon_stream_transaction(msg_type, msg, avalon_stream_transaction_tmp);
       check_equal(avalon_stream_transaction_tmp.data, avalon_stream_transaction.data, "pop stream transaction data");
 
-    elsif run("test transaction push delay pop") then
+    elsif run("test transaction push delay peek and pop") then
       avalon_stream_transaction.data := x"f1";
       msg := new_avalon_stream_transaction_msg(avalon_stream_transaction);
       msg_type := message_type(msg);
       wait until rising_edge(clk);
       wait until rising_edge(clk);
       wait until rising_edge(clk);
+      peek_avalon_stream_transaction(msg, avalon_stream_transaction_tmp);
+      check_equal(avalon_stream_transaction_tmp.data, avalon_stream_transaction.data, "peek stream transaction data");
       handle_avalon_stream_transaction(msg_type, msg, avalon_stream_transaction_tmp);
       check_equal(avalon_stream_transaction_tmp.data, avalon_stream_transaction.data, "pop stream transaction data");
 
@@ -71,6 +79,10 @@ begin
         avalon_stream_transaction.eop  := (i = 7);
         msg := new_avalon_stream_transaction_msg(avalon_stream_transaction);
         msg_type := message_type(msg);
+        peek_avalon_stream_transaction(msg, avalon_stream_transaction_tmp);
+        check_equal(avalon_stream_transaction_tmp.data, std_logic_vector(to_unsigned(i, 8)), "peek stream data"&natural'image(i));
+        check_equal(avalon_stream_transaction_tmp.sop, i = 0, "peek stream sop");
+        check_equal(avalon_stream_transaction_tmp.eop, i = 7, "peek stream eop");
         handle_avalon_stream_transaction(msg_type, msg, avalon_stream_transaction_tmp);
         check_equal(avalon_stream_transaction_tmp.data, std_logic_vector(to_unsigned(i, 8)), "pop stream data"&natural'image(i));
         check_equal(avalon_stream_transaction_tmp.sop, i = 0, "pop stream sop");

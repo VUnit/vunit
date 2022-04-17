@@ -80,200 +80,263 @@ begin
         check(msg.receiver = null_actor);
         check_equal(msg.request_id, no_message_id);
         check(msg.data = null_queue);
-      elsif run("Test push and pop integer") then
+      elsif run("Test push, peek and pop integer") then
         msg := new_msg;
         push_integer(msg, 11);
         push_integer(msg, 22);
+        check_equal(peek_integer(msg), 11, "data");
         check_equal(pop_integer(msg), 11, "data");
+        check_equal(peek_integer(msg), 22, "data");
         check_equal(pop_integer(msg), 22, "data");
-      elsif run("Test push and pop character") then
+      elsif run("Test push, peek and pop character") then
         msg := new_msg;
         push_character(msg, '1');
         push_character(msg, '2');
+        assert peek_character(msg) = '1';
         assert pop_character(msg) = '1';
+        assert peek_character(msg) = '2';
         assert pop_character(msg) = '2';
-      elsif run("Test push and pop queue") then
+      elsif run("Test push, peek and pop queue") then
         msg   := new_msg;
         queue := new_queue;
         push(queue, 22);
         queue_copy := queue;
         push_queue_ref(msg, queue);
         assert queue = null_queue report "Ownership was transfered";
+        assert peek_queue_ref(msg) = queue_copy report "Queue should come back";
         assert pop_queue_ref(msg) = queue_copy report "Queue should come back";
-      elsif run("Test push and pop string") then
+      elsif run("Test push, peek and pop string") then
         msg := new_msg;
         push_string(msg, "hello world");
         push_string(msg, "two");
+        assert peek_string(msg) = "hello world";
         assert pop_string(msg) = "hello world";
+        assert peek_string(msg) = "two";
         assert pop_string(msg) = "two";
-      elsif run("Test push and pop bit") then
+      elsif run("Test push, peek and pop bit") then
         msg := new_msg;
         push_bit(msg, '0');
         push_bit(msg, '1');
+        check(peek_bit(msg) = '0');
         check(pop_bit(msg) = '0');
+        check(peek_bit(msg) = '1');
         check(pop_bit(msg) = '1');
-      elsif run("Test push and pop std_ulogic") then
+      elsif run("Test push, peek and pop std_ulogic") then
         msg := new_msg;
         push_std_ulogic(msg, 'U');
         push_std_ulogic(msg, 'X');
+        assert peek_std_ulogic(msg) = 'U';
         assert pop_std_ulogic(msg) = 'U';
+        assert peek_std_ulogic(msg) = 'X';
         assert pop_std_ulogic(msg) = 'X';
-      elsif run("Test push and pop severity_level") then
+      elsif run("Test push, peek and pop severity_level") then
         msg := new_msg;
         push_severity_level(msg, note);
         push_severity_level(msg, error);
+        check(peek_severity_level(msg) = note);
         check(pop_severity_level(msg) = note);
+        check(peek_severity_level(msg) = error);
         check(pop_severity_level(msg) = error);
-      elsif run("Test push and pop file_open_status") then
+      elsif run("Test push, peek and pop file_open_status") then
         msg := new_msg;
         push_file_open_status(msg, open_ok);
         push_file_open_status(msg, mode_error);
+        check(peek_file_open_status(msg) = open_ok);
         check(pop_file_open_status(msg) = open_ok);
+        check(peek_file_open_status(msg) = mode_error);
         check(pop_file_open_status(msg) = mode_error);
-      elsif run("Test push and pop file_open_kind") then
+      elsif run("Test push, peek and pop file_open_kind") then
         msg := new_msg;
         push_file_open_kind(msg, read_mode);
         push_file_open_kind(msg, append_mode);
+        check(peek_file_open_kind(msg) = read_mode);
         check(pop_file_open_kind(msg) = read_mode);
+        check(peek_file_open_kind(msg) = append_mode);
         check(pop_file_open_kind(msg) = append_mode);
-      elsif run("Test push and pop bit_vector") then
+      elsif run("Test push, peek and pop bit_vector") then
         msg := new_msg;
         push_bit_vector(msg, "1");
         push_bit_vector(msg, "010101");
+        bv(0 to 0) := peek_bit_vector(msg);
+        check(bv(0) = '1');
         bv(0 to 0) := pop_bit_vector(msg);
         check(bv(0) = '1');
+        bv := peek_bit_vector(msg) ;
+        check(bv = "010101");
         bv := pop_bit_vector(msg) ;
         check(bv = "010101");
-      elsif run("Test push and pop std_ulogic_vector") then
+      elsif run("Test push, peek and pop std_ulogic_vector") then
         msg := new_msg;
         push_std_ulogic_vector(msg, "1");
         push_std_ulogic_vector(msg, "010101");
+        sulv(0 to 0) := peek_std_ulogic_vector(msg);
+        check(sulv(0) = '1');
         sulv(0 to 0) := pop_std_ulogic_vector(msg);
         check(sulv(0) = '1');
+        sulv := peek_std_ulogic_vector(msg);
+        check(sulv = "010101");
         sulv := pop_std_ulogic_vector(msg);
         check(sulv = "010101");
-      elsif run("Test push and pop complex") then
+      elsif run("Test push, peek and pop complex") then
         msg := new_msg;
         push_complex(msg, (1.0, 2.2));
         push_complex(msg, (-1.0, -2.2));
+        check(peek_complex(msg) = (1.0, 2.2));
         check(pop_complex(msg) = (1.0, 2.2));
+        check(peek_complex(msg) = (-1.0, -2.2));
         check(pop_complex(msg) = (-1.0, -2.2));
-      elsif run("Test push and pop complex_polar") then
+      elsif run("Test push, peek and pop complex_polar") then
         msg := new_msg;
         push_complex_polar(msg, (1.0, 0.707));
         push_complex_polar(msg, (3.14, -0.707));
+        check(peek_complex_polar(msg) = (1.0, 0.707));
         check(pop_complex_polar(msg) = (1.0, 0.707));
+        check(peek_complex_polar(msg) = (3.14, -0.707));
         check(pop_complex_polar(msg) = (3.14, -0.707));
-      elsif run("Test push and pop ieee.numeric_bit.unsigned") then
+      elsif run("Test push, peek and pop ieee.numeric_bit.unsigned") then
         msg := new_msg;
         push_numeric_bit_unsigned(msg, "1");
         push_numeric_bit_unsigned(msg, "010101");
+        check(peek_numeric_bit_unsigned(msg) = "1");
         check(pop_numeric_bit_unsigned(msg) = "1");
+        check(peek_numeric_bit_unsigned(msg) = "010101");
         check(pop_numeric_bit_unsigned(msg) = "010101");
-      elsif run("Test push and pop ieee.numeric_bit.signed") then
+      elsif run("Test push, peek and pop ieee.numeric_bit.signed") then
         msg := new_msg;
         push_numeric_bit_signed(msg, "1");
         push_numeric_bit_signed(msg, "010101");
+        check(peek_numeric_bit_signed(msg) = "1");
         check(pop_numeric_bit_signed(msg) = "1");
+        check(peek_numeric_bit_signed(msg) = "010101");
         check(pop_numeric_bit_signed(msg) = "010101");
-      elsif run("Test push and pop ieee.numeric_std.unsigned") then
+      elsif run("Test push, peek and pop ieee.numeric_std.unsigned") then
         msg := new_msg;
         push_numeric_std_unsigned(msg, "1");
         push_numeric_std_unsigned(msg, "010101");
+        check(peek_numeric_std_unsigned(msg) = "1");
         check(pop_numeric_std_unsigned(msg) = "1");
+        check(peek_numeric_std_unsigned(msg) = "010101");
         check(pop_numeric_std_unsigned(msg) = "010101");
-      elsif run("Test push and pop ieee.numeric_std.signed") then
+      elsif run("Test push, peek and pop ieee.numeric_std.signed") then
         msg := new_msg;
         push_numeric_std_signed(msg, "1");
         push_numeric_std_signed(msg, "010101");
+        check(peek_numeric_std_signed(msg) = "1");
         check(pop_numeric_std_signed(msg) = "1");
+        check(peek_numeric_std_signed(msg) = "010101");
         check(pop_numeric_std_signed(msg) = "010101");
-      elsif run("Test push and pop signed and unsigned") then
+      elsif run("Test push, peek and pop signed and unsigned") then
         msg := new_msg;
         push_std_ulogic_vector(msg, std_ulogic_vector(ieee.numeric_std.to_unsigned(11, 16)));
         push_std_ulogic_vector(msg, std_ulogic_vector(ieee.numeric_std.to_signed(-1, 8)));
+        assert ieee.numeric_std.unsigned(peek_std_ulogic_vector(msg)) = ieee.numeric_std.to_unsigned(11, 16);
         assert ieee.numeric_std.unsigned(pop_std_ulogic_vector(msg)) = ieee.numeric_std.to_unsigned(11, 16);
+        assert ieee.numeric_std.signed(peek_std_ulogic_vector(msg)) = ieee.numeric_std.to_signed(-1, 8);
         assert ieee.numeric_std.signed(pop_std_ulogic_vector(msg)) = ieee.numeric_std.to_signed(-1, 8);
-      elsif run("Test push and pop real") then
+      elsif run("Test push, peek and pop real") then
         msg := new_msg;
         push_real(msg, 1.0);
         push_real(msg, -1.0);
+        assert peek_real(msg) = 1.0;
         assert pop_real(msg) = 1.0;
+        assert peek_real(msg) = -1.0;
         assert pop_real(msg) = -1.0;
-      elsif run("Test push and pop time") then
+      elsif run("Test push, peek and pop time") then
         msg := new_msg;
         push_time(msg, 1 fs);
         push_time(msg, 1 ps);
+        assert peek_time(msg) = 1 fs;
         assert pop_time(msg) = 1 fs;
+        assert peek_time(msg) = 1 ps;
         assert pop_time(msg) = 1 ps;
-      elsif run("Test push and pop boolean_vector") then
+      elsif run("Test push, peek and pop boolean_vector") then
         msg := new_msg;
         push_boolean_vector(msg, (1 => true));
         push_boolean_vector(msg, (false, true));
+        boolv(0 to 0) := peek_boolean_vector(msg);
+        check(boolv(0) = true);
         boolv(0 to 0) := pop_boolean_vector(msg);
         check(boolv(0) = true);
+        boolv := peek_boolean_vector(msg);
+        check(boolv = (false, true));
         boolv := pop_boolean_vector(msg);
         check(boolv = (false, true));
-      elsif run("Test push and pop integer_vector") then
+      elsif run("Test push, peek and pop integer_vector") then
         msg := new_msg;
         push_integer_vector(msg, (1        => 17));
         push_integer_vector(msg, (-21, 42));
+        check(peek_integer_vector(msg) = (1 => 17));
         check(pop_integer_vector(msg) = (1 => 17));
+        check(peek_integer_vector(msg) = (-21, 42));
         check(pop_integer_vector(msg) = (-21, 42));
-      elsif run("Test push and pop real_vector") then
+      elsif run("Test push, peek and pop real_vector") then
         msg := new_msg;
         push_real_vector(msg, (1        => 17.17));
         push_real_vector(msg, (-21.21, 42.42));
+        check(peek_real_vector(msg) = (1 => 17.17));
         check(pop_real_vector(msg) = (1 => 17.17));
+        check(peek_real_vector(msg) = (-21.21, 42.42));
         check(pop_real_vector(msg) = (-21.21, 42.42));
-      elsif run("Test push and pop time_vector") then
+      elsif run("Test push, peek and pop time_vector") then
         msg := new_msg;
         push_time_vector(msg, (1        => 17.17 ms));
         push_time_vector(msg, (-21.21 min, 42.42 us));
+        check(peek_time_vector(msg) = (1 => 17.17 ms));
         check(pop_time_vector(msg) = (1 => 17.17 ms));
+        check(peek_time_vector(msg) = (-21.21 min, 42.42 us));
         check(pop_time_vector(msg) = (-21.21 min, 42.42 us));
-      elsif run("Test push and pop ufixed") then
+      elsif run("Test push, peek and pop ufixed") then
         msg := new_msg;
         push_ufixed(msg, to_ufixed(17.17, 6, -9));
         push_ufixed(msg, to_ufixed(42.42, 6, -9));
+        check(peek_ufixed(msg) = to_ufixed(17.17, 6, -9));
         check(pop_ufixed(msg) = to_ufixed(17.17, 6, -9));
+        check(peek_ufixed(msg) = to_ufixed(42.42, 6, -9));
         check(pop_ufixed(msg) = to_ufixed(42.42, 6, -9));
-      elsif run("Test push and pop sfixed") then
+      elsif run("Test push, peek and pop sfixed") then
         msg := new_msg;
         push_sfixed(msg, to_sfixed(17.17, 6, -9));
         push_sfixed(msg, to_sfixed(-21.21, 6, -9));
+        check(peek_sfixed(msg) = to_sfixed(17.17, 6, -9));
         check(pop_sfixed(msg) = to_sfixed(17.17, 6, -9));
+        check(peek_sfixed(msg) = to_sfixed(-21.21, 6, -9));
         check(pop_sfixed(msg) = to_sfixed(-21.21, 6, -9));
-      elsif run("Test push and pop float") then
+      elsif run("Test push, peek and pop float") then
         msg := new_msg;
         push_float(msg, to_float(17.17));
         push_float(msg, to_float(-21.21));
+        check(peek_float(msg) = to_float(17.17));
         check(pop_float(msg) = to_float(17.17));
+        check(peek_float(msg) = to_float(-21.21));
         check(pop_float(msg) = to_float(-21.21));
-      elsif run("Test push and pop of msg_type") then
+      elsif run("Test push, peek and pop of msg_type") then
         msg := new_msg;
         push_msg_type(msg, my_msg_type);
+        check(peek_msg_type(msg) = my_msg_type);
         check(pop_msg_type(msg) = my_msg_type);
-      elsif run("Test push and pop of integer_vector_ptr_t") then
+      elsif run("Test push, peek and pop of integer_vector_ptr_t") then
         msg := new_msg;
         integer_vector_ptr := new_integer_vector_ptr;
         integer_vector_ptr_copy := integer_vector_ptr;
         push_integer_vector_ptr_ref(msg, integer_vector_ptr);
         assert integer_vector_ptr = null_ptr report "Ownership was transfered";
+        check(peek_integer_vector_ptr_ref(msg) = integer_vector_ptr_copy);
         check(pop_integer_vector_ptr_ref(msg) = integer_vector_ptr_copy);
-      elsif run("Test push and pop of integer_array_t") then
+      elsif run("Test push, peek and pop of integer_array_t") then
         msg := new_msg;
         integer_array := new_3d(1, 2, 3, 4);
         integer_array_copy := integer_array;
         push_integer_array_t_ref(msg, integer_array);
         check(integer_array = null_integer_array);
+        check(peek_integer_array_t_ref(msg) = integer_array_copy);
         check(pop_integer_array_t_ref(msg) = integer_array_copy);
-      elsif run("Test push and pop of msg_t") then
+      elsif run("Test push, peek and pop of msg_t") then
         msg := new_msg;
         msg2 := new_msg;
         msg2_copy := msg2;
         push(msg, msg2);
         assert msg2 = null_msg report "Ownership was transfered";
+        check(peek(msg) = msg2_copy);
         check(pop(msg) = msg2_copy);
       elsif run("Test setting and getting msg_type") then
         msg := new_msg;
@@ -287,6 +350,7 @@ begin
         check(is_empty(msg));
         push_integer(msg, 11);
         check_false(is_empty(msg));
+        check_equal(peek_integer(msg), 11);
         check_equal(pop_integer(msg), 11);
         check(is_empty(msg));
         push_integer(msg, 11);

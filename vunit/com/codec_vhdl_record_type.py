@@ -99,6 +99,11 @@ class RecordCodecTemplate(DatatypeCodecTemplate):
     push_variable_string(queue, encode(value));
   end;
 
+  impure function peek(queue : queue_t) return $type is
+  begin
+    return decode(peek_variable_string(queue));
+  end;
+
   impure function pop(queue : queue_t) return $type is
   begin
     return decode(pop_variable_string(queue));
@@ -107,6 +112,11 @@ class RecordCodecTemplate(DatatypeCodecTemplate):
   procedure push(msg : msg_t; value : $type) is
   begin
     push(msg.data, value);
+  end;
+
+  impure function peek(msg : msg_t) return $type is
+  begin
+    return peek(msg.data);
   end;
 
   impure function pop(msg : msg_t) return $type is

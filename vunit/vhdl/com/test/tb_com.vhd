@@ -240,6 +240,7 @@ begin
         check(msg2.sender = my_sender);
         check(msg2.receiver = my_receiver);
         check_equal(msg2.request_id, 21);
+        check_equal(peek_string(msg2), "hello");
         check_equal(pop_string(msg2), "hello");
 
       -- to_string
@@ -286,6 +287,7 @@ begin
         send(net, server, request_msg);
         receive(net, self, reply_msg);
         check(reply_msg.status = ok, "Expected no receive problems");
+        check_equal(peek_string(reply_msg), "request acknowledge");
         check_equal(pop_string(reply_msg), "request acknowledge");
       elsif run("Test that an actor can send a message to itself") then
         msg := new_msg;
@@ -293,6 +295,7 @@ begin
         send(net, self, msg);
         receive(net, self, msg2);
         check(msg2.status = ok, "Expected no receive problems");
+        check_equal(peek_string(msg2), "hello");
         check_equal(pop_string(msg2), "hello");
       elsif run("Test that no-name actors can communicate") then
         actor := new_actor;
@@ -300,6 +303,7 @@ begin
         push_string(msg, "hello");
         send(net, actor, msg);
         receive(net, actor, msg2);
+        check_equal(peek_string(msg2), "hello");
         check_equal(pop_string(msg2), "hello");
       elsif run("Test that an actor can poll for incoming messages") then
         wait_for_message(net, self, status, 0 ns);
@@ -311,6 +315,7 @@ begin
         check(status = ok, "Expected ok status");
         get_message(net, self, msg2);
         check(msg2.status = ok, "Expected no problems with receive");
+        check_equal(peek_string(msg2), "hello again");
         check_equal(pop_string(msg2), "hello again");
         check(msg2.sender = self, "Expected message from myself");
       elsif run("Test that sending to a non-existing actor results in an error") then
@@ -328,6 +333,7 @@ begin
         actor := new_actor("deferred actor");
         receive(net, actor, msg2);
         check(msg2.status = ok, "Expected no problems with receive");
+        check_equal(peek_string(msg2), "hello actor to be created");
         check_equal(pop_string(msg2), "hello actor to be created");
       elsif run("Test that receiving from an actor with deferred creation results in an error") then
         actor := find("deferred actor");
@@ -417,6 +423,7 @@ begin
         check_true(has_message(actor));
         check_false(has_message(actor2));
         get_message(net, actor, msg);
+        check_equal(peek_string(msg), "To actor");
         check_equal(pop_string(msg), "To actor");
         msg    := new_msg;
         push_string(msg, "To actor2");
@@ -426,6 +433,7 @@ begin
         check_true(has_message(actor2));
         check_false(has_message(actor));
         get_message(net, actor2, msg);
+        check_equal(peek_string(msg), "To actor2");
         check_equal(pop_string(msg), "To actor2");
       elsif run("Test sending to several actors") then
         actor_vec := (new_actor, new_actor, new_actor);
@@ -436,6 +444,7 @@ begin
           check(msg.data = null_queue);
           for i in 1 to n loop
             receive(net, actor_vec(i), msg, 0 ns);
+            check_equal(peek_string(msg), "hello");
             check_equal(pop_string(msg), "hello");
           end loop;
         end loop;
@@ -464,9 +473,11 @@ begin
         end loop;
         start_publishers <= true;
         receive(net, actor_vec(0 to 0), msg);
+        check_equal(name(msg.sender), peek_string(msg));
         check_equal(name(msg.sender), pop_string(msg));
         for i in 1 to 2 loop
           receive(net, actor_vec(1 to 2), msg);
+          check_equal(name(msg.sender), peek_string(msg));
           check_equal(name(msg.sender), pop_string(msg));
         end loop;
       elsif run("Test that the sender and the receiver of a message can be retrieved") then
@@ -500,10 +511,12 @@ begin
 
         wait_for_message(net, actor, status);
         get_message(net, actor, reply_msg);
+        check_equal(peek_string(reply_msg), "reply to request1");
         check_equal(pop_string(reply_msg), "reply to request1");
 
         wait_for_message(net, actor, status);
         get_message(net, actor, reply_msg);
+        check_equal(peek_string(reply_msg), "reply to request2");
         check_equal(pop_string(reply_msg), "reply to request2");
 
       elsif run("Test that a message can be forwarded") then
@@ -520,9 +533,11 @@ begin
         receive(net, actor3, msg3);
         msg2   := new_msg;
         push_string(msg2, "reply");
+        msg4   := peek_msg_t(msg3);
         msg4   := pop_msg_t(msg3);
         reply(net, msg4, msg2);
         receive_reply(net, msg, msg3);
+        check_equal(peek_string(msg3), "reply");
         check_equal(pop_string(msg3), "reply");
         check(sender(msg3) = actor2);
         check(receiver(msg3) = actor);
@@ -551,11 +566,13 @@ begin
         receive(net, my_receiver, msg2, 0 ns);
         check(sender(msg2) = my_sender);
         check(receiver(msg2) = my_receiver);
+        check_equal(peek_string(msg2), "hello");
         check_equal(pop_string(msg2), "hello");
 
         receive(net, self, msg2, 0 ns);
         check(sender(msg2) = my_sender);
         check(receiver(msg2) = my_receiver);
+        check_equal(peek_string(msg2), "hello");
         check_equal(pop_string(msg2), "hello");
 
         msg := new_msg;
@@ -565,6 +582,7 @@ begin
         receive(net, self, msg2, 0 ns);
         check(sender(msg2) = my_sender);
         check(receiver(msg2) = self);
+        check_equal(peek_string(msg2), "hello2");
         check_equal(pop_string(msg2), "hello2");
 
       elsif run("Test that subscribers don't receive duplicate message") then
@@ -600,11 +618,13 @@ begin
         receive(net, my_receiver, msg2, 0 ns);
         check(sender(msg2) = null_actor);
         check(receiver(msg2) = my_receiver);
+        check_equal(peek_string(msg2), "hello");
         check_equal(pop_string(msg2), "hello");
 
         receive(net, self, msg2, 0 ns);
         check(sender(msg2) = null_actor);
         check(receiver(msg2) = my_receiver);
+        check_equal(peek_string(msg2), "hello");
         check_equal(pop_string(msg2), "hello");
 
         msg := new_msg;
@@ -633,9 +653,11 @@ begin
         send(net, server, request_msg);
 
         receive_reply(net, request_msg, reply_msg, 100 ns);
+        check_equal(peek_string(reply_msg), "reply");
         check_equal(pop_string(reply_msg), "reply");
 
         receive(net, subscriber, reply_msg, 0 ns);
+        check_equal(peek_string(reply_msg), "request");
         check_equal(pop_string(reply_msg), "request");
       elsif run("Test chained subscribers") then
         my_sender   := new_actor;
@@ -651,16 +673,19 @@ begin
         receive(net, my_receiver, msg2, 0 ns);
         check(sender(msg2) = my_sender);
         check(receiver(msg2) = my_receiver);
+        check_equal(peek_string(msg2), "hello");
         check_equal(pop_string(msg2), "hello");
 
         receive(net, self, msg2, 0 ns);
         check(sender(msg2) = my_sender);
         check(receiver(msg2) = my_receiver);
+        check_equal(peek_string(msg2), "hello");
         check_equal(pop_string(msg2), "hello");
 
         receive(net, subscriber, msg2, 0 ns);
         check(sender(msg2) = my_sender);
         check(receiver(msg2) = my_receiver);
+        check_equal(peek_string(msg2), "hello");
         check_equal(pop_string(msg2), "hello");
 
         msg := new_msg;
@@ -670,11 +695,13 @@ begin
         receive(net, self, msg2, 0 ns);
         check(sender(msg2) = my_sender);
         check(receiver(msg2) = self);
+        check_equal(peek_string(msg2), "hello2");
         check_equal(pop_string(msg2), "hello2");
 
         receive(net, subscriber, msg2, 0 ns);
         check(sender(msg2) = my_sender);
         check(receiver(msg2) = self, "Got: " & name(receiver(msg2)));
+        check_equal(peek_string(msg2), "hello2");
         check_equal(pop_string(msg2), "hello2");
 
       elsif run("Test that a subscriber can unsubscribe") then
@@ -685,6 +712,7 @@ begin
         push_string(msg, "hello subscriber");
         publish(net, self, msg);
         receive(net, self, msg, 0 ns);
+        check_equal(peek_string(msg), "hello subscriber");
         check_equal(pop_string(msg), "hello subscriber");
         unsubscribe(self, self, published);
         msg := new_msg;
@@ -699,6 +727,7 @@ begin
         push_string(msg, "hello subscriber");
         publish(net, self, msg);
         receive(net, subscriber, msg, 0 ns);
+        check_equal(peek_string(msg), "hello subscriber");
         check_equal(pop_string(msg), "hello subscriber");
         destroy(subscriber);
         push_string(msg, "hello subscriber");
@@ -760,6 +789,7 @@ begin
         receive_reply(net, request_msg2, reply_msg);
         check(reply_msg.sender = server);
         check(reply_msg.receiver = self);
+        check_equal(peek_string(reply_msg), "reply2");
         check_equal(pop_string(reply_msg), "reply2");
         check_equal(reply_msg.request_id, request_msg2.id);
 
@@ -770,6 +800,7 @@ begin
         request_msg := new_msg(sender => self);
         push_string(request_msg, "request1");
         request(net, server, request_msg, reply_msg);
+        check_equal(peek_string(reply_msg), "reply1");
         check_equal(pop_string(reply_msg), "reply1");
 
         request_msg := new_msg(sender => self);
@@ -806,6 +837,7 @@ begin
         send(net, server, request_msg);
         wait_for_reply(net, request_msg, status);
         get_reply(net, request_msg, reply_msg);
+        check_equal(peek_string(reply_msg), "reply3");
         check_equal(pop_string(reply_msg), "reply3");
 
         t_start     := now;
@@ -814,6 +846,7 @@ begin
         send(net, server, request_msg);
         wait_for_reply(net, request_msg, status);
         get_reply(net, request_msg, reply_msg);
+        check_equal(peek_string(reply_msg), "reply4");
         check_equal(pop_string(reply_msg), "reply4");
       elsif run("Test waiting and getting a reply out-of-order") then
         start_server2 <= true;
@@ -831,6 +864,7 @@ begin
         check(status = ok);
 
         get_reply(net, request_msg, reply_msg);
+        check_false(peek_boolean(reply_msg));
         check_false(pop_boolean(reply_msg));
 
         request_msg3 := new_msg(sender => self);
@@ -841,12 +875,14 @@ begin
         check(status = ok);
 
         get_reply(net, request_msg3, reply_msg);
+        check(peek_boolean(reply_msg));
         check(pop_boolean(reply_msg));
 
         wait_for_reply(net, request_msg2, status);
         check(status = ok);
 
         get_reply(net, request_msg2, reply_msg);
+        check_equal(peek_string(reply_msg), "reply2");
         check_equal(pop_string(reply_msg), "reply2");
 
       elsif run("Test that an anonymous request can be made") then
@@ -860,6 +896,7 @@ begin
         receive_reply(net, request_msg, reply_msg);
         check(reply_msg.sender = server);
         check(reply_msg.receiver = null_actor);
+        check_equal(peek_string(reply_msg), "reply");
         check_equal(pop_string(reply_msg), "reply");
         check_equal(reply_msg.request_id, request_msg.id);
 
@@ -867,12 +904,14 @@ begin
         push_string(request_msg, "request2");
         send(net, server, request_msg);
         receive_reply(net, request_msg, reply_msg);
+        check_equal(peek_string(reply_msg), "reply2");
         check_equal(pop_string(reply_msg), "reply2");
 
         request_msg := new_msg;
         push_string(request_msg, "request3");
         send(net, server, request_msg);
         receive_reply(net, request_msg, reply_msg);
+        check_equal(peek_string(reply_msg), "reply3");
         check_equal(pop_string(reply_msg), "reply3");
 
       elsif run("Test that get_reply will wake up sender blocking on full inbox") then
@@ -890,9 +929,11 @@ begin
         send(net, server, request_msg2);
 
         receive_reply(net, request_msg, reply_msg);
+        check_equal(peek_string(reply_msg), "reply to request1");
         check_equal(pop_string(reply_msg), "reply to request1");
 
         receive_reply(net, request_msg2, reply_msg);
+        check_equal(peek_string(reply_msg), "reply to request2");
         check_equal(pop_string(reply_msg), "reply to request2");
 
       -- Timeout
@@ -1320,9 +1361,11 @@ begin
     self := new_actor("server2");
 
     receive(net, self, request_msg1);
+    check_equal(peek_string(request_msg1), "request1");
     check_equal(pop_string(request_msg1), "request1");
 
     receive(net, self, request_msg2);
+    check_equal(peek_string(request_msg2), "request2");
     check_equal(pop_string(request_msg2), "request2");
 
     reply_msg := new_msg;
@@ -1334,6 +1377,7 @@ begin
     acknowledge(net, request_msg1, false);
 
     receive(net, self, request_msg3);
+    check_equal(peek_string(request_msg3), "request3");
     check_equal(pop_string(request_msg3), "request3");
 
     acknowledge(net, request_msg3, true);
@@ -1348,16 +1392,19 @@ begin
     self := new_actor("server3");
 
     receive(net, self, request_msg);
+    check_equal(peek_string(request_msg), "request1");
     check_equal(pop_string(request_msg), "request1");
     reply_msg := new_msg;
     push_string(reply_msg, "reply1");
     reply(net, request_msg, reply_msg);
 
     receive(net, self, request_msg);
+    check_equal(peek_string(request_msg), "request2");
     check_equal(pop_string(request_msg), "request2");
     acknowledge(net, request_msg, true);
 
     receive(net, self, request_msg);
+    check_equal(peek_string(request_msg), "request3");
     check_equal(pop_string(request_msg), "request3");
     acknowledge(net, request_msg, false);
 
@@ -1392,12 +1439,14 @@ begin
     self := new_actor("server5");
 
     receive(net, self, request_msg);
+    check_equal(peek_string(request_msg), "request");
     check_equal(pop_string(request_msg), "request");
     reply_msg := new_msg;
     push_string(reply_msg, "reply");
     reply(net, request_msg, reply_msg);
 
     receive(net, self, request_msg);
+    check_equal(peek_string(request_msg), "request2");
     check_equal(pop_string(request_msg), "request2");
     reply_msg := new_msg;
     push_string(reply_msg, "reply2");
@@ -1405,6 +1454,7 @@ begin
     reply(net, request_msg, reply_msg);
 
     receive(net, self, request_msg);
+    check_equal(peek_string(request_msg), "request3");
     check_equal(pop_string(request_msg), "request3");
     reply_msg := new_msg;
     push_string(reply_msg, "reply3");

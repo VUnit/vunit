@@ -25,6 +25,7 @@ package codec_builder_pkg is
     constant byte_array : string)
     return bit_vector;
 
+  constant character_code_length : positive := 1;
   constant integer_code_length : positive := 4;
   constant boolean_code_length : positive := 1;
   constant real_code_length : positive := boolean_code_length + 3 * integer_code_length;
@@ -36,6 +37,8 @@ package codec_builder_pkg is
   constant file_open_kind_code_length : positive := 1;
   constant complex_code_length : positive := 2 * real_code_length;
   constant complex_polar_code_length : positive := 2 * real_code_length;
+  constant range_length : positive := 2 * integer_code_length + boolean_code_length;
+  alias array_header_length is range_length;
 
   procedure decode (
     constant code   :       string;

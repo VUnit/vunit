@@ -31,34 +31,42 @@ package avalon_stream_pkg is
   end record;
 
   constant avalon_stream_logger : logger_t := get_logger("vunit_lib:avalon_stream_pkg");
-  impure function new_avalon_source(data_length : natural;
-                                        valid_high_probability : real := 1.0;
-                                        logger : logger_t := avalon_stream_logger;
-                                        actor : actor_t := null_actor) return avalon_source_t;
-  impure function new_avalon_sink(data_length : natural;
-                                       ready_high_probability : real := 1.0;
-                                       logger : logger_t := avalon_stream_logger;
-                                       actor : actor_t := null_actor) return avalon_sink_t;
+  impure function new_avalon_source(
+    data_length : natural;
+    valid_high_probability : real := 1.0;
+    logger : logger_t := avalon_stream_logger;
+    actor : actor_t := null_actor
+  ) return avalon_source_t;
+  impure function new_avalon_sink(
+    data_length : natural;
+    ready_high_probability : real := 1.0;
+    logger : logger_t := avalon_stream_logger;
+    actor : actor_t := null_actor
+  ) return avalon_sink_t;
   impure function data_length(source : avalon_source_t) return natural;
   impure function data_length(source : avalon_sink_t) return natural;
   impure function as_stream(source : avalon_source_t) return stream_master_t;
   impure function as_stream(sink : avalon_sink_t) return stream_slave_t;
 
-  constant push_avalon_stream_msg        : msg_type_t := new_msg_type("push avalon stream");
-  constant pop_avalon_stream_msg        : msg_type_t := new_msg_type("pop avalon stream");
+  constant push_avalon_stream_msg : msg_type_t := new_msg_type("push avalon stream");
+  constant pop_avalon_stream_msg : msg_type_t := new_msg_type("pop avalon stream");
   constant avalon_stream_transaction_msg : msg_type_t := new_msg_type("avalon stream transaction");
 
-  procedure push_avalon_stream(signal net : inout network_t;
-                               avalon_source : avalon_source_t;
-                               data : std_logic_vector;
-                               sop : std_logic := '0';
-                               eop : std_logic := '0');
+  procedure push_avalon_stream(
+    signal net : inout network_t;
+    avalon_source : avalon_source_t;
+    data : std_logic_vector;
+    sop : std_logic := '0';
+    eop : std_logic := '0'
+  );
 
-  procedure pop_avalon_stream(signal net : inout network_t;
-                              avalon_sink : avalon_sink_t;
-                              variable data : inout std_logic_vector;
-                              variable sop  : inout std_logic;
-                              variable eop  : inout std_logic);
+  procedure pop_avalon_stream(
+    signal net : inout network_t;
+    avalon_sink : avalon_sink_t;
+    variable data : inout std_logic_vector;
+    variable sop  : inout std_logic;
+    variable eop  : inout std_logic
+  );
 
   type avalon_stream_transaction_t is record
     data : std_logic_vector;
@@ -67,6 +75,15 @@ package avalon_stream_pkg is
   end record;
 
   procedure push_avalon_stream_transaction(msg : msg_t; avalon_stream_transaction : avalon_stream_transaction_t);
+  procedure peek_avalon_stream_transaction(
+    constant msg : in msg_t;
+    variable avalon_stream_transaction : out avalon_stream_transaction_t;
+    variable offset : inout natural
+  );
+  procedure peek_avalon_stream_transaction(
+    constant msg : in msg_t;
+    variable avalon_stream_transaction : out avalon_stream_transaction_t
+  );
   procedure pop_avalon_stream_transaction(
     constant msg : in msg_t;
     variable avalon_stream_transaction : out avalon_stream_transaction_t
@@ -85,32 +102,38 @@ end package;
 
 package body avalon_stream_pkg is
 
-  impure function new_avalon_source(data_length : natural;
-                                        valid_high_probability : real := 1.0;
-                                        logger : logger_t := avalon_stream_logger;
-                                        actor : actor_t := null_actor) return avalon_source_t is
+  impure function new_avalon_source(
+    data_length : natural;
+    valid_high_probability : real := 1.0;
+    logger : logger_t := avalon_stream_logger;
+    actor : actor_t := null_actor
+  ) return avalon_source_t is
     variable p_actor : actor_t;
   begin
     p_actor := actor when actor /= null_actor else new_actor;
-
-    return (valid_high_probability => valid_high_probability,
-            p_actor => p_actor,
-            p_data_length => data_length,
-            p_logger => logger);
+    return (
+      valid_high_probability => valid_high_probability,
+      p_actor => p_actor,
+      p_data_length => data_length,
+      p_logger => logger
+    );
   end;
 
-  impure function new_avalon_sink(data_length : natural;
-                                       ready_high_probability : real := 1.0;
-                                       logger : logger_t := avalon_stream_logger;
-                                       actor : actor_t := null_actor) return avalon_sink_t is
+  impure function new_avalon_sink(
+    data_length : natural;
+    ready_high_probability : real := 1.0;
+    logger : logger_t := avalon_stream_logger;
+    actor : actor_t := null_actor
+  ) return avalon_sink_t is
     variable p_actor : actor_t;
   begin
     p_actor := actor when actor /= null_actor else new_actor;
-
-    return (ready_high_probability => ready_high_probability,
-            p_actor => p_actor,
-            p_data_length => data_length,
-            p_logger => logger);
+    return (
+      ready_high_probability => ready_high_probability,
+      p_actor => p_actor,
+      p_data_length => data_length,
+      p_logger => logger
+    );
   end;
 
   impure function data_length(source : avalon_source_t) return natural is
@@ -133,11 +156,13 @@ package body avalon_stream_pkg is
     return (p_actor => sink.p_actor);
 end;
 
-  procedure push_avalon_stream(signal net : inout network_t;
-                               avalon_source : avalon_source_t;
-                               data : std_logic_vector;
-                               sop : std_logic := '0';
-                               eop : std_logic := '0') is
+  procedure push_avalon_stream(
+    signal net : inout network_t;
+    avalon_source : avalon_source_t;
+    data : std_logic_vector;
+    sop : std_logic := '0';
+    eop : std_logic := '0'
+  ) is
     variable msg : msg_t := new_msg(push_avalon_stream_msg);
     variable avalon_stream_transaction : avalon_stream_transaction_t(data(data'length - 1 downto 0));
   begin
@@ -156,11 +181,13 @@ end;
     send(net, avalon_source.p_actor, msg);
   end;
 
-  procedure pop_avalon_stream(signal net : inout network_t;
-                              avalon_sink : avalon_sink_t;
-                              variable data : inout std_logic_vector;
-                              variable sop  : inout std_logic;
-                              variable eop  : inout std_logic) is
+  procedure pop_avalon_stream(
+    signal net : inout network_t;
+    avalon_sink : avalon_sink_t;
+    variable data : inout std_logic_vector;
+    variable sop  : inout std_logic;
+    variable eop  : inout std_logic
+  ) is
     variable reference : msg_t := new_msg(pop_avalon_stream_msg);
     variable reply_msg : msg_t;
     variable avalon_stream_transaction : avalon_stream_transaction_t(data(data'length - 1 downto 0));
@@ -190,10 +217,33 @@ begin
     push_boolean(msg, avalon_stream_transaction.eop);
   end;
 
+  procedure peek_avalon_stream_transaction(
+    constant msg : in msg_t;
+    variable avalon_stream_transaction : out avalon_stream_transaction_t;
+    variable offset : inout natural
+  ) is begin
+    report "0";
+    peek_std_ulogic_vector(msg, avalon_stream_transaction.data, offset);
+    report "1";
+    peek_boolean(msg, avalon_stream_transaction.sop, offset);
+    report "2";
+    peek_boolean(msg, avalon_stream_transaction.eop, offset);
+    report "3";
+  end;
+
+  procedure peek_avalon_stream_transaction(
+    constant msg : in msg_t;
+    variable avalon_stream_transaction : out avalon_stream_transaction_t
+  ) is
+    variable offset : natural := 0;
+  begin
+    peek_avalon_stream_transaction(msg, avalon_stream_transaction, offset);
+  end;
+
   procedure pop_avalon_stream_transaction(
     constant msg : in msg_t;
-    variable avalon_stream_transaction : out avalon_stream_transaction_t) is
-  begin
+    variable avalon_stream_transaction : out avalon_stream_transaction_t
+  ) is begin
     avalon_stream_transaction.data := pop_std_ulogic_vector(msg);
     avalon_stream_transaction.sop  := pop_boolean(msg);
     avalon_stream_transaction.eop  := pop_boolean(msg);
@@ -213,11 +263,10 @@ begin
   procedure handle_avalon_stream_transaction(
     variable msg_type : inout msg_type_t;
     variable msg : inout msg_t;
-    variable avalon_transaction : out avalon_stream_transaction_t) is
-  begin
+    variable avalon_transaction : out avalon_stream_transaction_t
+  ) is begin
     if msg_type = avalon_stream_transaction_msg then
       handle_message(msg_type);
-
       pop_avalon_stream_transaction(msg, avalon_transaction);
     end if;
   end;

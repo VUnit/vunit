@@ -63,7 +63,7 @@ begin
       pop_stream(net, slave_stream, tmp);
       check_equal(tmp, std_logic_vector'(x"55"), "pop stream second data");
 
-    elsif run("push delay pop") then
+    elsif run("test push and pop with delay") then
       push_stream(net, master_stream, x"de");
       wait until rising_edge(clk);
       wait until rising_edge(clk);
