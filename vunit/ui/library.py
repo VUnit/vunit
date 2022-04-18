@@ -5,7 +5,7 @@
 # Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
-UI class Library
+UI classes Library and LibraryList
 """
 
 from pathlib import Path
@@ -19,6 +19,180 @@ from .common import check_not_empty, get_checked_file_names_from_globs
 from .source import SourceFile, SourceFileList
 from .testbench import TestBench
 from .packagefacade import PackageFacade
+
+
+class LibraryList(list):
+    """
+    A list of :class:`.Library`
+    """
+
+    def __init__(self, libraries):
+        list.__init__(self, libraries)
+
+    def get_test_benches(self, pattern="*", allow_empty=False):
+        """
+        Get a list of test benches
+
+        :param pattern: A wildcard pattern matching the test_bench name
+        :param allow_empty: To disable an error when no test benches were found
+        :returns: A list of :class:`.TestBench` objects
+        """
+        results = []
+        for library in self:
+            results += library.get_test_benches(pattern, allow_empty=True)
+
+        return check_not_empty(
+            results,
+            allow_empty,
+            "No testbenches found within libraries",
+        )
+
+    def set_generic(self, name, value, allow_empty=False):
+        """
+        Set a value of generic within all |configurations| of test benches and tests in these libraries
+
+        :param name: The name of the generic
+        :param value: The value of the generic
+        :param allow_empty: To disable an error when no test benches were found
+
+        :example:
+
+        .. code-block:: python
+
+           libs.set_generic("data_width", 16)
+
+        .. note::
+           Only affects test benches added *before* the generic is set.
+        """
+        check_not_empty(
+            self.get_test_benches(allow_empty=True),
+            allow_empty,
+            "No testbenches in libraries",
+        )
+
+        for library in self:
+            library.set_generic(name, value, allow_empty=True)
+
+    def set_parameter(self, name, value, allow_empty=False):
+        """
+        Set a value of parameter within all |configurations| of test benches and tests in these libraries
+
+        :param name: The name of the parameter
+        :param value: The value of the parameter
+        :param allow_empty: To disable an error when no test benches were found
+
+        :example:
+
+        .. code-block:: python
+
+           libs.set_parameter("data_width", 16)
+
+        .. note::
+           Only affects test benches added *before* the parameter is set.
+        """
+        check_not_empty(
+            self.get_test_benches(allow_empty=True),
+            allow_empty,
+            "No testbenches in libraries",
+        )
+
+        for library in self:
+            library.set_parameter(name, value, allow_empty=True)
+
+    def set_sim_option(self, name, value, allow_empty=False, overwrite=True):
+        """
+        Set simulation option within all |configurations| of test benches and tests in these libraries.
+
+        :param name: |simulation_options|
+        :param value: The value of the simulation option
+        :param allow_empty: To disable an error when no test benches were found
+        :param overwrite: To overwrite the option or append to the existing value
+
+        :example:
+
+        .. code-block:: python
+
+           libs.set_sim_option("ghdl.a_flags", ["--no-vital-checks"])
+
+        .. note::
+           Only affects test benches added *before* the option is set.
+        """
+        check_not_empty(
+            self.get_test_benches(allow_empty=True),
+            allow_empty,
+            "No testbenches in libraries",
+        )
+
+        for library in self:
+            library.set_sim_option(name, value, allow_empty=True, overwrite=overwrite)
+
+    def get_source_files(self, pattern="*", allow_empty=False):
+        """
+        Get a list of source files within these libraries
+
+        :param pattern: A wildcard pattern matching either an absolute or relative path
+        :param allow_empty: To disable an error if no files matched the pattern
+        :returns: A :class:`.SourceFileList` object
+        """
+
+        results = [
+            source_file for library in self for source_file in library.get_source_files(pattern, allow_empty=True)
+        ]
+
+        check_not_empty(
+            results,
+            allow_empty,
+            f"Pattern {pattern} did not match any file",
+        )
+
+        return SourceFileList(results)
+
+    def set_compile_option(self, name, value, allow_empty=False):
+        """
+        Set compile option for all files within these libraries
+
+        :param name: |compile_option|
+        :param value: The value of the compile option
+        :param allow_empty: To disable an error when no source files were found
+
+        :example:
+
+        .. code-block:: python
+
+           libs.set_compile_option("ghdl.a_flags", ["--no-vital-checks"])
+
+
+        .. note::
+           Only affects files added *before* the option is set.
+        """
+        check_not_empty(
+            self.get_source_files(allow_empty=True),
+            allow_empty,
+            "No source files in libraries",
+        )
+
+        for library in self:
+            library.set_compile_option(name, value, allow_empty=True)
+
+    def add_compile_option(self, name, value, allow_empty=False):
+        """
+        Add compile option to all files within these libraries
+
+        :param name: |compile_option|
+        :param value: The value of the compile option
+        :param allow_empty: To disable an error when no source files were found
+
+        .. note::
+           Only affects files added *before* the option is set.
+        """
+        check_not_empty(
+            self.get_source_files(allow_empty=True),
+            allow_empty,
+            "No source files in libraries",
+        )
+
+        for library in self:
+            library.add_compile_option(name, value, allow_empty=True)
 
 
 class Library(object):
