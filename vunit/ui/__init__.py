@@ -347,7 +347,7 @@ See https://github.com/VUnit/vunit/issues/777.
 
         :param pattern: A wildcard pattern matching the library name
         :param allow_empty: To disable an error if no labraries matched the pattern
-        :returns: A :class:`.SourceFileList` object
+        :returns: A :class:`.LibraryList` object
         """
         results = []
 
