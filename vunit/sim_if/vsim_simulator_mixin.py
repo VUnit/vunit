@@ -29,7 +29,6 @@ class VsimSimulatorMixin(object):
         self._sim_cfg_file_name = sim_cfg_file_name
 
         prefix = self._prefix  # Avoid circular dependency inhibiting process destruction
-        env = self.get_env()
 
         def create_process(ident):
             return Process(
@@ -42,7 +41,7 @@ class VsimSimulatorMixin(object):
                     str((Path(__file__).parent / "tcl_read_eval_loop.tcl").resolve()),
                 ],
                 cwd=str(Path(sim_cfg_file_name).parent),
-                env=env,
+                env=self.get_env(),
             )
 
         if persistent:
