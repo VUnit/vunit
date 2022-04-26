@@ -93,7 +93,7 @@ Getting Started
 
 There are a number of ways to get started.
 
--  :ref:`VUnit User Guide <user_guide>` will guide users on how to use start using the basic features of VUnit but also
+-  :ref:`VUnit User Guide <user_guide>` will guide users on how to start using the basic features of VUnit but also
    provides information about more specific and advanced usage.
 -  :ref:`Run Library User Guide <run_library>` presents the run packages.
 -  :ref:`Check Library User Guide <check_library>` presents the check packages.

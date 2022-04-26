@@ -40,7 +40,7 @@ currently ModelSim/Questa, Riviera-Pro, Active-HDL, GHDL, and Cadence
 Incisive. Support for other simulators is `planned
 <http://github.com/VUnit/vunit/issues?utf8=%E2%9C%93&q=is%3Aissue%20is%3Aopen%20label%3A%22simulator%20support%22>`__.
 
-I my next blog I will use the same script to also run all the
+In my next blog I will use the same script to also run all the
 testbenches in my project and present a test report. Until then you
 can have a more detailed look at the script created by downloading the
 `example project <http://github.com/LarsAsplund/udp_ip_stack>`__.

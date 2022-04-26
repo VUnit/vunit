@@ -77,7 +77,7 @@ number of other useful features. For example,
    Message passing can be used for sending transactions without some of
    the limitations of pin-wiggling and procedure-based transactions but
    it is also the basis for several other communication patterns. For
-   more info see the user :vunit_file:`guide <vunit/vhdl/com/user_guide.md>`.
+   more info see the :vunit_file:`com user guide <vunit/vhdl/com/user_guide.md>`.
 
 -  An array package that can handle multidimensional arrays. It's
    typically used for input and output data sets to the DUT. The package
@@ -88,7 +88,7 @@ number of other useful features. For example,
    output, different output levels, filtering on level and design
    hierarchy, output formatting, automatic file and line localization of
    log entries, multiple loggers, and spreadsheet tool integration. For
-   more information see the user :vunit_file:`guide <vunit/vhdl/logging/user_guide.md>`.
+   more information see the :vunit_file:`logging user guide <vunit/vhdl/logging/user_guide.md>`.
 
 VUnit is a truly open project formed by its community. If you want to
 follow the progress you can click on "watch" on the project

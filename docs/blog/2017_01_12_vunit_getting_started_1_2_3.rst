@@ -5,7 +5,7 @@
 VUnit - Getting Started 1-2-3
 =============================
 
-I recently a started a LinkedIn blog series about getting started with VUnit. The
+I recently started a LinkedIn blog series about getting started with VUnit. The
 first three parts are:
 
 1. `Installing VUnit in 1 minute <https://www.linkedin.com/pulse/vunit-best-value-initial-effort-lars-asplund>`__
