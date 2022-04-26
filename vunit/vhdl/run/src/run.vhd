@@ -41,10 +41,6 @@ package body run_pkg is
 
     if has_active_python_runner(runner_state) then
       core_pkg.setup(output_path(runner_cfg) & "vunit_results");
-    end if;
-
-
-    if has_active_python_runner(runner_state) then
       hide(runner_trace_logger, display_handler, info);
     end if;
 
@@ -78,7 +74,7 @@ package body run_pkg is
 
     set_run_all(runner_state, strip(test_case_candidates(0).all) = "__all__");
     if get_run_all(runner_state) then
-      set_num_of_test_cases(runner_state, unknown_num_of_test_cases_c);
+      set_num_of_test_cases(runner_state, unknown_num_of_test_cases);
     else
       set_num_of_test_cases(runner_state, 0);
       for i in 1 to test_case_candidates'length loop

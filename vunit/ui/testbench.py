@@ -17,7 +17,7 @@ class TestBench(object):
     """
     User interface of a test bench.
     A test bench consists of one or more :class:`.Test` cases. Setting options for a test
-    bench will apply that option all test cases belonging to that test bench.
+    bench will apply that option to all test cases belonging to that test bench.
     """
 
     def __init__(self, test_bench, library):
@@ -209,9 +209,9 @@ class TestBench(object):
 
     def scan_tests_from_file(self, file_name):
         """
-        Scan tests from another file than the one containg the test
+        Scan tests from another file than the one containing the test
         bench.  Useful for when the top level test bench does not
-        contain the tests.
+        contain any tests.
 
         Such a structure is not the preferred way of doing things in
         VUnit but this method exists to accommodate legacy needs.
