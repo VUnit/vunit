@@ -776,4 +776,23 @@ package body codec_pkg is
     return decode_raw_std_ulogic_array(code, code'length * basic_code_length);
   end function;
 
+
+  --===========================================================================
+  -- Deprecated functions - Maintained for backward compatibility.
+  --===========================================================================
+
+  -- Deprecated. Maintained for backward compatibility.
+  function get_range(code : code_t) return range_t is
+    constant range_left   : integer := decode_integer(code(code'left                       to code'left+code_length_integer-1));
+    constant range_right  : integer := decode_integer(code(code'left+code_length_integer   to code'left+code_length_integer*2-1));
+    constant is_ascending : boolean := decode_boolean(code(code'left+code_length_integer*2 to code'left+code_length_integer*2+code_length_boolean-1));
+    constant ret_val_ascending  : range_t(range_left to range_right) := (others => '0');
+    constant ret_val_descending : range_t(range_left downto range_right) := (others => '0');
+  begin
+    assert False report
+      "This function ('get_range') is deprecated. Please use 'decode_range' from codec_pkg.vhd"
+    severity warning;
+    return decode_range(code);
+  end function;
+
 end package body;
