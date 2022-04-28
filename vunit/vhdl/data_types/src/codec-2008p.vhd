@@ -6,85 +6,72 @@
 --
 -- Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
+library std;
+use std.textio.all;
+
 library ieee;
 use ieee.std_logic_1164.all;
-use ieee.math_complex.all;
 use ieee.numeric_bit.all;
 use ieee.numeric_std.all;
+use ieee.math_complex.all;
 use ieee.fixed_pkg.all;
 use ieee.float_pkg.all;
 
-use std.textio.all;
+library work;
+use work.codec_builder_pkg.all;
+
 
 package codec_2008p_pkg is
-  -----------------------------------------------------------------------------
-  -- Predefined composite types
-  -----------------------------------------------------------------------------
-  function encode (
-    constant data : boolean_vector)
-    return string;
-  function decode (
-    constant code : string)
-    return boolean_vector;
-  function encode (
-    constant data : integer_vector)
-    return string;
-  function decode (
-    constant code : string)
-    return integer_vector;
-  function encode (
-    constant data : real_vector)
-    return string;
-  function decode (
-    constant code : string)
-    return real_vector;
-  function encode (
-    constant data : time_vector)
-    return string;
-  function decode (
-    constant code : string)
-    return time_vector;
-  function encode (
-    constant data : ufixed)
-    return string;
-  function decode (
-    constant code : string)
-    return ufixed;
-  function encode (
-    constant data : sfixed)
-    return string;
-  function decode (
-    constant code : string)
-    return sfixed;
-  function encode (
-    constant data : float)
-    return string;
-  function decode (
-    constant code : string)
-    return float;
 
-  -----------------------------------------------------------------------------
-  -- Aliases
-  -----------------------------------------------------------------------------
-  alias encode_boolean_vector is encode[boolean_vector return string];
-  alias decode_boolean_vector is decode[string return boolean_vector];
-  alias encode_integer_vector is encode[integer_vector return string];
-  alias decode_integer_vector is decode[string return integer_vector];
-  alias encode_real_vector is encode[real_vector return string];
-  alias decode_real_vector is decode[string return real_vector];
-  alias encode_time_vector is encode[time_vector return string];
-  alias decode_time_vector is decode[string return time_vector];
-  alias encode_ufixed is encode[ufixed return string];
-  alias decode_ufixed is decode[string return ufixed];
-  alias encode_sfixed is encode[sfixed return string];
-  alias decode_sfixed is decode[string return sfixed];
-  alias encode_float is encode[float return string];
-  alias decode_float is decode[string return float];
+  -- This package extends the codec_pkg to support the types
+  -- introduced by the VHDL-2008 revision.
+  -- The main documentation of the coded functionnality are located
+  -- on the codec_pkg.vhd file.
+
+
+  --===========================================================================
+  -- API for the CASUAL USERS
+  --===========================================================================
+
+  function encode_boolean_vector(data : boolean_vector) return code_t;
+  function decode_boolean_vector(code : string) return boolean_vector;
+  alias encode is encode_boolean_vector[boolean_vector return code_t];
+  alias decode is decode_boolean_vector[string return boolean_vector];
+
+  function encode_integer_vector(data : integer_vector) return code_t;
+  function decode_integer_vector(code : string) return integer_vector;
+  alias encode is encode_integer_vector[integer_vector return code_t];
+  alias decode is decode_integer_vector[string return integer_vector];
+
+  function encode_real_vector(data : real_vector) return code_t;
+  function decode_real_vector(code : string) return real_vector;
+  alias encode is encode_real_vector[real_vector return code_t];
+  alias decode is decode_real_vector[string return real_vector];
+
+  function encode_time_vector(data : time_vector) return code_t;
+  function decode_time_vector(code : string) return time_vector;
+  alias encode is encode_time_vector[time_vector return code_t];
+  alias decode is decode_time_vector[string return time_vector];
+
+  function encode_ufixed(data : unresolved_ufixed) return code_t;
+  function decode_ufixed(code : string) return unresolved_ufixed;
+  alias encode is encode_ufixed[unresolved_ufixed return code_t];
+  alias decode is decode_ufixed[string return unresolved_ufixed];
+
+  function encode_sfixed(data : unresolved_sfixed) return code_t;
+  function decode_sfixed(code : string) return unresolved_sfixed;
+  alias encode is encode_sfixed[unresolved_sfixed return code_t];
+  alias decode is decode_sfixed[string return unresolved_sfixed];
+
+  function encode_float(data : unresolved_float) return code_t;
+  function decode_float(code : string) return unresolved_float;
+  alias encode is encode_float[unresolved_float return code_t];
+  alias decode is decode_float[string return unresolved_float];
 
 end package;
 
+
 use work.codec_pkg.all;
-use work.codec_builder_pkg.all;
 use work.codec_builder_2008p_pkg.all;
 
 package body codec_2008p_pkg is
