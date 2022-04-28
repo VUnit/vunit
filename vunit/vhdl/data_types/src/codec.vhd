@@ -232,488 +232,247 @@ end package;
 
 
 package body codec_pkg is
+
+  --===========================================================================
+  -- Encode and decode procedures of predefined enumerated types
+  --===========================================================================
+
   -----------------------------------------------------------------------------
-  -- Predefined scalar types
+  -- Boolean
   -----------------------------------------------------------------------------
-  function encode (
-    constant data : integer)
-    return string is
+  function encode_boolean(data : boolean) return code_t is
+    variable ret_val : code_t(1 to code_length_boolean);
+    variable index   : code_index_t := ret_val'left;
   begin
-    return to_byte_array(bit_vector(ieee.numeric_bit.to_signed(data, 32)));
-  end function encode;
-
-  function decode (
-    constant code : string)
-    return integer is
-    variable ret_val : integer;
-    variable index   : positive := code'left;
-  begin
-    decode(code, index, ret_val);
-
+    encode_boolean(data, index, ret_val);
     return ret_val;
-  end function decode;
+  end function;
 
-  function encode (
-    constant data : real)
-    return string is
-    constant is_signed : boolean := data < 0.0;
-    variable val : real := data;
-    variable exp : integer;
-    variable low : integer;
-    variable high : integer;
-
-    function log2 (a : real) return integer is
-      variable y : real;
-      variable n : integer := 0;
-    begin
-      if (a = 1.0 or a = 0.0) then
-        return 0;
-      end if;
-      y := a;
-      if(a > 1.0) then
-        while y >= 2.0 loop
-          y := y / 2.0;
-          n := n + 1;
-        end loop;
-        return n;
-      end if;
-      -- o < y < 1
-      while y < 1.0 loop
-        y := y * 2.0;
-        n := n - 1;
-      end loop;
-      return n;
-    end function;
-  begin
-    if is_signed then
-      val := -val;
-    end if;
-
-    exp := log2(val);
-    -- Assume 53 mantissa bits
-    val := val * 2.0 ** (-exp + 53);
-    high := integer(floor(val * 2.0 ** (-31)));
-    low := integer(val - real(high) * 2.0 ** 31);
-
-    return encode(is_signed) & encode(exp) & encode(low) & encode(high);
-  end;
-
-  function decode (
-    constant code : string)
-    return real is
-    variable ret_val : real;
-    variable index   : positive := code'left;
-  begin
-    decode(code, index, ret_val);
-
-    return ret_val;
-  end;
-
-  constant simulator_resolution : time := get_simulator_resolution;
-
-  function encode (
-    constant data : time)
-    return string is
-
-    function modulo(t : time; m : natural) return integer is
-    begin
-      return (integer((t - (t/m)*m)/simulator_resolution) mod m);
-    end function;
-
-    variable ret_val     : string(1 to time_code_length);
-    variable t           : time;
-    variable ascii       : natural;
-  begin
-    -- @TODO assumes time is time_code_length bytes
-    t           := data;
-    for i in time_code_length downto 1 loop
-      ascii := modulo(t, 256);
-      ret_val(i) := character'val(ascii);
-      t          := (t - (ascii * simulator_resolution))/256;
-    end loop;
-    return ret_val;
-  end;
-
-  function decode (
-    constant code : string)
-    return time is
-    variable ret_val : time;
-    variable index   : positive := code'left;
-  begin
-    decode(code, index, ret_val);
-
-    return ret_val;
-  end;
-
-  function encode (
-    constant data : boolean)
-    return string is
-  begin
-    if data then
-      return "T";
-    else
-      return "F";
-    end if;
-  end;
-
-  function decode (
-    constant code : string)
-    return boolean is
+  function decode_boolean(code : code_t) return boolean is
     variable ret_val : boolean;
-    variable index   : positive := code'left;
+    variable index   : code_index_t := code'left;
   begin
-    decode(code, index, ret_val);
-
+    decode_boolean(code, index, ret_val);
     return ret_val;
-  end;
+  end function;
 
-  function encode (
-    constant data : bit)
-    return string is
+  -----------------------------------------------------------------------------
+  -- Character
+  -----------------------------------------------------------------------------
+  function encode_character(data : character) return code_t is
+    variable ret_val : code_t(1 to code_length_character);
+    variable index   : code_index_t := ret_val'left;
   begin
-    if data = '1' then
-      return "1";
-    else
-      return "0";
-    end if;
-  end;
-
-  function decode (
-    constant code : string)
-    return bit is
-    variable ret_val : bit;
-    variable index   : positive := code'left;
-  begin
-    decode(code, index, ret_val);
-
+    encode_character(data, index, ret_val);
     return ret_val;
-  end;
+  end function;
 
-  function encode (
-    constant data : std_ulogic)
-    return string is
-  begin
-    return std_ulogic'image(data)(2 to 2);
-  end;
-
-  function decode (
-    constant code : string)
-    return std_ulogic is
-    variable ret_val : std_ulogic;
-    variable index   : positive := code'left;
-  begin
-    decode(code, index, ret_val);
-
-    return ret_val;
-  end;
-
-  function encode (
-    constant data : severity_level)
-    return string is
-  begin
-    return (1 => character'val(severity_level'pos(data)));
-  end;
-
-  function decode (
-    constant code : string)
-    return severity_level is
-    variable ret_val : severity_level;
-    variable index   : positive := code'left;
-  begin
-    decode(code, index, ret_val);
-
-    return ret_val;
-  end;
-
-  function encode (
-    constant data : file_open_status)
-    return string is
-  begin
-    return (1 => character'val(file_open_status'pos(data)));
-  end;
-
-  function decode (
-    constant code : string)
-    return file_open_status is
-    variable ret_val : file_open_status;
-    variable index   : positive := code'left;
-  begin
-    decode(code, index, ret_val);
-
-    return ret_val;
-  end;
-
-  function encode (
-    constant data : file_open_kind)
-    return string is
-  begin
-    return (1 => character'val(file_open_kind'pos(data)));
-  end;
-
-  function decode (
-    constant code : string)
-    return file_open_kind is
-    variable ret_val : file_open_kind;
-    variable index   : positive := code'left;
-  begin
-    decode(code, index, ret_val);
-
-    return ret_val;
-  end;
-
-  function encode (
-    constant data : character)
-    return string is
-  begin
-    return (1 => data);
-  end;
-
-  function decode (
-    constant code : string)
-    return character is
+  function decode_character(code : code_t) return character is
     variable ret_val : character;
-    variable index   : positive := code'left;
+    variable index   : code_index_t := code'left;
   begin
-    decode(code, index, ret_val);
-
+    decode_character(code, index, ret_val);
     return ret_val;
-  end;
+  end function;
 
   -----------------------------------------------------------------------------
-  -- Predefined composite types
+  -- Bit
   -----------------------------------------------------------------------------
-  function get_range (
-    constant code : string)
-    return range_t is
-    constant range_left         : integer := decode(code(1 to 4));
-    constant range_right        : integer := decode(code(5 to 8));
-    constant is_ascending       : boolean := decode(code(9 to 9));
-    constant ret_val_ascending  : range_t(range_left to range_right) := (others => '0');
-    constant ret_val_descending : range_t(range_left downto range_right) := (others => '0');
+  function encode_bit(data : bit) return code_t is
+    variable ret_val : code_t(1 to code_length_bit);
+    variable index   : code_index_t := ret_val'left;
   begin
-    if is_ascending then
-      return ret_val_ascending;
-    else
-      return ret_val_descending;
-    end if;
-  end function get_range;
-
-  function encode (
-    constant data : std_ulogic_array)
-    return string is
-    variable ret_val : string(1 to 9 + (data'length+1)/2);
-    variable index   : positive := 10;
-    variable i       : integer  := data'left;
-    variable byte    : natural;
-  begin
-    if data'length = 0 then
-      return encode_array_header(encode(1), encode(0), encode(true));
-    end if;
-    ret_val(1 to 9) := encode_array_header(encode(data'left), encode(data'right), encode(data'ascending));
-    if data'ascending then
-      while i <= data'right loop
-        byte := std_ulogic'pos(data(i));
-        if i /= data'right then
-          byte := byte + std_ulogic'pos(data(i + 1)) * 16;
-        end if;
-        ret_val(index) := character'val(byte);
-        i              := i + 2;
-        index          := index + 1;
-      end loop;
-    else
-      while i >= data'right loop
-        byte := std_ulogic'pos(data(i));
-        if i /= data'right then
-          byte := byte + std_ulogic'pos(data(i - 1)) * 16;
-        end if;
-        ret_val(index) := character'val(byte);
-        i              := i - 2;
-        index          := index + 1;
-      end loop;
-    end if;
-
+    encode_bit(data, index, ret_val);
     return ret_val;
-  end;
+  end function;
 
-  function encode (
-    constant data : string)
-    return string is
+  function decode_bit(code : code_t) return bit is
+    variable ret_val : bit;
+    variable index   : code_index_t := code'left;
   begin
-    -- Modelsim sets data'right to 0 which is out of the positive index range used by
-    -- strings.
-    if data'length = 0 then
-      return encode_array_header(encode(data'left), encode(data'right), encode(data'ascending));
-    else
-      return encode_array_header(encode(data'left), encode(data'right), encode(data'ascending)) & data;
-    end if;
-  end;
-
-  function decode (
-    constant code : string)
-    return string is
-    constant ret_range : range_t := get_range(code);
-    variable ret_val : string(ret_range'range) := (others => NUL);
-    variable index   : positive := code'left;
-  begin
-    decode(code, index, ret_val);
-
+    decode_bit(code, index, ret_val);
     return ret_val;
-  end;
+  end function;
 
-  function encode (
-    constant data : bit_vector)
-    return string is
-    variable ret_val : string(1 to 9 + (data'length + 7) / 8);
+  -----------------------------------------------------------------------------
+  -- std_ulogic
+  -----------------------------------------------------------------------------
+  function encode_std_ulogic(data : std_ulogic) return code_t is
+    variable ret_val : code_t(1 to code_length_std_ulogic);
+    variable index   : code_index_t := ret_val'left;
   begin
-    if data'length = 0 then
-      return encode_array_header(encode(1), encode(0), encode(true));
-    end if;
-    ret_val(1 to 9)               := encode_array_header(encode(data'left), encode(data'right), encode(data'ascending));
-    ret_val(10 to ret_val'length) := to_byte_array(data);
-
+    encode_std_ulogic(data, index, ret_val);
     return ret_val;
-  end;
+  end function;
 
-  function decode (
-    constant code : string)
-    return bit_vector is
-    constant ret_range : range_t := get_range(code);
-    variable ret_val : bit_vector(ret_range'range) := (others => '0');
-    variable index   : positive := code'left;
+  function decode_std_ulogic(code : code_t) return std_ulogic is
+    variable ret_val : std_ulogic;
+    variable index   : code_index_t := code'left;
   begin
-    decode(code, index, ret_val);
-
+    decode_std_ulogic(code, index, ret_val);
     return ret_val;
-  end;
+  end function;
 
-  function encode (
-    constant data : std_ulogic_vector)
-    return string is
+  -----------------------------------------------------------------------------
+  -- severity_level
+  -----------------------------------------------------------------------------
+  function encode_severity_level(data : severity_level) return code_t is
+    variable ret_val : code_t(1 to code_length_severity_level);
+    variable index   : code_index_t := ret_val'left;
   begin
-    return encode(std_ulogic_array(data));
-  end;
-
-  function decode (
-    constant code : string)
-    return std_ulogic_vector is
-    constant ret_range : range_t := get_range(code);
-    variable ret_val : std_ulogic_vector(ret_range'range) := (others => 'U');
-    variable index   : positive := code'left;
-  begin
-    decode(code, index, ret_val);
-
+    encode_severity_level(data, index, ret_val);
     return ret_val;
-  end;
+  end function;
 
-  function encode (
-    constant data : complex)
-    return string is
+  function decode_severity_level(code : code_t) return severity_level is
+    variable ret_val : severity_level;
+    variable index   : code_index_t := code'left;
   begin
-    return encode(data.re) & encode(data.im);
-  end;
+    decode_severity_level(code, index, ret_val);
+    return ret_val;
+  end function;
 
-  function decode (
-    constant code : string)
-    return complex is
+  -----------------------------------------------------------------------------
+  -- file_open_kind
+  -----------------------------------------------------------------------------
+  function encode_file_open_kind(data : file_open_kind) return code_t is
+    variable ret_val : code_t(1 to code_length_file_open_kind);
+    variable index   : code_index_t := ret_val'left;
+  begin
+    encode_file_open_kind(data, index, ret_val);
+    return ret_val;
+  end function;
+
+  function decode_file_open_kind(code : code_t) return file_open_kind is
+    variable ret_val : file_open_kind;
+    variable index   : code_index_t := code'left;
+  begin
+    decode_file_open_kind(code, index, ret_val);
+    return ret_val;
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- file_open_status
+  -----------------------------------------------------------------------------
+  function encode_file_open_status(data : file_open_status) return code_t is
+    variable ret_val : code_t(1 to code_length_file_open_status);
+    variable index   : code_index_t := ret_val'left;
+  begin
+    encode_file_open_status(data, index, ret_val);
+    return ret_val;
+  end function;
+
+  function decode_file_open_status(code : code_t) return file_open_status is
+    variable ret_val : file_open_status;
+    variable index   : code_index_t := code'left;
+  begin
+    decode_file_open_status(code, index, ret_val);
+    return ret_val;
+  end function;
+
+
+  --===========================================================================
+  -- Encode and decode procedures of predefined scalar types
+  --===========================================================================
+
+  -----------------------------------------------------------------------------
+  -- integer
+  -----------------------------------------------------------------------------
+  function encode_integer(data : integer) return code_t is
+    variable ret_val : code_t(1 to code_length_integer);
+    variable index   : code_index_t := ret_val'left;
+  begin
+    encode_integer(data, index, ret_val);
+    return ret_val;
+  end function;
+
+  function decode_integer(code : code_t) return integer is
+    variable ret_val : integer;
+    variable index   : code_index_t := code'left;
+  begin
+    decode_integer(code, index, ret_val);
+    return ret_val;
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- real
+  -----------------------------------------------------------------------------
+  function encode_real(data : real) return code_t is
+    variable ret_val : code_t(1 to code_length_real);
+    variable index   : code_index_t := ret_val'left;
+  begin
+    encode_real(data, index, ret_val);
+    return ret_val;
+  end function;
+
+  function decode_real(code : code_t) return real is
+    variable ret_val : real;
+    variable index   : code_index_t := code'left;
+  begin
+    decode_real(code, index, ret_val);
+    return ret_val;
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- time
+  -----------------------------------------------------------------------------
+  function encode_time(data : time) return code_t is
+    variable ret_val : code_t(1 to code_length_time);
+    variable index   : code_index_t := ret_val'left;
+  begin
+    encode_time(data, index, ret_val);
+    return ret_val;
+  end function;
+
+  function decode_time(code : code_t) return time is
+    variable ret_val : time;
+    variable index   : code_index_t := code'left;
+  begin
+    decode_time(code, index, ret_val);
+    return ret_val;
+  end function;
+
+
+  --===========================================================================
+  -- Encode and decode procedures of predefined composite types (records)
+  --===========================================================================
+
+  -----------------------------------------------------------------------------
+  -- complex
+  -----------------------------------------------------------------------------
+  function encode_complex(data : complex) return code_t is
+    variable ret_val : code_t(1 to code_length_complex);
+    variable index   : code_index_t := ret_val'left;
+  begin
+    encode_complex(data, index, ret_val);
+    return ret_val;
+  end function;
+
+  function decode_complex(code : code_t) return complex is
     variable ret_val : complex;
-    variable index   : positive := code'left;
+    variable index   : code_index_t := code'left;
   begin
-    decode(code, index, ret_val);
-
+    decode_complex(code, index, ret_val);
     return ret_val;
-  end;
+  end function;
 
-  function encode (
-    constant data : complex_polar)
-    return string is
+  -----------------------------------------------------------------------------
+  -- complex_polar
+  -----------------------------------------------------------------------------
+  function encode_complex_polar(data : complex_polar) return code_t is
+    variable ret_val : code_t(1 to code_length_complex_polar);
+    variable index   : code_index_t := ret_val'left;
   begin
-    return encode(data.mag) & encode(data.arg);
-  end;
+    encode_complex_polar(data, index, ret_val);
+    return ret_val;
+  end function;
 
-  function decode (
-    constant code : string)
-    return complex_polar is
+  function decode_complex_polar(code : code_t) return complex_polar is
     variable ret_val : complex_polar;
-    variable index   : positive := code'left;
+    variable index   : code_index_t := code'left;
   begin
-    decode(code, index, ret_val);
-
+    decode_complex_polar(code, index, ret_val);
     return ret_val;
-  end;
+  end function;
 
-  function encode (
-    constant data : ieee.numeric_bit.unsigned)
-    return string is
-  begin
-    return encode(bit_vector(data));
-  end;
-
-  function decode (
-    constant code : string)
-    return ieee.numeric_bit.unsigned is
-    constant ret_range : range_t := get_range(code);
-    variable ret_val : ieee.numeric_bit.unsigned(ret_range'range) := (others => '0');
-    variable index   : positive := code'left;
-  begin
-    decode(code, index, ret_val);
-
-    return ret_val;
-  end;
-
-  function encode (
-    constant data : ieee.numeric_bit.signed)
-    return string is
-  begin
-    return encode(bit_vector(data));
-  end;
-
-  function decode (
-    constant code : string)
-    return ieee.numeric_bit.signed is
-    constant ret_range : range_t := get_range(code);
-    variable ret_val : ieee.numeric_bit.signed(ret_range'range) := (others => '0');
-    variable index   : positive := code'left;
-  begin
-    decode(code, index, ret_val);
-
-    return ret_val;
-  end;
-
-  function encode (
-    constant data : ieee.numeric_std.unsigned)
-    return string is
-  begin
-    return encode(std_ulogic_vector(data));
-  end;
-
-  function decode (
-    constant code : string)
-    return ieee.numeric_std.unsigned is
-    constant ret_range : range_t := get_range(code);
-    variable ret_val : ieee.numeric_std.unsigned(ret_range'range) := (others => 'U');
-    variable index   : positive := code'left;
-  begin
-    decode(code, index, ret_val);
-
-    return ret_val;
-  end;
-
-  function encode (
-    constant data : ieee.numeric_std.signed)
-    return string is
-  begin
-    return encode(std_ulogic_vector(data));
-  end;
-
-  function decode (
-    constant code : string)
-    return ieee.numeric_std.signed is
-    constant ret_range : range_t := get_range(code);
-    variable ret_val : ieee.numeric_std.signed(ret_range'range) := (others => 'U');
-    variable index   : positive := code'left;
-  begin
-    decode(code, index, ret_val);
-
-    return ret_val;
-  end;
-end package body codec_pkg;
+end package body;
