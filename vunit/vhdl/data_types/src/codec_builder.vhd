@@ -387,6 +387,371 @@ end package;
 
 
 package body codec_builder_pkg is
+
+  --===========================================================================
+  -- Constants used to give the number of code_t element to be used to encode the type
+  --===========================================================================
+
+  -- Number of literals of the predefined enumerated types:
+  -- The formulation "type'pos(type'right) + 1" gives the number of literals defined by the enumerated type
+  constant length_boolean          : positive := boolean'pos(boolean'right) + 1;
+  constant length_character        : positive := character'pos(character'right) + 1;
+  constant length_bit              : positive := bit'pos(bit'right) + 1;
+  constant length_std_ulogic       : positive := std_ulogic'pos(std_ulogic'right) + 1;
+  constant length_severity_level   : positive := severity_level'pos(severity_level'right) + 1;
+  constant length_file_open_kind   : positive := file_open_kind'pos(file_open_kind'right) + 1;
+  constant length_file_open_status : positive := file_open_status'pos(file_open_status'right) + 1;
+
+
+  --===========================================================================
+  -- Functions which gives the number of code_t element to be used to encode the type
+  --===========================================================================
+
+  -----------------------------------------------------------------------------
+  -- Boolean
+  -----------------------------------------------------------------------------
+  -- A boolean is transfomed the characters 'T' or 'F' to be encoded
+  constant static_code_length_boolean : positive := ceil_div(length_boolean, basic_code_nb_values);
+
+  function code_length_boolean(data : boolean := boolean'left) return natural is
+  begin
+    return static_code_length_boolean;
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- Character
+  -----------------------------------------------------------------------------
+  -- A character can direclty be encoded
+  constant static_code_length_character : positive := ceil_div(length_character, basic_code_nb_values);
+
+  function code_length_character(data : character := character'left) return natural is
+  begin
+    return static_code_length_character;
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- Bit
+  -----------------------------------------------------------------------------
+  -- A bit holds 2 values ('0' or '1') which are transformed intp the character '0' or '1'.
+  constant static_code_length_bit : positive := ceil_div(length_bit, basic_code_nb_values);
+
+  function code_length_bit(data : bit := bit'left) return natural is
+  begin
+    return static_code_length_bit;
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- std_ulogic
+  -----------------------------------------------------------------------------
+  -- A std_ulogic holds 9 values which are translated into their equivalent character
+  constant static_code_length_std_ulogic : positive := ceil_div(length_std_ulogic, basic_code_nb_values);
+
+  function code_length_std_ulogic(data : std_ulogic := std_ulogic'left) return natural is
+  begin
+    return static_code_length_std_ulogic;
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- severity_level
+  -----------------------------------------------------------------------------
+  -- A value of the enumerated type severity_level is encoded
+  -- using the position of the value into the enumerated type declaration.
+  -- The position in encoded on 1 character
+  constant static_code_length_severity_level : positive := ceil_div(length_severity_level, basic_code_nb_values);
+
+  function code_length_severity_level(data : severity_level := severity_level'left) return natural is
+  begin
+    return static_code_length_severity_level;
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- file_open_kind
+  -----------------------------------------------------------------------------
+  -- A value of the enumerated type file_open_kind is encoded
+  -- using the position of the value into the enumerated type declaration.
+  -- The position in encoded on 1 character
+  constant static_code_length_file_open_kind : positive := ceil_div(length_file_open_kind, basic_code_nb_values);
+
+  function code_length_file_open_kind(data : file_open_kind := file_open_kind'left) return natural is
+  begin
+    return static_code_length_file_open_kind;
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- file_open_status
+  -----------------------------------------------------------------------------
+  -- A value of the enumerated type file_open_status is encoded
+  -- using the position of the value into the enumerated type declaration.
+  -- The position in encoded on 1 character
+  constant static_code_length_file_open_status : positive := ceil_div(length_file_open_status, basic_code_nb_values);
+
+  function code_length_file_open_status(data : file_open_status := file_open_status'left) return natural is
+  begin
+    return static_code_length_file_open_status;
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- Raw string
+  -----------------------------------------------------------------------------
+  -- A string can directly be stored into the encoded string
+  -- We do not encode the range
+  function code_length_raw_string(length : natural) return natural is
+  begin
+    return length;
+  end function;
+
+  function code_length_raw_string(data : string) return natural is
+  begin
+    return code_length_raw_string(data'length);
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- String
+  -----------------------------------------------------------------------------
+  -- bit_array are encoded inte string. The array of bits is divided into
+  -- chunks of basic_code_length=8 bits (gives a number N between 0 and 255) which
+  -- can be directly used to select the Nth character in the string type.
+  -- We do not encode the range
+  function code_length_raw_bit_array(length : natural) return natural is
+  begin
+    return ceil_div(length, basic_code_length);
+  end function;
+
+  function code_length_raw_bit_array(data : bit_array) return natural is
+  begin
+    return code_length_raw_bit_array(data'length);
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- std_ulogic_array
+  -----------------------------------------------------------------------------
+  -- std_ulogic_array are encoded into string. The array is divided into
+  -- groups of 2 std_ulogic.
+  -- One std_ulogic can represent length_std_ulogic=9 value: it needs bits_length_std_ulogic=4 bits to store it.
+  -- In a character (basic_code_length=8 bits), we can store basic_code_length/bits_length_std_ulogic=2 std_ulogic elements.
+  -- We do not encode the range
+  constant bits_length_std_ulogic : positive := positive(ceil(log2(real(length_std_ulogic))));
+
+  function code_length_raw_std_ulogic_array(length : natural) return natural is
+  begin
+    return ceil_div(length, basic_code_length / bits_length_std_ulogic);
+  end function;
+
+  function code_length_raw_std_ulogic_array(data : std_ulogic_array) return natural is
+  begin
+    return code_length_raw_std_ulogic_array(data'length);
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- Integer
+  -----------------------------------------------------------------------------
+  -- An integer is encoded as a 32 bits bit_array.
+  -- Note: we do not encode the range into the encoded string
+  constant static_code_length_integer : positive := code_length_raw_bit_array(simulator_integer_width);
+
+  function code_length_integer(data : integer := integer'left) return natural is
+  begin
+    -- A string can directly be stored into the encoded string
+    -- We do not encode the range
+    return static_code_length_integer;
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- Integer range
+  -----------------------------------------------------------------------------
+  -- A range is constituted of:
+  --  * two bounds:
+  --     - a left bound (encoded as integer)
+  --     - a right bound (encoded as integer)
+  --  * ascending/descending attribute (encoded as boolean).
+  -- Note that the range is also encoded when the range is null.
+  constant static_code_length_integer_range : positive := 2 * code_length_integer + code_length_boolean;
+
+  function code_length_integer_range return natural is
+  begin
+    return static_code_length_integer_range;
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- Real
+  -----------------------------------------------------------------------------
+  -- A 'real' is decomposed into:
+  -- * a sign (encoded as boolean)
+  -- * a mantisse (encoded as 2 integers)
+  -- * an exponent (encoded as 1 integer)
+  constant static_code_length_real : positive := code_length_boolean + 3 * code_length_integer;
+
+  function code_length_real(data : real := real'left) return natural is
+  begin
+    return static_code_length_real;
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- Time
+  -----------------------------------------------------------------------------
+  -- A 'time' type is encoded TBC
+  constant static_code_length_time : positive := ceil_div(simulator_time_width, basic_code_length);
+
+  function code_length_time(data : time := time'left) return natural is
+  begin
+    return static_code_length_time;
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- Complex
+  -----------------------------------------------------------------------------
+  -- A 'complex' is decomposed into:
+  -- * a real part (encoded as 1 integer)
+  -- * an imaginary part (encoded as 1 integer)
+  constant static_code_length_complex : positive := 2 * code_length_real;
+
+  function code_length_complex(data : complex := MATH_CZERO) return natural is
+  begin
+    return static_code_length_complex;
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- Complex_polar
+  -----------------------------------------------------------------------------
+  -- A 'complex' is decomposed into:
+  -- * a angle (encoded as 1 integer)
+  -- * a length (encoded as 1 integer)
+  constant static_code_length_complex_polar : positive := 2 * code_length_real;
+
+  function code_length_complex_polar(data : complex_polar := (MAG => 0.0, ARG => 0.0)) return natural is
+  begin
+    return static_code_length_complex_polar;
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- String
+  -----------------------------------------------------------------------------
+  -- A string can directly be stored into the encoded string
+  -- We also encode the range
+  function code_length_string(length : natural) return natural is
+  begin
+    return code_length_integer_range + code_length_raw_string(length);
+  end function;
+
+  function code_length_string(data : string) return natural is
+  begin
+    return code_length_string(data'length);
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- bit_array
+  -----------------------------------------------------------------------------
+  -- We also encode the range along side the raw_bit_array
+  function code_length_bit_array(length : natural) return natural is
+  begin
+    return code_length_integer_range + code_length_raw_bit_array(length);
+  end function;
+
+  function code_length_bit_array(data : bit_array) return natural is
+  begin
+    return code_length_bit_array(data'length);
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- bit_vector
+  -----------------------------------------------------------------------------
+  -- We cast the bit_vector into a bit_array to encode it
+  function code_length_bit_vector(length : natural) return natural is
+  begin
+    return code_length_bit_array(length);
+  end function;
+
+  function code_length_bit_vector(data : bit_vector) return natural is
+  begin
+    return code_length_bit_vector(data'length);
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- ieee.numeric_bit.unsigned
+  -----------------------------------------------------------------------------
+  -- We cast the ieee.numeric_bit.unsigned into a bit_array to encode it
+  function code_length_numeric_bit_unsigned(length : natural) return natural is
+  begin
+    return code_length_bit_array(length);
+  end function;
+
+  function code_length_numeric_bit_unsigned(data : ieee.numeric_bit.unsigned) return natural is
+  begin
+    return code_length_numeric_bit_unsigned(data'length);
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- ieee.numeric_bit.signed
+  -----------------------------------------------------------------------------
+  -- We cast the ieee.numeric_bit.signed into a bit_array to encode it
+  function code_length_numeric_bit_signed(length : natural) return natural is
+  begin
+    return code_length_bit_array(length);
+  end function;
+
+  function code_length_numeric_bit_signed(data : ieee.numeric_bit.signed) return natural is
+  begin
+    return code_length_numeric_bit_signed(data'length);
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- std_ulogic_array
+  -----------------------------------------------------------------------------
+  -- We also encode the range along side the raw_bit_array
+  function code_length_std_ulogic_array(length : natural) return natural is
+  begin
+    return code_length_integer_range + code_length_raw_std_ulogic_array(length);
+  end function;
+
+  function code_length_std_ulogic_array(data : std_ulogic_array) return natural is
+  begin
+    return code_length_std_ulogic_array(data'length);
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- std_ulogic_vector
+  -----------------------------------------------------------------------------
+  -- We cast the std_ulogic_vector into a bit_array to encode it
+  function code_length_std_ulogic_vector(length : natural) return natural is
+  begin
+    return code_length_std_ulogic_array(length);
+  end function;
+
+  function code_length_std_ulogic_vector(data : std_ulogic_vector) return natural is
+  begin
+    return code_length_std_ulogic_vector(data'length);
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- ieee.numeric_std.unresolved_unsigned
+  -----------------------------------------------------------------------------
+  -- We cast the ieee.numeric_std.unresolved_unsigned into a bit_array to encode it
+  function code_length_numeric_std_unsigned(length : natural) return natural is
+  begin
+    return code_length_std_ulogic_array(length);
+  end function;
+
+  function code_length_numeric_std_unsigned(data : ieee.numeric_std.unresolved_unsigned) return natural is
+  begin
+    return code_length_numeric_std_unsigned(data'length);
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- ieee.numeric_std.unresolved_signed
+  -----------------------------------------------------------------------------
+  -- We cast the ieee.numeric_std.unresolved_signed into a bit_array to encode it
+  function code_length_numeric_std_signed(length : natural) return natural is
+  begin
+    return code_length_std_ulogic_array(length);
+  end function;
+
+  function code_length_numeric_std_signed(data : ieee.numeric_std.unresolved_signed) return natural is
+  begin
+    return code_length_numeric_std_signed(data'length);
+  end function;
+
+
+
   function get_simulator_resolution return time is
     type time_array_t is array (integer range <>) of time;
     variable resolution : time;
@@ -690,4 +1055,5 @@ package body codec_builder_pkg is
       return range_left1 & range_right1 & is_ascending1 & range_left2 & range_right2 & is_ascending2;
     end if;
   end function encode_array_header;
-end package body codec_builder_pkg;
+
+end package body;
