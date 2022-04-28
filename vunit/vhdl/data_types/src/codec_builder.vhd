@@ -751,309 +751,329 @@ package body codec_builder_pkg is
   end function;
 
 
+  --===========================================================================
+  -- Encode and Decode procedures of predefined enumerated types
+  --===========================================================================
 
-  function get_simulator_resolution return time is
-    type time_array_t is array (integer range <>) of time;
-    variable resolution : time;
-    constant resolutions : time_array_t(1 to 8) := (
-      1.0e-15 sec, 1.0e-12 sec , 1.0e-9 sec, 1.0e-6 sec, 1.0e-3 sec, 1 sec, 1 min, 1 hr);
+  -----------------------------------------------------------------------------
+  -- Boolean
+  -----------------------------------------------------------------------------
+  procedure encode_boolean(constant data : in boolean; variable index : inout code_index_t; variable code : inout code_t) is
   begin
-    for r in resolutions'range loop
-      resolution := resolutions(r);
-      exit when resolution > 0 sec;
-    end loop;
-
-    return resolution;
-  end;
-
-  constant simulator_resolution : time := get_simulator_resolution;
-
-  function to_byte_array (
-    constant value : bit_vector)
-    return string is
-    variable ret_val   : string(1 to (value'length + 7) / 8);
-    variable value_int : ieee.numeric_bit.unsigned(value'length - 1 downto 0) := ieee.numeric_bit.unsigned(value);
-  begin
-    for i in ret_val'reverse_range loop
-      ret_val(i) := character'val(to_integer(value_int and to_unsigned(255, value_int'length)));
-      value_int  := value_int srl 8;
-    end loop;
-
-    return ret_val;
-  end function to_byte_array;
-
-  function from_byte_array (
-    constant byte_array : string)
-    return bit_vector is
-    constant byte_array_int : string(1 to byte_array'length) := byte_array;
-    variable ret_val        : bit_vector(byte_array'length*8-1 downto 0);
-  begin
-    for i in byte_array_int'range loop
-      ret_val((byte_array_int'length-i)*8 + 7 downto (byte_array_int'length-i)*8) := bit_vector(ieee.numeric_bit.to_unsigned(character'pos(byte_array_int(i)), 8));
-    end loop;
-
-    return ret_val;
-  end function from_byte_array;
-
-  procedure decode (
-    constant code   :       string;
-    variable index  : inout positive;
-    variable result : out   integer) is
-  begin
-    result := to_integer(ieee.numeric_bit.signed(from_byte_array(code(index to index + integer_code_length - 1))));
-    index  := index + integer_code_length;
-  end procedure decode;
-
-  procedure decode (
-    constant code   :       string;
-    variable index  : inout positive;
-    variable result : out   real) is
-    variable is_signed : boolean;
-    variable exp, low, high : integer;
-    variable result_i : real;
-  begin
-    decode(code, index, is_signed);
-    decode(code, index, exp);
-    decode(code, index, low);
-    decode(code, index, high);
-
-    result_i := (real(low) + real(high) * 2.0**31) * 2.0 ** (exp - 53);
-    if is_signed then
-      result_i := -result_i;
+    if data then
+      code(index) := 'T';
+    else
+      code(index) := 'F';
     end if;
-    result := result_i;
-  end procedure decode;
+    index := index + code_length_boolean;
+  end procedure;
 
-  procedure decode (
-    constant code   :       string;
-    variable index  : inout positive;
-    variable result : out   time) is
-    constant code_int    : string(1 to time_code_length) := code(index to index + time_code_length - 1);
-    variable r : time;
-    variable b : integer;
-  begin
-    -- @TODO assumes time is time_code_length bytes
-    r := simulator_resolution * 0;
-
-    for i in code_int'range loop
-      b := character'pos(code_int(i));
-      r := r * 256;
-      if i = 1 and b >= 128 then
-        b := b - 256;
-      end if;
-      r := r + b * simulator_resolution;
-    end loop;
-
-    index := index + time_code_length;
-    result := r;
-  end procedure decode;
-
-  procedure decode (
-    constant code   :       string;
-    variable index  : inout positive;
-    variable result : out   boolean) is
+  procedure decode_boolean(constant code : in code_t; variable index : inout code_index_t; variable result : out boolean) is
   begin
     result := code(index) = 'T';
-    index  := index + boolean_code_length;
-  end procedure decode;
+    index  := index + code_length_boolean;
+  end procedure;
 
-  procedure decode (
-    constant code   :       string;
-    variable index  : inout positive;
-    variable result : out   bit) is
+  -----------------------------------------------------------------------------
+  -- Character
+  -----------------------------------------------------------------------------
+  procedure encode_character(constant data : in character; variable index : inout code_index_t; variable code : inout code_t) is
+  begin
+    code(index) := data;
+    index       := index + code_length_character;
+    assert code_length_character = 1 report
+      "Character wronglength"
+    severity failure;
+  end procedure;
+
+  procedure decode_character(constant code : in code_t; variable index : inout code_index_t; variable result : out character) is
+  begin
+    result := code(index);
+    index  := index + code_length_character;
+  end procedure;
+
+  -----------------------------------------------------------------------------
+  -- Bit
+  -----------------------------------------------------------------------------
+  procedure encode_bit(constant data : in bit; variable index : inout code_index_t; variable code : inout code_t) is
+  begin
+    if data = '1' then
+      code(index) := '1';
+    else
+      code(index) := '0';
+    end if;
+    index := index + code_length_bit;
+  end procedure;
+
+  procedure decode_bit(constant code : in code_t; variable index : inout code_index_t; variable result : out bit) is
   begin
     if code(index) = '1' then
       result := '1';
     else
       result := '0';
     end if;
-    index := index + bit_code_length;
-  end procedure decode;
+    index := index + code_length_bit;
+  end procedure;
 
-  procedure decode (
-    constant code   :       string;
-    variable index  : inout positive;
-    variable result : out   std_ulogic) is
+  -----------------------------------------------------------------------------
+  -- std_ulogic
+  -----------------------------------------------------------------------------
+  procedure encode_std_ulogic(constant data : in std_ulogic; variable index : inout code_index_t; variable code : inout code_t) is
+  begin
+    -- The '2' is used to select the second character of the string representation
+    code(index) := std_ulogic'image(data)(2);
+    index       := index + code_length_std_ulogic;
+  end procedure;
+
+  procedure decode_std_ulogic(constant code : in code_t; variable index : inout code_index_t; variable result : out std_ulogic) is
   begin
     result := std_ulogic'value("'" & code(index) & "'");
-    index  := index + std_ulogic_code_length;
-  end procedure decode;
+    index  := index + code_length_std_ulogic;
+  end procedure;
 
-  procedure decode (
-    constant code   :       string;
-    variable index  : inout positive;
-    variable result : out   severity_level) is
+  -----------------------------------------------------------------------------
+  -- severity_level
+  -----------------------------------------------------------------------------
+  procedure encode_severity_level(constant data : in severity_level; variable index : inout code_index_t; variable code : inout code_t) is
+  begin
+    code(index) := character'val(severity_level'pos(data));
+    index       := index + code_length_severity_level;
+  end procedure;
+
+  procedure decode_severity_level(constant code : in code_t; variable index : inout code_index_t; variable result : out severity_level) is
   begin
     result := severity_level'val(character'pos(code(index)));
-    index  := index + severity_level_code_length;
-  end;
+    index  := index + code_length_severity_level;
+  end procedure;
 
-  procedure decode (
-    constant code   :       string;
-    variable index  : inout positive;
-    variable result : out   file_open_status) is
+  -----------------------------------------------------------------------------
+  -- file_open_kind
+  -----------------------------------------------------------------------------
+  procedure encode_file_open_kind(constant data : in file_open_kind; variable index : inout code_index_t; variable code : inout code_t) is
   begin
-    result := file_open_status'val(character'pos(code(index)));
-    index  := index + file_open_status_code_length;
-  end;
+    code(index) := character'val(file_open_kind'pos(data));
+    index       := index + code_length_file_open_kind;
+  end procedure;
 
-  procedure decode (
-    constant code   :       string;
-    variable index  : inout positive;
-    variable result : out   file_open_kind) is
+  procedure decode_file_open_kind(constant code : in code_t; variable index : inout code_index_t; variable result : out file_open_kind) is
   begin
     result := file_open_kind'val(character'pos(code(index)));
-    index  := index + file_open_kind_code_length;
-  end;
+    index  := index + code_length_file_open_kind;
+  end procedure;
 
-  procedure decode (
-    constant code   :       string;
-    variable index  : inout positive;
-    variable result : out   character) is
+  -----------------------------------------------------------------------------
+  -- file_open_status
+  -----------------------------------------------------------------------------
+  procedure encode_file_open_status(constant data : in file_open_status; variable index : inout code_index_t; variable code : inout code_t) is
   begin
-    result := code(index);
-    index  := index + 1;
-  end procedure decode;
+    code(index) := character'val(file_open_status'pos(data));
+    index       := index + code_length_file_open_status;
+  end procedure;
 
-  procedure decode (
-    constant code   :       string;
-    variable index  : inout positive;
-    variable result : out   std_ulogic_array) is
-    variable i            : integer := result'left;
-    variable upper_nibble : natural;
+  procedure decode_file_open_status(constant code : in code_t; variable index : inout code_index_t; variable result : out file_open_status) is
   begin
-    index := index + 9;
-    if result'ascending then
-      while i <= result'right loop
-        if i /= result'right then
-          upper_nibble  := character'pos(code(index))/16;
-          result(i + 1) := std_ulogic'val(upper_nibble);
-        else
-          upper_nibble := 0;
-        end if;
-        result(i) := std_ulogic'val(character'pos(code(index)) - upper_nibble*16);
-        i         := i + 2;
-        index     := index + 1;
-      end loop;
+    result := file_open_status'val(character'pos(code(index)));
+    index  := index + code_length_file_open_status;
+  end procedure;
+
+
+  --===========================================================================
+  -- Encode and Decode procedures of predefined scalar types
+  --===========================================================================
+
+  -----------------------------------------------------------------------------
+  -- integer
+  -----------------------------------------------------------------------------
+  procedure encode_integer(constant data : in integer; variable index : inout code_index_t; variable code : inout code_t) is
+  begin
+    encode_raw_bit_array(bit_array(ieee.numeric_bit.to_signed(data, simulator_integer_width)), index, code);
+  end procedure;
+
+  procedure decode_integer(constant code : in code_t; variable index : inout code_index_t; variable result : out integer) is
+    variable ret_val : bit_array(simulator_integer_width-1 downto 0);
+  begin
+    decode_raw_bit_array(code, index, ret_val);
+    result := to_integer(ieee.numeric_bit.signed(ret_val));
+  end procedure;
+
+  -----------------------------------------------------------------------------
+  -- real
+  -----------------------------------------------------------------------------
+  -- TODO Remove hard coded values (EXPONENT, MANTISSE and SIGN width constants are defined in the common_pkg)
+  -- TODO Add automatic 64 bits support
+  procedure encode_real(constant data : in real; variable index : inout code_index_t; variable code : inout code_t) is
+    constant is_signed : boolean := data < 0.0;
+    variable value : real := abs(data);
+    variable exp : integer;
+    variable low : integer;
+    variable high : integer;
+  begin
+    if value = 0.0 then
+      exp := 0;
     else
-      while i >= result'right loop
-        if i /= result'right then
-          upper_nibble  := character'pos(code(index))/16;
-          result(i - 1) := std_ulogic'val(upper_nibble);
-        else
-          upper_nibble := 0;
-        end if;
-        result(i) := std_ulogic'val(character'pos(code(index)) - upper_nibble*16);
-        i         := i - 2;
-        index     := index + 1;
-      end loop;
+      exp := integer(floor(log2(value)));
     end if;
-  end;
+    value := value * 2.0 ** (-exp + 53);
+    high := integer(floor(value * 2.0 ** (-31)));
+    low := integer(value - real(high) * 2.0 ** 31);
+    encode_boolean(is_signed, index, code);
+    encode_integer(exp, index, code);
+    encode_integer(low, index, code);
+    encode_integer(high, index, code);
+  end procedure;
 
-  procedure decode (
-    constant code   :       string;
-    variable index  : inout positive;
-    variable result : out   string) is
+  procedure decode_real(constant code : in code_t; variable index : inout code_index_t; variable result : out real) is
+    variable is_signed : boolean;
+    variable exp, low, high : integer;
+    variable ret_val : real;
   begin
-    result := code(index + 9 to index + 9 + result'length - 1);
-    index  := index + 9 + result'length;
-  end;
+    decode_boolean(code, index, is_signed);
+    decode_integer(code, index, exp);
+    decode_integer(code, index, low);
+    decode_integer(code, index, high);
+    ret_val := (real(low) + real(high) * 2.0**31) * 2.0 ** (exp - 53);
+    if is_signed then
+      ret_val := -ret_val;
+    end if;
+    result := ret_val;
+  end procedure;
 
-  procedure decode (
-    constant code   :       string;
-    variable index  : inout positive;
-    variable result : out   bit_vector) is
-    constant n_bytes     : natural := (result'length + 7) / 8;
-    variable result_temp : bit_vector(n_bytes * 8 - 1 downto 0);
+  -----------------------------------------------------------------------------
+  -- time
+  -----------------------------------------------------------------------------
+  procedure encode_time(constant data : in time; variable index : inout code_index_t; variable code : inout code_t) is
+
+    function modulo(t : time; m : natural) return integer is
+    begin
+      return integer((t - (t/m)*m) / simulator_resolution) mod m;
+    end function;
+
+    variable t       : time;
+    variable ascii   : natural;
   begin
-    result_temp := from_byte_array(code(index + 9 to index + 9 + n_bytes - 1));
-    result      := result_temp(result'length - 1 downto 0);
+    t := data;
+    for i in index + code_length_time - 1 downto index loop
+      ascii := modulo(t, basic_code_nb_values);
+      code(i) := character'val(ascii);
+      t := (t - (ascii * simulator_resolution)) / basic_code_nb_values;
+    end loop;
+    index := index + code_length_time;
+  end procedure;
 
-    index := index + 9 + n_bytes;
-  end procedure decode;
-
-  procedure decode (
-    constant code   :       string;
-    variable index  : inout positive;
-    variable result : out   std_ulogic_vector) is
-    variable result_sula : std_ulogic_array(result'range);
+  procedure decode_time(constant code : in code_t; variable index : inout code_index_t; variable result : out time) is
+    constant code_int : code_t(1 to code_length_time) := code(index to index + code_length_time - 1);
+    variable r : time;
+    variable b : integer;
   begin
-    decode(code, index, result_sula);
-    result := std_ulogic_vector(result_sula);
-  end;
+    r := simulator_resolution * 0;
+    for i in code_int'range loop
+      b := character'pos(code_int(i));
+      r := r * basic_code_nb_values;
+      if i = 1 and b >= basic_code_nb_values / 2 then
+        b := b - basic_code_nb_values;
+      end if;
+      r := r + b * simulator_resolution;
+    end loop;
+    result := r;
+    index := index + code_length_time;
+  end procedure;
 
-  procedure decode (
-    constant code   :       string;
-    variable index  : inout positive;
-    variable result : out   complex) is
+
+  --===========================================================================
+  -- Encode and Decode procedures of predefined composite types (records)
+  --===========================================================================
+
+  -----------------------------------------------------------------------------
+  -- complex
+  -----------------------------------------------------------------------------
+  procedure encode_complex(constant data : in complex; variable index : inout code_index_t; variable code : inout code_t) is
   begin
-    decode(code, index, result.re);
-    decode(code, index, result.im);
-  end;
+    encode_real(data.re, index, code);
+    encode_real(data.im, index, code);
+  end procedure;
 
-  procedure decode (
-    constant code   :       string;
-    variable index  : inout positive;
-    variable result : out   complex_polar) is
+  procedure decode_complex(constant code : in code_t; variable index : inout code_index_t; variable result : out complex) is
   begin
-    decode(code, index, result.mag);
-    decode(code, index, result.arg);
-  end;
+    decode_real(code, index, result.re);
+    decode_real(code, index, result.im);
+  end procedure;
 
-  procedure decode (
-    constant code   :       string;
-    variable index  : inout positive;
-    variable result : out   ieee.numeric_bit.unsigned) is
-    variable result_bv : bit_vector(result'range);
+  -----------------------------------------------------------------------------
+  -- complex_polar
+  -----------------------------------------------------------------------------
+  procedure encode_complex_polar(constant data : in complex_polar; variable index : inout code_index_t; variable code : inout code_t) is
   begin
-    decode(code, index, result_bv);
-    result := ieee.numeric_bit.unsigned(result_bv);
-  end;
+    encode_real(data.mag, index, code);
+    encode_real(data.arg, index, code);
+  end procedure;
 
-  procedure decode (
-    constant code   :       string;
-    variable index  : inout positive;
-    variable result : out   ieee.numeric_bit.signed) is
-    variable result_bv : bit_vector(result'range);
+  procedure decode_complex_polar(constant code : in code_t; variable index : inout code_index_t; variable result : out complex_polar) is
   begin
-    decode(code, index, result_bv);
-    result := ieee.numeric_bit.signed(result_bv);
-  end;
+    decode_real(code, index, result.mag);
+    decode_real(code, index, result.arg);
+  end procedure;
 
-  procedure decode (
-    constant code   :       string;
-    variable index  : inout positive;
-    variable result : out   ieee.numeric_std.unsigned) is
-    variable result_slv : std_ulogic_vector(result'range);
-  begin
-    decode(code, index, result_slv);
-    result := ieee.numeric_std.unsigned(result_slv);
-  end;
 
-  procedure decode (
-    constant code   :       string;
-    variable index  : inout positive;
-    variable result : out   ieee.numeric_std.signed) is
-    variable result_slv : std_ulogic_vector(result'range);
-  begin
-    decode(code, index, result_slv);
-    result := ieee.numeric_std.signed(result_slv);
-  end;
 
+  --===========================================================================
+  -- Deprecated functions - Maintained for backward compatibility.
+  --===========================================================================
+
+  -- Deferred constants
+  constant integer_code_length          : positive := code_length_integer;
+  constant boolean_code_length          : positive := code_length_boolean;
+  constant real_code_length             : positive := code_length_real;
+  constant std_ulogic_code_length       : positive := code_length_std_ulogic;
+  constant bit_code_length              : positive := code_length_bit;
+  constant time_code_length             : positive := code_length_time;
+  constant severity_level_code_length   : positive := code_length_severity_level;
+  constant file_open_status_code_length : positive := code_length_file_open_status;
+  constant file_open_kind_code_length   : positive := code_length_file_open_kind;
+  constant complex_code_length          : positive := code_length_complex;
+  constant complex_polar_code_length    : positive := code_length_complex_polar;
+
+  -- Deprecated. Maintained for backward compatibility.
   function encode_array_header (
-    constant range_left1   : string;
-    constant range_right1  : string;
-    constant is_ascending1 : string;
-    constant range_left2   : string := "";
-    constant range_right2  : string := "";
-    constant is_ascending2 : string := "T")
-    return string is
+    constant range_left1   : code_t;
+    constant range_right1  : code_t;
+    constant is_ascending1 : code_t;
+    constant range_left2   : code_t := "";
+    constant range_right2  : code_t := "";
+    constant is_ascending2 : code_t := "T"
+  ) return code_t is
   begin
+    assert False report
+      "This function ('encode_array_header') is deprecated. Please use 'encode_range' from codec_pkg.vhd"
+    severity warning;
     if range_left2 = "" then
       return range_left1 & range_right1 & is_ascending1;
     else
       return range_left1 & range_right1 & is_ascending1 & range_left2 & range_right2 & is_ascending2;
     end if;
-  end function encode_array_header;
+  end function;
+
+  -- Deprecated. Maintained for backward compatibility.
+  function to_byte_array(value : bit_vector) return code_t is
+    variable ret_val : code_t(code_length_bit_array(bit_array(value))-1 downto 0);
+    variable index : code_index_t := ret_val'left;
+  begin
+    assert False report
+      "This function ('to_byte_array') is deprecated. Please use 'encode_raw_bit_array' from codec_builder_pkg.vhd"
+    severity warning;
+    encode_raw_bit_array(bit_array(value), index, ret_val);
+    return ret_val;
+  end function;
+
+  -- Deprecated. Maintained for backward compatibility.
+  function from_byte_array(byte_array : code_t) return bit_vector is
+    variable ret_val : bit_array(byte_array'length*basic_code_length-1 downto 0);
+    variable index : code_index_t := ret_val'left;
+  begin
+    assert False report
+      "This function ('from_byte_array') is deprecated. Please use 'decode_raw_bit_array' from codec_builder_pkg.vhd"
+    severity warning;
+    decode_raw_bit_array(byte_array, index, ret_val);
+    return bit_vector(ret_val);
+  end function;
 
 end package body;
