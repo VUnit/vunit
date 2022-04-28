@@ -26,7 +26,7 @@ package codec_2008p_pkg is
   -- This package extends the codec_pkg to support the types
   -- introduced by the VHDL-2008 revision.
   -- The main documentation of the coded functionnality are located
-  -- on the codec_pkg.vhd file.
+  -- in the codec_pkg.vhd file.
 
 
   --===========================================================================
@@ -75,173 +75,133 @@ use work.codec_pkg.all;
 use work.codec_builder_2008p_pkg.all;
 
 package body codec_2008p_pkg is
-  -----------------------------------------------------------------------------
-  -- Predefined composite types
-  -----------------------------------------------------------------------------
-  function encode (
-    constant data : boolean_vector)
-    return string is
-    variable data_bv : bit_vector(data'range);
+
+  --===========================================================================
+  -- Encode functions of new predefined types from VHDL 2008
+  --===========================================================================
+
+  function encode_boolean_vector(data : boolean_vector) return code_t is
+    variable ret_val : code_t(1 to code_length_boolean_vector(data'length));
+    variable index : code_index_t := ret_val'left;
   begin
-    for i in data'range loop
-      if data(i) then
-        data_bv(i) := '1';
-      else
-        data_bv(i) := '0';
-      end if;
-    end loop;
-
-    return encode(data_bv);
-  end;
-
-  function decode (
-    constant code : string)
-    return boolean_vector is
-    constant ret_range : range_t := get_range(code);
-    variable ret_val : boolean_vector(ret_range'range) := (others => false);
-    variable index   : positive := code'left;
-  begin
-    decode(code, index, ret_val);
-
+    encode_boolean_vector(data, index, ret_val);
     return ret_val;
-  end;
+  end function;
 
-  function encode (
-    constant data : integer_vector)
-    return string is
-    variable ret_val : string(1 to 9 + data'length*4);
-    variable index   : positive := 10;
+  function encode_integer_vector(data : integer_vector) return code_t is
+    variable ret_val : code_t(1 to code_length_integer_vector(data'length));
+    variable index : code_index_t := ret_val'left;
   begin
-    ret_val(1 to 9) := encode_array_header(encode(data'left), encode(data'right), encode(data'ascending));
-    for i in data'range loop
-      ret_val(index to index + 3) := encode(data(i));
-      index                       := index + 4;
-    end loop;
-
+    encode_integer_vector(data, index, ret_val);
     return ret_val;
-  end;
+  end function;
 
-  function decode (
-    constant code : string)
-    return integer_vector is
-    constant ret_range : range_t := get_range(code);
-    variable ret_val : integer_vector(ret_range'range) := (others => integer'left);
-    variable index   : positive := code'left;
+  function encode_real_vector(data : real_vector) return code_t is
+    variable ret_val : code_t(1 to code_length_real_vector(data'length));
+    variable index : code_index_t := ret_val'left;
   begin
-    decode(code, index, ret_val);
-
+    encode_real_vector(data, index, ret_val);
     return ret_val;
-  end;
+  end function;
 
-  function encode (
-    constant data : real_vector)
-    return string is
-    variable ret_val : string(1 to 9 + 13*data'length);
-    variable index   : positive := 10;
+  function encode_time_vector(data : time_vector) return code_t is
+    variable ret_val : code_t(1 to code_length_time_vector(data'length));
+    variable index : code_index_t := ret_val'left;
   begin
-    ret_val(1 to 9) := encode_array_header(encode(data'left), encode(data'right), encode(data'ascending));
-    for i in data'range loop
-      ret_val(index to index + 12) := encode(data(i));
-      index                       := index + 13;
-    end loop;
-
+    encode_time_vector(data, index, ret_val);
     return ret_val;
-  end;
+  end function;
 
-  function decode (
-    constant code : string)
-    return real_vector is
-    constant ret_range : range_t := get_range(code);
-    variable ret_val : real_vector(ret_range'range) := (others => real'left);
-    variable index   : positive := code'left;
+  function encode_ufixed(data : unresolved_ufixed) return code_t is
+    variable ret_val : code_t(1 to code_length_ufixed(data'length));
+    variable index : code_index_t := ret_val'left;
   begin
-    decode(code, index, ret_val);
-
+    encode_ufixed(data, index, ret_val);
     return ret_val;
-  end;
+  end function;
 
-  function encode (
-    constant data : time_vector)
-    return string is
-    variable ret_val : string(1 to 9 + 8*data'length);
-    variable index   : positive := 10;
+  function encode_sfixed(data : unresolved_sfixed) return code_t is
+    variable ret_val : code_t(1 to code_length_sfixed(data'length));
+    variable index : code_index_t := ret_val'left;
   begin
-    ret_val(1 to 9) := encode_array_header(encode(data'left), encode(data'right), encode(data'ascending));
-    for i in data'range loop
-      ret_val(index to index + 7) := encode(data(i));
-      index                       := index + 8;
-    end loop;
-
+    encode_sfixed(data, index, ret_val);
     return ret_val;
-  end;
+  end function;
 
-  function decode (
-    constant code : string)
-    return time_vector is
-    constant ret_range : range_t := get_range(code);
-    variable ret_val : time_vector(ret_range'range) := (others => time'left);
-    variable index   : positive := code'left;
+  function encode_float(data : unresolved_float) return code_t is
+    variable ret_val : code_t(1 to code_length_float(data'length));
+    variable index : code_index_t := ret_val'left;
   begin
-    decode(code, index, ret_val);
-
+    encode_float(data, index, ret_val);
     return ret_val;
-  end;
+  end function;
 
-  function encode (
-    constant data : ufixed)
-    return string is
+
+  --===========================================================================
+  -- Decode functions of new predefined types from VHDL 2008
+  --===========================================================================
+
+  function decode_boolean_vector(code : code_t) return boolean_vector is
+    constant ret_range : range_t := decode_range(code);
+    variable ret_val : boolean_vector(ret_range'range);
+    variable index : code_index_t := code'left;
   begin
-    return encode(std_ulogic_array(data));
-  end;
-
-  function decode (
-    constant code : string)
-    return ufixed is
-    constant ret_range : range_t := get_range(code);
-    variable ret_val : ufixed(ret_range'range);
-    variable index   : positive := code'left;
-  begin
-    decode(code, index, ret_val);
-
+    decode_boolean_vector(code, index, ret_val);
     return ret_val;
-  end;
+  end function;
 
-  function encode (
-    constant data : sfixed)
-    return string is
+  function decode_integer_vector(code : code_t) return integer_vector is
+    constant ret_range : range_t := decode_range(code);
+    variable ret_val : integer_vector(ret_range'range);
+    variable index : code_index_t := code'left;
   begin
-    return encode(std_ulogic_array(data));
-  end;
-
-  function decode (
-    constant code : string)
-    return sfixed is
-    constant ret_range : range_t := get_range(code);
-    variable ret_val : sfixed(ret_range'range);
-    variable index   : positive := code'left;
-  begin
-    decode(code, index, ret_val);
-
+    decode_integer_vector(code, index, ret_val);
     return ret_val;
-  end;
+  end function;
 
-  function encode (
-    constant data : float)
-    return string is
+  function decode_real_vector(code : code_t) return real_vector is
+    constant ret_range : range_t := decode_range(code);
+    variable ret_val : real_vector(ret_range'range);
+    variable index : code_index_t := code'left;
   begin
-    return encode(std_ulogic_array(data));
-  end;
-
-  function decode (
-    constant code : string)
-    return float is
-    constant ret_range : range_t := get_range(code);
-    variable ret_val : float(ret_range'range);
-    variable index   : positive := code'left;
-  begin
-    decode(code, index, ret_val);
-
+    decode_real_vector(code, index, ret_val);
     return ret_val;
-  end;
+  end function;
 
-end package body codec_2008p_pkg;
+  function decode_time_vector(code : code_t) return time_vector is
+    constant ret_range : range_t := decode_range(code);
+    variable ret_val : time_vector(ret_range'range);
+    variable index : code_index_t := code'left;
+  begin
+    decode_time_vector(code, index, ret_val);
+    return ret_val;
+  end function;
+
+  function decode_ufixed(code : code_t) return unresolved_ufixed is
+    constant ret_range : range_t := decode_range(code);
+    variable ret_val : unresolved_ufixed(ret_range'range);
+    variable index : code_index_t := code'left;
+  begin
+    decode_ufixed(code, index, ret_val);
+    return ret_val;
+  end function;
+
+  function decode_sfixed(code : code_t) return unresolved_sfixed is
+    constant ret_range : range_t := decode_range(code);
+    variable ret_val : unresolved_sfixed(ret_range'range);
+    variable index : code_index_t := code'left;
+  begin
+    decode_sfixed(code, index, ret_val);
+    return ret_val;
+  end function;
+
+  function decode_float(code : code_t) return unresolved_float is
+    constant ret_range : range_t := decode_range(code);
+    variable ret_val : unresolved_float(ret_range'range);
+    variable index : code_index_t := code'left;
+  begin
+    decode_float(code, index, ret_val);
+    return ret_val;
+  end function;
+
+end package body;
