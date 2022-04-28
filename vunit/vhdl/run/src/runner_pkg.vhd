@@ -52,7 +52,7 @@ package runner_pkg is
 
   procedure set_test_case_name(runner : runner_t; index : positive; new_name : string);
 
-  impure function get_test_case_name(runner : runner_t; index : positive) return string ;
+  impure function get_test_case_name(runner : runner_t; index : positive) return string;
 
   procedure set_num_of_test_cases(runner : runner_t; new_value : integer);
 
@@ -76,7 +76,7 @@ package runner_pkg is
 
   impure function get_run_test_case(runner : runner_t; index : positive) return string;
 
-  procedure set_running_test_case(runner : runner_t; new_name  : string);
+  procedure set_running_test_case(runner : runner_t; new_name : string);
 
   impure function get_running_test_case(runner : runner_t) return string;
 

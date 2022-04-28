@@ -52,7 +52,7 @@ It has the following important properties
   You can put the test code directly between ``test_runner_setup`` and ``test_runner_cleanup`` or you can simply
   use that region to trigger and wait for test activities performed elsewhere (for example in other processes) or
   you can mix those strategies. In this case the test code is in the same process and it uses the ``check_equal``
-  procedure from the :doc:`check library <../check/user_guide>`
+  procedure from the :doc:`check library <../check/user_guide>`.
 
 Running this testbench using PR will result in something like this
 
@@ -617,7 +617,7 @@ simulation on ``error`` when running with PR. When running standalone the defaul
 simulation on the ``failure`` level such that the simulation has the ability to run through all test cases
 despite a failing check like in the example above.
 
-Without PR there is a need print the test result. VUnit provides the ``get_checker_stat`` function to get the
+Without PR there is a need to print the test result. VUnit provides the ``get_checker_stat`` function to get the
 internal error counters and a ``to_string`` function to convert the returned record to a string. The example
 uses that and VUnit logging capabilities to create a simple summary in the test suite cleanup phase.
 

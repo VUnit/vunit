@@ -29,9 +29,9 @@ common for the entire test bench depending on the situation.  For test
 benches without test such as `tb_example` in the User Guide the
 configuration is common for the entire test bench. For test benches
 containing tests such as `tb_example_many` the configuration is done
-for each test case. If the ``run_all_in_same_sim`` attribute has been used
+for each test case. If the ``run_all_in_same_sim`` attribute has been used,
 configuration is performed at the test bench level even if there are
-individual test within since they must run in the same simulation.
+individual tests within since they must run in the same simulation.
 
 In a VUnit all test benches and test cases are created with an unnamed default
 configuration which is modified by different methods such as ``set_generic`` etc.
@@ -106,7 +106,7 @@ There are two hooks to run user defined Python code.
              the test will fail immediately.
 
              The use case is to automatically create input data files
-             that is read by the test case during simulation. The test
+             that are read by the test case during simulation. The test
              bench can access the test case unique ``output_path`` via
              a :ref:`special generic/parameter <special_generics>`.
 
@@ -114,12 +114,12 @@ There are two hooks to run user defined Python code.
              the test case. The function may accept an ``output_path``
              string which is the filesystem path to the directory
              where test outputs are stored. The function may accept an
-             ``output`` string which full standard output from the
+             ``output`` string which is the full standard output from the
              test containing the simulator transcript. The function
              must return ``True`` or the test will fail.
 
              The use case is to automatically check output data files
-             that is written by the test case during simulation. The test
+             that are written by the test case during simulation. The test
              bench can access the test case unique ``output_path`` via
              a :ref:`special generic/parameter <special_generics>`.
 

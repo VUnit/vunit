@@ -51,11 +51,11 @@ different from standard subprograms
   logger.info("Hello world with a protected type variable");
 
 but VUnit hides this behind standard subprogram calls to keep a
-consistent API for all VHDL versions.
+consistent API for all VHDL versions
 
 .. code-block:: vhdl
 
-info(logger, "Hello world for VHDL-93 and later");
+  info(logger, "Hello world for VHDL-93 and later");
 
 A drawback with the protected type variable is that it can't be used
 as freely as other objects. For example
@@ -270,7 +270,7 @@ between such a testbench and one acting on a single interface boils
 down to more advanced communication. That is, how we transfer
 information to/from verification components and how we synchronize
 their actions when they work concurrently. There are many ways to do
-this but what's needed to handle the various use cases is a basically
+this but what's needed to handle the various use cases is basically
 an emailing service in VHDL. Computer science calls it message passing
 but the point is that emailing is something we all know. It only takes
 us a few minutes to figure out a new email client so a message passing

@@ -1065,7 +1065,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         compile order dependency but the component instance will not
         elaborate if there is no binding component.
 
-        :param source_files: A list of :class:`.SourceFile` objects or `None` meaing all
+        :param source_files: A list of :class:`.SourceFile` objects or `None` meaning all
         :returns: A list of :class:`.SourceFile` objects in compile order.
         """
         if source_files is None:

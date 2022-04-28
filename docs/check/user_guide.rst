@@ -369,7 +369,7 @@ Common to all point checks is that the condition for failure is
 evaluated at a single point in time, either when the subprogram is
 called as part of sequential code or synchronous to a clock in a clocked
 and usually concurrent procedure call. There are six unclocked versions
-of each point check and they correspond to the two function and four
+of each point check and they correspond to the two functions and four
 procedures previously described for ``check``. The only difference to the
 parameter lists is that the boolean ``expr`` parameter is replaced by
 one or more parameters specific to the point check.
@@ -1042,7 +1042,7 @@ Unconditional Checks
 ~~~~~~~~~~~~~~~~~~~~
 
 The check library has two unconditional checks, ``check_passed`` and
-``check_failed``, that contains no expression parameter to evaluate.
+``check_failed``, that contain no expression parameter to evaluate.
 They are used when the pass/fail status is already given by the program
 flow. For example,
 

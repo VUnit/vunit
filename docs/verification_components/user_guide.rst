@@ -95,4 +95,4 @@ activity on several bus interfaces.
 A VC typically has an associated package defining procedures for sending to and receiving messages from the VC.
 Each VC instance is associated with a handle that is created in the test bench and set as a generic on the VC
 instantiation.
-The handle is given as and argument to the procedure calls to direct messages to the specfic VC instance.
+The handle is given as an argument to the procedure calls to direct messages to the specific VC instance.
