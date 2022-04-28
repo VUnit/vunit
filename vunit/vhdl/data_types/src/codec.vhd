@@ -475,4 +475,305 @@ package body codec_pkg is
     return ret_val;
   end function;
 
+
+  --===========================================================================
+  -- Encode and decode functions and procedures for range
+  --===========================================================================
+
+  function encode_range(range_left : integer; range_right : integer; is_ascending : boolean) return code_t is
+    variable ret_val : code_t(1 to code_length_integer_range);
+    variable index   : code_index_t := ret_val'left;
+  begin
+    encode_range(range_left, range_right, is_ascending, index, ret_val);
+    return ret_val;
+  end function;
+
+  function decode_range(code : code_t; index : code_index_t) return range_t is
+    variable code_alias : code_t(1 to code'length-index+1) := code(index to code'length);
+    constant range_left : integer := decode_integer(
+      code_alias(1 to code_length_integer)
+    );
+    constant range_right : integer := decode_integer(
+      code_alias(1 + code_length_integer to code_length_integer*2)
+    );
+    constant is_ascending : boolean := decode_boolean(
+      code_alias(1 + code_length_integer*2 to code_length_integer*2 + code_length_boolean)
+    );
+    constant ret_val_ascending  : range_t(range_left to range_right) := (others => '0');
+    constant ret_val_descending : range_t(range_left downto range_right) := (others => '0');
+  begin
+    if is_ascending then
+      return ret_val_ascending;
+    else
+      return ret_val_descending;
+    end if;
+  end function;
+
+  function decode_range(code : code_t) return range_t is
+  begin
+    return decode_range(code, code'left);
+  end function;
+
+
+  --===========================================================================
+  -- Encode and decode procedures of predefined composite types (arrays)
+  --===========================================================================
+
+  -----------------------------------------------------------------------------
+  -- string
+  -----------------------------------------------------------------------------
+  function encode_string(data : string) return code_t is
+    variable ret_val : code_t(1 to code_length_string(data'length));
+    variable index   : code_index_t := ret_val'left;
+  begin
+    encode_string(data, index, ret_val);
+    return ret_val;
+  end function;
+
+  function decode_string(code : code_t) return string is
+    constant ret_range : range_t := decode_range(code);
+    variable ret_val : string(ret_range'range) := (others => NUL);
+    variable index   : code_index_t := code'left;
+  begin
+    decode_string(code, index, ret_val);
+    return ret_val;
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- bit_array
+  -----------------------------------------------------------------------------
+  function encode_bit_array(data : bit_array) return code_t is
+    variable ret_val : code_t(1 to code_length_bit_array(data'length));
+    variable index   : code_index_t := ret_val'left;
+  begin
+    encode_bit_array(data, index, ret_val);
+    return ret_val;
+  end function;
+
+  function decode_bit_array(code : code_t) return bit_array is
+    constant ret_range : range_t := decode_range(code);
+    variable ret_val : bit_array(ret_range'range);
+    variable index   : code_index_t := code'left;
+  begin
+    decode_bit_array(code, index, ret_val);
+    return ret_val;
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- bit_vector
+  -----------------------------------------------------------------------------
+  function encode_bit_vector(data : bit_vector) return code_t is
+    variable ret_val : code_t(1 to code_length_bit_vector(data'length));
+    variable index   : code_index_t := ret_val'left;
+  begin
+    encode_bit_vector(data, index, ret_val);
+    return ret_val;
+  end function;
+
+  function decode_bit_vector(code : code_t) return bit_vector is
+    constant ret_range : range_t := decode_range(code);
+    variable ret_val : bit_vector(ret_range'range);
+    variable index   : code_index_t := code'left;
+  begin
+    decode_bit_vector(code, index, ret_val);
+    return ret_val;
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- ieee.numeric_bit.unsigned
+  -----------------------------------------------------------------------------
+  function encode_numeric_bit_unsigned(data : ieee.numeric_bit.unsigned) return code_t is
+    variable ret_val : code_t(1 to code_length_numeric_bit_unsigned(data'length));
+    variable index   : code_index_t := ret_val'left;
+  begin
+    encode_numeric_bit_unsigned(data, index, ret_val);
+    return ret_val;
+  end function;
+
+  function decode_numeric_bit_unsigned(code : code_t) return ieee.numeric_bit.unsigned is
+    constant ret_range : range_t := decode_range(code);
+    variable ret_val : ieee.numeric_bit.unsigned(ret_range'range);
+    variable index   : code_index_t := code'left;
+  begin
+    decode_numeric_bit_unsigned(code, index, ret_val);
+    return ret_val;
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- ieee.numeric_bit.signed
+  -----------------------------------------------------------------------------
+  function encode_numeric_bit_signed(data : ieee.numeric_bit.signed) return code_t is
+    variable ret_val : code_t(1 to code_length_numeric_bit_signed(data'length));
+    variable index   : code_index_t := ret_val'left;
+  begin
+    encode_numeric_bit_signed(data, index, ret_val);
+    return ret_val;
+  end function;
+
+  function decode_numeric_bit_signed(code : code_t) return ieee.numeric_bit.signed is
+    constant ret_range : range_t := decode_range(code);
+    variable ret_val : ieee.numeric_bit.signed(ret_range'range);
+    variable index   : code_index_t := code'left;
+  begin
+    decode_numeric_bit_signed(code, index, ret_val);
+    return ret_val;
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- std_ulogic_array
+  -----------------------------------------------------------------------------
+  function encode_std_ulogic_array(data : std_ulogic_array) return code_t is
+    variable ret_val : code_t(1 to code_length_std_ulogic_array(data'length));
+    variable index   : code_index_t := ret_val'left;
+  begin
+    encode_std_ulogic_array(data, index, ret_val);
+    return ret_val;
+  end function;
+
+  function decode_std_ulogic_array(code : code_t) return std_ulogic_array is
+    constant ret_range : range_t := decode_range(code);
+    variable ret_val : std_ulogic_array(ret_range'range);
+    variable index   : code_index_t := code'left;
+  begin
+    decode_std_ulogic_array(code, index, ret_val);
+    return ret_val;
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- std_ulogic_vector
+  -----------------------------------------------------------------------------
+  function encode_std_ulogic_vector(data : std_ulogic_vector) return code_t is
+    variable ret_val : code_t(1 to code_length_std_ulogic_vector(data'length));
+    variable index   : code_index_t := ret_val'left;
+  begin
+    encode_std_ulogic_vector(data, index, ret_val);
+    return ret_val;
+  end function;
+
+  function decode_std_ulogic_vector(code : code_t) return std_ulogic_vector is
+    constant ret_range : range_t := decode_range(code);
+    variable ret_val : std_ulogic_vector(ret_range'range);
+    variable index   : code_index_t := code'left;
+  begin
+    decode_std_ulogic_vector(code, index, ret_val);
+    return ret_val;
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- ieee.numeric_std.unresolved_unsigned
+  -----------------------------------------------------------------------------
+  function encode_numeric_std_unsigned(data : ieee.numeric_std.unresolved_unsigned) return code_t is
+    variable ret_val : code_t(1 to code_length_numeric_std_unsigned(data'length));
+    variable index   : code_index_t := ret_val'left;
+  begin
+    encode_numeric_std_unsigned(data, index, ret_val);
+    return ret_val;
+  end function;
+
+  function decode_numeric_std_unsigned(code : code_t) return ieee.numeric_std.unresolved_unsigned is
+    constant ret_range : range_t := decode_range(code);
+    variable ret_val : ieee.numeric_std.unresolved_unsigned(ret_range'range);
+    variable index   : code_index_t := code'left;
+  begin
+    decode_numeric_std_unsigned(code, index, ret_val);
+    return ret_val;
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- ieee.numeric_std.unresolved_signed
+  -----------------------------------------------------------------------------
+  function encode_numeric_std_signed(data : ieee.numeric_std.unresolved_signed) return code_t is
+    variable ret_val : code_t(1 to code_length_numeric_std_signed(data'length));
+    variable index   : code_index_t := ret_val'left;
+  begin
+    encode_numeric_std_signed(data, index, ret_val);
+    return ret_val;
+  end function;
+
+  function decode_numeric_std_signed(code : code_t) return ieee.numeric_std.unresolved_signed is
+    constant ret_range : range_t := decode_range(code);
+    variable ret_val : ieee.numeric_std.unresolved_signed(ret_range'range);
+    variable index   : code_index_t := code'left;
+  begin
+    decode_numeric_std_signed(code, index, ret_val);
+    return ret_val;
+  end function;
+
+
+  --===========================================================================
+  -- Encode and Decode functions of for a 'raw' string, 'raw' bit_array and 'raw' std_ulogic_array
+  --===========================================================================
+
+  -----------------------------------------------------------------------------
+  -- raw_string
+  -----------------------------------------------------------------------------
+  function encode_raw_string(data : string) return code_t is
+    variable ret_val : code_t(1 to code_length_raw_string(data'length));
+    variable index : code_index_t := ret_val'left;
+  begin
+    encode_raw_string(data, index, ret_val);
+    return ret_val;
+  end function;
+
+  function decode_raw_string(code : code_t; length : positive) return string is
+    variable ret_val : string(length-1 downto 0);
+    variable index : code_index_t := code'left;
+  begin
+    decode_raw_string(code, index, ret_val);
+    return ret_val;
+  end function;
+
+  function decode_raw_string(code : code_t) return string is
+  begin
+    return decode_raw_string(code, code'length * basic_code_length);
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- raw_bit_array
+  -----------------------------------------------------------------------------
+  function encode_raw_bit_array(data : bit_array) return code_t is
+    variable ret_val : code_t(1 to code_length_raw_bit_array(data'length));
+    variable index : code_index_t := ret_val'left;
+  begin
+    encode_raw_bit_array(data, index, ret_val);
+    return ret_val;
+  end function;
+
+  function decode_raw_bit_array(code : code_t; length : positive) return bit_array is
+    variable ret_val : bit_array(length-1 downto 0);
+    variable index : code_index_t := code'left;
+  begin
+    decode_raw_bit_array(code, index, ret_val);
+    return ret_val;
+  end function;
+
+  function decode_raw_bit_array(code : code_t) return bit_array is
+  begin
+    return decode_raw_bit_array(code, code'length * basic_code_length);
+  end function;
+
+  -----------------------------------------------------------------------------
+  -- raw_std_ulogic_array
+  -----------------------------------------------------------------------------
+  function encode_raw_std_ulogic_array(data : std_ulogic_array) return code_t is
+    variable ret_val : code_t(1 to code_length_raw_std_ulogic_array(data'length));
+    variable index : code_index_t := ret_val'left;
+  begin
+    encode_raw_std_ulogic_array(data, index, ret_val);
+    return ret_val;
+  end function;
+
+  function decode_raw_std_ulogic_array(code : code_t; length : positive) return std_ulogic_array is
+    variable ret_val : std_ulogic_array(length-1 downto 0);
+    variable index : code_index_t := code'left;
+  begin
+    decode_raw_std_ulogic_array(code, index, ret_val);
+    return ret_val;
+  end function;
+
+  function decode_raw_std_ulogic_array(code : code_t) return std_ulogic_array is
+  begin
+    return decode_raw_std_ulogic_array(code, code'length * basic_code_length);
+  end function;
+
 end package body;
