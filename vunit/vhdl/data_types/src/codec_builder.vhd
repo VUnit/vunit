@@ -1014,6 +1014,271 @@ package body codec_builder_pkg is
   end procedure;
 
 
+  --===========================================================================
+  -- Encode functions and procedures for range
+  --===========================================================================
+
+  procedure encode_range(
+    constant range_left : integer;
+    constant range_right : integer;
+    constant is_ascending : boolean;
+    variable index : inout code_index_t;
+    variable code : inout code_t
+  ) is
+  begin
+    encode_integer(range_left, index, code);
+    encode_integer(range_right, index, code);
+    encode_boolean(is_ascending, index, code);
+  end procedure;
+
+  -- There are no decode procedure. See the explanation into the package declaration.
+
+
+  --===========================================================================
+  -- Encode and decode procedures of predefined composite types (arrays)
+  --===========================================================================
+
+  -----------------------------------------------------------------------------
+  -- raw_string
+  -----------------------------------------------------------------------------
+  procedure encode_raw_string(constant data : in string; variable index : inout code_index_t; variable code : inout code_t) is
+  begin
+    if data'length /= 0 then
+      code(index to index + data'length-1) := data;
+    end if;
+    index := index + code_length_raw_string(data);
+  end procedure;
+
+  procedure decode_raw_string(constant code : in code_t; variable index : inout code_index_t; variable result : out string) is
+  begin
+    result := code(index to index + result'length - 1);
+    index  := index + code_length_raw_string(result);
+  end procedure;
+
+  -----------------------------------------------------------------------------
+  -- string
+  -----------------------------------------------------------------------------
+  procedure encode_string(constant data : in string; variable index : inout code_index_t; variable code : inout code_t) is
+  begin
+    -- Note: Modelsim sets data'right to 0 which is out of the positive
+    -- index range used by strings.
+    encode_range(data'left, data'right, data'ascending, index, code);
+    encode_raw_string(data, index, code);
+  end procedure;
+
+  procedure decode_string(constant code : in code_t; variable index : inout code_index_t; variable result : out string) is
+  begin
+    index := index + code_length_integer_range;
+    decode_raw_string(code, index, result);
+  end procedure;
+
+  -----------------------------------------------------------------------------
+  -- raw_bit_array
+  -----------------------------------------------------------------------------
+  procedure encode_raw_bit_array(constant data : in bit_array; variable index : inout code_index_t; variable code : inout code_t) is
+    constant actual_code_length : natural := code_length_raw_bit_array(data);
+    variable value : ieee.numeric_bit.unsigned(data'length-1 downto 0) := ieee.numeric_bit.unsigned(data);
+    constant BYTE_MASK : ieee.numeric_bit.unsigned(data'length-1 downto 0) := resize(to_unsigned(basic_code_nb_values-1, basic_code_length), data'length);
+  begin
+    for i in actual_code_length-1 downto 0 loop
+      code(index + i) := character'val(to_integer(value and BYTE_MASK));
+      value := value srl basic_code_length;
+    end loop;
+    index := index + actual_code_length;
+  end procedure;
+
+  procedure decode_raw_bit_array(constant code : in code_t; variable index : inout code_index_t; variable result : out bit_array) is
+    constant actual_code_length : natural := code_length_raw_bit_array(result);
+    variable ret_val : bit_array(actual_code_length*basic_code_length-1 downto 0);
+  begin
+    for i in 0 to actual_code_length-1 loop
+      ret_val(
+        (actual_code_length-i)*basic_code_length-1 downto (actual_code_length-i-1)*basic_code_length
+      ) := bit_array(ieee.numeric_bit.to_unsigned(character'pos(code(index + i)), basic_code_length));
+    end loop;
+    result := ret_val(result'length-1 downto 0);
+    index := index + actual_code_length;
+  end procedure;
+
+  -----------------------------------------------------------------------------
+  -- bit_array
+  -----------------------------------------------------------------------------
+  procedure encode_bit_array(constant data : in bit_array; variable index : inout code_index_t; variable code : inout code_t) is
+  begin
+    encode_range(data'left, data'right, data'ascending, index, code);
+    encode_raw_bit_array(data, index, code);
+  end procedure;
+
+  procedure decode_bit_array(constant code : in code_t; variable index : inout code_index_t; variable result : out bit_array) is
+  begin
+    index := index + code_length_integer_range;
+    decode_raw_bit_array(code, index, result);
+  end procedure;
+
+  -----------------------------------------------------------------------------
+  -- bit_vector
+  -----------------------------------------------------------------------------
+  procedure encode_bit_vector(constant data : in bit_vector; variable index : inout code_index_t; variable code : inout code_t) is
+  begin
+    encode_bit_array(bit_array(data), index, code);
+  end procedure;
+
+  procedure decode_bit_vector(constant code : in code_t; variable index : inout code_index_t; variable result : out bit_vector) is
+    variable ret_val : bit_array(result'range);
+  begin
+    decode_bit_array(code, index, ret_val);
+    result := bit_vector(ret_val);
+  end procedure;
+
+  -----------------------------------------------------------------------------
+  -- ieee.numeric_bit.unsigned
+  -----------------------------------------------------------------------------
+  procedure encode_numeric_bit_unsigned(constant data : in ieee.numeric_bit.unsigned; variable index : inout code_index_t; variable code : inout code_t) is
+  begin
+    encode_bit_array(bit_array(data), index, code);
+  end procedure;
+
+  procedure decode_numeric_bit_unsigned(constant code : in code_t; variable index : inout code_index_t; variable result : out ieee.numeric_bit.unsigned) is
+    variable ret_val : bit_array(result'range);
+  begin
+    decode_bit_array(code, index, ret_val);
+    result := ieee.numeric_bit.unsigned(ret_val);
+  end procedure;
+
+  -----------------------------------------------------------------------------
+  -- ieee.numeric_bit.signed
+  -----------------------------------------------------------------------------
+  procedure encode_numeric_bit_signed(constant data : in ieee.numeric_bit.signed; variable index : inout code_index_t; variable code : inout code_t) is
+  begin
+    encode_bit_array(bit_array(data), index, code);
+  end procedure;
+
+  procedure decode_numeric_bit_signed(constant code : in code_t; variable index : inout code_index_t; variable result : out ieee.numeric_bit.signed) is
+    variable ret_val : bit_array(result'range);
+  begin
+    decode_bit_array(code, index, ret_val);
+    result := ieee.numeric_bit.signed(ret_val);
+  end procedure;
+
+  -----------------------------------------------------------------------------
+  -- raw_std_ulogic_array
+  -----------------------------------------------------------------------------
+  -- Function which transform a boolean into +1 or -1
+  function idx_increment(is_ascending : boolean) return integer is
+  begin
+      if is_ascending then
+        return 1;
+      else
+        return -1;
+      end if;
+  end function;
+
+  procedure encode_raw_std_ulogic_array(constant data : in std_ulogic_array; variable index : inout code_index_t; variable code : inout code_t) is
+    constant actual_code_length : natural := code_length_raw_std_ulogic_array(data);
+    variable i    : integer := data'left;
+    variable byte : natural;
+    constant idx_increment : integer := idx_increment(data'ascending);
+    constant factor : positive := 2**bits_length_std_ulogic;
+  begin
+    -- One std_ulogic can represent length_std_ulogic=9 value: it needs bits_length_std_ulogic=4 bits to store it.
+    -- In a character (basic_code_length=8 bits), we can store basic_code_length/bits_length_std_ulogic=2 std_ulogic elements.
+    for idx in 0 to actual_code_length-1 loop
+      -- Encode the first std_ulogic
+      byte := std_ulogic'pos(data(i));
+      -- Encode the second std_ulogic (if not at the end of the std_ulogic_array)
+      if i /= data'right then
+        i := i + idx_increment;
+        byte := byte + std_ulogic'pos(data(i)) * factor;
+        i := i + idx_increment;
+      end if;
+      -- Convert into a character and stores it into the string
+      code(index + idx) := character'val(byte);
+    end loop;
+    index := index + actual_code_length;
+  end procedure;
+
+  procedure decode_raw_std_ulogic_array(constant code : in code_t; variable index : inout code_index_t; variable result : out std_ulogic_array) is
+    constant actual_code_length : natural := code_length_raw_std_ulogic_array(result);
+    variable i : integer := result'left;
+    variable upper_nibble : natural;
+    constant idx_increment : integer := idx_increment(result'ascending);
+    constant factor : positive := 2**bits_length_std_ulogic;
+  begin
+    for idx in 0 to actual_code_length-1 loop
+      -- Decode the second std_ulogic
+        if i /= result'right then
+          upper_nibble := character'pos(code(index + idx)) / factor;
+          result(i + idx_increment) := std_ulogic'val(upper_nibble);
+        else
+          upper_nibble := 0;
+        end if;
+      -- Decode the first std_ulogic
+      result(i) := std_ulogic'val(character'pos(code(index + idx)) - upper_nibble*factor);
+      i := i + 2*idx_increment;
+    end loop;
+    index := index + actual_code_length;
+  end procedure;
+
+  -----------------------------------------------------------------------------
+  -- std_ulogic_array
+  -----------------------------------------------------------------------------
+  procedure encode_std_ulogic_array(constant data : in std_ulogic_array; variable index : inout code_index_t; variable code : inout code_t) is
+  begin
+    encode_range(data'left, data'right, data'ascending, index, code);
+    encode_raw_std_ulogic_array(data, index, code);
+  end procedure;
+
+  procedure decode_std_ulogic_array(constant code : in code_t; variable index : inout code_index_t; variable result : out std_ulogic_array) is
+  begin
+    index := index + code_length_integer_range;
+    decode_raw_std_ulogic_array(code, index, result);
+  end procedure;
+
+  -----------------------------------------------------------------------------
+  -- std_ulogic_vector
+  -----------------------------------------------------------------------------
+  procedure encode_std_ulogic_vector(constant data : in std_ulogic_vector; variable index : inout code_index_t; variable code : inout code_t) is
+  begin
+    encode_std_ulogic_array(std_ulogic_array(data), index, code);
+  end procedure;
+
+  procedure decode_std_ulogic_vector(constant code : in code_t; variable index : inout code_index_t; variable result : out std_ulogic_vector) is
+    variable ret_val : std_ulogic_array(result'range);
+  begin
+    decode_std_ulogic_array(code, index, ret_val);
+    result := std_ulogic_vector(ret_val);
+  end procedure;
+
+  -----------------------------------------------------------------------------
+  -- ieee.numeric_std.unresolved_unsigned
+  -----------------------------------------------------------------------------
+  procedure encode_numeric_std_unsigned(constant data : in ieee.numeric_std.unresolved_unsigned; variable index : inout code_index_t; variable code : inout code_t) is
+  begin
+    encode_std_ulogic_array(std_ulogic_array(data), index, code);
+  end procedure;
+
+  procedure decode_numeric_std_unsigned(constant code : in code_t; variable index : inout code_index_t; variable result : out ieee.numeric_std.unresolved_unsigned) is
+    variable ret_val : std_ulogic_array(result'range);
+  begin
+    decode_std_ulogic_array(code, index, ret_val);
+    result := ieee.numeric_std.unresolved_unsigned(ret_val);
+  end procedure;
+
+  -----------------------------------------------------------------------------
+  -- ieee.numeric_std.unresolved_signed
+  -----------------------------------------------------------------------------
+  procedure encode_numeric_std_signed(constant data : in ieee.numeric_std.unresolved_signed; variable index : inout code_index_t; variable code : inout code_t) is
+  begin
+    encode_std_ulogic_array(std_ulogic_array(data), index, code);
+  end procedure;
+
+  procedure decode_numeric_std_signed(constant code : in code_t; variable index : inout code_index_t; variable result : out ieee.numeric_std.unresolved_signed) is
+    variable ret_val : std_ulogic_array(result'range);
+  begin
+    decode_std_ulogic_array(code, index, ret_val);
+    result := ieee.numeric_std.unresolved_signed(ret_val);
+  end procedure;
+
 
   --===========================================================================
   -- Deprecated functions - Maintained for backward compatibility.
