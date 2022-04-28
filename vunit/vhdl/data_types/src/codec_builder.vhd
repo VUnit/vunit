@@ -781,9 +781,6 @@ package body codec_builder_pkg is
   begin
     code(index) := data;
     index       := index + code_length_character;
-    assert code_length_character = 1 report
-      "Character wronglength"
-    severity failure;
   end procedure;
 
   procedure decode_character(constant code : in code_t; variable index : inout code_index_t; variable result : out character) is
