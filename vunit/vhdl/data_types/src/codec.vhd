@@ -19,7 +19,6 @@ library work;
 use work.codec_builder_pkg.all;
 
 
-
 package codec_pkg is
 
   -- This packages enables the user to encode any predefined type into a unique type.
