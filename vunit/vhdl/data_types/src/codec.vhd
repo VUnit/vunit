@@ -175,15 +175,15 @@ package codec_pkg is
   alias encode is encode_std_ulogic_vector[std_ulogic_vector return code_t];
   alias decode is decode_std_ulogic_vector[code_t return std_ulogic_vector];
 
-  function encode_numeric_std_unsigned(data : ieee.numeric_std.unresolved_unsigned) return code_t;
-  function decode_numeric_std_unsigned(code : code_t) return ieee.numeric_std.unresolved_unsigned;
-  alias encode is encode_numeric_std_unsigned[ieee.numeric_std.unresolved_unsigned return code_t];
-  alias decode is decode_numeric_std_unsigned[code_t return ieee.numeric_std.unresolved_unsigned];
+  function encode_numeric_std_unsigned(data : ieee.numeric_std.unsigned) return code_t;
+  function decode_numeric_std_unsigned(code : code_t) return ieee.numeric_std.unsigned;
+  alias encode is encode_numeric_std_unsigned[ieee.numeric_std.unsigned return code_t];
+  alias decode is decode_numeric_std_unsigned[code_t return ieee.numeric_std.unsigned];
 
-  function encode_numeric_std_signed(data : ieee.numeric_std.unresolved_signed) return code_t;
-  function decode_numeric_std_signed(code : code_t) return ieee.numeric_std.unresolved_signed;
-  alias encode is encode_numeric_std_signed[ieee.numeric_std.unresolved_signed return code_t];
-  alias decode is decode_numeric_std_signed[code_t return ieee.numeric_std.unresolved_signed];
+  function encode_numeric_std_signed(data : ieee.numeric_std.signed) return code_t;
+  function decode_numeric_std_signed(code : code_t) return ieee.numeric_std.signed;
+  alias encode is encode_numeric_std_signed[ieee.numeric_std.signed return code_t];
+  alias decode is decode_numeric_std_signed[code_t return ieee.numeric_std.signed];
 
 
   --===========================================================================
@@ -659,9 +659,9 @@ package body codec_pkg is
   end function;
 
   -----------------------------------------------------------------------------
-  -- ieee.numeric_std.unresolved_unsigned
+  -- ieee.numeric_std.unsigned
   -----------------------------------------------------------------------------
-  function encode_numeric_std_unsigned(data : ieee.numeric_std.unresolved_unsigned) return code_t is
+  function encode_numeric_std_unsigned(data : ieee.numeric_std.unsigned) return code_t is
     variable ret_val : code_t(1 to code_length_numeric_std_unsigned(data'length));
     variable index   : code_index_t := ret_val'left;
   begin
@@ -669,9 +669,9 @@ package body codec_pkg is
     return ret_val;
   end function;
 
-  function decode_numeric_std_unsigned(code : code_t) return ieee.numeric_std.unresolved_unsigned is
+  function decode_numeric_std_unsigned(code : code_t) return ieee.numeric_std.unsigned is
     constant ret_range : range_t := decode_range(code);
-    variable ret_val : ieee.numeric_std.unresolved_unsigned(ret_range'range);
+    variable ret_val : ieee.numeric_std.unsigned(ret_range'range);
     variable index   : code_index_t := code'left;
   begin
     decode_numeric_std_unsigned(code, index, ret_val);
@@ -679,9 +679,9 @@ package body codec_pkg is
   end function;
 
   -----------------------------------------------------------------------------
-  -- ieee.numeric_std.unresolved_signed
+  -- ieee.numeric_std.signed
   -----------------------------------------------------------------------------
-  function encode_numeric_std_signed(data : ieee.numeric_std.unresolved_signed) return code_t is
+  function encode_numeric_std_signed(data : ieee.numeric_std.signed) return code_t is
     variable ret_val : code_t(1 to code_length_numeric_std_signed(data'length));
     variable index   : code_index_t := ret_val'left;
   begin
@@ -689,9 +689,9 @@ package body codec_pkg is
     return ret_val;
   end function;
 
-  function decode_numeric_std_signed(code : code_t) return ieee.numeric_std.unresolved_signed is
+  function decode_numeric_std_signed(code : code_t) return ieee.numeric_std.signed is
     constant ret_range : range_t := decode_range(code);
-    variable ret_val : ieee.numeric_std.unresolved_signed(ret_range'range);
+    variable ret_val : ieee.numeric_std.signed(ret_range'range);
     variable index   : code_index_t := code'left;
   begin
     decode_numeric_std_signed(code, index, ret_val);

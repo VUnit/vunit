@@ -99,18 +99,18 @@ package body common_pkg is
     end if;
   end function;
 
-  function get_simulator_real_mantisse_width(simulator_real_width : positive) return positive is
+  function get_simulator_real_mantisse_width(real_width : positive) return positive is
   begin
-    if simulator_real_width = 32 then
+    if real_width = 32 then
       return 23;
     else
       return 52;
     end if;
   end function;
 
-  function get_simulator_real_exponent_width(simulator_real_width : positive) return positive is
+  function get_simulator_real_exponent_width(real_width : positive) return positive is
   begin
-    if simulator_real_width = 32 then
+    if real_width = 32 then
       return 8;
     else
       return 11;

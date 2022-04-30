@@ -127,8 +127,8 @@ package codec_builder_pkg is
   function code_length_numeric_bit_unsigned(data : ieee.numeric_bit.unsigned) return natural;
   function code_length_numeric_bit_signed(data : ieee.numeric_bit.signed) return natural;
   function code_length_std_ulogic_vector(data : std_ulogic_vector) return natural;
-  function code_length_numeric_std_unsigned(data : ieee.numeric_std.unresolved_unsigned) return natural;
-  function code_length_numeric_std_signed(data : ieee.numeric_std.unresolved_signed) return natural;
+  function code_length_numeric_std_unsigned(data : ieee.numeric_std.unsigned) return natural;
+  function code_length_numeric_std_signed(data : ieee.numeric_std.signed) return natural;
   function code_length_bit_array(data : bit_array) return natural;
   function code_length_std_ulogic_array(data : std_ulogic_array) return natural;
 
@@ -137,8 +137,8 @@ package codec_builder_pkg is
   alias code_length is code_length_numeric_bit_unsigned[ieee.numeric_bit.unsigned return natural];
   alias code_length is code_length_numeric_bit_signed[ieee.numeric_bit.signed return natural];
   alias code_length is code_length_std_ulogic_vector[std_ulogic_vector return natural];
-  alias code_length is code_length_numeric_std_unsigned[ieee.numeric_std.unresolved_unsigned return natural];
-  alias code_length is code_length_numeric_std_signed[ieee.numeric_std.unresolved_signed return natural];
+  alias code_length is code_length_numeric_std_unsigned[ieee.numeric_std.unsigned return natural];
+  alias code_length is code_length_numeric_std_signed[ieee.numeric_std.signed return natural];
   alias code_length is code_length_bit_array[bit_array return natural];
   alias code_length is code_length_std_ulogic_array[std_ulogic_array return natural];
 
@@ -270,15 +270,15 @@ package codec_builder_pkg is
   alias encode is encode_std_ulogic_vector[std_ulogic_vector, code_index_t, code_t];
   alias decode is decode_std_ulogic_vector[code_t, code_index_t, std_ulogic_vector];
 
-  procedure encode_numeric_std_unsigned(constant data : in ieee.numeric_std.unresolved_unsigned; variable index : inout code_index_t; variable code : inout code_t);
-  procedure decode_numeric_std_unsigned(constant code : in code_t; variable index : inout code_index_t; variable result : out ieee.numeric_std.unresolved_unsigned);
-  alias encode is encode_numeric_std_unsigned[ieee.numeric_std.unresolved_unsigned, code_index_t, code_t];
-  alias decode is decode_numeric_std_unsigned[code_t, code_index_t, ieee.numeric_std.unresolved_unsigned];
+  procedure encode_numeric_std_unsigned(constant data : in ieee.numeric_std.unsigned; variable index : inout code_index_t; variable code : inout code_t);
+  procedure decode_numeric_std_unsigned(constant code : in code_t; variable index : inout code_index_t; variable result : out ieee.numeric_std.unsigned);
+  alias encode is encode_numeric_std_unsigned[ieee.numeric_std.unsigned, code_index_t, code_t];
+  alias decode is decode_numeric_std_unsigned[code_t, code_index_t, ieee.numeric_std.unsigned];
 
-  procedure encode_numeric_std_signed(constant data : in ieee.numeric_std.unresolved_signed; variable index : inout code_index_t; variable code : inout code_t);
-  procedure decode_numeric_std_signed(constant code : in code_t; variable index : inout code_index_t; variable result : out ieee.numeric_std.unresolved_signed);
-  alias encode is encode_numeric_std_signed[ieee.numeric_std.unresolved_signed, code_index_t, code_t];
-  alias decode is decode_numeric_std_signed[code_t, code_index_t, ieee.numeric_std.unresolved_signed];
+  procedure encode_numeric_std_signed(constant data : in ieee.numeric_std.signed; variable index : inout code_index_t; variable code : inout code_t);
+  procedure decode_numeric_std_signed(constant code : in code_t; variable index : inout code_index_t; variable result : out ieee.numeric_std.signed);
+  alias encode is encode_numeric_std_signed[ieee.numeric_std.signed, code_index_t, code_t];
+  alias decode is decode_numeric_std_signed[code_t, code_index_t, ieee.numeric_std.signed];
 
 
   -----------------------------------------------------------------------------
@@ -723,29 +723,29 @@ package body codec_builder_pkg is
   end function;
 
   -----------------------------------------------------------------------------
-  -- ieee.numeric_std.unresolved_unsigned
+  -- ieee.numeric_std.unsigned
   -----------------------------------------------------------------------------
-  -- We cast the ieee.numeric_std.unresolved_unsigned into a bit_array to encode it
+  -- We cast the ieee.numeric_std.unsigned into a bit_array to encode it
   function code_length_numeric_std_unsigned(length : natural) return natural is
   begin
     return code_length_std_ulogic_array(length);
   end function;
 
-  function code_length_numeric_std_unsigned(data : ieee.numeric_std.unresolved_unsigned) return natural is
+  function code_length_numeric_std_unsigned(data : ieee.numeric_std.unsigned) return natural is
   begin
     return code_length_numeric_std_unsigned(data'length);
   end function;
 
   -----------------------------------------------------------------------------
-  -- ieee.numeric_std.unresolved_signed
+  -- ieee.numeric_std.signed
   -----------------------------------------------------------------------------
-  -- We cast the ieee.numeric_std.unresolved_signed into a bit_array to encode it
+  -- We cast the ieee.numeric_std.signed into a bit_array to encode it
   function code_length_numeric_std_signed(length : natural) return natural is
   begin
     return code_length_std_ulogic_array(length);
   end function;
 
-  function code_length_numeric_std_signed(data : ieee.numeric_std.unresolved_signed) return natural is
+  function code_length_numeric_std_signed(data : ieee.numeric_std.signed) return natural is
   begin
     return code_length_numeric_std_signed(data'length);
   end function;
@@ -1049,7 +1049,7 @@ package body codec_builder_pkg is
   procedure decode_raw_string(constant code : in code_t; variable index : inout code_index_t; variable result : out string) is
   begin
     result := code(index to index + result'length - 1);
-    index  := index + code_length_raw_string(result);
+    index  := index + code_length_raw_string(result'length);
   end procedure;
 
   -----------------------------------------------------------------------------
@@ -1085,7 +1085,7 @@ package body codec_builder_pkg is
   end procedure;
 
   procedure decode_raw_bit_array(constant code : in code_t; variable index : inout code_index_t; variable result : out bit_array) is
-    constant actual_code_length : natural := code_length_raw_bit_array(result);
+    constant actual_code_length : natural := code_length_raw_bit_array(result'length);
     variable ret_val : bit_array(actual_code_length*basic_code_length-1 downto 0);
   begin
     for i in 0 to actual_code_length-1 loop
@@ -1174,7 +1174,7 @@ package body codec_builder_pkg is
     constant actual_code_length : natural := code_length_raw_std_ulogic_array(data);
     variable i    : integer := data'left;
     variable byte : natural;
-    constant idx_increment : integer := idx_increment(data'ascending);
+    constant increment : integer := idx_increment(data'ascending);
     constant factor : positive := 2**bits_length_std_ulogic;
   begin
     -- One std_ulogic can represent length_std_ulogic=9 value: it needs bits_length_std_ulogic=4 bits to store it.
@@ -1184,9 +1184,9 @@ package body codec_builder_pkg is
       byte := std_ulogic'pos(data(i));
       -- Encode the second std_ulogic (if not at the end of the std_ulogic_array)
       if i /= data'right then
-        i := i + idx_increment;
+        i := i + increment;
         byte := byte + std_ulogic'pos(data(i)) * factor;
-        i := i + idx_increment;
+        i := i + increment;
       end if;
       -- Convert into a character and stores it into the string
       code(index + idx) := character'val(byte);
@@ -1195,23 +1195,23 @@ package body codec_builder_pkg is
   end procedure;
 
   procedure decode_raw_std_ulogic_array(constant code : in code_t; variable index : inout code_index_t; variable result : out std_ulogic_array) is
-    constant actual_code_length : natural := code_length_raw_std_ulogic_array(result);
+    constant actual_code_length : natural := code_length_raw_std_ulogic_array(result'length);
     variable i : integer := result'left;
     variable upper_nibble : natural;
-    constant idx_increment : integer := idx_increment(result'ascending);
+    constant increment : integer := idx_increment(result'ascending);
     constant factor : positive := 2**bits_length_std_ulogic;
   begin
     for idx in 0 to actual_code_length-1 loop
       -- Decode the second std_ulogic
         if i /= result'right then
           upper_nibble := character'pos(code(index + idx)) / factor;
-          result(i + idx_increment) := std_ulogic'val(upper_nibble);
+          result(i + increment) := std_ulogic'val(upper_nibble);
         else
           upper_nibble := 0;
         end if;
       -- Decode the first std_ulogic
       result(i) := std_ulogic'val(character'pos(code(index + idx)) - upper_nibble*factor);
-      i := i + 2*idx_increment;
+      i := i + 2*increment;
     end loop;
     index := index + actual_code_length;
   end procedure;
@@ -1247,33 +1247,33 @@ package body codec_builder_pkg is
   end procedure;
 
   -----------------------------------------------------------------------------
-  -- ieee.numeric_std.unresolved_unsigned
+  -- ieee.numeric_std.unsigned
   -----------------------------------------------------------------------------
-  procedure encode_numeric_std_unsigned(constant data : in ieee.numeric_std.unresolved_unsigned; variable index : inout code_index_t; variable code : inout code_t) is
+  procedure encode_numeric_std_unsigned(constant data : in ieee.numeric_std.unsigned; variable index : inout code_index_t; variable code : inout code_t) is
   begin
     encode_std_ulogic_array(std_ulogic_array(data), index, code);
   end procedure;
 
-  procedure decode_numeric_std_unsigned(constant code : in code_t; variable index : inout code_index_t; variable result : out ieee.numeric_std.unresolved_unsigned) is
+  procedure decode_numeric_std_unsigned(constant code : in code_t; variable index : inout code_index_t; variable result : out ieee.numeric_std.unsigned) is
     variable ret_val : std_ulogic_array(result'range);
   begin
     decode_std_ulogic_array(code, index, ret_val);
-    result := ieee.numeric_std.unresolved_unsigned(ret_val);
+    result := ieee.numeric_std.unsigned(ret_val);
   end procedure;
 
   -----------------------------------------------------------------------------
-  -- ieee.numeric_std.unresolved_signed
+  -- ieee.numeric_std.signed
   -----------------------------------------------------------------------------
-  procedure encode_numeric_std_signed(constant data : in ieee.numeric_std.unresolved_signed; variable index : inout code_index_t; variable code : inout code_t) is
+  procedure encode_numeric_std_signed(constant data : in ieee.numeric_std.signed; variable index : inout code_index_t; variable code : inout code_t) is
   begin
     encode_std_ulogic_array(std_ulogic_array(data), index, code);
   end procedure;
 
-  procedure decode_numeric_std_signed(constant code : in code_t; variable index : inout code_index_t; variable result : out ieee.numeric_std.unresolved_signed) is
+  procedure decode_numeric_std_signed(constant code : in code_t; variable index : inout code_index_t; variable result : out ieee.numeric_std.signed) is
     variable ret_val : std_ulogic_array(result'range);
   begin
     decode_std_ulogic_array(code, index, ret_val);
-    result := ieee.numeric_std.unresolved_signed(ret_val);
+    result := ieee.numeric_std.signed(ret_val);
   end procedure;
 
 
@@ -1296,12 +1296,12 @@ package body codec_builder_pkg is
 
   -- Deprecated. Maintained for backward compatibility.
   function encode_array_header (
-    constant range_left1   : code_t;
-    constant range_right1  : code_t;
-    constant is_ascending1 : code_t;
-    constant range_left2   : code_t := "";
-    constant range_right2  : code_t := "";
-    constant is_ascending2 : code_t := "T"
+    constant range_left1   : in code_t;
+    constant range_right1  : in code_t;
+    constant is_ascending1 : in code_t;
+    constant range_left2   : in code_t := "";
+    constant range_right2  : in code_t := "";
+    constant is_ascending2 : in code_t := "T"
   ) return code_t is
   begin
     assert False report
