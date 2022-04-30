@@ -1057,8 +1057,6 @@ package body codec_builder_pkg is
   -----------------------------------------------------------------------------
   procedure encode_string(constant data : in string; variable index : inout code_index_t; variable code : inout code_t) is
   begin
-    -- Note: Modelsim sets data'right to 0 which is out of the positive
-    -- index range used by strings.
     encode_range(data'left, data'right, data'ascending, index, code);
     encode_raw_string(data, index, code);
   end procedure;
@@ -1074,12 +1072,13 @@ package body codec_builder_pkg is
   -----------------------------------------------------------------------------
   procedure encode_raw_bit_array(constant data : in bit_array; variable index : inout code_index_t; variable code : inout code_t) is
     constant actual_code_length : natural := code_length_raw_bit_array(data);
-    variable value : ieee.numeric_bit.unsigned(data'length-1 downto 0) := ieee.numeric_bit.unsigned(data);
-    constant BYTE_MASK : ieee.numeric_bit.unsigned(data'length-1 downto 0) := resize(to_unsigned(basic_code_nb_values-1, basic_code_length), data'length);
+    variable value : bit_array(ceil_div(data'length, basic_code_length)*basic_code_length-1 downto 0);
+    variable byte : bit_array(basic_code_length-1 downto 0);
   begin
-    for i in actual_code_length-1 downto 0 loop
-      code(index + i) := character'val(to_integer(value and BYTE_MASK));
-      value := value srl basic_code_length;
+    value(data'length-1 downto 0) := data;
+    for i in 0 to actual_code_length-1 loop
+      byte := value(basic_code_length*(i+1)-1 downto basic_code_length*i);
+      code(index + actual_code_length - i - 1) := character'val(to_integer(ieee.numeric_bit.unsigned(byte)));
     end loop;
     index := index + actual_code_length;
   end procedure;
@@ -1123,8 +1122,12 @@ package body codec_builder_pkg is
   procedure decode_bit_vector(constant code : in code_t; variable index : inout code_index_t; variable result : out bit_vector) is
     variable ret_val : bit_array(result'range);
   begin
-    decode_bit_array(code, index, ret_val);
-    result := bit_vector(ret_val);
+    if ret_val'length /= 0 then -- GHDL work-around (see explanation at the end of the file)
+      decode_bit_array(code, index, ret_val);
+      result := bit_vector(ret_val);
+    else
+      result := "";
+    end if;
   end procedure;
 
   -----------------------------------------------------------------------------
@@ -1138,8 +1141,12 @@ package body codec_builder_pkg is
   procedure decode_numeric_bit_unsigned(constant code : in code_t; variable index : inout code_index_t; variable result : out ieee.numeric_bit.unsigned) is
     variable ret_val : bit_array(result'range);
   begin
-    decode_bit_array(code, index, ret_val);
-    result := ieee.numeric_bit.unsigned(ret_val);
+    if ret_val'length /= 0 then -- GHDL work-around (see explanation at the end of the file)
+      decode_bit_array(code, index, ret_val);
+      result := ieee.numeric_bit.unsigned(ret_val);
+    else
+      result := "";
+    end if;
   end procedure;
 
   -----------------------------------------------------------------------------
@@ -1153,8 +1160,12 @@ package body codec_builder_pkg is
   procedure decode_numeric_bit_signed(constant code : in code_t; variable index : inout code_index_t; variable result : out ieee.numeric_bit.signed) is
     variable ret_val : bit_array(result'range);
   begin
-    decode_bit_array(code, index, ret_val);
-    result := ieee.numeric_bit.signed(ret_val);
+    if ret_val'length /= 0 then -- GHDL work-around (see explanation at the end of the file)
+      decode_bit_array(code, index, ret_val);
+      result := ieee.numeric_bit.signed(ret_val);
+    else
+      result := "";
+    end if;
   end procedure;
 
   -----------------------------------------------------------------------------
@@ -1227,8 +1238,12 @@ package body codec_builder_pkg is
 
   procedure decode_std_ulogic_array(constant code : in code_t; variable index : inout code_index_t; variable result : out std_ulogic_array) is
   begin
-    index := index + code_length_integer_range;
-    decode_raw_std_ulogic_array(code, index, result);
+    if result'length /= 0 then -- GHDL work-around (see explanation at the end of the file)
+      index := index + code_length_integer_range;
+      decode_raw_std_ulogic_array(code, index, result);
+    else
+      result := "";
+    end if;
   end procedure;
 
   -----------------------------------------------------------------------------
@@ -1242,8 +1257,12 @@ package body codec_builder_pkg is
   procedure decode_std_ulogic_vector(constant code : in code_t; variable index : inout code_index_t; variable result : out std_ulogic_vector) is
     variable ret_val : std_ulogic_array(result'range);
   begin
-    decode_std_ulogic_array(code, index, ret_val);
-    result := std_ulogic_vector(ret_val);
+    if ret_val'length /= 0 then -- GHDL work-around (see explanation at the end of the file)
+      decode_std_ulogic_array(code, index, ret_val);
+      result := std_ulogic_vector(ret_val);
+    else
+      result := "";
+    end if;
   end procedure;
 
   -----------------------------------------------------------------------------
@@ -1257,8 +1276,12 @@ package body codec_builder_pkg is
   procedure decode_numeric_std_unsigned(constant code : in code_t; variable index : inout code_index_t; variable result : out ieee.numeric_std.unsigned) is
     variable ret_val : std_ulogic_array(result'range);
   begin
-    decode_std_ulogic_array(code, index, ret_val);
-    result := ieee.numeric_std.unsigned(ret_val);
+    if ret_val'length /= 0 then -- GHDL work-around (see explanation at the end of the file)
+      decode_std_ulogic_array(code, index, ret_val);
+      result := ieee.numeric_std.unsigned(ret_val);
+    else
+      result := "";
+    end if;
   end procedure;
 
   -----------------------------------------------------------------------------
@@ -1272,8 +1295,12 @@ package body codec_builder_pkg is
   procedure decode_numeric_std_signed(constant code : in code_t; variable index : inout code_index_t; variable result : out ieee.numeric_std.signed) is
     variable ret_val : std_ulogic_array(result'range);
   begin
-    decode_std_ulogic_array(code, index, ret_val);
-    result := ieee.numeric_std.signed(ret_val);
+    if ret_val'length /= 0 then -- GHDL work-around (see explanation at the end of the file)
+      decode_std_ulogic_array(code, index, ret_val);
+      result := ieee.numeric_std.signed(ret_val);
+    else
+      result := "";
+    end if;
   end procedure;
 
 
@@ -1337,5 +1364,22 @@ package body codec_builder_pkg is
     decode_raw_bit_array(byte_array, index, ret_val);
     return bit_vector(ret_val);
   end function;
+
+
+
+  --===========================================================================
+  -- GHDL limitations
+  --===========================================================================
+
+  -- GHDL work-around: GHDL raises an error when casting a null
+  -- range of type bit_array(-1 downto 0) to bit_vector.
+  -- Error: 'bound check failure'
+  -- However:
+  -- LRM VHDL-2008: '5.2.1 General'
+  -- > A constraint is compatible with a subtype if each bound of the
+  --   range belongs to the subtype or if the range constraint defines
+  --   a null range. Otherwise, the range constraint is not compatible
+  --   with the subtype.
+  -- This happens for conversion between array types
 
 end package body;

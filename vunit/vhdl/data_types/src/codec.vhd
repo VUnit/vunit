@@ -36,7 +36,7 @@ package codec_pkg is
   --===========================================================================
   -- All data going through the encoding process becomes a string: it
   -- basically becomes a sequence of bytes without any overhead for type
-  -- information. The 'codec' package doesn’t know if four bytes represents an
+  -- information. The 'codec' package does not know if four bytes represents an
   -- integer, four characters or something else. The interpretation of these
   -- bytes takes place when the user decodes the data using a type specific
   -- 'decode' function.

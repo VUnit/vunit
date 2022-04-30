@@ -16,6 +16,7 @@ use vunit_lib.path.all;
 use vunit_lib.queue_pkg.all;
 use vunit_lib.integer_vector_ptr_pkg.all;
 use vunit_lib.codec_pkg.all;
+use vunit_lib.codec_builder_pkg.all;
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -94,7 +95,9 @@ begin
     variable null_string         : string(10 to 9);
     variable t1  : time;
     variable string_15_downto_4 : string(15 downto 4);
+    variable bit_array_m3_downto_m5 : bit_array(-3 downto -5);
     variable bit_vector_5_downto_3 : bit_vector(5 downto 3);
+    variable std_ulogic_array_m3_downto_m5 : std_ulogic_array(-3 downto -5);
     variable std_ulogic_vector_5_downto_3 : std_ulogic_vector(5 downto 3);
     variable numeric_bit_unsigned_5_downto_3 : ieee.numeric_bit.unsigned(5 downto 3);
     variable numeric_bit_signed_5_downto_3 : ieee.numeric_bit.signed(5 downto 3);
@@ -108,10 +111,22 @@ begin
     function get_decoded_range_right ( constant vec: string ) return integer is
     begin return vec'right; end;
 
+    function get_decoded_range_left ( constant vec: bit_array ) return integer is
+    begin return vec'left; end;
+
+    function get_decoded_range_right ( constant vec: bit_array ) return integer is
+    begin return vec'right; end;
+
     function get_decoded_range_left ( constant vec: bit_vector ) return integer is
     begin return vec'left; end;
 
     function get_decoded_range_right ( constant vec: bit_vector ) return integer is
+    begin return vec'right; end;
+
+    function get_decoded_range_left ( constant vec: std_ulogic_array ) return integer is
+    begin return vec'left; end;
+
+    function get_decoded_range_right ( constant vec: std_ulogic_array ) return integer is
     begin return vec'right; end;
 
     function get_decoded_range_left ( constant vec: std_ulogic_vector ) return integer is
@@ -219,6 +234,14 @@ begin
         check_relation(decode_string(encode_string(string_15_downto_4)) = string'("Hello world!"));
         check_relation(get_decoded_range_left(decode_string(encode_string(string_15_downto_4))) = 15);
         check_relation(get_decoded_range_right(decode_string(encode_string(string_15_downto_4))) = 4);
+      elsif run("Test that bit_array can be encoded and decoded") then
+        bit_array_m3_downto_m5 := "101";
+        check_relation(decode_bit_array(encode_bit_array("101")) = bit_array'("101"));
+        check_relation(decode_bit_array(encode_bit_array("1")) = bit_array'("1"));
+        check_relation(decode_bit_array(encode_bit_array("")) = bit_array'(""));
+        check_relation(decode_bit_array(encode_bit_array(bit_array_m3_downto_m5)) = bit_array'("101"));
+        check_relation(get_decoded_range_left(decode_bit_array(encode_bit_array(bit_array_m3_downto_m5))) = -3);
+        check_relation(get_decoded_range_right(decode_bit_array(encode_bit_array(bit_array_m3_downto_m5))) = -5);
       elsif run("Test that bit_vector can be encoded and decoded") then
         bit_vector_5_downto_3 := "101";
         check_relation(decode_bit_vector(encode_bit_vector("101")) = bit_vector'("101"));
@@ -227,6 +250,14 @@ begin
         check_relation(decode_bit_vector(encode_bit_vector(bit_vector_5_downto_3)) = bit_vector'("101"));
         check_relation(get_decoded_range_left(decode_bit_vector(encode_bit_vector(bit_vector_5_downto_3))) = 5);
         check_relation(get_decoded_range_right(decode_bit_vector(encode_bit_vector(bit_vector_5_downto_3))) = 3);
+      elsif run("Test that std_ulogic_array can be encoded and decoded") then
+        std_ulogic_array_m3_downto_m5 := "XU1";
+        check_relation(decode_std_ulogic_array(encode_std_ulogic_array("XU1")) = std_ulogic_array'("XU1"));
+        check_relation(decode_std_ulogic_array(encode_std_ulogic_array("X")) = std_ulogic_array'("X"));
+        check_relation(decode_std_ulogic_array(encode_std_ulogic_array("")) = std_ulogic_array'(""));
+        check_relation(decode_std_ulogic_array(encode_std_ulogic_array(std_ulogic_array_m3_downto_m5)) = std_ulogic_array'("XU1"));
+        check_relation(get_decoded_range_left(decode_std_ulogic_array(encode_std_ulogic_array(std_ulogic_array_m3_downto_m5))) = -3);
+        check_relation(get_decoded_range_right(decode_std_ulogic_array(encode_std_ulogic_array(std_ulogic_array_m3_downto_m5))) = -5);
       elsif run("Test that std_ulogic_vector can be encoded and decoded") then
         std_ulogic_vector_5_downto_3 := "XU1";
         check_relation(decode_std_ulogic_vector(encode_std_ulogic_vector("XU1")) = std_ulogic_vector'("XU1"));
