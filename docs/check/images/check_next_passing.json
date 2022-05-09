@@ -6,8 +6,8 @@
    {name: 'expr', wave: '0.....10'},
    {name: 'active_clock_edge', wave: '=.......', data: ['rising_edge']},
    {name: 'num_cks', wave: '=.......', data: ['4']},
-   {name: 'allow_overlapping', wave: '=.......', data: ['true']},
-   {name: 'allow_missing_start', wave: '=.......', data: ['true']}
+   {name: 'allow_overlapping', wave: '=.......', data: ['true/false']},
+   {name: 'allow_missing_start', wave: '=.......', data: ['true/false']}
  ],
  head:{
    tick:0,

@@ -951,7 +951,11 @@ the second start event
 When ``allow_missing_start`` is ``true`` ``check_next`` will allow
 ``expr = '1'`` when there is no corresponding start event. When
 ``allow_missing_start`` is ``false`` such a situation will lead to a
-failure.
+failure. Here is an example where ``expr`` is at ``'1'`` for one
+cycles with no corresponding start event.
+
+.. figure:: images/check_next_passing_with_missing_start.png
+   :alt:
 
 Any unknown value  (``U``, ``X``, ``Z``, ``W``, or ``-``) on ``start_event``
 will cause an error.
