@@ -1,0 +1,15 @@
+{
+  signal: [
+    {name: 'clock', wave: 'p.........'},
+    {name: 'en', wave: '1...01....'},
+    {name: 'start_event', wave: '010.......'},
+    {name: 'expr', wave: '0.....1010'},
+    {name: 'active_clock_edge', wave: '=.........', data: ['rising_edge']},
+    {name: 'num_cks', wave: '=.........', data: ['4']},
+    {name: 'allow_overlapping', wave: '=.........', data: ['true']},
+    {name: 'allow_missing_start', wave: '=.........', data: ['true']}
+  ],
+  head:{
+    tick:0,
+  }
+}
