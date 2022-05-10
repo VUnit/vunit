@@ -637,7 +637,9 @@ class VHDLInterfaceElement(object):
         """
         if is_signal:
             # Remove 'signal' string if a signal is being parsed
-            code = re.sub("\bsignal\b", "", code)
+            # Note, the string must be a raw string for the word boundary '\b' to work properly
+            # see documentation https://docs.python.org/3/howto/regex.html#more-metacharacters
+            code = re.sub(r"\bsignal\b", "", code)
 
         interface_element_string = code
 
