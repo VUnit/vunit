@@ -84,6 +84,8 @@ package runner_pkg is
 
   procedure inc_num_of_run_test_cases(runner : runner_t);
 
+  procedure set_num_of_run_test_cases(runner : runner_t; new_value : integer);
+
   procedure set_has_run_since_last_loop_check(runner : runner_t);
 
   procedure clear_has_run_since_last_loop_check(runner : runner_t);
@@ -423,6 +425,11 @@ package body runner_pkg is
   procedure inc_num_of_run_test_cases(runner : runner_t) is
   begin
     set(runner.p_data, n_run_test_cases_idx, get_num_of_run_test_cases(runner) + 1);
+  end;
+
+  procedure set_num_of_run_test_cases(runner : runner_t; new_value : integer) is
+  begin
+    set(runner.p_data, n_run_test_cases_idx, new_value);
   end;
 
   procedure set_has_run_since_last_loop_check(runner : runner_t) is
