@@ -468,6 +468,27 @@ begin
     test_case_cleanup;
 
     ---------------------------------------------------------------------------
+    banner("Should prevent from running a test from enabled_test_case more than once unless re-initialized.");
+    test_case_setup;
+    test_runner_setup(runner, "enabled_test_cases : Should one");
+    for i in 0 to 1 loop
+      case i is
+        when 0 =>
+          check(c, run("Should one"), "Expected ""Should one"" to run.");
+        when others =>
+          check_false(c, run("Should one"), "Didn't expected ""Should one"" to run.");
+      end case;
+    end loop;
+    check_false(c, run("Should one"), "Didn't expect ""Should one"" to run.");
+    test_runner_setup(runner, "enabled_test_cases : Should one");
+    while test_suite loop
+      check(c, run("Should one"), "Expected ""Should one"" to run.");
+      exit;
+    end loop;
+
+    test_case_cleanup;
+
+    ---------------------------------------------------------------------------
     --banner("Should be possible to exit a test case or test suite with an error message that can be caught afterwards.");
     --test_case_setup;
     --test_runner_setup(runner, "test a, test b");
