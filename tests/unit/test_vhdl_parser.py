@@ -403,6 +403,7 @@ end entity;
         self.assertEqual(ports[11].subtype_indication.code, "type_signal")
         self.assertEqual(ports[11].subtype_indication.type_mark, "type_signal")
         self.assertEqual(ports[11].subtype_indication.constraint, None)
+
     def test_parsing_simple_package_body(self):
         package_body = self.parse_single_package_body(
             """\
