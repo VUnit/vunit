@@ -636,8 +636,8 @@ class VHDLInterfaceElement(object):
         Returns a new instance by parsing the code
         """
         if is_signal:
-            # Remove 'signal' string if a signal is beeing parsed
-            code = code.replace("signal", "")
+            # Remove 'signal' string if a signal is being parsed
+            code = re.sub("\bsignal\b", "", code)
 
         interface_element_string = code
 
