@@ -299,17 +299,17 @@ end entity;
 entity name is
 port (
     clk : in std_logic;
-    data : out std_logic_vector(11-1 downto 0);
+ \t data : out std_logic_vector(11-1 downto 0);
     signal_data2 : in std_logic;
-    data3 :\tin signal_type;
-    data4_signal : in std_logic;
+\t  data3 :\tin signal_type;
+    data4_signal : in\tstd_logic;
     data5\t: in type_signal;
-    signal clk2 : in std_logic;
+\t\tsignal clk2 : in std_logic;
     signal\tdata7 : out std_logic_vector(11-1 downto 0);
     signal signal_data8 : in std_logic;
-    signal data9 : in signal_type;
+    signal\t data9 : in signal_type;
     signal data10_signal :\tin std_logic;\t
-    signal data11 : in type_signal
+    signal \t data11 : in type_signal
 );
 end entity;
 """
