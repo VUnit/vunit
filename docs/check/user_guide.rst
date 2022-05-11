@@ -431,6 +431,7 @@ The figure below shows an example using the concurrent version of
 ``check``.
 
 .. figure:: images/check_true.png
+   :align: center
    :alt:
 
 ``expr`` is evaluated on every rising clock edge except for edge 3 where
@@ -885,6 +886,7 @@ edge for the end event. Bits within ``expr`` may change drive strength
 stable. Below is an example with two windows that will pass.
 
 .. figure:: images/check_stable_passing.png
+   :align: center
    :alt:
 
 Here are two examples of failing checks. Note that any unknown value
@@ -894,6 +896,7 @@ if the unknown value is constant. The check will also fail if
 value.
 
 .. figure:: images/check_stable_failing.png
+   :align: center
    :alt:
 
 ``check_stable`` can handle one clock cycle windows and back-to-back
@@ -935,6 +938,7 @@ expected to be high four enabled clock edges after that which is at
 clock edge seven due to ``en`` being low at clock edge five.
 
 .. figure:: images/check_next_passing.png
+   :align: center
    :alt:
 
 When ``allow_overlapping`` is ``true`` ``check_next`` will allow a new
@@ -943,6 +947,7 @@ completed. Here is an example with two overlapping and passing
 sequences.
 
 .. figure:: images/check_next_passing_with_overlap.png
+   :align: center
    :alt:
 
 In case ``allow_overlapping`` is ``false`` ``check_next`` will fail at
@@ -955,6 +960,7 @@ failure. Here is an example where ``expr`` is at ``'1'`` for one
 cycles with no corresponding start event.
 
 .. figure:: images/check_next_passing_with_missing_start.png
+   :align: center
    :alt:
 
 Any unknown value  (``U``, ``X``, ``Z``, ``W``, or ``-``) on ``start_event``
@@ -999,12 +1005,14 @@ controlled by the ``trigger_event`` parameter:
 The figure below shows two overlapping sequences that pass.
 
 .. figure:: images/check_sequence_first_pipe_passing.png
+   :align: center
    :alt:
 
 In this example the sequence is started but not completed and the check
 fails.
 
 .. figure:: images/check_sequence_first_pipe_failing.png
+   :align: center
    :alt:
 
 -  ``first_no_pipe`` - Same as ``first_pipe`` with the exception that
@@ -1016,6 +1024,7 @@ second is interrupted. However, since only one sequence is handled at a
 time the second is ignored and the check pass.
 
 .. figure:: images/check_sequence_first_no_pipe_passing.png
+   :align: center
    :alt:
 
 -  ``penultimate`` - The difference with the previous modes is that
@@ -1030,12 +1039,14 @@ early interrupted sequence that doesn't cause a failure in this mode
 (which it did in the example for the ``first_pipe`` mode.
 
 .. figure:: images/check_sequence_penultimate_passing.png
+   :align: center
    :alt:
 
 In this example the sequence is interrupted after the second to last bit
 is activated and the check fails.
 
 .. figure:: images/check_sequence_penultimate_failing.png
+   :align: center
    :alt:
 
 
