@@ -151,7 +151,7 @@ class Builtins(object):
         Add osvvm library
         """
         library = self._add_library_if_not_exist(
-            "osvvm", "Library 'OSVVM' previously defined. Skipping addition of builtin OSVVM (2021.12)."
+            "osvvm", "Library 'OSVVM' previously defined. Skipping addition of builtin OSVVM (2022.04)."
         )
         if library is None:
             return
