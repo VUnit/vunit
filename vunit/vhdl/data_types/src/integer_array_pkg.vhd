@@ -178,4 +178,18 @@ package integer_array_pkg is
     arr       : integer_array_t;
     file_name : string
   );
+
+  function encode (
+    data : integer_array_t
+  ) return string;
+
+  function decode (
+    code : string
+  ) return integer_array_t;
+
+  procedure decode (
+    constant code   : string;
+    variable index  : inout positive;
+    variable result : out integer_array_t
+  );
 end package;
