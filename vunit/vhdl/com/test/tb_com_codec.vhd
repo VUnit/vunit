@@ -88,9 +88,10 @@ begin
         check_relation(enum1 = green);
         enum1 := decode(encode(blue));
         check_relation(enum1 = blue);
-      elsif run("Test that custom enumeration type can be pushed and popped") then
+      elsif run("Test that custom enumeration type can be pushed, peeked and popped") then
         msg := new_msg;
         push_enum1_t(msg, red);
+        check_relation(peek_enum1_t(msg) = red, result("for peek_enum1"));
         check_relation(pop_enum1_t(msg) = red, result("for pop_enum1"));
       elsif run("Test that custom record type can be encoded and decoded") then
         rec1 := decode(encode_record1_t((character'pos(lp), -1, -2, -3)));
@@ -107,10 +108,11 @@ begin
         check_relation(rec3 = (char => lp));
         rec3 := decode(encode_record3_t((char => rp)));
         check_relation(rec3 = (char => rp));
-      elsif run("Test that custom record type can be pushed and popped") then
+      elsif run("Test that custom record type can be pushed, peeked and popped") then
         msg := new_msg;
         rec1 := (character'pos(lp), -1, -2, -3);
         push_record1_t(msg, rec1);
+        check_relation(peek_record1_t(msg) = rec1, result("for peek_record1_t"));
         check_relation(pop_record1_t(msg) = rec1, result("for pop_record1_t"));
       elsif run("Test that custom array can be encoded and decoded") then
         a1 := decode(encode_array1_t((0, 1, 2, 3, 4)));
@@ -176,22 +178,26 @@ begin
         check_relation(a10'right(1) = 2);
         check_relation(a10'left(2) = -1);
         check_relation(a10'right(2) = 1);
-      elsif run("Test that custom array can be pushed and popped") then
+      elsif run("Test that custom array can be pushed, peeked and popped") then
         msg := new_msg;
         a1 := (0, 1, 2, 3, 4);
         push_array1_t(msg, a1);
+        check_relation(peek_array1_t(msg) = a1, result("for peek_array1_t"));
         check_relation(pop_array1_t(msg) = a1, result("for pop_array1_t"));
 
         a3 := ((0, 1, 2), (3, 4, 5), (6, 7, 8), (9, 10, 11), (12, 13, 14));
         push_array3_t(msg, a3);
+        check_relation(peek_array3_t(msg) = a3, result("for peek_array3_t"));
         check_relation(pop_array3_t(msg) = a3, result("for pop_array3_t"));
 
         a4 := (0, 1, 2, 3, 4);
         push_array4_t(msg, a4);
+        check_relation(peek_array4_t(msg) = a4, result("for peek_array4_t"));
         check_relation(pop_array4_t(msg) = a4, result("for pop_array4_t"));
 
         a5 := ((0, 1, 2), (3, 4, 5), (6, 7, 8), (9, 10, 11), (12, 13, 14));
         push_array5_t(msg, a5);
+        check_relation(peek_array5_t(msg) = a5, result("for peek_array5_t"));
         check_relation(pop_array5_t(msg) = a5, result("for pop_array5_t"));
 
       elsif run("Test that all provided codecs can be used within a composite") then

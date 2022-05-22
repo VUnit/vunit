@@ -23,27 +23,30 @@ use work.logger_pkg.all;
 use work.queue_pkg.all;
 use work.queue_2008p_pkg.all;
 use work.queue_pool_pkg.all;
+use work.codec_builder_pkg.all;
 
 package com_types_pkg is
 
   -- These status types are mostly internal to com and will cause runtime
   -- errors. Only ok and timeout will ever be returned to the user
-  type com_status_t is (ok,
-                        timeout,
-                        null_message_error,
-                        unknown_actor_error,
-                        unknown_receiver_error,
-                        unknown_subscriber_error,
-                        unknown_publisher_error,
-                        deferred_receiver_error,
-                        already_a_subscriber_error,
-                        not_a_subscriber_error,
-                        full_inbox_error,
-                        reply_missing_request_id_error,
-                        unknown_request_id_error,
-                        deprecated_interface_error,
-                        insufficient_size_error,
-                        duplicate_actor_name_error);
+  type com_status_t is (
+    ok,
+    timeout,
+    null_message_error,
+    unknown_actor_error,
+    unknown_receiver_error,
+    unknown_subscriber_error,
+    unknown_publisher_error,
+    deferred_receiver_error,
+    already_a_subscriber_error,
+    not_a_subscriber_error,
+    full_inbox_error,
+    reply_missing_request_id_error,
+    unknown_request_id_error,
+    deprecated_interface_error,
+    insufficient_size_error,
+    duplicate_actor_name_error
+  );
 
   subtype com_error_t is com_status_t range timeout to duplicate_actor_name_error;
 
@@ -71,7 +74,8 @@ package com_types_pkg is
   end record;
 
   constant p_msg_types : msg_types_t := (
-    p_name_ptrs => new_integer_vector_ptr);
+    p_name_ptrs => new_integer_vector_ptr
+  );
 
 
   -- Every message has a unique ID unless its a message from an inbound or
@@ -117,7 +121,8 @@ package com_types_pkg is
     sender => null_actor,
     receiver => null_actor,
     request_id => no_message_id,
-    data => null_queue);
+    data => null_queue
+  );
 
   -- A subscriber can subscribe on three different types of traffic:
   --
@@ -185,15 +190,34 @@ package com_types_pkg is
   impure function new_msg_type(name : string) return msg_type_t;
   impure function name(msg_type : msg_type_t) return string;
 
-  procedure unexpected_msg_type(msg_type : msg_type_t;
-                                logger : logger_t := com_logger);
+  procedure unexpected_msg_type(
+    msg_type : msg_type_t;
+    logger : logger_t := com_logger
+  );
 
   procedure push_msg_type(msg : msg_t; msg_type : msg_type_t; logger : logger_t := com_logger);
   alias push is push_msg_type [msg_t, msg_type_t, logger_t];
 
-  impure function pop_msg_type(msg : msg_t;
-                               logger : logger_t := com_logger) return msg_type_t;
+  impure function pop_msg_type(
+    msg : msg_t;
+    logger : logger_t := com_logger
+  ) return msg_type_t;
   alias pop is pop_msg_type [msg_t, logger_t return msg_type_t];
+
+  procedure peek_msg_type(
+    msg : msg_t;
+    logger : logger_t := com_logger;
+    variable ret_val : out msg_type_t;
+    variable offset : inout natural
+  );
+
+  impure function peek_msg_type(
+    msg : msg_t;
+    logger : logger_t := com_logger
+  ) return msg_type_t;
+
+  alias peek is peek_msg_type [msg_t, logger_t, msg_type_t, natural];
+  alias peek is peek_msg_type [msg_t, logger_t return msg_type_t];
 
   procedure handle_message(variable msg_type : inout msg_type_t);
   impure function is_already_handled(msg_type : msg_type_t) return boolean;
@@ -206,7 +230,8 @@ package com_types_pkg is
   -- or signed with the sending actor
   impure function new_msg(
     msg_type : msg_type_t := null_msg_type;
-    sender : actor_t := null_actor) return msg_t;
+    sender : actor_t := null_actor
+  ) return msg_t;
 
   impure function copy(msg : msg_t) return msg_t;
 
@@ -232,167 +257,423 @@ package com_types_pkg is
   -- Pop a message from a queue.
   impure function pop(queue : queue_t) return msg_t;
 
+  -- Peek a message from a queue (do not consume the message).
+  procedure peek(
+    queue : queue_t;
+    variable ret_val : out msg_t;
+    variable offset : inout natural
+  );
+  impure function peek(queue : queue_t) return msg_t;
+
   -----------------------------------------------------------------------------
   -- Subprograms for pushing/popping data to/from a message. Data is popped
   -- from a message in the same order they were pushed (FIFO)
   -----------------------------------------------------------------------------
   procedure push(msg : msg_t; value : integer);
   impure function pop(msg : msg_t) return integer;
+  procedure peek(
+    msg : msg_t;
+    variable value : out integer;
+    variable offset : inout natural
+  );
+  impure function peek(msg : msg_t) return integer;
   alias push_integer is push[msg_t, integer];
   alias pop_integer is pop[msg_t return integer];
+  alias peek_integer is peek[msg_t, integer, natural];
+  alias peek_integer is peek[msg_t return integer];
 
   procedure push(msg : msg_t; value : character);
   impure function pop(msg : msg_t) return character;
+  procedure peek(
+    msg : msg_t;
+    variable value : out character;
+    variable offset : inout natural
+  );
+  impure function peek(msg : msg_t) return character;
   alias push_character is push[msg_t, character];
   alias pop_character is pop[msg_t return character];
+  alias peek_character is peek[msg_t, character, natural];
+  alias peek_character is peek[msg_t return character];
 
   procedure push(msg : msg_t; value : boolean);
   impure function pop(msg : msg_t) return boolean;
+  procedure peek(
+    msg : msg_t;
+    variable value : out boolean;
+    variable offset : inout natural
+  );
+  impure function peek(msg : msg_t) return boolean;
   alias push_boolean is push[msg_t, boolean];
   alias pop_boolean is pop[msg_t return boolean];
+  alias peek_boolean is peek[msg_t, boolean, natural];
+  alias peek_boolean is peek[msg_t return boolean];
 
   procedure push(msg : msg_t; value : real);
   impure function pop(msg : msg_t) return real;
+  procedure peek(
+    msg : msg_t;
+    variable value : out real;
+    variable offset : inout natural
+  );
+  impure function peek(msg : msg_t) return real;
   alias push_real is push[msg_t, real];
   alias pop_real is pop[msg_t return real];
+  alias peek_real is peek[msg_t, real, natural];
+  alias peek_real is peek[msg_t return real];
 
   procedure push(msg : msg_t; value : bit);
   impure function pop(msg : msg_t) return bit;
+  procedure peek(
+    msg : msg_t;
+    variable value : out bit;
+    variable offset : inout natural
+  );
+  impure function peek(msg : msg_t) return bit;
   alias push_bit is push[msg_t, bit];
   alias pop_bit is pop[msg_t return bit];
+  alias peek_bit is peek[msg_t, bit, natural];
+  alias peek_bit is peek[msg_t return bit];
 
   procedure push(msg : msg_t; value : std_ulogic);
   impure function pop(msg : msg_t) return std_ulogic;
+  procedure peek(
+    msg : msg_t;
+    variable value : out std_ulogic;
+    variable offset : inout natural
+  );
+  impure function peek(msg : msg_t) return std_ulogic;
   alias push_std_ulogic is push[msg_t, std_ulogic];
   alias pop_std_ulogic is pop[msg_t return std_ulogic];
+  alias peek_std_ulogic is peek[msg_t, std_ulogic, natural];
+  alias peek_std_ulogic is peek[msg_t return std_ulogic];
 
   procedure push(msg : msg_t; value : severity_level);
   impure function pop(msg : msg_t) return severity_level;
+  procedure peek(
+    msg : msg_t;
+    variable value : out severity_level;
+    variable offset : inout natural
+  );
+  impure function peek(msg : msg_t) return severity_level;
   alias push_severity_level is push[msg_t, severity_level];
   alias pop_severity_level is pop[msg_t return severity_level];
+  alias peek_severity_level is peek[msg_t, severity_level, natural];
+  alias peek_severity_level is peek[msg_t return severity_level];
 
   procedure push(msg : msg_t; value : file_open_status);
   impure function pop(msg : msg_t) return file_open_status;
+  procedure peek(
+    msg : msg_t;
+    variable value : out file_open_status;
+    variable offset : inout natural
+  );
+  impure function peek(msg : msg_t) return file_open_status;
   alias push_file_open_status is push[msg_t, file_open_status];
   alias pop_file_open_status is pop[msg_t return file_open_status];
+  alias peek_file_open_status is peek[msg_t, file_open_status, natural];
+  alias peek_file_open_status is peek[msg_t return file_open_status];
 
   procedure push(msg : msg_t; value : file_open_kind);
   impure function pop(msg : msg_t) return file_open_kind;
+  procedure peek(
+    msg : msg_t;
+    variable value : out file_open_kind;
+    variable offset : inout natural
+  );
+  impure function peek(msg : msg_t) return file_open_kind;
   alias push_file_open_kind is push[msg_t, file_open_kind];
   alias pop_file_open_kind is pop[msg_t return file_open_kind];
+  alias peek_file_open_kind is peek[msg_t, file_open_kind, natural];
+  alias peek_file_open_kind is peek[msg_t return file_open_kind];
 
   procedure push(msg : msg_t; value : bit_vector);
   impure function pop(msg : msg_t) return bit_vector;
+  procedure peek(
+    msg : msg_t;
+    variable value : out bit_vector;
+    variable offset : inout natural
+  );
+  impure function peek(msg : msg_t) return bit_vector;
   alias push_bit_vector is push[msg_t, bit_vector];
   alias pop_bit_vector is pop[msg_t return bit_vector];
+  alias peek_bit_vector is peek[msg_t, bit_vector, natural];
+  alias peek_bit_vector is peek[msg_t return bit_vector];
 
   procedure push(msg : msg_t; value : std_ulogic_vector);
   impure function pop(msg : msg_t) return std_ulogic_vector;
+  procedure peek(
+    msg : msg_t;
+    variable value : out std_ulogic_vector;
+    variable offset : inout natural
+  );
+  impure function peek(msg : msg_t) return std_ulogic_vector;
   alias push_std_ulogic_vector is push[msg_t, std_ulogic_vector];
   alias pop_std_ulogic_vector is pop[msg_t return std_ulogic_vector];
+  alias peek_std_ulogic_vector is peek[msg_t, std_ulogic_vector, natural];
+  alias peek_std_ulogic_vector is peek[msg_t return std_ulogic_vector];
 
   procedure push(msg : msg_t; value : complex);
   impure function pop(msg : msg_t) return complex;
+  procedure peek(
+    msg : msg_t;
+    variable value : out complex;
+    variable offset : inout natural
+  );
+  impure function peek(msg : msg_t) return complex;
   alias push_complex is push[msg_t, complex];
   alias pop_complex is pop[msg_t return complex];
+  alias peek_complex is peek[msg_t, complex, natural];
+  alias peek_complex is peek[msg_t return complex];
 
   procedure push(msg : msg_t; value : complex_polar);
   impure function pop(msg : msg_t) return complex_polar;
+  procedure peek(
+    msg : msg_t;
+    variable value : out complex_polar;
+    variable offset : inout natural
+  );
+  impure function peek(msg : msg_t) return complex_polar;
   alias push_complex_polar is push[msg_t, complex_polar];
   alias pop_complex_polar is pop[msg_t return complex_polar];
+  alias peek_complex_polar is peek[msg_t, complex_polar, natural];
+  alias peek_complex_polar is peek[msg_t return complex_polar];
 
   procedure push(msg : msg_t; value : ieee.numeric_bit.unsigned);
   impure function pop(msg : msg_t) return ieee.numeric_bit.unsigned;
+  procedure peek(
+    msg : msg_t;
+    variable value : out ieee.numeric_bit.unsigned;
+    variable offset : inout natural
+  );
+  impure function peek(msg : msg_t) return ieee.numeric_bit.unsigned;
   alias push_numeric_bit_unsigned is push[msg_t, ieee.numeric_bit.unsigned];
   alias pop_numeric_bit_unsigned is pop[msg_t return ieee.numeric_bit.unsigned];
+  alias peek_numeric_bit_unsigned is peek[msg_t, ieee.numeric_bit.unsigned, natural];
+  alias peek_numeric_bit_unsigned is peek[msg_t return ieee.numeric_bit.unsigned];
 
   procedure push(msg : msg_t; value : ieee.numeric_bit.signed);
   impure function pop(msg : msg_t) return ieee.numeric_bit.signed;
+  procedure peek(
+    msg : msg_t;
+    variable value : out ieee.numeric_bit.signed;
+    variable offset : inout natural
+  );
+  impure function peek(msg : msg_t) return ieee.numeric_bit.signed;
   alias push_numeric_bit_signed is push[msg_t, ieee.numeric_bit.signed];
   alias pop_numeric_bit_signed is pop[msg_t return ieee.numeric_bit.signed];
+  alias peek_numeric_bit_signed is peek[msg_t, ieee.numeric_bit.signed, natural];
+  alias peek_numeric_bit_signed is peek[msg_t return ieee.numeric_bit.signed];
 
   procedure push(msg : msg_t; value : ieee.numeric_std.unsigned);
   impure function pop(msg : msg_t) return ieee.numeric_std.unsigned;
+  procedure peek(
+    msg : msg_t;
+    variable value : out ieee.numeric_std.unsigned;
+    variable offset : inout natural
+  );
+  impure function peek(msg : msg_t) return ieee.numeric_std.unsigned;
   alias push_numeric_std_unsigned is push[msg_t, ieee.numeric_std.unsigned];
   alias pop_numeric_std_unsigned is pop[msg_t return ieee.numeric_std.unsigned];
+  alias peek_numeric_std_unsigned is peek[msg_t, ieee.numeric_std.unsigned, natural];
+  alias peek_numeric_std_unsigned is peek[msg_t return ieee.numeric_std.unsigned];
 
   procedure push(msg : msg_t; value : ieee.numeric_std.signed);
   impure function pop(msg : msg_t) return ieee.numeric_std.signed;
+  procedure peek(
+    msg : msg_t;
+    variable value : out ieee.numeric_std.signed;
+    variable offset : inout natural
+  );
+  impure function peek(msg : msg_t) return ieee.numeric_std.signed;
   alias push_numeric_std_signed is push[msg_t, ieee.numeric_std.signed];
   alias pop_numeric_std_signed is pop[msg_t return ieee.numeric_std.signed];
+  alias peek_numeric_std_signed is peek[msg_t, ieee.numeric_std.signed, natural];
+  alias peek_numeric_std_signed is peek[msg_t return ieee.numeric_std.signed];
 
   procedure push(msg : msg_t; value : string);
   impure function pop(msg : msg_t) return string;
+  procedure peek(
+    msg : msg_t;
+    variable value : out string;
+    variable offset : inout natural
+  );
+  impure function peek(msg : msg_t) return string;
   alias push_string is push[msg_t, string];
   alias pop_string is pop[msg_t return string];
+  alias peek_string is peek[msg_t, string, natural];
+  alias peek_string is peek[msg_t return string];
 
   procedure push(msg : msg_t; value : time);
   impure function pop(msg : msg_t) return time;
+  procedure peek(
+    msg : msg_t;
+    variable value : out time;
+    variable offset : inout natural
+  );
+  impure function peek(msg : msg_t) return time;
   alias push_time is push[msg_t, time];
   alias pop_time is pop[msg_t return time];
+  alias peek_time is peek[msg_t, time, natural];
+  alias peek_time is peek[msg_t return time];
 
   -- The value is set to null to avoid duplicate ownership
   procedure push(msg : msg_t; variable value : inout integer_vector_ptr_t);
   impure function pop(msg : msg_t) return integer_vector_ptr_t;
+  procedure peek(
+    msg : msg_t;
+    variable value : out integer_vector_ptr_t;
+    variable offset : inout natural
+  );
+  impure function peek(msg : msg_t) return integer_vector_ptr_t;
   alias push_integer_vector_ptr_ref is push[msg_t, integer_vector_ptr_t];
   alias pop_integer_vector_ptr_ref is pop[msg_t return integer_vector_ptr_t];
+  alias peek_integer_vector_ptr_ref is peek[msg_t, integer_vector_ptr_t, natural];
+  alias peek_integer_vector_ptr_ref is peek[msg_t return integer_vector_ptr_t];
 
   -- The value is set to null to avoid duplicate ownership
   procedure push(msg : msg_t; variable value : inout string_ptr_t);
   impure function pop(msg : msg_t) return string_ptr_t;
+  procedure peek(
+    msg : msg_t;
+    variable value : out string_ptr_t;
+    variable offset : inout natural
+  );
+  impure function peek(msg : msg_t) return string_ptr_t;
   alias push_string_ptr_ref is push[msg_t, string_ptr_t];
   alias pop_string_ptr_ref is pop[msg_t return string_ptr_t];
+  alias peek_string_ptr_ref is peek[msg_t, string_ptr_t, natural];
+  alias peek_string_ptr_ref is peek[msg_t return string_ptr_t];
 
   -- The value is set to null to avoid duplicate ownership
   procedure push(msg : msg_t; variable value : inout queue_t);
   impure function pop(msg : msg_t) return queue_t;
+  procedure peek(
+    msg : msg_t;
+    variable value : out queue_t;
+    variable offset : inout natural
+  );
+  impure function peek(msg : msg_t) return queue_t;
   alias push_queue_ref is push[msg_t, queue_t];
   alias pop_queue_ref is pop[msg_t return queue_t];
+  alias peek_queue_ref is peek[msg_t, queue_t, natural];
+  alias peek_queue_ref is peek[msg_t return queue_t];
 
   procedure push(msg : msg_t; value : boolean_vector);
   impure function pop(msg : msg_t) return boolean_vector;
+  procedure peek(
+    msg : msg_t;
+    variable value : out boolean_vector;
+    variable offset : inout natural
+  );
+  impure function peek(msg : msg_t) return boolean_vector;
   alias push_boolean_vector is push[msg_t, boolean_vector];
   alias pop_boolean_vector is pop[msg_t return boolean_vector];
+  alias peek_boolean_vector is peek[msg_t, boolean_vector, natural];
+  alias peek_boolean_vector is peek[msg_t return boolean_vector];
 
   procedure push(msg : msg_t; value : integer_vector);
   impure function pop(msg : msg_t) return integer_vector;
+  procedure peek(
+    msg : msg_t;
+    variable value : out integer_vector;
+    variable offset : inout natural
+  );
+  impure function peek(msg : msg_t) return integer_vector;
   alias push_integer_vector is push[msg_t, integer_vector];
   alias pop_integer_vector is pop[msg_t return integer_vector];
+  alias peek_integer_vector is peek[msg_t, integer_vector, natural];
+  alias peek_integer_vector is peek[msg_t return integer_vector];
 
   procedure push(msg : msg_t; value : real_vector);
   impure function pop(msg : msg_t) return real_vector;
+  procedure peek(
+    msg : msg_t;
+    variable value : out real_vector;
+    variable offset : inout natural
+  );
+  impure function peek(msg : msg_t) return real_vector;
   alias push_real_vector is push[msg_t, real_vector];
   alias pop_real_vector is pop[msg_t return real_vector];
+  alias peek_real_vector is peek[msg_t, real_vector, natural];
+  alias peek_real_vector is peek[msg_t return real_vector];
 
   procedure push(msg : msg_t; value : time_vector);
   impure function pop(msg : msg_t) return time_vector;
+  procedure peek(
+    msg : msg_t;
+    variable value : out time_vector;
+    variable offset : inout natural
+  );
+  impure function peek(msg : msg_t) return time_vector;
   alias push_time_vector is push[msg_t, time_vector];
   alias pop_time_vector is pop[msg_t return time_vector];
+  alias peek_time_vector is peek[msg_t, time_vector, natural];
+  alias peek_time_vector is peek[msg_t return time_vector];
 
   procedure push(msg : msg_t; value : ufixed);
   impure function pop(msg : msg_t) return ufixed;
+  procedure peek(
+    msg : msg_t;
+    variable value : out ufixed;
+    variable offset : inout natural
+  );
+  impure function peek(msg : msg_t) return ufixed;
   alias push_ufixed is push[msg_t, ufixed];
   alias pop_ufixed is pop[msg_t return ufixed];
+  alias peek_ufixed is peek[msg_t, ufixed, natural];
+  alias peek_ufixed is peek[msg_t return ufixed];
 
   procedure push(msg : msg_t; value : sfixed);
   impure function pop(msg : msg_t) return sfixed;
+  procedure peek(
+    msg : msg_t;
+    variable value : out sfixed;
+    variable offset : inout natural
+  );
+  impure function peek(msg : msg_t) return sfixed;
   alias push_sfixed is push[msg_t, sfixed];
   alias pop_sfixed is pop[msg_t return sfixed];
+  alias peek_sfixed is peek[msg_t, sfixed, natural];
+  alias peek_sfixed is peek[msg_t return sfixed];
 
   procedure push(msg : msg_t; value : float);
   impure function pop(msg : msg_t) return float;
+  procedure peek(
+    msg : msg_t;
+    variable value : out float;
+    variable offset : inout natural
+  );
+  impure function peek(msg : msg_t) return float;
   alias push_float is push[msg_t, float];
   alias pop_float is pop[msg_t return float];
+  alias peek_float is peek[msg_t, float, natural];
+  alias peek_float is peek[msg_t return float];
 
   procedure push(msg : msg_t; variable value : inout msg_t);
   impure function pop(msg : msg_t) return msg_t;
+  procedure peek(
+    msg : msg_t;
+    variable value : out msg_t;
+    variable offset : inout natural
+  );
+  impure function peek(msg : msg_t) return msg_t;
   alias push_msg_t is push[msg_t, msg_t];
   alias pop_msg_t is pop[msg_t return msg_t];
+  alias peek_msg_t is peek[msg_t, msg_t, natural];
+  alias peek_msg_t is peek[msg_t return msg_t];
 
   procedure push_ref(constant msg : msg_t; value : inout integer_array_t);
   impure function pop_ref(msg : msg_t) return integer_array_t;
+  procedure peek_ref(
+    msg : msg_t;
+    variable value : out integer_array_t;
+    variable offset : inout natural
+  );
+  impure function peek_ref(msg : msg_t) return integer_array_t;
   alias push_integer_array_t_ref is push_ref[msg_t, integer_array_t];
   alias pop_integer_array_t_ref is pop_ref[msg_t return integer_array_t];
+  alias peek_integer_array_t_ref is peek_ref[msg_t, integer_array_t, natural];
+  alias peek_integer_array_t_ref is peek_ref[msg_t return integer_array_t];
 
 end package;
 
@@ -457,6 +738,32 @@ package body com_types_pkg is
       failure(logger, "Got invalid message with code " & to_string(code));
     end if;
     return (p_code => code);
+  end;
+
+  procedure peek_msg_type(
+    msg : msg_t;
+    logger : logger_t := com_logger;
+    variable ret_val : out msg_type_t;
+    variable offset : inout natural
+  ) is
+    variable code : integer;
+  begin
+    peek(msg, code, offset);
+    if not is_valid(code) then
+      failure(logger, "Got invalid message with code " & to_string(code));
+    end if;
+    ret_val := (p_code => code);
+  end;
+
+  impure function peek_msg_type(
+    msg : msg_t;
+    logger : logger_t := com_logger
+  ) return msg_type_t is
+    variable offset : natural := 0;
+    variable value : msg_type_t;
+  begin
+    peek_msg_type(msg, logger, value, offset);
+    return value;
   end;
 
   -----------------------------------------------------------------------------
@@ -540,6 +847,32 @@ package body com_types_pkg is
     return ret_val;
   end;
 
+  procedure peek(
+    queue : queue_t;
+    variable ret_val : out msg_t;
+    variable offset : inout natural
+  ) is
+    variable value : integer;
+  begin
+    peek(queue, ret_val.id, offset);
+    peek(queue, value, offset);
+    ret_val.msg_type := (p_code => value);
+    peek(queue, value, offset);
+    ret_val.status := com_status_t'val(value);
+    peek(queue, ret_val.sender.id, offset);
+    peek(queue, ret_val.receiver.id, offset);
+    peek(queue, ret_val.request_id, offset);
+    peek_queue_ref(queue, ret_val.data, offset);
+  end;
+
+  impure function peek(queue : queue_t) return msg_t is
+    variable ret_val : msg_t;
+    variable offset : natural := 0;
+  begin
+    peek(queue, ret_val, offset);
+    return ret_val;
+  end;
+
   -----------------------------------------------------------------------------
   -- Subprograms for pushing/popping data to/from a message. Data is popped
   -- from a message in the same order they were pushed (FIFO)
@@ -554,6 +887,19 @@ package body com_types_pkg is
     return pop(msg.data);
   end;
 
+  procedure peek(
+    msg : msg_t;
+    variable value : out integer;
+    variable offset : inout natural
+  ) is begin
+    peek(msg.data, value, offset);
+  end;
+
+  impure function peek(msg : msg_t) return integer is
+  begin
+    return peek(msg.data);
+  end;
+
   procedure push(msg : msg_t; value : character) is
   begin
     push(msg.data, value);
@@ -562,6 +908,20 @@ package body com_types_pkg is
   impure function pop(msg : msg_t) return character is
   begin
     return pop(msg.data);
+  end;
+
+  procedure peek(
+    msg : msg_t;
+    variable value : out character;
+    variable offset : inout natural
+  ) is
+  begin
+    peek(msg.data, value, offset);
+  end;
+
+  impure function peek(msg : msg_t) return character is
+  begin
+    return peek(msg.data);
   end;
 
   procedure push(msg : msg_t; value : boolean) is
@@ -574,6 +934,19 @@ package body com_types_pkg is
     return pop(msg.data);
   end;
 
+  procedure peek(
+    msg : msg_t;
+    variable value : out boolean;
+    variable offset : inout natural
+  ) is begin
+    peek(msg.data, value, offset);
+  end;
+
+  impure function peek(msg : msg_t) return boolean is
+  begin
+    return peek(msg.data);
+  end;
+
   procedure push(msg : msg_t; value : real) is
   begin
     push(msg.data, value);
@@ -582,6 +955,19 @@ package body com_types_pkg is
   impure function pop(msg : msg_t) return real is
   begin
     return pop(msg.data);
+  end;
+
+  procedure peek(
+    msg : msg_t;
+    variable value : out real;
+    variable offset : inout natural
+  ) is begin
+    peek(msg.data, value, offset);
+  end;
+
+  impure function peek(msg : msg_t) return real is
+  begin
+    return peek(msg.data);
   end;
 
   procedure push(msg : msg_t; value : bit) is
@@ -594,6 +980,19 @@ package body com_types_pkg is
     return pop(msg.data);
   end;
 
+  procedure peek(
+    msg : msg_t;
+    variable value : out bit;
+    variable offset : inout natural
+  ) is begin
+    peek(msg.data, value, offset);
+  end;
+
+  impure function peek(msg : msg_t) return bit is
+  begin
+    return peek(msg.data);
+  end;
+
   procedure push(msg : msg_t; value : std_ulogic) is
   begin
     push(msg.data, value);
@@ -602,6 +1001,19 @@ package body com_types_pkg is
   impure function pop(msg : msg_t) return std_ulogic is
   begin
     return pop(msg.data);
+  end;
+
+  procedure peek(
+    msg : msg_t;
+    variable value : out std_ulogic;
+    variable offset : inout natural
+  ) is begin
+    peek(msg.data, value, offset);
+  end;
+
+  impure function peek(msg : msg_t) return std_ulogic is
+  begin
+    return peek(msg.data);
   end;
 
   procedure push(msg : msg_t; value : severity_level) is
@@ -614,6 +1026,19 @@ package body com_types_pkg is
     return pop(msg.data);
   end;
 
+  procedure peek(
+    msg : msg_t;
+    variable value : out severity_level;
+    variable offset : inout natural
+  ) is begin
+    peek(msg.data, value, offset);
+  end;
+
+  impure function peek(msg : msg_t) return severity_level is
+  begin
+    return peek(msg.data);
+  end;
+
   procedure push(msg : msg_t; value : file_open_status) is
   begin
     push(msg.data, value);
@@ -622,6 +1047,19 @@ package body com_types_pkg is
   impure function pop(msg : msg_t) return file_open_status is
   begin
     return pop(msg.data);
+  end;
+
+  procedure peek(
+    msg : msg_t;
+    variable value : out file_open_status;
+    variable offset : inout natural
+  ) is begin
+    peek(msg.data, value, offset);
+  end;
+
+  impure function peek(msg : msg_t) return file_open_status is
+  begin
+    return peek(msg.data);
   end;
 
   procedure push(msg : msg_t; value : file_open_kind) is
@@ -634,6 +1072,19 @@ package body com_types_pkg is
     return pop(msg.data);
   end;
 
+  procedure peek(
+    msg : msg_t;
+    variable value : out file_open_kind;
+    variable offset : inout natural
+  ) is begin
+    peek(msg.data, value, offset);
+  end;
+
+  impure function peek(msg : msg_t) return file_open_kind is
+  begin
+    return peek(msg.data);
+  end;
+
   procedure push(msg : msg_t; value : bit_vector) is
   begin
     push(msg.data, value);
@@ -642,6 +1093,19 @@ package body com_types_pkg is
   impure function pop(msg : msg_t) return bit_vector is
   begin
     return pop(msg.data);
+  end;
+
+  procedure peek(
+    msg : msg_t;
+    variable value : out bit_vector;
+    variable offset : inout natural
+  ) is begin
+    peek(msg.data, value, offset);
+  end;
+
+  impure function peek(msg : msg_t) return bit_vector is
+  begin
+    return peek(msg.data);
   end;
 
   procedure push(msg : msg_t; value : std_ulogic_vector) is
@@ -654,6 +1118,19 @@ package body com_types_pkg is
     return pop(msg.data);
   end;
 
+  procedure peek(
+    msg : msg_t;
+    variable value : out std_ulogic_vector;
+    variable offset : inout natural
+  ) is begin
+    peek(msg.data, value, offset);
+  end;
+
+  impure function peek(msg : msg_t) return std_ulogic_vector is
+  begin
+    return peek(msg.data);
+  end;
+
   procedure push(msg : msg_t; value : complex) is
   begin
     push(msg.data, value);
@@ -662,6 +1139,19 @@ package body com_types_pkg is
   impure function pop(msg : msg_t) return complex is
   begin
     return pop(msg.data);
+  end;
+
+  procedure peek(
+    msg : msg_t;
+    variable value : out complex;
+    variable offset : inout natural
+  ) is begin
+    peek(msg.data, value, offset);
+  end;
+
+  impure function peek(msg : msg_t) return complex is
+  begin
+    return peek(msg.data);
   end;
 
   procedure push(msg : msg_t; value : complex_polar) is
@@ -674,6 +1164,19 @@ package body com_types_pkg is
     return pop(msg.data);
   end;
 
+  procedure peek(
+    msg : msg_t;
+    variable value : out complex_polar;
+    variable offset : inout natural
+  ) is begin
+    peek(msg.data, value, offset);
+  end;
+
+  impure function peek(msg : msg_t) return complex_polar is
+  begin
+    return peek(msg.data);
+  end;
+
   procedure push(msg : msg_t; value : ieee.numeric_bit.unsigned) is
   begin
     push(msg.data, value);
@@ -682,6 +1185,19 @@ package body com_types_pkg is
   impure function pop(msg : msg_t) return ieee.numeric_bit.unsigned is
   begin
     return pop(msg.data);
+  end;
+
+  procedure peek(
+    msg : msg_t;
+    variable value : out ieee.numeric_bit.unsigned;
+    variable offset : inout natural
+  ) is begin
+    peek(msg.data, value, offset);
+  end;
+
+  impure function peek(msg : msg_t) return ieee.numeric_bit.unsigned is
+  begin
+    return peek(msg.data);
   end;
 
   procedure push(msg : msg_t; value : ieee.numeric_bit.signed) is
@@ -694,6 +1210,19 @@ package body com_types_pkg is
     return pop(msg.data);
   end;
 
+  procedure peek(
+    msg : msg_t;
+    variable value : out ieee.numeric_bit.signed;
+    variable offset : inout natural
+  ) is begin
+    peek(msg.data, value, offset);
+  end;
+
+  impure function peek(msg : msg_t) return ieee.numeric_bit.signed is
+  begin
+    return peek(msg.data);
+  end;
+
   procedure push(msg : msg_t; value : ieee.numeric_std.unsigned) is
   begin
     push(msg.data, value);
@@ -702,6 +1231,19 @@ package body com_types_pkg is
   impure function pop(msg : msg_t) return ieee.numeric_std.unsigned is
   begin
     return pop(msg.data);
+  end;
+
+  procedure peek(
+    msg : msg_t;
+    variable value : out ieee.numeric_std.unsigned;
+    variable offset : inout natural
+  ) is begin
+    peek(msg.data, value, offset);
+  end;
+
+  impure function peek(msg : msg_t) return ieee.numeric_std.unsigned is
+  begin
+    return peek(msg.data);
   end;
 
   procedure push(msg : msg_t; value : ieee.numeric_std.signed) is
@@ -714,6 +1256,19 @@ package body com_types_pkg is
     return pop(msg.data);
   end;
 
+  procedure peek(
+    msg : msg_t;
+    variable value : out ieee.numeric_std.signed;
+    variable offset : inout natural
+  ) is begin
+    peek(msg.data, value, offset);
+  end;
+
+  impure function peek(msg : msg_t) return ieee.numeric_std.signed is
+  begin
+    return peek(msg.data);
+  end;
+
   procedure push(msg : msg_t; value : string) is
   begin
     push(msg.data, value);
@@ -722,6 +1277,19 @@ package body com_types_pkg is
   impure function pop(msg : msg_t) return string is
   begin
     return pop(msg.data);
+  end;
+
+  procedure peek(
+    msg : msg_t;
+    variable value : out string;
+    variable offset : inout natural
+  ) is begin
+    peek(msg.data, value, offset);
+  end;
+
+  impure function peek(msg : msg_t) return string is
+  begin
+    return peek(msg.data);
   end;
 
   procedure push(msg : msg_t; value : time) is
@@ -734,6 +1302,19 @@ package body com_types_pkg is
     return pop(msg.data);
   end;
 
+  procedure peek(
+    msg : msg_t;
+    variable value : out time;
+    variable offset : inout natural
+  ) is begin
+    peek(msg.data, value, offset);
+  end;
+
+  impure function peek(msg : msg_t) return time is
+  begin
+    return peek(msg.data);
+  end;
+
   procedure push(msg : msg_t; variable value : inout integer_vector_ptr_t) is
   begin
     push(msg.data, value);
@@ -742,6 +1323,19 @@ package body com_types_pkg is
   impure function pop(msg : msg_t) return integer_vector_ptr_t is
   begin
     return pop(msg.data);
+  end;
+
+  procedure peek(
+    msg : msg_t;
+    variable value : out integer_vector_ptr_t;
+    variable offset : inout natural
+  ) is begin
+    peek(msg.data, value, offset);
+  end;
+
+  impure function peek(msg : msg_t) return integer_vector_ptr_t is
+  begin
+    return peek(msg.data);
   end;
 
   procedure push(msg : msg_t; variable value : inout string_ptr_t) is
@@ -754,6 +1348,19 @@ package body com_types_pkg is
     return pop(msg.data);
   end;
 
+  procedure peek(
+    msg : msg_t;
+    variable value : out string_ptr_t;
+    variable offset : inout natural
+  ) is begin
+    peek(msg.data, value, offset);
+  end;
+
+  impure function peek(msg : msg_t) return string_ptr_t is
+  begin
+    return peek(msg.data);
+  end;
+
   procedure push(msg : msg_t; variable value : inout queue_t) is
   begin
     push(msg.data, value);
@@ -762,6 +1369,19 @@ package body com_types_pkg is
   impure function pop(msg : msg_t) return queue_t is
   begin
     return pop(msg.data);
+  end;
+
+  procedure peek(
+    msg : msg_t;
+    variable value : out queue_t;
+    variable offset : inout natural
+  ) is begin
+    peek(msg.data, value, offset);
+  end;
+
+  impure function peek(msg : msg_t) return queue_t is
+  begin
+    return peek(msg.data);
   end;
 
   procedure push(msg : msg_t; value : boolean_vector) is
@@ -774,6 +1394,19 @@ package body com_types_pkg is
     return pop(msg.data);
   end;
 
+  procedure peek(
+    msg : msg_t;
+    variable value : out boolean_vector;
+    variable offset : inout natural
+  ) is begin
+    peek(msg.data, value, offset);
+  end;
+
+  impure function peek(msg : msg_t) return boolean_vector is
+  begin
+    return peek(msg.data);
+  end;
+
   procedure push(msg : msg_t; value : integer_vector) is
   begin
     push(msg.data, value);
@@ -782,6 +1415,19 @@ package body com_types_pkg is
   impure function pop(msg : msg_t) return integer_vector is
   begin
     return pop(msg.data);
+  end;
+
+  procedure peek(
+    msg : msg_t;
+    variable value : out integer_vector;
+    variable offset : inout natural
+  ) is begin
+    peek(msg.data, value, offset);
+  end;
+
+  impure function peek(msg : msg_t) return integer_vector is
+  begin
+    return peek(msg.data);
   end;
 
   procedure push(msg : msg_t; value : real_vector) is
@@ -794,6 +1440,19 @@ package body com_types_pkg is
     return pop(msg.data);
   end;
 
+  procedure peek(
+    msg : msg_t;
+    variable value : out real_vector;
+    variable offset : inout natural
+  ) is begin
+    peek(msg.data, value, offset);
+  end;
+
+  impure function peek(msg : msg_t) return real_vector is
+  begin
+    return peek(msg.data);
+  end;
+
   procedure push(msg : msg_t; value : time_vector) is
   begin
     push(msg.data, value);
@@ -802,6 +1461,19 @@ package body com_types_pkg is
   impure function pop(msg : msg_t) return time_vector is
   begin
     return pop(msg.data);
+  end;
+
+  procedure peek(
+    msg : msg_t;
+    variable value : out time_vector;
+    variable offset : inout natural
+  ) is begin
+    peek(msg.data, value, offset);
+  end;
+
+  impure function peek(msg : msg_t) return time_vector is
+  begin
+    return peek(msg.data);
   end;
 
   procedure push(msg : msg_t; value : ufixed) is
@@ -814,6 +1486,19 @@ package body com_types_pkg is
     return pop(msg.data);
   end;
 
+  procedure peek(
+    msg : msg_t;
+    variable value : out ufixed;
+    variable offset : inout natural
+  ) is begin
+    peek(msg.data, value, offset);
+  end;
+
+  impure function peek(msg : msg_t) return ufixed is
+  begin
+    return peek(msg.data);
+  end;
+
   procedure push(msg : msg_t; value : sfixed) is
   begin
     push(msg.data, value);
@@ -822,6 +1507,19 @@ package body com_types_pkg is
   impure function pop(msg : msg_t) return sfixed is
   begin
     return pop(msg.data);
+  end;
+
+  procedure peek(
+    msg : msg_t;
+    variable value : out sfixed;
+    variable offset : inout natural
+  ) is begin
+    peek(msg.data, value, offset);
+  end;
+
+  impure function peek(msg : msg_t) return sfixed is
+  begin
+    return peek(msg.data);
   end;
 
   procedure push(msg : msg_t; value : float) is
@@ -834,6 +1532,19 @@ package body com_types_pkg is
     return pop(msg.data);
   end;
 
+  procedure peek(
+    msg : msg_t;
+    variable value : out float;
+    variable offset : inout natural
+  ) is begin
+    peek(msg.data, value, offset);
+  end;
+
+  impure function peek(msg : msg_t) return float is
+  begin
+    return peek(msg.data);
+  end;
+
   procedure push(msg : msg_t; variable value : inout msg_t) is
   begin
     push(msg.data, value);
@@ -844,6 +1555,19 @@ package body com_types_pkg is
     return pop(msg.data);
   end;
 
+  procedure peek(
+    msg : msg_t;
+    variable value : out msg_t;
+    variable offset : inout natural
+  ) is begin
+    peek(msg.data, value, offset);
+  end;
+
+  impure function peek(msg : msg_t) return msg_t is
+  begin
+    return peek(msg.data);
+  end;
+
   procedure push_ref(constant msg : msg_t; value : inout integer_array_t) is
   begin
     push_ref(msg.data, value);
@@ -852,6 +1576,19 @@ package body com_types_pkg is
   impure function pop_ref(msg : msg_t) return integer_array_t is
   begin
     return pop_ref(msg.data);
+  end;
+
+  procedure peek_ref(
+    msg : msg_t;
+    variable value : out integer_array_t;
+    variable offset : inout natural
+  ) is begin
+    peek_ref(msg.data, value, offset);
+  end;
+
+  impure function peek_ref(msg : msg_t) return integer_array_t is
+  begin
+    return peek_ref(msg.data);
   end;
 
 end package body com_types_pkg;

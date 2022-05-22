@@ -8,6 +8,7 @@
 .tox
 .vscode
 env/
+.venv/
 venv/
 error.csv
 log.csv

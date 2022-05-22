@@ -182,6 +182,8 @@ begin
 
       info(tb_logger, "Compare...");
       for i in 0 to tb_cfg.transfers-1 loop
+        tmp := peek(data_queue);
+        check_equal(tmp, std_logic_vector(to_unsigned(i, readdata'length)), "read data");
         tmp := pop(data_queue);
         check_equal(tmp, std_logic_vector(to_unsigned(i, readdata'length)), "read data");
       end loop;
@@ -201,6 +203,8 @@ begin
 
       info(tb_logger, "Compare...");
       for i in 0 to tb_cfg.transfers-1 loop
+        tmp := peek(data_queue);
+        check_equal(tmp, std_logic_vector(to_unsigned(i, readdata'length)), "read data");
         tmp := pop(data_queue);
         check_equal(tmp, std_logic_vector(to_unsigned(i, readdata'length)), "read data");
       end loop;
@@ -237,6 +241,8 @@ begin
         burst_rd_ref := pop(rd_ref_queue);
         await_burst_read_bus_reply(net, bus_handle, data_queue, burst_rd_ref);
         while not is_empty(data_queue) loop
+          tmp := peek(data_queue);
+          check_equal(tmp, std_logic_vector(to_unsigned(i, readdata'length)), "read data");
           tmp := pop(data_queue);
           check_equal(tmp, std_logic_vector(to_unsigned(i, readdata'length)), "read data");
           i := i + 1;
