@@ -87,14 +87,14 @@ class IncisiveInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         """
         Finds irun cds root
         """
-        return subprocess.check_output([str(Path(self._prefix) / "cds_root"), "irun"]).splitlines()[0]
+        return subprocess.check_output([str(Path(self._prefix) / "cds_root"), "irun"]).splitlines()[0].decode()
 
     def find_cds_root_virtuoso(self):
         """
         Finds virtuoso cds root
         """
         try:
-            return subprocess.check_output([str(Path(self._prefix) / "cds_root"), "virtuoso"]).splitlines()[0]
+            return subprocess.check_output([str(Path(self._prefix) / "cds_root"), "virtuoso"]).splitlines()[0].decode()
         except subprocess.CalledProcessError:
             return None
 

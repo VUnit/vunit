@@ -108,7 +108,7 @@ class XceliumInterface(  # pylint: disable=too-many-instance-attributes
         """
         return subprocess.check_output(
             [str(Path(self._prefix) / "cds_root"), "xrun"]
-        ).splitlines()[0]
+        ).splitlines()[0].decode()
 
     def find_cds_root_virtuoso(self):
         """
@@ -117,7 +117,7 @@ class XceliumInterface(  # pylint: disable=too-many-instance-attributes
         try:
             return subprocess.check_output(
                 [str(Path(self._prefix) / "cds_root"), "virtuoso"]
-            ).splitlines()[0]
+            ).splitlines()[0].decode()
         except subprocess.CalledProcessError:
             return None
 
