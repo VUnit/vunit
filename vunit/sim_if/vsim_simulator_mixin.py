@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Shared simulation logic between vsim based simulators such as ModelSim
@@ -28,9 +28,7 @@ class VsimSimulatorMixin(object):
         sim_cfg_file_name = str(Path(sim_cfg_file_name).resolve())
         self._sim_cfg_file_name = sim_cfg_file_name
 
-        prefix = (
-            self._prefix
-        )  # Avoid circular dependency inhibiting process destruction
+        prefix = self._prefix  # Avoid circular dependency inhibiting process destruction
         env = self.get_env()
 
         def create_process(ident):
@@ -39,7 +37,7 @@ class VsimSimulatorMixin(object):
                     str(Path(prefix) / "vsim"),
                     "-c",
                     "-l",
-                    str(Path(sim_cfg_file_name).parent / ("transcript%i" % ident)),
+                    str(Path(sim_cfg_file_name).parent / f"transcript{ident}"),
                     "-do",
                     str((Path(__file__).parent / "tcl_read_eval_loop.tcl").resolve()),
                 ],
@@ -78,57 +76,50 @@ class VsimSimulatorMixin(object):
         # relies on the return code from the python process rather than being
         # tricked by output going to stderr.  See issue #228.
         recompile_command_eval = [
-            "%s" % sys.executable,
+            str(sys.executable),
             "-u",
             "-c",
             (
                 "import sys;"
                 "import subprocess;"
-                "exit(subprocess.call(%r, "
-                "cwd=%r, "
+                f"exit(subprocess.call({recompile_command!r}, "
+                f"cwd={str(Path(os.getcwd()).resolve())!r}, "
                 "bufsize=0, "
                 "universal_newlines=True, "
                 "stdout=sys.stdout, "
                 "stderr=sys.stdout))"
-            )
-            % (recompile_command, str(Path(os.getcwd()).resolve())),
+            ),
         ]
-        recompile_command_eval_tcl = " ".join(
-            ["{%s}" % part for part in recompile_command_eval]
-        )
+        recompile_command_eval_tcl = " ".join([f"{{{part}}}" for part in recompile_command_eval])
 
-        tcl = """
-proc vunit_compile {} {
-    set cmd_show {%s}
-    puts "Re-compiling using command ${cmd_show}"
+        return f"""
+proc vunit_compile {{}} {{
+    set cmd_show {{{recompile_command_visual!s}}}
+    puts "Re-compiling using command ${{cmd_show}}"
 
-    set chan [open |[list %s] r]
+    set chan [open |[list {recompile_command_eval_tcl!s}] r]
 
-    while {[gets $chan line] >= 0} {
+    while {{[gets $chan line] >= 0}} {{
         puts $line
-    }
+    }}
 
-    if {[catch {close $chan} error_msg]} {
+    if {{[catch {{close $chan}} error_msg]}} {{
         puts "Re-compile failed"
-        puts ${error_msg}
+        puts ${{error_msg}}
         return true
-    } else {
+    }} else {{
         puts "Re-compile finished"
         return false
-    }
-}
+    }}
+}}
 
-proc vunit_restart {} {
-    if {![vunit_compile]} {
+proc vunit_restart {{}} {{
+    if {{![vunit_compile]}} {{
         _vunit_sim_restart
         vunit_run
-    }
-}
-""" % (
-            recompile_command_visual,
-            recompile_command_eval_tcl,
-        )
-        return tcl
+    }}
+}}
+"""
 
     def _create_common_script(self, test_suite_name, config, script_path, output_path):
         """
@@ -186,7 +177,7 @@ proc vunit_run {} {
         """
         batch_do = ""
         batch_do += "onerror {quit -code 1}\n"
-        batch_do += 'source "%s"\n' % fix_path(common_file_name)
+        batch_do += f'source "{fix_path(common_file_name)!s}"\n'
         batch_do += "set failed [vunit_load]\n"
         batch_do += "if {$failed} {quit -code 1}\n"
         if not load_only:
@@ -264,7 +255,7 @@ proc vunit_run {} {
         """
         Create the user facing script which loads common functions and prints a help message
         """
-        tcl = 'source "%s"\n' % fix_path(common_file_name)
+        tcl = f'source "{fix_path(common_file_name)!s}"\n'
         tcl += self._create_user_init_function(config)
         tcl += "if {![vunit_load]} {\n"
         tcl += "  vunit_user_init\n"
@@ -284,7 +275,7 @@ proc vunit_run {} {
                 "-l",
                 str(Path(batch_file_name).parent / "transcript"),
                 "-do",
-                'source "%s"' % fix_path(batch_file_name),
+                f'source "{fix_path(batch_file_name)!s}"',
             ]
 
             proc = Process(args, cwd=str(Path(self._sim_cfg_file_name).parent))
@@ -298,7 +289,7 @@ proc vunit_run {} {
         Run a test bench using the persistent vsim process
         """
         try:
-            self._persistent_shell.execute('source "%s"' % fix_path(common_file_name))
+            self._persistent_shell.execute(f'source "{fix_path(common_file_name)!s}"')
             self._persistent_shell.execute("set failed [vunit_load]")
             if self._persistent_shell.read_bool("failed"):
                 return False
@@ -324,13 +315,9 @@ proc vunit_run {} {
 
         write_file(
             str(common_file_name),
-            self._create_common_script(
-                test_suite_name, config, script_path, output_path
-            ),
+            self._create_common_script(test_suite_name, config, script_path, output_path),
         )
-        write_file(
-            str(gui_file_name), self._create_gui_script(str(common_file_name), config)
-        )
+        write_file(str(gui_file_name), self._create_gui_script(str(common_file_name), config))
         write_file(
             str(batch_file_name),
             self._create_batch_script(str(common_file_name), elaborate_only),
@@ -357,22 +344,18 @@ def get_is_test_suite_done_tcl(vunit_result_file):
     Returns tcl procedure to detect if simulation was successful or not
     Simulation is considered successful if the test_suite_done was reached in the results file
     """
-
-    tcl = """
-proc is_test_suite_done {} {
-    set fd [open "%s" "r"]
+    return f"""
+proc is_test_suite_done {{}} {{
+    set fd [open "{fix_path(vunit_result_file)!s}" "r"]
     set contents [read $fd]
     close $fd
     set lines [split $contents "\n"]
-    foreach line $lines {
-        if {$line=="test_suite_done"} {
+    foreach line $lines {{
+        if {{$line=="test_suite_done"}} {{
            return true;
-        }
-    }
+        }}
+    }}
 
     return false;
-}
-""" % (
-        fix_path(vunit_result_file)
-    )
-    return tcl
+}}
+"""

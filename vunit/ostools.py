@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Provides operating systems dependent functionality that can be easily
@@ -127,9 +127,7 @@ class Process(object):
                 preexec_fn=os.setpgrp,  # pylint: disable=no-member
             )
 
-        LOGGER.debug(
-            "Started process with pid=%i: '%s'", self._process.pid, (" ".join(args))
-        )
+        LOGGER.debug("Started process with pid=%i: '%s'", self._process.pid, (" ".join(args)))
 
         self._queue = InterruptableQueue()
         self._reader = AsynchronousFileReader(self._process.stdout, self._queue)
@@ -277,9 +275,7 @@ class AsynchronousFileReader(threading.Thread):
 def read_file(file_name, encoding="utf-8", newline=None):
     """To stub during testing"""
     try:
-        with io.open(
-            file_name, "r", encoding=encoding, newline=newline
-        ) as file_to_read:
+        with io.open(file_name, "r", encoding=encoding, newline=newline) as file_to_read:
             data = file_to_read.read()
     except UnicodeDecodeError:
         LOGGER.warning(
@@ -287,9 +283,7 @@ def read_file(file_name, encoding="utf-8", newline=None):
             file_name,
             encoding,
         )
-        with io.open(
-            file_name, "r", encoding=encoding, errors="ignore", newline=newline
-        ) as file_to_read:
+        with io.open(file_name, "r", encoding=encoding, errors="ignore", newline=newline) as file_to_read:
             data = file_to_read.read()
 
     return data

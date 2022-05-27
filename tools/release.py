@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Create and validates new tagged release commits
@@ -30,19 +30,19 @@ def main():
         version = args.version[0]
         major, minor, patch = parse_version(version)
 
-        print("Attempting to create new release %s" % version)
+        print(f"Attempting to create new release {version!s}")
         set_version(version)
         validate_new_release(version, pre_tag=True)
         make_release_commit(version)
 
-        new_version = "%i.%i.%irc0" % (major, minor, patch + 1)
+        new_version = f"{major:d}.{minor:d}.{patch + 1:d}rc0"
         set_version(new_version)
         make_next_pre_release_commit(new_version)
 
     elif args.cmd == "validate":
         version = get_local_version()
         validate_new_release(version, pre_tag=False)
-        print("Release %s is validated for publishing" % version)
+        print(f"Release {version!s} is validated for publishing")
 
 
 def parse_args():
@@ -69,8 +69,8 @@ def make_release_commit(version):
     """
     run(["git", "add", str(release_note_file_name(version))])
     run(["git", "add", str(ABOUT_PY)])
-    run(["git", "commit", "-m", "Release %s" % version])
-    run(["git", "tag", "v%s" % version, "-a", "-m", "release %s" % version])
+    run(["git", "commit", "-m", f"Release {version!s}"])
+    run(["git", "tag", f"v{version!s}", "-a", "-m", f"release {version!s}"])
 
 
 def make_next_pre_release_commit(version):
@@ -78,7 +78,7 @@ def make_next_pre_release_commit(version):
     Add release notes and make the release commit
     """
     run(["git", "add", str(ABOUT_PY)])
-    run(["git", "commit", "-m", "Start of next release candidate %s" % version])
+    run(["git", "commit", "-m", f"Start of next release candidate {version!s}"])
 
 
 def validate_new_release(version, pre_tag):
@@ -88,38 +88,27 @@ def validate_new_release(version, pre_tag):
 
     release_note = release_note_file_name(version)
     if not release_note.exists():
-        print(
-            "Not releasing version %s since release note %s does not exist"
-            % (version, str(release_note))
-        )
+        print(f"Not releasing version {version!s} since release note {release_note!s} does not exist")
         sys.exit(1)
 
     with release_note.open("r") as fptr:
         if not fptr.read():
-            print(
-                "Not releasing version %s since release note %s is empty"
-                % (version, str(release_note))
-            )
+            print(f"Not releasing version {version!s} since release note {release_note!s} is empty")
             sys.exit(1)
 
     if pre_tag and check_tag(version):
-        print(
-            "Not creating new release %s since tag v%s already exist"
-            % (version, version)
-        )
+        print(f"Not creating new release {version!s} since tag v{version!s} already exist")
         sys.exit(1)
 
     if not pre_tag and not check_tag(version):
-        print(
-            "Not releasing version %s since tag v%s does not exist" % (version, version)
-        )
+        print(f"Not releasing version {version!s} since tag v{version!s} does not exist")
         sys.exit(1)
 
     with urlopen("https://pypi.python.org/pypi/vunit_hdl/json") as fptr:
         info = json.load(fptr)
 
     if version in info["releases"].keys():
-        print("Version %s has already been released" % version)
+        print(f"Version {version!s} has already been released")
         sys.exit(1)
 
 
@@ -138,12 +127,10 @@ def set_version(version):
     with ABOUT_PY.open("r") as fptr:
         content = fptr.read()
 
-    print("Set local version to %s" % version)
-    content = content.replace(
-        'VERSION = "%s"' % get_local_version(), 'VERSION = "%s"' % version
-    )
+    print(f"Set local version to {version!s}")
+    content = content.replace(f'VERSION = "{get_local_version()!s}"', f'VERSION = "{version!s}"')
 
-    with ABOUT_PY.open("w") as fptr:
+    with ABOUT_PY.open("w", encoding="utf-8") as fptr:
         fptr.write(content)
 
     assert get_local_version() == version
@@ -158,21 +145,13 @@ def get_local_version():
     Return the local python package version and check if corresponding release
     notes exist
     """
-    version = (
-        subprocess.check_output(
-            [sys.executable, str(REPO_ROOT / "setup.py"), "--version"]
-        )
-        .decode()
-        .strip()
-    )
+    version = subprocess.check_output([sys.executable, str(REPO_ROOT / "setup.py"), "--version"]).decode().strip()
 
     return version
 
 
 def check_tag(version):
-    return "v" + version in set(
-        subprocess.check_output([which("git"), "tag", "--list"]).decode().splitlines()
-    )
+    return "v" + version in set(subprocess.check_output([which("git"), "tag", "--list"]).decode().splitlines())
 
 
 def run(cmd):

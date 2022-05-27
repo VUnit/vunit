@@ -43,7 +43,7 @@ how logging is handled in different parts of the system.
 
 The difference is not in how you make these calls but in
 scoreboard_logger itself. Prior to VUnit 3.0 loggers were protected
-types which comes with a number restrictions preventing them to be
+types which comes with a number of restrictions preventing them to be
 used freely. These restrictions are addressed by the upcoming
 VHDL-2017 standard but rather than waiting for that standard to be
 adopted by the simulator vendors, something that usually takes a few

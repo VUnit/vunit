@@ -79,7 +79,7 @@ In this case I have a one-dimensional array (a vector) created by
 
   data_set := new_1d;
 
-The created vecor is empty by default and grows dynamically with every new sample I append.
+The created vector is empty by default and grows dynamically with every new sample I append.
 
 .. code-block:: vhdl
 
@@ -313,4 +313,3 @@ still a number of flaws with this solution. For example
   hardcoded.
 
 It seems that I will have to revisit this post. Until then...
-

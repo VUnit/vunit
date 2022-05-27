@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 from os import getenv
 import glob
@@ -24,9 +24,7 @@ def main():
     preprocessor = location_preprocessor.LocationPreprocessor()
     preprocessor.add_subprogram("print_pre_vhdl_2019_style")
     preprocessor.remove_subprogram("info")
-    vunit_lib.add_source_files(
-        root / "test" / "tb_location.vhd", preprocessors=[preprocessor]
-    )
+    vunit_lib.add_source_files(root / "test" / "tb_location.vhd", preprocessors=[preprocessor])
 
     if vhdl_2019:
         testbenches = vunit_lib.get_source_files("*tb*")

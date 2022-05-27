@@ -24,7 +24,7 @@ Copyright is given by adding the copyright notice to the beginning of each file.
    # License, v. 2.0. If a copy of the MPL was not distributed with this file,
    # You can obtain one at http://mozilla.org/MPL/2.0/.
    #
-   # Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+   # Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 
 Python related
@@ -47,7 +47,10 @@ The test suite is divided into three parts:
 
 The test suites must pass with Python 3.x as well as with all supported simulators.
 
-For running the test locally we recommend using `pytest <https://pypi.python.org/pypi/pytest>`__.
+For running the tests locally we recommend using `pytest <https://pypi.python.org/pypi/pytest>`__.
+In fact, ``pytest`` is required for running the acceptance tests, because some specific features are used for allowing
+certain tests to fail.
+See :doc:`pytest:how-to/skipping`.
 
 Example
 '''''''
@@ -186,8 +189,7 @@ A full list of test environments can be seen by issuing the following command:
 Making releases
 ~~~~~~~~~~~~~~~
 
-Releases are automatically made by Travic CI on any ``master`` commit
-which is tagged.
+Releases are automatically made by GitHub Actions on any ``master`` commit which is tagged.
 
 To create a new tagged release commit:
 
@@ -210,3 +212,13 @@ named ``vX.Y.Z`` is found in Git. A new release will not be made if:
 
 - The ``X.Y.Z`` release is already on PyPI.
 - The repo tag does not exist.
+
+Submodule related
+-----------------
+
+As of VUnit v4.7.0, the version of the submodules is printed in the corresponding ``add_*`` methods of
+:vunit_file:`builtins.py <vunit/builtins.py>`.
+Therefore, when bumping the submodules, maintainers/contributors need to remember modifying the string to match the new
+version.
+
+Furthermore, since OSVVM is tagged periodically, bumping from tag to tag is strongly suggested.

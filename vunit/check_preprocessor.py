@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Preprocessing of check functions
@@ -17,9 +17,7 @@ class CheckPreprocessor(object):
     """
 
     def __init__(self):
-        self._find_operators = re.compile(
-            r"\?/=|\?<=|\?>=|\?<|\?>|\?=|/=|<=|>=|<|>|=", re.MULTILINE
-        )
+        self._find_operators = re.compile(r"\?/=|\?<=|\?>=|\?<|\?>|\?=|/=|<=|>=|<|>|=", re.MULTILINE)
         self._find_quotes = re.compile(r'"|' + r"'", re.MULTILINE)
         self._find_comments = re.compile(r"--|/\*|\*/", re.MULTILINE)
         self._actual_formal = re.compile(r"=>(?P<actual>.*)", re.MULTILINE)
@@ -30,9 +28,7 @@ class CheckPreprocessor(object):
         """
         Preprocess code and return result also given the file_name of the original file
         """
-        check_relation_pattern = re.compile(
-            r"[^a-zA-Z0-9_](?P<call>check_relation)\s*(?P<parameters>\()", re.MULTILINE
-        )
+        check_relation_pattern = re.compile(r"[^a-zA-Z0-9_](?P<call>check_relation)\s*(?P<parameters>\()", re.MULTILINE)
 
         check_relation_calls = list(check_relation_pattern.finditer(code))
         check_relation_calls.reverse()
@@ -43,19 +39,11 @@ class CheckPreprocessor(object):
                 offset_to_point_before_closing_paranthesis,
             ) = self._extract_relation(code, match)
             if relation:
-                context_msg_parameter = (
-                    ", context_msg => %s" % relation.make_context_msg()
-                )
+                context_msg_parameter = f", context_msg => {relation.make_context_msg()!s}"
                 code = (
-                    code[
-                        : match.end("parameters")
-                        + offset_to_point_before_closing_paranthesis
-                    ]
+                    code[: match.end("parameters") + offset_to_point_before_closing_paranthesis]
                     + context_msg_parameter
-                    + code[
-                        match.end("parameters")
-                        + offset_to_point_before_closing_paranthesis :
-                    ]
+                    + code[match.end("parameters") + offset_to_point_before_closing_paranthesis :]
                 )
 
         return code
@@ -93,8 +81,7 @@ class CheckPreprocessor(object):
 
         if not relation:
             raise SyntaxError(
-                "Failed to find relation in %s"
-                % code[check.start("call") : check.end("parameters") + index]
+                f"Failed to find relation in {(code[check.start('call') : check.end('parameters') + index])!s}"
             )
 
         return relation, index - 1
@@ -162,19 +149,14 @@ class CheckPreprocessor(object):
         def find_top_level_match(matches, tokens, top_level=1):
             if matches:
                 for match in matches:
-                    if (
-                        not tokens[match.start()].is_quote
-                        and tokens[match.start()].level == top_level
-                    ):
+                    if not tokens[match.start()].is_quote and tokens[match.start()].level == top_level:
                         return match
 
             return None
 
         relation = None
         token_string = "".join([token.value for token in tokens]).strip()
-        actual_formal = find_top_level_match(
-            self._actual_formal.finditer(token_string), tokens
-        )
+        actual_formal = find_top_level_match(self._actual_formal.finditer(token_string), tokens)
         if actual_formal:
             expr = actual_formal.group("actual")
             start = actual_formal.start("actual")
@@ -195,24 +177,14 @@ class CheckPreprocessor(object):
             )
             + 1
         )
-        top_level_match = find_top_level_match(
-            self._find_operators.finditer(expr), tokens[start:], top_level
-        )
+        top_level_match = find_top_level_match(self._find_operators.finditer(expr), tokens[start:], top_level)
         if top_level_match:
             if top_level == 1:
                 left = expr[: top_level_match.start()].strip()
                 right = expr[top_level_match.end() :].strip()
             else:
-                left = (
-                    expr[: top_level_match.start()]
-                    .replace("(", "", top_level - 1)
-                    .strip()
-                )
-                right = (
-                    expr[: top_level_match.end() : -1]
-                    .replace(")", "", top_level - 1)
-                    .strip()[::-1]
-                )
+                left = expr[: top_level_match.start()].replace("(", "", top_level - 1).strip()
+                right = expr[: top_level_match.end() : -1].replace(")", "", top_level - 1).strip()[::-1]
 
             relation = Relation(left, top_level_match.group(), right)
 
@@ -249,10 +221,10 @@ class Relation(object):
         self._right = right
 
     def make_context_msg(self):
-        return '"Expected %s %s %s. Left is " & to_string(%s) & ". Right is " & to_string(%s) & "."' % (
-            self._left.replace('"', '""'),
-            self._operand,
-            self._right.replace('"', '""'),
-            self._left,
-            self._right,
+        eleft = self._left.replace('"', '""')
+        eright = self._right.replace('"', '""')
+        return (
+            f'"Expected {eleft!s} {self._operand!s} {eright!s}. '
+            f'Left is " & to_string({self._left!s}) & ". '
+            f'Right is " & to_string({self._right!s}) & "."'
         )

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Test the SimulatorInterface class
@@ -33,9 +33,7 @@ class TestSimulatorInterface(unittest.TestCase):
 
     def test_compile_source_files(self):
         simif = create_simulator_interface()
-        simif.compile_source_file_command.side_effect = iter(
-            [["command1"], ["command2"]]
-        )
+        simif.compile_source_file_command.side_effect = iter([["command1"], ["command2"]])
         project = Project()
         project.add_library("lib", "lib_path")
         write_file("file1.vhd", "")
@@ -108,13 +106,9 @@ Compile passed
 
             raise AssertionError
 
-        def check_output_side_effect(
-            command, env=None
-        ):  # pylint: disable=missing-docstring, unused-argument
+        def check_output_side_effect(command, env=None):  # pylint: disable=missing-docstring, unused-argument
             if command == ["command1"]:
-                raise subprocess.CalledProcessError(
-                    returncode=-1, cmd=command, output="bad stuff"
-                )
+                raise subprocess.CalledProcessError(returncode=-1, cmd=command, output="bad stuff")
 
             return ""
 
@@ -152,9 +146,7 @@ Compile failed
                 ],
                 any_order=True,
             )
-        self.assertEqual(
-            project.get_files_in_compile_order(incremental=True), [file1, file2]
-        )
+        self.assertEqual(project.get_files_in_compile_order(incremental=True), [file1, file2])
 
     def test_compile_source_files_check_output_error(self):
         simif = create_simulator_interface()
@@ -166,18 +158,12 @@ Compile failed
 
         with mock.patch("vunit.sim_if.check_output", autospec=True) as check_output:
 
-            def check_output_side_effect(
-                command, env=None
-            ):  # pylint: disable=missing-docstring, unused-argument
-                raise subprocess.CalledProcessError(
-                    returncode=-1, cmd=command, output="bad stuff"
-                )
+            def check_output_side_effect(command, env=None):  # pylint: disable=missing-docstring, unused-argument
+                raise subprocess.CalledProcessError(returncode=-1, cmd=command, output="bad stuff")
 
             check_output.side_effect = check_output_side_effect
             printer = MockPrinter()
-            self.assertRaises(
-                CompileError, simif.compile_source_files, project, printer=printer
-            )
+            self.assertRaises(CompileError, simif.compile_source_files, project, printer=printer)
             self.assertEqual(
                 printer.output,
                 """\
@@ -191,9 +177,7 @@ Compile failed
 """,
             )
             check_output.assert_called_once_with(["command"], env=simif.get_env())
-        self.assertEqual(
-            project.get_files_in_compile_order(incremental=True), [source_file]
-        )
+        self.assertEqual(project.get_files_in_compile_order(incremental=True), [source_file])
 
     def test_compile_source_files_create_command_error(self):
         simif = create_simulator_interface()
@@ -210,15 +194,11 @@ Compile failed
 
             simif.compile_source_file_command.side_effect = raise_compile_error
             self.assertRaises(CompileError, simif.compile_source_files, project)
-        self.assertEqual(
-            project.get_files_in_compile_order(incremental=True), [source_file]
-        )
+        self.assertEqual(project.get_files_in_compile_order(incremental=True), [source_file])
 
     @mock.patch("os.environ", autospec=True)
     def test_find_prefix(self, environ):
-        class MySimulatorInterface(
-            SimulatorInterface
-        ):  # pylint: disable=abstract-method
+        class MySimulatorInterface(SimulatorInterface):  # pylint: disable=abstract-method
             """
             Dummy simulator interface for testing
             """
@@ -274,27 +254,21 @@ class TestOptions(unittest.TestCase):
     def test_string_option(self):
         option = StringOption("optname")
         self._test_ok(option, "hello")
-        self._test_ok(option, u"hello")
+        self._test_ok(option, "hello")
         self._test_not_ok(option, False, "Option 'optname' must be a string. Got False")
-        self._test_not_ok(
-            option, ["foo"], "Option 'optname' must be a string. Got ['foo']"
-        )
+        self._test_not_ok(option, ["foo"], "Option 'optname' must be a string. Got ['foo']")
 
     def test_list_of_string_option(self):
         option = ListOfStringOption("optname")
         self._test_ok(option, ["hello", "foo"])
-        self._test_ok(option, [u"hello"])
-        self._test_not_ok(
-            option, [True], "Option 'optname' must be a list of strings. " "Got [True]"
-        )
+        self._test_ok(option, ["hello"])
+        self._test_not_ok(option, [True], "Option 'optname' must be a list of strings. " "Got [True]")
         self._test_not_ok(
             option,
             [["foo"]],
             "Option 'optname' must be a list of strings. " "Got [['foo']]",
         )
-        self._test_not_ok(
-            option, "foo", "Option 'optname' must be a list of strings. " "Got 'foo'"
-        )
+        self._test_not_ok(option, "foo", "Option 'optname' must be a list of strings. " "Got 'foo'")
 
     def test_vhdl_assert_level(self):
         option = VHDLAssertLevelOption()
@@ -305,8 +279,7 @@ class TestOptions(unittest.TestCase):
         self._test_not_ok(
             option,
             "foo",
-            "Option 'vhdl_assert_stop_level' must be one of "
-            "('warning', 'error', 'failure'). Got 'foo'",
+            "Option 'vhdl_assert_stop_level' must be one of " "('warning', 'error', 'failure'). Got 'foo'",
         )
 
     @staticmethod
@@ -330,9 +303,7 @@ def create_simulator_interface():
     Create a simulator interface with fake method
     """
     simif = SimulatorInterface(output_path="output_path", gui=False)
-    simif.compile_source_file_command = mock.create_autospec(
-        simif.compile_source_file_command
-    )
+    simif.compile_source_file_command = mock.create_autospec(simif.compile_source_file_command)
     return simif
 
 
@@ -344,7 +315,5 @@ class MockPrinter(object):
     def __init__(self):
         self.output = ""
 
-    def write(
-        self, text, output_file=None, fg=None, bg=None
-    ):  # pylint: disable=unused-argument
+    def write(self, text, output_file=None, fg=None, bg=None):  # pylint: disable=unused-argument
         self.output += text

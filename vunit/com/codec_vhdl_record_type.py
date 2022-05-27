@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Module containing the CodecVHDLRecordType class.
@@ -30,8 +30,8 @@ class CodecVHDLRecordType(VHDLRecordType):
         num_of_elements = 0
         for element in self.elements:
             for i in element.identifier_list:
-                element_encoding_list.append("encode(data.%s)" % i)
-                element_decoding_list.append("decode(code, index, result.%s);" % i)
+                element_encoding_list.append(f"encode(data.{i!s})")
+                element_decoding_list.append(f"decode(code, index, result.{i!s});")
 
                 num_of_elements += 1
         element_encodings = " & ".join(element_encoding_list)

@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
 
-import os
-import sys
+from sys import path as sys_path
+from os.path import abspath
 from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parent
+
+sys_path.insert(0, abspath("."))
 
 # -- Sphinx Options -----------------------------------------------------------
 
@@ -15,6 +20,7 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.todo",
     "sphinxarg.ext",  # Automatic argparse command line argument documentation
+    "exec",
 ]
 
 autodoc_default_options = {
@@ -30,9 +36,9 @@ source_suffix = {
 
 master_doc = "index"
 
-project = u"VUnit"
-copyright = u"2014-2021, Lars Asplund"
-author = u"LarsAsplund, kraigher and contributors"
+project = "VUnit"
+copyright = "2014-2022, Lars Asplund"
+author = "LarsAsplund, kraigher and contributors"
 
 version = ""
 release = ""
@@ -47,27 +53,29 @@ todo_include_todos = False
 
 # -- Options for HTML output ----------------------------------------------
 
-html_theme_path = ["."]
-html_theme = "_theme"
-
-html_theme_options = {
-    "analytics_id": "UA-112393863-1",
-    "logo_only": True,
-    "vcs_pageview_mode": "blob",
-    "style_nav_header_background": "#0c479d",
-    "home_breadcrumbs": False,
-}
-html_context = {
-    "conf_py_path": "%s/" % Path(__file__).parent.name,
-    "display_github": True,
-    "github_user": "VUnit",
-    "github_repo": "vunit",
-    "github_version": "master/",
-}
+if (ROOT / "_theme").is_dir():
+    html_theme_path = ["."]
+    html_theme = "_theme"
+    html_theme_options = {
+        "analytics_id": "UA-112393863-1",
+        "logo_only": True,
+        "vcs_pageview_mode": "blob",
+        "style_nav_header_background": "#0c479d",
+        "home_breadcrumbs": False,
+    }
+    html_context = {
+        "conf_py_path": f"{ROOT.name}/",
+        "display_github": True,
+        "github_user": "VUnit",
+        "github_repo": "vunit",
+        "github_version": "master/",
+    }
+else:
+    html_theme = "alabaster"
 
 html_static_path = ["_static"]
 
-html_logo = str(Path(html_static_path[0]) / "VUnit_logo_175x175.png")
+html_logo = str(Path(html_static_path[0]) / "VUnit_logo.png")
 
 html_favicon = str(Path(html_static_path[0]) / "vunit.ico")
 
@@ -78,6 +86,7 @@ htmlhelp_basename = "VUnitDoc"
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3.8/", None),
+    "pytest": ("https://docs.pytest.org/en/latest/", None),
 }
 
 # -- ExtLinks -------------------------------------------------------------

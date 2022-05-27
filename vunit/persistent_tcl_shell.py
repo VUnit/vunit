@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 A persistent TCL shell to avoid startup overhead in TCL-based simulators
@@ -67,7 +67,7 @@ class PersistentTclShell(object):
         Read a variable from the persistent TCL shell
         """
         process = self._process()
-        process.writeline("puts #VUNIT_READVAR=${%s}" % varname)
+        process.writeline(f"puts #VUNIT_READVAR=${varname!s}")
         consumer = ReadVarOutputConsumer()
         process.consume_output(consumer)
         return consumer.var

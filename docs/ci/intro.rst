@@ -24,5 +24,5 @@ might represent a burden for the adoption of continuous integration in hardware 
 category of dev ops.
 
 Nevertheless, thanks to free and public CI/CD services, along with the striking research about portable development
-environment solutions, there are a bunch of alternatives to ease the path. In this section, solutions are grouped in three
+environment solutions, there are a bunch of alternatives to ease the path. In this section, solutions are grouped into three
 categories: :ref:`continuous_integration:script`, :ref:`continuous_integration:container` and :ref:`continuous_integration:manual`.

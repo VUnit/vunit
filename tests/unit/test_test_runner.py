@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Test the test runner
@@ -146,10 +146,7 @@ class TestTestRunner(unittest.TestCase):
                 test_output = runner._get_output_path(test_name)
                 self.assertEqual(
                     test_output,
-                    str(
-                        Path(output_path).resolve()
-                        / (test_name + "_" + hash_string(test_name))
-                    ),
+                    str(Path(output_path).resolve() / (test_name + "_" + hash_string(test_name))),
                 )
 
                 output_path = "output_path"
@@ -157,10 +154,7 @@ class TestTestRunner(unittest.TestCase):
                 test_output = runner._get_output_path(test_name)
                 self.assertEqual(
                     test_output,
-                    str(
-                        Path(output_path).resolve()
-                        / (test_name + "_" + hash_string(test_name))
-                    ),
+                    str(Path(output_path).resolve() / (test_name + "_" + hash_string(test_name))),
                 )
 
                 output_path = "output_path"
@@ -169,10 +163,7 @@ class TestTestRunner(unittest.TestCase):
                 test_output = runner._get_output_path(test_name)
                 self.assertEqual(
                     test_output,
-                    str(
-                        Path(output_path).resolve()
-                        / (safe_name + "_" + hash_string(test_name))
-                    ),
+                    str(Path(output_path).resolve() / (safe_name + "_" + hash_string(test_name))),
                 )
 
     def test_get_output_path_on_windows(self):
@@ -186,18 +177,13 @@ class TestTestRunner(unittest.TestCase):
                 test_output = runner._get_output_path(test_name)
                 self.assertEqual(len(test_output), 260 - 100 + 1)
 
-            with mock.patch(
-                "os.environ", new={"VUNIT_TEST_OUTPUT_PATH_MARGIN": "-1000"}
-            ):
+            with mock.patch("os.environ", new={"VUNIT_TEST_OUTPUT_PATH_MARGIN": "-1000"}):
                 output_path = "output_path"
                 test_name = "_" * 400
                 test_output = runner._get_output_path(test_name)
                 self.assertEqual(
                     test_output,
-                    str(
-                        Path(output_path).resolve()
-                        / (test_name + "_" + hash_string(test_name))
-                    ),
+                    str(Path(output_path).resolve() / (test_name + "_" + hash_string(test_name))),
                 )
 
             with mock.patch("os.environ", new={"VUNIT_SHORT_TEST_OUTPUT_PATHS": ""}):

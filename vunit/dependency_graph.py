@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Functionality to compute a dependency graph
@@ -135,4 +135,4 @@ class CircularDependencyException(Exception):
         self.path = path
 
     def __repr__(self):
-        return "CircularDependencyException(%r)" % self.path
+        return f"CircularDependencyException({self.path!r})"

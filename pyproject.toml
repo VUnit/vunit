@@ -5,11 +5,13 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
+[tool.black]
+line-length = 120
+
 [tool.tox]
 legacy_tox_ini = """
 [tox]
-envlist = py{36,37,38,39}-{fmt,unit,lint,docs}, py{36,37,38,39}-{acceptance,vcomponents}-{activehdl,ghdl,modelsim,rivierapro}, py{36,37,38,39}-coverage
-skip_missing_interpreters = True
+envlist = py{36,37,38,39,310}-{fmt,unit,lint,docs}, py{36,37,38,39,310}-{acceptance,vcomponents}-{activehdl,ghdl,modelsim,rivierapro}, py{36,37,38,39,310}-coverage
 isolated_build = True
 
 [testenv]
@@ -26,8 +28,8 @@ deps=
     coverage: pycodestyle
     coverage: pylint
     coverage: mypy
-    docs: docutils==0.16
-    docs: sphinx==3.3.1
+    docs: docutils
+    docs: sphinx
     docs: sphinx-argparse
 
 setenv=
@@ -43,5 +45,5 @@ commands=
     docs:        {envpython} tools/build_docs.py {envtmpdir}/docsbuild {posargs}
     acceptance:  {envpython} -m pytest -v -ra tests/acceptance {posargs}
     vcomponents: {envpython} vunit/vhdl/verification_components/run.py --clean
-    coverage:    {envpython} -m coverage run --branch --source vunit/ -m unittest discover tests/
+    coverage:    {envpython} -m coverage run --branch --source vunit/ -m pytest tests/
 """

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 from pathlib import Path
 from itertools import product
@@ -22,9 +22,7 @@ def encode(tb_cfg):
 
 
 def gen_wb_tests(obj, *args):
-    for dat_width, num_cycles, strobe_prob, ack_prob, stall_prob, slave_inst in product(
-        *args
-    ):
+    for dat_width, num_cycles, strobe_prob, ack_prob, stall_prob, slave_inst in product(*args):
         tb_cfg = dict(
             dat_width=dat_width,
             #  TODO remove fixed addr
@@ -81,9 +79,7 @@ for test in tb_avalon_master.get_tests():
     if test.name == "wr single rd single":
         gen_avalon_master_tests(test, [1], [1.0], [0.0], [1.0], [1.0])
     else:
-        gen_avalon_master_tests(
-            test, [64], [1.0, 0.3], [0.0, 0.7], [1.0, 0.3], [1.0, 0.3]
-        )
+        gen_avalon_master_tests(test, [64], [1.0, 0.3], [0.0, 0.7], [1.0, 0.3], [1.0, 0.3])
 
 TB_WISHBONE_SLAVE = LIB.test_bench("tb_wishbone_slave")
 
@@ -138,8 +134,7 @@ for id_length in [0, 8]:
         for user_length in [0, 8]:
             for test in TB_AXI_STREAM.get_tests("*check"):
                 test.add_config(
-                    name="id_l=%d dest_l=%d user_l=%d"
-                    % (id_length, dest_length, user_length),
+                    name="id_l=%d dest_l=%d user_l=%d" % (id_length, dest_length, user_length),
                     generics=dict(
                         g_id_length=id_length,
                         g_dest_length=dest_length,
@@ -151,23 +146,17 @@ TB_AXI_STREAM_PROTOCOL_CHECKER = LIB.test_bench("tb_axi_stream_protocol_checker"
 
 for data_length in [0, 8]:
     for test in TB_AXI_STREAM_PROTOCOL_CHECKER.get_tests("*passing*tdata*"):
-        test.add_config(
-            name="data_length=%d" % data_length, generics=dict(data_length=data_length)
-        )
+        test.add_config(name="data_length=%d" % data_length, generics=dict(data_length=data_length))
 
 for test in TB_AXI_STREAM_PROTOCOL_CHECKER.get_tests("*failing*tid width*"):
     test.add_config(name="dest_length=25", generics=dict(dest_length=25))
-    test.add_config(
-        name="id_length=8 dest_length=17", generics=dict(id_length=8, dest_length=17)
-    )
+    test.add_config(name="id_length=8 dest_length=17", generics=dict(id_length=8, dest_length=17))
 
 TEST_FAILING_MAX_WAITS = TB_AXI_STREAM_PROTOCOL_CHECKER.test(
     "Test failing check of that tready comes within max_waits after valid"
 )
 for max_waits in [0, 8]:
-    TEST_FAILING_MAX_WAITS.add_config(
-        name="max_waits=%d" % max_waits, generics=dict(max_waits=max_waits)
-    )
+    TEST_FAILING_MAX_WAITS.add_config(name="max_waits=%d" % max_waits, generics=dict(max_waits=max_waits))
 
 TB_AXI_STREAM.test("test random stall on master").add_config(
     name="stall_master", generics=dict(g_stall_percentage_master=30)

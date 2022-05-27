@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Create monolithic release notes file from several input files
@@ -22,9 +22,7 @@ def get_releases(source_path: Path):
     """
     release_notes = source_path / "release_notes"
     releases = []
-    for idx, file_name in enumerate(
-        sorted(glob(str(release_notes / "*.rst")), reverse=True)
-    ):
+    for idx, file_name in enumerate(sorted(glob(str(release_notes / "*.rst")), reverse=True)):
         releases.append(Release(file_name, is_latest=idx == 0))
     return releases
 
@@ -38,9 +36,9 @@ def create_release_notes():
     releases = get_releases(source_path)
     latest_release = releases[0]
 
-    with (source_path / "release_notes.rst").open("w") as fptr:
+    with (source_path / "release_notes.rst").open("w", encoding="utf-8") as fptr:
         fptr.write(
-            """
+            f"""
 .. _release_notes:
 
 Release notes
@@ -48,10 +46,9 @@ Release notes
 
 .. NOTE:: For installation instructions read :ref:`this <installing>`.
 
-`Commits since last release <https://github.com/VUnit/vunit/compare/%s...master>`__
+`Commits since last release <https://github.com/VUnit/vunit/compare/{latest_release.tag!s}...master>`__
 
 """
-            % latest_release.tag
         )
 
         fptr.write("\n\n")
@@ -62,30 +59,23 @@ Release notes
             if release.is_latest:
                 fptr.write(".. _latest_release:\n\n")
 
-            title = ":vunit_commit:`%s <%s>` - %s" % (
-                release.name,
-                release.tag,
-                release.date.strftime("%Y-%m-%d"),
-            )
+            title = f":vunit_commit:`{release.name!s} <{release.tag!s}>` - {release.date.strftime('%Y-%m-%d')!s}"
             if release.is_latest:
                 title += " (latest)"
             fptr.write(title + "\n")
             fptr.write("-" * len(title) + "\n\n")
 
-            fptr.write(
-                "\n`Download from PyPI <https://pypi.python.org/pypi/vunit_hdl/%s/>`__"
-                % release.name
-            )
+            fptr.write(f"\n`Download from PyPI <https://pypi.python.org/pypi/vunit_hdl/{release.name!s}/>`__")
 
             if not is_last:
                 fptr.write(
-                    " | `Commits since previous release <https://github.com/VUnit/vunit/compare/%s...%s>`__"
-                    % (releases[idx + 1].tag, release.tag)
+                    f" | `Commits since previous release "
+                    f"<https://github.com/VUnit/vunit/compare/{releases[idx + 1].tag!s}...{release.tag!s}>`__"
                 )
 
             fptr.write("\n\n")
 
-            fptr.write(".. include:: %s\n" % relpath(release.file_name, source_path))
+            fptr.write(f".. include:: {relpath(release.file_name, source_path)!s}\n")
 
 
 class Release(object):
@@ -105,7 +95,7 @@ class Release(object):
         except CalledProcessError:
             if self.is_latest:
                 # Release tag for latest release not yet created, assume HEAD will become release
-                print("Release tag %s not created yet, use HEAD for date" % self.tag)
+                print(f"Release tag {self.tag!s} not created yet, use HEAD for date")
                 self.date = _get_date("HEAD")
             else:
                 raise
