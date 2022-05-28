@@ -7,22 +7,24 @@
 from pathlib import Path
 from string import Template
 
-api_template = """  procedure set (
+api_template = """  procedure set_$data_type (
     dict       : dict_t;
     key        : string;
     value      : $full_data_type
   );
-  alias set_$data_type is set[dict_t, string, $full_data_type];
 
-  impure function get (
+  impure function get_$data_type (
     dict : dict_t;
     key  : string
   ) return $full_data_type;
-  alias get_$data_type is get[dict_t, string return $full_data_type];
 
 """
 
-impl_template = """  procedure set (
+alias_template = """  alias set is set_$data_type[dict_t, string, $full_data_type];
+  alias get is get_$data_type[dict_t, string return $full_data_type];
+"""
+
+impl_template = """  procedure set_$data_type (
     dict       : dict_t;
     key        : string;
     value      : $full_data_type
@@ -31,7 +33,7 @@ impl_template = """  procedure set (
     p_set_with_type(dict, key, encode(value), ${data_type_provider}_$data_type);
   end;
 
-  impure function get (
+  impure function get_$data_type (
     dict : dict_t;
     key  : string
   ) return $full_data_type is
@@ -50,6 +52,7 @@ test_template = """\
 """
 
 combinations = [
+    ("string", "vhdl", '"foo"'),
     ("integer", "vhdl", "17"),
     ("character", "vhdl", "'a'"),
     ("boolean", "vhdl", "true"),
@@ -67,7 +70,6 @@ combinations = [
     ("numeric_bit_signed", "ieee", '"101"', "ieee.numeric_bit.signed"),
     ("numeric_std_unsigned", "ieee", '"101"', "ieee.numeric_std.unsigned"),
     ("numeric_std_signed", "ieee", '"101"', "ieee.numeric_std.signed"),
-    ("string", "vhdl", '"foo"'),
     ("time", "vhdl", "17 ns"),
     ("boolean_vector", "vhdl", "(false, true)"),
     ("time_vector", "vhdl", "(17 ns, 21 ps)"),
@@ -83,6 +85,15 @@ def generate_api():
     api = ""
     for combination in combinations:
         template = Template(api_template)
+        full_data_type = combination[3] if len(combination) == 4 else combination[0]
+        api += template.substitute(data_type=combination[0], full_data_type=full_data_type)
+    return api
+
+
+def generate_alias():
+    api = ""
+    for combination in combinations:
+        template = Template(alias_template)
         full_data_type = combination[3] if len(combination) == 4 else combination[0]
         api += template.substitute(data_type=combination[0], full_data_type=full_data_type)
     return api
@@ -110,6 +121,7 @@ def generate_test():
 
 def main():
     print("API:\n\n" + generate_api() + "\n")
+    print("ALIAS:\n\n" + generate_alias() + "\n")
     print("IMPLEMENTATION:\n\n" + generate_impl() + "\n")
     print("TEST:\n\n" + generate_test() + "\n")
 
