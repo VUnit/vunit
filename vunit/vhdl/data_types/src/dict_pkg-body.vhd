@@ -342,296 +342,7 @@ package body dict_pkg is
     return to_string(value_ptr);
   end;
 
-  procedure set (
-    dict       : dict_t;
-    key        : string;
-    value      : integer
-  ) is
-  begin
-    p_set_with_type(dict, key, encode(value), vhdl_integer);
-  end;
-
-  impure function get (
-    dict : dict_t;
-    key  : string
-  ) return integer is
-  begin
-    return decode(p_get_with_type(dict, key, vhdl_integer));
-  end;
-
-  procedure set (
-    dict       : dict_t;
-    key        : string;
-    value      : character
-  ) is
-  begin
-    p_set_with_type(dict, key, encode(value), vhdl_character);
-  end;
-
-  impure function get (
-    dict : dict_t;
-    key  : string
-  ) return character is
-  begin
-    return decode(p_get_with_type(dict, key, vhdl_character));
-  end;
-
-  procedure set (
-    dict       : dict_t;
-    key        : string;
-    value      : boolean
-  ) is
-  begin
-    p_set_with_type(dict, key, encode(value), vhdl_boolean);
-  end;
-
-  impure function get (
-    dict : dict_t;
-    key  : string
-  ) return boolean is
-  begin
-    return decode(p_get_with_type(dict, key, vhdl_boolean));
-  end;
-
-  procedure set (
-    dict       : dict_t;
-    key        : string;
-    value      : real
-  ) is
-  begin
-    p_set_with_type(dict, key, encode(value), vhdl_real);
-  end;
-
-  impure function get (
-    dict : dict_t;
-    key  : string
-  ) return real is
-  begin
-    return decode(p_get_with_type(dict, key, vhdl_real));
-  end;
-
-  procedure set (
-    dict       : dict_t;
-    key        : string;
-    value      : bit
-  ) is
-  begin
-    p_set_with_type(dict, key, encode(value), vhdl_bit);
-  end;
-
-  impure function get (
-    dict : dict_t;
-    key  : string
-  ) return bit is
-  begin
-    return decode(p_get_with_type(dict, key, vhdl_bit));
-  end;
-
-  procedure set (
-    dict       : dict_t;
-    key        : string;
-    value      : std_ulogic
-  ) is
-  begin
-    p_set_with_type(dict, key, encode(value), ieee_std_ulogic);
-  end;
-
-  impure function get (
-    dict : dict_t;
-    key  : string
-  ) return std_ulogic is
-  begin
-    return decode(p_get_with_type(dict, key, ieee_std_ulogic));
-  end;
-
-  procedure set (
-    dict       : dict_t;
-    key        : string;
-    value      : severity_level
-  ) is
-  begin
-    p_set_with_type(dict, key, encode(value), vhdl_severity_level);
-  end;
-
-  impure function get (
-    dict : dict_t;
-    key  : string
-  ) return severity_level is
-  begin
-    return decode(p_get_with_type(dict, key, vhdl_severity_level));
-  end;
-
-  procedure set (
-    dict       : dict_t;
-    key        : string;
-    value      : file_open_status
-  ) is
-  begin
-    p_set_with_type(dict, key, encode(value), vhdl_file_open_status);
-  end;
-
-  impure function get (
-    dict : dict_t;
-    key  : string
-  ) return file_open_status is
-  begin
-    return decode(p_get_with_type(dict, key, vhdl_file_open_status));
-  end;
-
-  procedure set (
-    dict       : dict_t;
-    key        : string;
-    value      : file_open_kind
-  ) is
-  begin
-    p_set_with_type(dict, key, encode(value), vhdl_file_open_kind);
-  end;
-
-  impure function get (
-    dict : dict_t;
-    key  : string
-  ) return file_open_kind is
-  begin
-    return decode(p_get_with_type(dict, key, vhdl_file_open_kind));
-  end;
-
-  procedure set (
-    dict       : dict_t;
-    key        : string;
-    value      : bit_vector
-  ) is
-  begin
-    p_set_with_type(dict, key, encode(value), vhdl_bit_vector);
-  end;
-
-  impure function get (
-    dict : dict_t;
-    key  : string
-  ) return bit_vector is
-  begin
-    return decode(p_get_with_type(dict, key, vhdl_bit_vector));
-  end;
-
-  procedure set (
-    dict       : dict_t;
-    key        : string;
-    value      : std_ulogic_vector
-  ) is
-  begin
-    p_set_with_type(dict, key, encode(value), ieee_std_ulogic_vector);
-  end;
-
-  impure function get (
-    dict : dict_t;
-    key  : string
-  ) return std_ulogic_vector is
-  begin
-    return decode(p_get_with_type(dict, key, ieee_std_ulogic_vector));
-  end;
-
-  procedure set (
-    dict       : dict_t;
-    key        : string;
-    value      : complex
-  ) is
-  begin
-    p_set_with_type(dict, key, encode(value), ieee_complex);
-  end;
-
-  impure function get (
-    dict : dict_t;
-    key  : string
-  ) return complex is
-  begin
-    return decode(p_get_with_type(dict, key, ieee_complex));
-  end;
-
-  procedure set (
-    dict       : dict_t;
-    key        : string;
-    value      : complex_polar
-  ) is
-  begin
-    p_set_with_type(dict, key, encode(value), ieee_complex_polar);
-  end;
-
-  impure function get (
-    dict : dict_t;
-    key  : string
-  ) return complex_polar is
-  begin
-    return decode(p_get_with_type(dict, key, ieee_complex_polar));
-  end;
-
-  procedure set (
-    dict       : dict_t;
-    key        : string;
-    value      : ieee.numeric_bit.unsigned
-  ) is
-  begin
-    p_set_with_type(dict, key, encode(value), ieee_numeric_bit_unsigned);
-  end;
-
-  impure function get (
-    dict : dict_t;
-    key  : string
-  ) return ieee.numeric_bit.unsigned is
-  begin
-    return decode(p_get_with_type(dict, key, ieee_numeric_bit_unsigned));
-  end;
-
-  procedure set (
-    dict       : dict_t;
-    key        : string;
-    value      : ieee.numeric_bit.signed
-  ) is
-  begin
-    p_set_with_type(dict, key, encode(value), ieee_numeric_bit_signed);
-  end;
-
-  impure function get (
-    dict : dict_t;
-    key  : string
-  ) return ieee.numeric_bit.signed is
-  begin
-    return decode(p_get_with_type(dict, key, ieee_numeric_bit_signed));
-  end;
-
-  procedure set (
-    dict       : dict_t;
-    key        : string;
-    value      : ieee.numeric_std.unsigned
-  ) is
-  begin
-    p_set_with_type(dict, key, encode(value), ieee_numeric_std_unsigned);
-  end;
-
-  impure function get (
-    dict : dict_t;
-    key  : string
-  ) return ieee.numeric_std.unsigned is
-  begin
-    return decode(p_get_with_type(dict, key, ieee_numeric_std_unsigned));
-  end;
-
-  procedure set (
-    dict       : dict_t;
-    key        : string;
-    value      : ieee.numeric_std.signed
-  ) is
-  begin
-    p_set_with_type(dict, key, encode(value), ieee_numeric_std_signed);
-  end;
-
-  impure function get (
-    dict : dict_t;
-    key  : string
-  ) return ieee.numeric_std.signed is
-  begin
-    return decode(p_get_with_type(dict, key, ieee_numeric_std_signed));
-  end;
-
-  procedure set (
+  procedure set_string (
     dict       : dict_t;
     key        : string;
     value      : string
@@ -640,7 +351,7 @@ package body dict_pkg is
     p_set_with_type(dict, key, encode(value), vhdl_string);
   end;
 
-  impure function get (
+  impure function get_string (
     dict : dict_t;
     key  : string
   ) return string is
@@ -648,7 +359,296 @@ package body dict_pkg is
     return decode(p_get_with_type(dict, key, vhdl_string));
   end;
 
-  procedure set (
+  procedure set_integer (
+    dict       : dict_t;
+    key        : string;
+    value      : integer
+  ) is
+  begin
+    p_set_with_type(dict, key, encode(value), vhdl_integer);
+  end;
+
+  impure function get_integer (
+    dict : dict_t;
+    key  : string
+  ) return integer is
+  begin
+    return decode(p_get_with_type(dict, key, vhdl_integer));
+  end;
+
+  procedure set_character (
+    dict       : dict_t;
+    key        : string;
+    value      : character
+  ) is
+  begin
+    p_set_with_type(dict, key, encode(value), vhdl_character);
+  end;
+
+  impure function get_character (
+    dict : dict_t;
+    key  : string
+  ) return character is
+  begin
+    return decode(p_get_with_type(dict, key, vhdl_character));
+  end;
+
+  procedure set_boolean (
+    dict       : dict_t;
+    key        : string;
+    value      : boolean
+  ) is
+  begin
+    p_set_with_type(dict, key, encode(value), vhdl_boolean);
+  end;
+
+  impure function get_boolean (
+    dict : dict_t;
+    key  : string
+  ) return boolean is
+  begin
+    return decode(p_get_with_type(dict, key, vhdl_boolean));
+  end;
+
+  procedure set_real (
+    dict       : dict_t;
+    key        : string;
+    value      : real
+  ) is
+  begin
+    p_set_with_type(dict, key, encode(value), vhdl_real);
+  end;
+
+  impure function get_real (
+    dict : dict_t;
+    key  : string
+  ) return real is
+  begin
+    return decode(p_get_with_type(dict, key, vhdl_real));
+  end;
+
+  procedure set_bit (
+    dict       : dict_t;
+    key        : string;
+    value      : bit
+  ) is
+  begin
+    p_set_with_type(dict, key, encode(value), vhdl_bit);
+  end;
+
+  impure function get_bit (
+    dict : dict_t;
+    key  : string
+  ) return bit is
+  begin
+    return decode(p_get_with_type(dict, key, vhdl_bit));
+  end;
+
+  procedure set_std_ulogic (
+    dict       : dict_t;
+    key        : string;
+    value      : std_ulogic
+  ) is
+  begin
+    p_set_with_type(dict, key, encode(value), ieee_std_ulogic);
+  end;
+
+  impure function get_std_ulogic (
+    dict : dict_t;
+    key  : string
+  ) return std_ulogic is
+  begin
+    return decode(p_get_with_type(dict, key, ieee_std_ulogic));
+  end;
+
+  procedure set_severity_level (
+    dict       : dict_t;
+    key        : string;
+    value      : severity_level
+  ) is
+  begin
+    p_set_with_type(dict, key, encode(value), vhdl_severity_level);
+  end;
+
+  impure function get_severity_level (
+    dict : dict_t;
+    key  : string
+  ) return severity_level is
+  begin
+    return decode(p_get_with_type(dict, key, vhdl_severity_level));
+  end;
+
+  procedure set_file_open_status (
+    dict       : dict_t;
+    key        : string;
+    value      : file_open_status
+  ) is
+  begin
+    p_set_with_type(dict, key, encode(value), vhdl_file_open_status);
+  end;
+
+  impure function get_file_open_status (
+    dict : dict_t;
+    key  : string
+  ) return file_open_status is
+  begin
+    return decode(p_get_with_type(dict, key, vhdl_file_open_status));
+  end;
+
+  procedure set_file_open_kind (
+    dict       : dict_t;
+    key        : string;
+    value      : file_open_kind
+  ) is
+  begin
+    p_set_with_type(dict, key, encode(value), vhdl_file_open_kind);
+  end;
+
+  impure function get_file_open_kind (
+    dict : dict_t;
+    key  : string
+  ) return file_open_kind is
+  begin
+    return decode(p_get_with_type(dict, key, vhdl_file_open_kind));
+  end;
+
+  procedure set_bit_vector (
+    dict       : dict_t;
+    key        : string;
+    value      : bit_vector
+  ) is
+  begin
+    p_set_with_type(dict, key, encode(value), vhdl_bit_vector);
+  end;
+
+  impure function get_bit_vector (
+    dict : dict_t;
+    key  : string
+  ) return bit_vector is
+  begin
+    return decode(p_get_with_type(dict, key, vhdl_bit_vector));
+  end;
+
+  procedure set_std_ulogic_vector (
+    dict       : dict_t;
+    key        : string;
+    value      : std_ulogic_vector
+  ) is
+  begin
+    p_set_with_type(dict, key, encode(value), ieee_std_ulogic_vector);
+  end;
+
+  impure function get_std_ulogic_vector (
+    dict : dict_t;
+    key  : string
+  ) return std_ulogic_vector is
+  begin
+    return decode(p_get_with_type(dict, key, ieee_std_ulogic_vector));
+  end;
+
+  procedure set_complex (
+    dict       : dict_t;
+    key        : string;
+    value      : complex
+  ) is
+  begin
+    p_set_with_type(dict, key, encode(value), ieee_complex);
+  end;
+
+  impure function get_complex (
+    dict : dict_t;
+    key  : string
+  ) return complex is
+  begin
+    return decode(p_get_with_type(dict, key, ieee_complex));
+  end;
+
+  procedure set_complex_polar (
+    dict       : dict_t;
+    key        : string;
+    value      : complex_polar
+  ) is
+  begin
+    p_set_with_type(dict, key, encode(value), ieee_complex_polar);
+  end;
+
+  impure function get_complex_polar (
+    dict : dict_t;
+    key  : string
+  ) return complex_polar is
+  begin
+    return decode(p_get_with_type(dict, key, ieee_complex_polar));
+  end;
+
+  procedure set_numeric_bit_unsigned (
+    dict       : dict_t;
+    key        : string;
+    value      : ieee.numeric_bit.unsigned
+  ) is
+  begin
+    p_set_with_type(dict, key, encode(value), ieee_numeric_bit_unsigned);
+  end;
+
+  impure function get_numeric_bit_unsigned (
+    dict : dict_t;
+    key  : string
+  ) return ieee.numeric_bit.unsigned is
+  begin
+    return decode(p_get_with_type(dict, key, ieee_numeric_bit_unsigned));
+  end;
+
+  procedure set_numeric_bit_signed (
+    dict       : dict_t;
+    key        : string;
+    value      : ieee.numeric_bit.signed
+  ) is
+  begin
+    p_set_with_type(dict, key, encode(value), ieee_numeric_bit_signed);
+  end;
+
+  impure function get_numeric_bit_signed (
+    dict : dict_t;
+    key  : string
+  ) return ieee.numeric_bit.signed is
+  begin
+    return decode(p_get_with_type(dict, key, ieee_numeric_bit_signed));
+  end;
+
+  procedure set_numeric_std_unsigned (
+    dict       : dict_t;
+    key        : string;
+    value      : ieee.numeric_std.unsigned
+  ) is
+  begin
+    p_set_with_type(dict, key, encode(value), ieee_numeric_std_unsigned);
+  end;
+
+  impure function get_numeric_std_unsigned (
+    dict : dict_t;
+    key  : string
+  ) return ieee.numeric_std.unsigned is
+  begin
+    return decode(p_get_with_type(dict, key, ieee_numeric_std_unsigned));
+  end;
+
+  procedure set_numeric_std_signed (
+    dict       : dict_t;
+    key        : string;
+    value      : ieee.numeric_std.signed
+  ) is
+  begin
+    p_set_with_type(dict, key, encode(value), ieee_numeric_std_signed);
+  end;
+
+  impure function get_numeric_std_signed (
+    dict : dict_t;
+    key  : string
+  ) return ieee.numeric_std.signed is
+  begin
+    return decode(p_get_with_type(dict, key, ieee_numeric_std_signed));
+  end;
+
+  procedure set_time (
     dict       : dict_t;
     key        : string;
     value      : time
@@ -657,7 +657,7 @@ package body dict_pkg is
     p_set_with_type(dict, key, encode(value), vhdl_time);
   end;
 
-  impure function get (
+  impure function get_time (
     dict : dict_t;
     key  : string
   ) return time is
@@ -665,39 +665,7 @@ package body dict_pkg is
     return decode(p_get_with_type(dict, key, vhdl_time));
   end;
 
-  function encode (
-    data : dict_t
-  ) return string is
-  begin
-    return encode(data.p_meta) & encode(data.p_bucket_lengths) & encode(data.p_bucket_keys) &
-    encode(data.p_bucket_values) & encode(data.p_bucket_value_types);
-  end;
-
-  function decode (
-    code : string
-  ) return dict_t is
-    variable result : dict_t;
-    variable index : positive := code'left;
-  begin
-    decode(code, index, result);
-
-    return result;
-  end;
-
-  procedure decode (
-    constant code   : string;
-    variable index  : inout positive;
-    variable result : out dict_t
-  ) is
-  begin
-    decode(code, index, result.p_meta);
-    decode(code, index, result.p_bucket_lengths);
-    decode(code, index, result.p_bucket_keys);
-    decode(code, index, result.p_bucket_values);
-    decode(code, index, result.p_bucket_value_types);
-  end;
-
-  procedure set_ref (
+  procedure set_dict_t_ref (
     dict       : dict_t;
     key        : string;
     value : inout dict_t
@@ -707,7 +675,7 @@ package body dict_pkg is
     value := null_dict;
   end;
 
-  impure function get_ref (
+  impure function get_dict_t_ref (
     dict : dict_t;
     key  : string
   ) return dict_t is
@@ -715,7 +683,7 @@ package body dict_pkg is
     return decode(p_get_with_type(dict, key, vunit_dict_t));
   end;
 
-  procedure set_ref (
+  procedure set_integer_vector_ptr_t_ref (
     dict       : dict_t;
     key        : string;
     value : inout integer_vector_ptr_t
@@ -725,7 +693,7 @@ package body dict_pkg is
     value := null_integer_vector_ptr;
   end;
 
-  impure function get_ref (
+  impure function get_integer_vector_ptr_t_ref (
     dict : dict_t;
     key  : string
   ) return integer_vector_ptr_t is
@@ -733,7 +701,7 @@ package body dict_pkg is
     return decode(p_get_with_type(dict, key, vunit_integer_vector_ptr_t));
   end;
 
-  procedure set_ref (
+  procedure set_string_ptr_t_ref (
     dict       : dict_t;
     key        : string;
     value : inout string_ptr_t
@@ -743,7 +711,7 @@ package body dict_pkg is
     value := null_string_ptr;
   end;
 
-  impure function get_ref (
+  impure function get_string_ptr_t_ref (
     dict : dict_t;
     key  : string
   ) return string_ptr_t is
@@ -751,7 +719,7 @@ package body dict_pkg is
     return decode(p_get_with_type(dict, key, vunit_string_ptr_t));
   end;
 
-  procedure set_ref (
+  procedure set_integer_array_t_ref (
     dict       : dict_t;
     key        : string;
     value : inout integer_array_t
@@ -761,7 +729,7 @@ package body dict_pkg is
     value := null_integer_array;
   end;
 
-  impure function get_ref (
+  impure function get_integer_array_t_ref (
     dict : dict_t;
     key  : string
   ) return integer_array_t is
@@ -769,7 +737,7 @@ package body dict_pkg is
     return decode(p_get_with_type(dict, key, vunit_integer_array_t));
   end;
 
-  procedure set_ref (
+  procedure set_queue_t_ref (
     dict       : dict_t;
     key        : string;
     value : inout queue_t
@@ -779,7 +747,7 @@ package body dict_pkg is
     value := null_queue;
   end;
 
-  impure function get_ref (
+  impure function get_queue_t_ref (
     dict : dict_t;
     key  : string
   ) return queue_t is
@@ -812,6 +780,38 @@ package body dict_pkg is
       p_bucket_keys => unsafe_pop(queue),
       p_bucket_values => unsafe_pop(queue),
       p_bucket_value_types => unsafe_pop(queue));
+  end;
+
+  function encode (
+    data : dict_t
+  ) return string is
+  begin
+    return encode(data.p_meta) & encode(data.p_bucket_lengths) & encode(data.p_bucket_keys) &
+    encode(data.p_bucket_values) & encode(data.p_bucket_value_types);
+  end;
+
+  function decode (
+    code : string
+  ) return dict_t is
+    variable result : dict_t;
+    variable index : positive := code'left;
+  begin
+    decode(code, index, result);
+
+    return result;
+  end;
+
+  procedure decode (
+    constant code   : string;
+    variable index  : inout positive;
+    variable result : out dict_t
+  ) is
+  begin
+    decode(code, index, result.p_meta);
+    decode(code, index, result.p_bucket_lengths);
+    decode(code, index, result.p_bucket_keys);
+    decode(code, index, result.p_bucket_values);
+    decode(code, index, result.p_bucket_value_types);
   end;
 
 end package body;
