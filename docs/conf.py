@@ -43,7 +43,7 @@ author = "LarsAsplund, kraigher and contributors"
 version = ""
 release = ""
 
-language = None
+language = "en"
 
 exclude_patterns = ["release_notes/*.*"]
 
@@ -92,8 +92,8 @@ intersphinx_mapping = {
 # -- ExtLinks -------------------------------------------------------------
 
 extlinks = {
-    "vunit_example": ("https://github.com/VUnit/vunit/tree/master/examples/%s/", ""),
-    "vunit_file": ("https://github.com/VUnit/vunit/tree/master/%s/", ""),
-    "vunit_commit": ("https://github.com/vunit/vunit/tree/%s/", "@"),
-    "vunit_issue": ("https://github.com/VUnit/vunit/issues/%s/", "#"),
+    "vunit_example": ("https://github.com/VUnit/vunit/tree/master/examples/%s/", "%s"),
+    "vunit_file": ("https://github.com/VUnit/vunit/tree/master/%s/", "%s"),
+    "vunit_commit": ("https://github.com/vunit/vunit/tree/%s/", "@%s"),
+    "vunit_issue": ("https://github.com/VUnit/vunit/issues/%s/", "#%s"),
 }
