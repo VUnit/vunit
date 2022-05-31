@@ -559,8 +559,8 @@ def _find_tests_and_attributes(content, file_name):
 
 
 _RE_ATTR_NAME = r"[a-zA-Z0-9_\-]+"
-_RE_ATTRIBUTE = re.compile(r"vunit:\s*(?P<name>\.?" + _RE_ATTR_NAME + r")", re.IGNORECASE)
-_RE_PRAGMA_LEGACY = re.compile(r"vunit_pragma\s+(?P<name>" + _RE_ATTR_NAME + ")", re.IGNORECASE)
+_RE_ATTRIBUTE = re.compile(r"(?:--|\/\/)\s*vunit:\s*(?P<name>\.?" + _RE_ATTR_NAME + r")", re.IGNORECASE)
+_RE_PRAGMA_LEGACY = re.compile(r"(?:--|\/\/)\s*vunit_pragma\s+(?P<name>" + _RE_ATTR_NAME + r")", re.IGNORECASE)
 _VALID_ATTRIBUTES = ["run_all_in_same_sim", "fail_on_warning"]
 
 
