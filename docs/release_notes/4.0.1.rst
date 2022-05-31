@@ -1,0 +1,2 @@
+- Set value to null when pushing pointer types in queue_t and com to avoid accidental dupliction of ownership.
+- Fix broken ram_master.vhd where the response messages where deleted to early.

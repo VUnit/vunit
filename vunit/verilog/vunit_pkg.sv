@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // You can obtain one at http://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
+// Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 package vunit_pkg;
 
@@ -22,18 +22,17 @@ class test_runner;
    string       output_path;
    int          test_idx = 0;
    int          exit_without_errors = 0;
-   int          exit_simulation = 0;
    int          trace_fd;
 
    function automatic string search_replace(string original, string old, string replacement);
       // First find the index of the old string
-      int 	start_index = 0;
-      int 	original_index = 0;
-      int 	replace_index = 0;
-      bit 	found = 0;
+      int       start_index = 0;
+      int       original_index = 0;
+      int       replace_index = 0;
+      bit       found = 0;
 
       while(1) begin
-	 if (original[original_index] == old[replace_index]) begin
+         if (original[original_index] == old[replace_index]) begin
             if (replace_index == 0) begin
                start_index = original_index;
             end
@@ -43,25 +42,25 @@ class test_runner;
                found = 1;
                break;
             end
-	 end else if (replace_index != 0) begin
+         end else if (replace_index != 0) begin
             replace_index = 0;
             original_index = start_index + 1;
-	 end else begin
+         end else begin
             original_index++;
-	 end
-	 if (original_index == original.len()) begin
+         end
+         if (original_index == original.len()) begin
             // Not found
             break;
-	 end
+         end
       end
 
       if (!found) return original;
 
       return {
-	      original.substr(0, start_index-1),
-	      replacement,
-	      original.substr(start_index+old.len(), original.len()-1)
-	      };
+              original.substr(0, start_index-1),
+              replacement,
+              original.substr(start_index+old.len(), original.len()-1)
+              };
 
    endfunction
 
@@ -73,20 +72,20 @@ class test_runner;
       prefix = "enabled_test_cases : ";
       index = -1;
       for (int i=0; i<runner_cfg.len(); i++) begin
-	 if (runner_cfg.substr(i, i+prefix.len()-1) == prefix) begin
-	    index = i + prefix.len();
-	    break;
-	 end
+         if (runner_cfg.substr(i, i+prefix.len()-1) == prefix) begin
+            index = i + prefix.len();
+            break;
+         end
       end
 
       if (index == -1) begin
-	 $error("Internal error: Cannot find 'enabled_test_cases' key");
+         $error("Internal error: Cannot find 'enabled_test_cases' key");
       end
 
       for (int i=index; i<runner_cfg.len(); i++) begin
-	 if (i == runner_cfg.len()-1) begin
+         if (i == runner_cfg.len()-1) begin
             test_cases_to_run.push_back(runner_cfg.substr(index, i));
-	 end
+         end
          else if (runner_cfg[i] == ",") begin
             test_cases_to_run.push_back(runner_cfg.substr(index, i-1));
             index = i+2;
@@ -100,21 +99,21 @@ class test_runner;
       prefix = "output path : ";
       index = -1;
       for (int i=0; i<runner_cfg.len(); i++) begin
-	 if (runner_cfg.substr(i, i+prefix.len()-1) == prefix) begin
-	    index = i + prefix.len();
-	    break;
-	 end
+         if (runner_cfg.substr(i, i+prefix.len()-1) == prefix) begin
+            index = i + prefix.len();
+            break;
+         end
       end
 
       if (index == -1) begin
-	 $error("Internal error: Cannot find 'output path' key");
+         $error("Internal error: Cannot find 'output path' key");
       end
 
       for (int i=index; i<runner_cfg.len(); i++) begin
-	 if (i == runner_cfg.len()-1) begin
+         if (i == runner_cfg.len()-1) begin
             output_path = runner_cfg.substr(index, i);
             break;
-	 end
+         end
          else if (runner_cfg[i] == ",") begin
             i++;
             if (runner_cfg[i] != ",") begin
@@ -128,15 +127,14 @@ class test_runner;
       phase = idle;
       test_idx = 0;
       exit_without_errors = 0;
-      exit_simulation = 0;
 
       trace_fd = $fopen({output_path, "vunit_results"}, "w");
       return 1;
-   endfunction;
+   endfunction
 
    function void cleanup();
+      $fwrite(trace_fd, "test_suite_done\n");
       exit_without_errors = 1;
-      exit_simulation = 1;
       $stop(0);
    endfunction
 
@@ -156,14 +154,20 @@ class test_runner;
                      break;
                   end
                end
-               if (!found) begin
-                  $error("Found no \"%s\" test case", test_cases_to_run[j]);
+
+               if (test_cases_found.size() == 0 && test_cases_to_run[0] == "") begin
+                  // A test suite without explicit test cases
                   cleanup();
+                  return 0;
+               end
+               else if (!found) begin
+                  $error("Found no \"%s\" test case", test_cases_to_run[j]);
+                  $stop(1);
                   return 0;
                end
             end
          end
-      end;
+      end
 
       if (phase == test_case_cleanup) begin
          test_idx++;
@@ -173,7 +177,6 @@ class test_runner;
             phase = test_suite_cleanup;
          end
       end else if (phase == test_suite_cleanup) begin
-         $fwrite(trace_fd, "test_suite_done\n");
          cleanup();
          return 0;
       end else begin
@@ -197,25 +200,25 @@ class test_runner;
 
    function int is_test_case_setup();
       return phase == test_case_setup;
-   endfunction;
+   endfunction
 
    function int is_test_case_cleanup();
       return phase == test_case_cleanup;
-   endfunction;
+   endfunction
 
    function int is_test_suite_setup();
       return phase == test_suite_setup;
-   endfunction;
+   endfunction
 
    function int is_test_suite_cleanup();
       return phase == test_suite_cleanup;
-   endfunction;
+   endfunction
 
-   task automatic watchdog(realtime timeout);
+   task automatic watchdog(real timeout_in_ns);
       fork : wait_or_timeout
          begin
-            #timeout;
-            $error("Timeout waiting finish after %.3f ns", timeout / 1ns);
+            #(timeout_in_ns * 1ns);
+            $error("Timeout waiting finish after %.3f ns", timeout_in_ns);
             disable wait_or_timeout;
          end
          begin
@@ -223,7 +226,7 @@ class test_runner;
             disable wait_or_timeout;
          end
       join
-   endtask;
+   endtask
 
 endclass
 

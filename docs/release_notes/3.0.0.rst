@@ -1,0 +1,14 @@
+- *beta* version of a :ref:`verification component <vc_library>` library.
+
+  - AXI read/write slaves
+  - Memory model
+  - AXI master
+  - AXI stream
+  - UART RX/TX
+  - (B)RAM master
+
+- Hiearchical and color logging support.
+
+- Communication library usability improvements.
+
+  - Push/pop message creation and debugging tools.

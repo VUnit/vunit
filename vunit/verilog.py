@@ -2,14 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 The main public Python interface of VUnit-Verilog.
 """
 
+from warnings import warn
 from vunit.ui import VUnit as VUnitVHDL
-from vunit.builtins import add_verilog_builtins
 
 
 class VUnit(VUnitVHDL):
@@ -17,9 +17,15 @@ class VUnit(VUnitVHDL):
     VUnit Verilog interface
     """
 
-    def add_builtins(self, library_name="vunit_lib"):  # pylint: disable=arguments-differ
+    # This is a temporary workaround to avoid breaking the scripts of current verilog users
+    def add_vhdl_builtins(self):  # pylint: disable=arguments-differ
         """
-        Add vunit VHDL builtin libraries
+        Add vunit Verilog builtin libraries
         """
-        library = self.add_library(library_name)
-        add_verilog_builtins(library)
+        self._builtins.add_verilog_builtins()
+        builtins_deprecation_note = (
+            "class 'verilog' is deprecated and it will be removed in future releases; "
+            "preserve the functionality using the default vunit class, along with "
+            "'compile_builtins=False' and 'VU.add_verilog_builtins'"
+        )
+        warn(builtins_deprecation_note, Warning)

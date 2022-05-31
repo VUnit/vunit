@@ -2,15 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2017, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Contains Configuration class which contains configuration of a test run
 """
 
 import logging
-from os.path import dirname
-from vunit.simulator_factory import SIMULATOR_FACTORY
+import inspect
+from pathlib import Path
+from copy import copy
+from vunit.sim_if.factory import SIMULATOR_FACTORY
 
 
 LOGGER = logging.getLogger(__name__)
@@ -19,38 +21,50 @@ LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = None
 
 
+class AttributeException(Exception):
+    pass
+
+
 class Configuration(object):  # pylint: disable=too-many-instance-attributes
     """
     Represents a configuration of a test bench
     """
-    def __init__(self,  # pylint: disable=too-many-arguments
-                 name,
-                 design_unit,
-                 generics=None,
-                 sim_options=None,
-                 pre_config=None,
-                 post_check=None):
+
+    def __init__(  # pylint: disable=too-many-arguments
+        self,
+        name,
+        design_unit,
+        generics=None,
+        sim_options=None,
+        pre_config=None,
+        post_check=None,
+        attributes=None,
+    ):
         self.name = name
         self._design_unit = design_unit
         self.generics = {} if generics is None else generics
         self.sim_options = {} if sim_options is None else sim_options
+        self.attributes = {} if attributes is None else attributes
 
-        self.tb_path = dirname(design_unit.file_name)
+        self.tb_path = str(Path(design_unit.original_file_name).parent)
 
         # Fill in tb_path generic with location of test bench
         if "tb_path" in design_unit.generic_names:
-            self.generics["tb_path"] = '%s/' % self.tb_path.replace("\\", "/")
+            self.generics["tb_path"] = str(self.tb_path.replace("\\", "/")) + "/"
 
         self.pre_config = pre_config
         self.post_check = post_check
 
     def copy(self):
-        return Configuration(name=self.name,
-                             design_unit=self._design_unit,
-                             generics=self.generics.copy(),
-                             sim_options=self.sim_options.copy(),
-                             pre_config=self.pre_config,
-                             post_check=self.post_check)
+        return Configuration(
+            name=self.name,
+            design_unit=self._design_unit,
+            generics=self.generics.copy(),
+            sim_options=self.sim_options.copy(),
+            pre_config=self.pre_config,
+            post_check=self.post_check,
+            attributes=self.attributes.copy(),
+        )
 
     @property
     def is_default(self):
@@ -79,6 +93,15 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
 
         return None
 
+    def set_attribute(self, name, value):
+        """
+        Set attribute
+        """
+        if name.startswith("."):
+            self.attributes[name] = value
+        else:
+            raise AttributeException
+
     def set_generic(self, name, value):
         """
         Set generic
@@ -86,10 +109,13 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
         if name not in self._design_unit.generic_names:
             LOGGER.warning(
                 "Generic '%s' set to value '%s' not found in %s '%s.%s'. Possible values are [%s]",
-                name, value,
+                name,
+                value,
                 "entity" if self._design_unit.is_entity else "module",
-                self._design_unit.library_name, self._design_unit.name,
-                ", ".join('%s' % gname for gname in self._design_unit.generic_names))
+                self._design_unit.library_name,
+                self._design_unit.name,
+                ", ".join(str(gname) for gname in self._design_unit.generic_names),
+            )
         else:
             self.generics[name] = value
 
@@ -98,7 +124,7 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
         Set sim option
         """
         SIMULATOR_FACTORY.check_sim_option(name, value)
-        self.sim_options[name] = value
+        self.sim_options[name] = copy(value)
 
     @property
     def vhdl_assert_stop_level(self):
@@ -111,6 +137,45 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
             level = "error"
 
         return level
+
+    def call_pre_config(self, output_path, simulator_output_path):
+        """
+        Call pre_config if available. Setting optional output_path
+        """
+        if self.pre_config is None:
+            return True
+
+        args = inspect.getargspec(self.pre_config).args  # pylint: disable=deprecated-method
+
+        kwargs = {
+            "output_path": output_path,
+            "simulator_output_path": simulator_output_path,
+        }
+
+        for argname in list(kwargs.keys()):
+            if argname not in args:
+                del kwargs[argname]
+
+        return self.pre_config(**kwargs) is True
+
+    def call_post_check(self, output_path, read_output):
+        """
+        Call post_check if available. Setting optional output_path
+        """
+        if self.post_check is None:
+            return True
+
+        args = inspect.getargspec(self.post_check).args  # pylint: disable=deprecated-method
+
+        kwargs = {"output_path": lambda: output_path, "output": read_output}
+
+        for argname, provider in list(kwargs.items()):
+            if argname not in args:
+                del kwargs[argname]
+            else:
+                kwargs[argname] = provider()
+
+        return self.post_check(**kwargs) is True
 
 
 class ConfigurationVisitor(object):
@@ -125,6 +190,15 @@ class ConfigurationVisitor(object):
     def get_configuration_dicts():
         raise NotImplementedError
 
+    def set_attribute(self, name, value):
+        """
+        Set attribute
+        """
+        self._check_enabled()
+        for configs in self.get_configuration_dicts():
+            for config in configs.values():
+                config.set_attribute(name, value)
+
     def set_generic(self, name, value):
         """
         Set generic
@@ -134,13 +208,18 @@ class ConfigurationVisitor(object):
             for config in configs.values():
                 config.set_generic(name, value)
 
-    def set_sim_option(self, name, value):
+    def set_sim_option(self, name, value, overwrite=True):
         """
         Set sim option
+
+        :param overwrite: To overwrite the option or append to the existing value
         """
         self._check_enabled()
         for configs in self.get_configuration_dicts():
             for config in configs.values():
+                if not overwrite:
+                    config.set_sim_option(name, config.sim_options.get(name, []) + value)
+                    continue
                 config.set_sim_option(name, value)
 
     def set_pre_config(self, value):
@@ -161,18 +240,26 @@ class ConfigurationVisitor(object):
             for config in configs.values():
                 config.post_check = value
 
-    def add_config(self, name, generics=None, pre_config=None, post_check=None, sim_options=None):
+    def add_config(  # pylint: disable=too-many-arguments
+        self,
+        name,
+        generics=None,
+        pre_config=None,
+        post_check=None,
+        sim_options=None,
+        attributes=None,
+    ):
         """
         Add a configuration copying unset fields from the default configuration:
         """
         self._check_enabled()
 
-        if name in (DEFAULT_NAME, '', u''):
-            raise ValueError("Illegal configuration name %r. Must be non-empty string" % name)
+        if name in (DEFAULT_NAME, ""):
+            raise ValueError(f"Illegal configuration name {name!r}. Must be non-empty string")
 
         for configs in self.get_configuration_dicts():
             if name in configs:
-                raise RuntimeError("Configuration name %s already defined" % name)
+                raise RuntimeError(f"Configuration name {name!s} already defined")
 
             # Copy default configuration
             config = configs[DEFAULT_NAME].copy()
@@ -189,5 +276,11 @@ class ConfigurationVisitor(object):
 
             if sim_options is not None:
                 config.sim_options.update(sim_options)
+
+            if attributes is not None:
+                for attribute in attributes:
+                    if not attribute.startswith("."):
+                        raise AttributeException
+                config.attributes.update(attributes)
 
             configs[config.name] = config

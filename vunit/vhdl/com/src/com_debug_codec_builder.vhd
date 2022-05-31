@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 library vunit_lib;
 context vunit_lib.vunit_context;
@@ -205,7 +205,7 @@ package body com_debug_codec_builder_pkg is
       return;
     end if;
 
-    elements      := new line_vector(0 to max_num_of_elements - 1);
+    elements      := new work.string_ops.line_vector(0 to max_num_of_elements - 1);
     element_start := grp'left + 1;
     for i in grp'left + 1 to grp'right loop
       if length = max_num_of_elements then

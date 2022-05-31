@@ -1,0 +1,2 @@
+- Make tb_path absolute again. :vunit_issue:`406`
+- Fix ``--export-json`` test location offets for DOS line endings. :vunit_issue:`437`

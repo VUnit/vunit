@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2017, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 library ieee;
 use ieee.std_logic_1164.all;
 
@@ -39,7 +39,6 @@ begin
   test_runner : process
   begin
     test_runner_setup(runner, runner_cfg);
-    logger_init(display_format => level);
 
     while test_suite loop
       if run("Test 1") then

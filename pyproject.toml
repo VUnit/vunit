@@ -1,0 +1,49 @@
+[build-system]
+requires = [
+    "setuptools >= 35.0.2",
+    "setuptools_scm >= 2.0.0, <3"
+]
+build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 120
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = py{36,37,38,39,310}-{fmt,unit,lint,docs}, py{36,37,38,39,310}-{acceptance,vcomponents}-{activehdl,ghdl,modelsim,rivierapro}, py{36,37,38,39,310}-coverage
+isolated_build = True
+
+[testenv]
+recreate=True
+passenv=ALDEC_LICENSE_FILE
+
+deps=
+    fmt: black
+    pytest
+    lint: pycodestyle
+    lint: pylint
+    lint: mypy
+    coverage: coverage
+    coverage: pycodestyle
+    coverage: pylint
+    coverage: mypy
+    docs: docutils
+    docs: sphinx
+    docs: sphinx-argparse
+
+setenv=
+    acceptance-activehdl:  VUNIT_SIMULATOR=activehdl
+    acceptance-ghdl:       VUNIT_SIMULATOR=ghdl
+    acceptance-modelsim:   VUNIT_SIMULATOR=modelsim
+    acceptance-rivierapro: VUNIT_SIMULATOR=rivierapro
+
+commands=
+    fmt:         {envpython} -m black ./ --exclude 'vunit/vhdl/JSON-for-VHDL|.eggs|.git|.hg|.mypy_cache|.nox|.tox|.venv|_build|buck-out|build|dist' {posargs}
+    unit:        {envpython} -m pytest -v -ra tests/unit {posargs}
+    lint:        {envpython} -m pytest -v -ra tests/lint {posargs}
+    docs:        {envpython} tools/build_docs.py {envtmpdir}/docsbuild {posargs}
+    acceptance:  {envpython} -m pytest -v -ra tests/acceptance {posargs}
+    vcomponents: {envpython} vunit/vhdl/verification_components/run.py --clean
+    coverage:    {envpython} -m coverage run --branch --source vunit/ -m pytest tests/
+"""

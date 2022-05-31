@@ -4,20 +4,21 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
+
+-- vunit: run_all_in_same_sim
 
 library ieee;
 use ieee.std_logic_1164.all;
 library vunit_lib;
 use vunit_lib.run_types_pkg.all;
-use vunit_lib.run_base_pkg.all;
 use vunit_lib.run_pkg.all;
-use vunit_lib.log_types_pkg.all;
-use vunit_lib.check_types_pkg.all;
-use vunit_lib.check_special_types_pkg.all;
+use vunit_lib.runner_pkg.all;
+use vunit_lib.log_levels_pkg.all;
+use vunit_lib.logger_pkg.all;
+use vunit_lib.checker_pkg.all;
 use vunit_lib.check_pkg.all;
 use work.test_support.all;
-use work.test_count.all;
 
 entity tb_check_false is
   generic (
@@ -29,13 +30,16 @@ architecture test_fixture of tb_check_false is
   signal check_false_in_1, check_false_in_2, check_false_in_3, check_false_in_4 : std_logic := '0';
   signal check_false_en_1, check_false_en_2, check_false_en_3, check_false_en_4 : std_logic := '1';
 
-  shared variable check_false_checker, check_false_checker2, check_false_checker3, check_false_checker4  : checker_t;
-  constant pass_level : log_level_t := debug_low2;
+  constant check_false_checker : checker_t := new_checker("checker1");
+  constant check_false_checker2 : checker_t := new_checker("checker2");
+  constant check_false_checker3 : checker_t := new_checker("checker3", default_log_level => info);
+  constant check_false_checker4 : checker_t := new_checker("checker4");
 
+  constant default_level : log_level_t := error;
 begin
   clock: process is
   begin
-    while runner.phase < test_runner_exit loop
+    while get_phase(runner_state) < test_runner_exit loop
       clk <= '1', '0' after 5 ns;
       wait for 10 ns;
     end loop;
@@ -48,13 +52,13 @@ begin
   check_false_4 : check_false(check_false_checker4, clk, check_false_en_4, check_false_in_4);
 
   check_false_runner : process
-    variable pass : boolean;
+    variable passed : boolean;
     variable stat : checker_stat_t;
 
     procedure test_concurrent_check (
       signal clk                        : in  std_logic;
       signal check_input                : out std_logic;
-      variable checker : inout checker_t ;
+      checker                           : checker_t ;
       constant level                    : in  log_level_t := error;
       constant active_rising_clock_edge : in  boolean := true) is
     begin
@@ -67,64 +71,97 @@ begin
       wait until clock_edge(clk, not active_rising_clock_edge);
       wait for 1 ns;
       verify_passed_checks(checker, stat, 0);
+      verify_failed_checks(checker, stat, 0);
+      mock(get_logger(checker));
       wait until clock_edge(clk, active_rising_clock_edge);
       wait for 1 ns;
-      verify_log_call(inc_count, "False check failed.", expected_level => level);
-      get_checker_stat(checker, stat);
+      check_only_log(get_logger(checker), "False check failed.", level);
+      unmock(get_logger(checker));
+      verify_passed_checks(checker, stat, 0);
+      verify_failed_checks(checker, stat, 1);
       apply_sequence("0", clk, check_input, active_rising_clock_edge);
       wait until clock_edge(clk, active_rising_clock_edge);
       wait for 1 ns;
       verify_passed_checks(checker, stat, 1);
+      verify_failed_checks(checker, stat, 1);
+      reset_checker_stat(checker);
     end procedure test_concurrent_check;
 
   begin
-    custom_checker_init_from_scratch(check_false_checker3, default_level => info);
     test_runner_setup(runner, runner_cfg);
 
     while test_suite loop
       if run("Test should fail on true and logic 1 inputs to sequential checks") then
+        get_checker_stat(stat);
+        mock(check_logger);
         check_false(true);
-        verify_log_call(inc_count, "False check failed.");
-        check_false(true, "");
-        verify_log_call(inc_count, "");
-        check_false(pass, true, "Checking my data.");
-        counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Checking my data.");
-        pass := check_false(true, result("for my data."));
-        counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "False check failed for my data.");
+        check_only_log(check_logger, "False check failed.", default_level);
 
-        check_false(check_false_checker,true);
-        verify_log_call(inc_count, "False check failed.");
-        check_false(check_false_checker,pass, true, result("for my data."));
-        counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "False check failed for my data.");
+        check_false(true, "");
+        check_only_log(check_logger, "", default_level);
+
+        check_false(passed, true, "Checking my data.", default_level);
+        assert_true(not passed, "Should return pass = false on failing check");
+        check_only_log(check_logger, "Checking my data.", default_level);
+
+        passed := check_false(true, result("for my data."), default_level);
+        assert_true(not passed, "Should return pass = false on failing check");
+        check_only_log(check_logger, "False check failed for my data.", default_level);
+        unmock(check_logger);
+        verify_passed_checks(stat, 0);
+        verify_failed_checks(stat, 4);
+        reset_checker_stat;
+
+        get_checker_stat(check_false_checker, stat);
+        mock(get_logger(check_false_checker));
+        check_false(check_false_checker, true);
+        check_only_log(get_logger(check_false_checker), "False check failed.", default_level);
+
+        check_false(check_false_checker, passed, true, result("for my data."));
+        assert_true(not passed, "Should return pass = false on failing check");
+        check_only_log(get_logger(check_false_checker), "False check failed for my data.", default_level);
+
+        passed := check_false(check_false_checker, true, result("for my data."), default_level);
+        assert_true(not passed, "Should return pass = false on failing check");
+        check_only_log(get_logger(check_false_checker), "False check failed for my data.", default_level);
+        unmock(get_logger(check_false_checker));
+        verify_passed_checks(check_false_checker,stat, 0);
+        verify_failed_checks(check_false_checker,stat, 3);
+        reset_checker_stat(check_false_checker);
+
       elsif run("Test should pass on false and logic 0 inputs to sequential checks") then
         get_checker_stat(stat);
         check_false(false);
-        check_false(pass, false);
-        counting_assert(pass, "Should return pass = true on passing check");
-        pass := check_false(false);
-        counting_assert(pass, "Should return pass = true on passing check");
+        check_false(passed, false);
+        assert_true(passed, "Should return pass = true on passing check");
+        passed := check_false(false);
+        assert_true(passed, "Should return pass = true on passing check");
         verify_passed_checks(stat, 3);
 
         get_checker_stat(check_false_checker, stat);
-        check_false(check_false_checker,false);
-        check_false(check_false_checker,pass, false);
-        counting_assert(pass, "Should return pass = true on passing check");
-        verify_passed_checks(check_false_checker, stat, 2);
-        verify_num_of_log_calls(get_count);
+        check_false(check_false_checker, false);
+        check_false(check_false_checker, passed, false);
+        assert_true(passed, "Should return pass = true on passing check");
+        passed := check_false(check_false_checker, false);
+        assert_true(passed, "Should return pass = true on passing check");
+        verify_passed_checks(stat, 3);
+        verify_passed_checks(check_false_checker, stat, 3);
+
       elsif run("Test pass message") then
-        enable_pass_msg;
+        mock(check_logger);
         check_false(false);
-        verify_log_call(inc_count, "False check passed.", pass_level);
+        check_only_log(check_logger, "False check passed.", pass);
+
         check_false(false, "");
-        verify_log_call(inc_count, "", pass_level);
+        check_only_log(check_logger, "", pass);
+
         check_false(false, "Checking my data.");
-        verify_log_call(inc_count, "Checking my data.", pass_level);
+        check_only_log(check_logger, "Checking my data.", pass);
+
         check_false(false, result("for my data."));
-        verify_log_call(inc_count, "False check passed for my data.", pass_level);
-        disable_pass_msg;
+        check_only_log(check_logger, "False check passed for my data.", pass);
+        unmock(check_logger);
+
       elsif run("Test should be possible to use concurrently") then
         test_concurrent_check(clk, check_false_in_1, default_checker);
       elsif run("Test should be possible to use concurrently with negative active clock edge") then
@@ -138,10 +175,25 @@ begin
         apply_sequence("0L0", clk, check_false_in_4);
         wait until rising_edge(clk);
         wait for 1 ns;
+        mock(get_logger(check_false_checker4));
         verify_passed_checks(check_false_checker4, stat, 3);
+        verify_failed_checks(check_false_checker4, stat, 0);
         apply_sequence("0UXZWH-0", clk, check_false_in_4);
+        wait until rising_edge(clk);
         wait for 1 ns;
-        verify_log_call(set_count(get_count + 6), "False check failed.");
+        check_log(get_logger(check_false_checker4), "False check passed.", pass);
+        check_log(get_logger(check_false_checker4), "False check failed.", default_level);
+        check_log(get_logger(check_false_checker4), "False check failed.", default_level);
+        check_log(get_logger(check_false_checker4), "False check failed.", default_level);
+        check_log(get_logger(check_false_checker4), "False check failed.", default_level);
+        check_log(get_logger(check_false_checker4), "False check failed.", default_level);
+        check_log(get_logger(check_false_checker4), "False check failed.", default_level);
+        check_log(get_logger(check_false_checker4), "False check passed.", pass);
+        unmock(get_logger(check_false_checker4));
+        verify_passed_checks(check_false_checker4, stat, 5);
+        verify_failed_checks(check_false_checker4, stat, 6);
+        reset_checker_stat(check_false_checker4);
+
       elsif run("Test should pass on logic high inputs when not enabled") then
         wait until rising_edge(clk);
         wait for 1 ns;
@@ -164,13 +216,10 @@ begin
       end if;
     end loop;
 
-    get_and_print_test_result(stat);
-    test_runner_cleanup(runner, stat);
+    test_runner_cleanup(runner);
     wait;
   end process;
 
   test_runner_watchdog(runner, 2 us);
 
 end test_fixture;
-
--- vunit_pragma run_all_in_same_sim

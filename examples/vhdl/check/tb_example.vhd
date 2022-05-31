@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2016-2017, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -29,19 +29,17 @@ begin
     constant my_data, reference_value : integer := 17;
     variable stat, expected_stat : checker_stat_t;
     variable my_checker : checker_t;
-    variable pass, found_errors : boolean;
+    variable check_ok, found_errors : boolean;
   begin
     test_runner_setup(runner, runner_cfg);
-    logger_init(display_format => level);
 
     -- Introduction
     -- This file contains a number of runnable examples that you can step through. Supporting information
     -- is brief. It is assumed that you've already read the user guide.
 
-    -- Checker Initialization
-    -- The default settings for the default checker is mostly good but for these examples I want to continue
+    -- The default settings is to stop on error but for these examples I want to continue
     -- on errors so I'm going to raise the stop level.
-    checker_init(display_format => level, stop_level => failure);
+    set_stop_level(failure);
 
     -- Check
     -- The basic check is like a VHDL assert. The difference is that error messages are reported using the
@@ -49,9 +47,7 @@ begin
     check(some_true_condition, "Expect to pass so this should not be displayed");
     check(some_false_condition, "Expected to fail");
 
-    -- checker_init takes all the inputs logger_init does to configure the logger that errors are reported
-    -- to. It also takes a default_level input that controls the level reported to the logger. This is error
-    -- unless specified. The default level can also be overridden in a specific check call.
+    -- The default log level of error can also be overridden in a specific check call.
     check(some_false_condition, "This is not very good", warning);
 
     -- Note that every failing check will be regarded as a failure from a testing point of view regardless
@@ -63,7 +59,8 @@ begin
     -- Logging Passing Checks
     -- You can also have the check message logged on a passing check to create a debug trace. If you use
     -- the result function the message becomes nice in both the passing and failing case.
-    enable_pass_msg;
+    show(get_logger(default_checker), display_handler, pass);
+
     check(some_false_condition, result("for error status flag"));
     check(some_true_condition, result("for error status flag"));
 
@@ -74,20 +71,17 @@ begin
     -- No need to bloat the output with such information.
     check_equal(my_data - 1, reference_value, result("for my_data"));
     check_equal(my_data, reference_value, result("for my_data"));
-    disable_pass_msg;
 
     -- Check Location
     -- Check calls are also detected by the location preprocessor such that ""anonymous"" checks can be
     -- more easily traced. Location preprocessing has been disabled for all checks but check_false to
     -- make this example file cleaner.
-    checker_init(display_format => verbose, stop_level => failure);
     check_false(some_true_condition, "Something is wrong somewhere.");
-    checker_init(display_format => level, stop_level => failure);
 
     -- Many Checkers
     -- As with loggers it's possible to create many checkers, so far we've used the default one.
-    checker_init(my_checker, display_format => level, file_format => verbose_csv,
-                 file_name => "my_checker_log.csv");
+    my_checker := new_checker("my_checker");
+
     -- The default checker is not affected by my_checker errors as shown in this after - before diff.
     stat := get_checker_stat;
     check(my_checker, some_false_condition);
@@ -105,21 +99,22 @@ begin
       info("This was not expected.");
     end if;
 
-    check(my_checker, pass, some_true_condition);
-    if pass then
+    check(my_checker, check_ok, some_true_condition);
+    if check_ok then
       info("Expected to be here.");
     else
       info("This was not expected.");
     end if;
 
     -- You can also ask if a checker has detected any errors.
-    if checker_found_errors then
+    stat := get_checker_stat(default_checker);
+    if stat.n_failed > 0 then
       info("Expected to be here.");
     else
       info("This was not expected.");
     end if;
-    checker_found_errors(my_checker, found_errors);
-    if found_errors then
+
+    if stat.n_failed > 0 then
       info("Expected to be here.");
     else
       info("This was not expected.");
@@ -146,7 +141,6 @@ begin
     -- Point Checks
     -- check is a point check checking a condition at a specific point in time. Here are some other
     -- point checks which have the same type of subprograms as check. Only one type of each is shown here.
-    enable_pass_msg;
 
     ---- True Check
     ---- check_true does the same thing as check but has a more verbose name and result message.
@@ -338,8 +332,12 @@ begin
       check_failed("Not the expected number of failing checks for my_checker:" & LF & to_string(stat));
     end if;
 
-    get_checker_stat(my_checker, stat);
-    test_runner_cleanup(runner, stat.n_failed > 0);
+    -- We reset the log count of the checkers to avoid test suite error in this
+    -- example
+    reset_log_count(get_logger(my_checker), error);
+    reset_log_count(get_logger(default_checker), error);
+
+    test_runner_cleanup(runner);
   end process example_process;
 
   clk <= not clk after 5 ns;

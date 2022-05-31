@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 A general tokenizer
@@ -12,29 +12,30 @@ import collections
 import re
 from vunit.ostools import read_file, file_exists, simplify_path
 
-TokenType = collections.namedtuple("Token", ["kind", "value", "location"])
+
+TokenType = collections.namedtuple("TokenType", ["kind", "value", "location"])
 
 
 def Token(kind, value="", location=None):  # pylint: disable=invalid-name
     return TokenType(kind, value, location)
 
 
-def new_token_kind(name):
+class TokenKind:
+    pass
+
+
+def new_token_kind(name: str) -> TokenKind:
     """
     Create a new token kind with nice __repr__
     """
 
-    def new_token(kind, value='', location=None):
+    def new_token(kind, value="", location=None):
         """
         Create new token of kind
         """
         return Token(kind, value, location)
 
-    cls = type(name,
-               (object,), {
-                   "__repr__": lambda self: name,
-                   "__call__": new_token
-               })
+    cls = type(name, (object,), {"__repr__": lambda self: name, "__call__": new_token})
     return cls()
 
 
@@ -52,13 +53,16 @@ class Tokenizer(object):
         """
         Add token type
         """
-        key = chr(ord('a') + len(self._regexs))
+        key = chr(ord("a") + len(self._regexs))
         self._regexs.append((key, regex))
         self._assoc[key] = (kind, func)
         return kind
 
     def finalize(self):
-        self._regex = re.compile("|".join("(?P<%s>%s)" % spec for spec in self._regexs), re.VERBOSE | re.MULTILINE)
+        self._regex = re.compile(
+            "|".join(f"(?P<{spec[0]!s}>{spec[1]!s})" for spec in self._regexs),
+            re.VERBOSE | re.MULTILINE,
+        )
 
     def tokenize(self, code, file_name=None, previous_location=None, create_locations=False):
         """
@@ -72,8 +76,7 @@ class Tokenizer(object):
                 break
             lexpos = (start, match.end() - 1)
             start = match.end()
-            key = match.lastgroup
-            kind, func = self._assoc[key]
+            kind, func = self._assoc[match.lastgroup]
             value = match.group(match.lastgroup)
 
             if create_locations:
@@ -156,12 +159,8 @@ class TokenStream(object):
         """
         token = self.pop()
         if token.kind not in kinds:
-            if len(kinds) == 1:
-                expected = str(kinds[0])
-            else:
-                expected = "any of [%s]" % ", ".join(str(kind) for kind in kinds)
-            raise LocationException.error("Expected %s got %s" % (expected, token.kind),
-                                          token.location)
+            expected = str(kinds[0]) if len(kinds) == 1 else f"any of [{', '.join(str(kind) for kind in kinds)}]"
+            raise LocationException.error(f"Expected {expected!s} got {token.kind!s}", token.location)
         return token
 
     def slice(self, start, end):
@@ -186,7 +185,7 @@ def describe_location(location, first=True):
         return retval
 
     if not file_exists(file_name):
-        retval += "Unknown location in %s" % file_name
+        retval += f"Unknown location in {file_name!s}"
         return retval
 
     contents = read_file(file_name)
@@ -200,26 +199,27 @@ def describe_location(location, first=True):
     for lineno, line in enumerate(contents.splitlines()):
         lstart = count
         lend = lstart + len(line)
-        if lstart <= start and start <= lend:
-            retval += "%s %s line %i:\n" % (prefix, simplify_path(file_name), lineno + 1)
+        if lstart <= start <= lend:
+            retval += f"{prefix!s} {simplify_path(file_name)!s} line {lineno + 1:d}:\n"
             retval += line + "\n"
             retval += (" " * (start - lstart)) + ("~" * (min(lend - 1, end) - start + 1))
             return retval
 
         count = lend + 1
+    return retval
 
 
 class EOFException(Exception):
     """
     End of file
     """
-    pass
 
 
 class LocationException(Exception):
     """
     A an exception to be raised when there is a problem in a location
     """
+
     @classmethod
     def error(cls, message, location):
         return cls(message, location, "error")
@@ -250,8 +250,7 @@ class LocationException(Exception):
         else:
             method = logger.debug
 
-        method(self._message + "\n%s",
-               describe_location(self._location))
+        method(self._message + "\n%s", describe_location(self._location))
 
 
 def add_previous(location, previous):

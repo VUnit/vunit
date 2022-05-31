@@ -2,230 +2,305 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Functions to add builtin VHDL code to a project for compilation
 """
 
-
-from os.path import join, abspath, dirname, basename
+from pathlib import Path
 from glob import glob
+from warnings import warn
+import logging
 
-VHDL_PATH = abspath(join(dirname(__file__), "vhdl"))
-VERILOG_PATH = abspath(join(dirname(__file__), "verilog"))
+from vunit.vhdl_standard import VHDL, VHDLStandard
+from vunit.ui.common import get_checked_file_names_from_globs
 
 
-def add_verilog_builtins(library):
+LOGGER = logging.getLogger(__name__)
+
+VHDL_PATH = (Path(__file__).parent / "vhdl").resolve()
+VERILOG_PATH = (Path(__file__).parent / "verilog").resolve()
+
+
+class Builtins(object):
     """
-    Add Verilog builtins
+    Manage VUnit builtins and their dependencies
     """
-    library.add_source_files(join(VERILOG_PATH, "vunit_pkg.sv"))
 
+    def __init__(self, vunit_obj, vhdl_standard: VHDLStandard, simulator_class):
+        self._vunit_obj = vunit_obj
+        self._vunit_lib = vunit_obj.add_library("vunit_lib")
+        self._vhdl_standard = vhdl_standard
+        self._simulator_class = simulator_class
+        self._builtins_adder = BuiltinsAdder()
 
-def add_verilog_include_dir(include_dirs):
-    """
-    Add VUnit Verilog include directory
-    """
-    return [join(VERILOG_PATH, "include")] + include_dirs
+        def add(name, deps=tuple()):
+            self._builtins_adder.add_type(name, getattr(self, f"_add_{name!s}"), deps)
 
+        add("array_util")
+        add("com")
+        add("verification_components", ["com", "osvvm"])
+        add("osvvm")
+        add("random", ["osvvm"])
+        add("json4vhdl")
 
-def add_vhdl_builtins(library,
-                      vhdl_standard,
-                      mock_lang=False,
-                      mock_log=False,
-                      supports_context=True):
-    """
-    Add vunit VHDL builtin libraries
-    """
-    def get_builtins_vhdl_all(mock_lang):
-        """Return built-in VHDL files present under all VHDL versions"""
-        files = []
+    def add(self, name, args=None):
+        self._builtins_adder.add(name, args)
 
-        if mock_lang:
-            files += [join("vhdl", "src", "lang", "lang_mock.vhd")]
-            files += [join("vhdl", "src", "lang", "lang_mock_types.vhd")]
-            files += [join("common", "test", "test_type_methods_api.vhd")]
-        else:
-            files += [join("vhdl", "src", "lang", "lang.vhd")]
+    def _add_files(self, pattern=None, allow_empty=True):
+        """
+        Add files with naming convention to indicate which standard is supported
+        """
+        supports_context = self._simulator_class.supports_vhdl_contexts() and self._vhdl_standard.supports_context
 
-        files += [join("string_ops", "src", "string_ops.vhd"),
-                  join("check", "src", "check.vhd"),
-                  join("check", "src", "check_api.vhd"),
-                  join("check", "src", "check_base_api.vhd"),
-                  join("check", "src", "check_types.vhd"),
-                  join("core", "src", "stop_api.vhd"),
-                  join("run", "src", "run.vhd"),
-                  join("run", "src", "run_api.vhd"),
-                  join("run", "src", "run_types.vhd"),
-                  join("run", "src", "run_base_api.vhd")]
+        for file_name in get_checked_file_names_from_globs(pattern, allow_empty):
+            base_file_name = Path(file_name).name
 
-        files += [join("core", "src", "core_pkg.vhd")]
+            standards = set()
+            for standard in VHDL.STANDARDS:
+                standard_name = str(standard)
+                if standard_name + "p" in base_file_name:
+                    standards.update(standard.and_later)
+                elif standard_name + "m" in base_file_name:
+                    standards.update(standard.and_earlier)
+                elif standard_name in base_file_name:
+                    standards.add(standard)
 
-        files += [join("logging", "src", "log_api.vhd"),
-                  join("logging", "src", "log_formatting.vhd"),
-                  join("logging", "src", "log.vhd"),
-                  join("logging", "src", "log_types.vhd")]
+            if standards and self._vhdl_standard not in standards:
+                continue
 
-        files += [join("dictionary", "src", "dictionary.vhd")]
+            if not supports_context and file_name.endswith("_context.vhd"):
+                continue
 
-        files += [join("path", "src", "path.vhd")]
+            self._vunit_lib.add_source_file(file_name)
 
-        return files
+    def _add_data_types(self, external=None):
+        """
+        Add data types packages (sources corresponding to VHPIDIRECT arrays, or their placeholders)
 
-    def get_builtins_vhdl_93(mock_lang, mock_log):
-        """Return built-in VHDL files unique fro VHDL 93"""
-        files = []
+        :param external: struct to provide bridges for the external VHDL API.
+                         {
+                             'string': ['path/to/custom/file'],
+                             'integer': ['path/to/custom/file']
+                         }.
+        """
+        self._add_files(VHDL_PATH / "data_types" / "src" / "*.vhd")
 
-        if mock_lang:
-            files += [join("common", "test", "test_type_methods93.vhd")]
-            files += [join("common", "test", "test_types93.vhd")]
-            files += [join("vhdl", "src", "lang", "lang_mock_special_types93.vhd")]
+        for key in ["string", "integer_vector"]:
+            self._add_files(
+                pattern=str(VHDL_PATH / "data_types" / "src" / "api" / f"external_{key!s}_pkg.vhd")
+                if external is None or key not in external or not external[key] or external[key] is True
+                else external[key],
+                allow_empty=False,
+            )
 
-        if mock_log:
-            files += [join("logging", "src", "log_base93_mock.vhd"),
-                      join("logging", "src", "log_special_types93.vhd"),
-                      join("logging", "src", "log_base_api_mock.vhd")]
-        else:
-            files += [join("logging", "src", "log_base93.vhd"),
-                      join("logging", "src", "log_special_types93.vhd"),
-                      join("logging", "src", "log_base_api.vhd")]
+    def _add_array_util(self):
+        """
+        Add array utility
+        """
+        if not self._vhdl_standard >= VHDL.STD_2008:
+            raise RuntimeError("Array util only supports vhdl 2008 and later")
 
-        files += [join("check", "src", "check_base93.vhd"),
-                  join("check", "src", "check_special_types93.vhd"),
-                  join("run", "src", "run_base93.vhd"),
-                  join("run", "src", "run_special_types93.vhd")]
+        arr_deprecation_note = (
+            "'array_t' is deprecated and it will removed in future releases; use 'integer_array_t' instead"
+        )
+        warn(arr_deprecation_note, Warning)
 
-        return files
+        self._vunit_lib.add_source_files(VHDL_PATH / "array" / "src" / "*.vhd")
 
-    def get_builtins_vhdl_not_93(mock_lang, mock_log):
-        """Return built-in VHDL files present both in VHDL 2002 and 2008"""
-        files = []
+    def _add_random(self):
+        """
+        Add random pkg
+        """
+        if not self._vhdl_standard >= VHDL.STD_2008:
+            raise RuntimeError("Random only supports vhdl 2008 and later")
 
-        if mock_lang:
-            files += [join("common", "test", "test_type_methods200x.vhd")]
-            files += [join("common", "test", "test_types200x.vhd")]
-            files += [join("vhdl", "src", "lang", "lang_mock_special_types200x.vhd")]
+        self._vunit_lib.add_source_files(VHDL_PATH / "random" / "src" / "*.vhd")
 
-        if mock_log:
-            files += [join("common", "test", "test_type_methods_api.vhd")]
-            files += [join("common", "test", "test_type_methods200x.vhd")]
-            files += [join("common", "test", "test_types200x.vhd")]
-            files += [join("logging", "src", "log_base.vhd"),
-                      join("logging", "src", "log_special_types200x_mock.vhd"),
-                      join("logging", "src", "log_base_api.vhd")]
-        else:
-            files += [join("logging", "src", "log_base.vhd"),
-                      join("logging", "src", "log_special_types200x.vhd"),
-                      join("logging", "src", "log_base_api.vhd")]
+    def _add_com(self):
+        """
+        Add com library
+        """
+        if not self._vhdl_standard >= VHDL.STD_2008:
+            raise RuntimeError("Communication package only supports vhdl 2008 and later")
 
-        files += [join("check", "src", "check_base.vhd"),
-                  join("check", "src", "check_special_types200x.vhd"),
-                  join("run", "src", "run_base.vhd"),
-                  join("run", "src", "run_special_types200x.vhd")]
+        self._add_files(VHDL_PATH / "com" / "src" / "*.vhd")
 
-        return files
+    def _add_verification_components(self):
+        """
+        Add verification component library
+        """
+        if not self._vhdl_standard >= VHDL.STD_2008:
+            raise RuntimeError("Verification component library only supports vhdl 2008 and later")
+        self._add_files(VHDL_PATH / "verification_components" / "src" / "*.vhd")
 
-    def get_builtins_vhdl_2008():
-        """Return built-in VHDL files present only in 2008"""
-        files = []
+    def _add_library_if_not_exist(self, library_name, message):
+        """
+        Check if a library name exists in the project. If not, add it and return a handle.
+        """
+        if library_name.lower() in [
+            library.lower() for library in self._vunit_obj._project._libraries  # pylint: disable=protected-access
+        ]:
+            LOGGER.warning(message)
+            return None
+        return self._vunit_obj.add_library(library_name)
 
-        if supports_context:
-            files += ["vunit_context.vhd"]
-            files += ["vunit_run_context.vhd"]
-        files += [join("core", "src", "stop_body_2008.vhd")]
+    def _add_osvvm(self):
+        """
+        Add osvvm library
+        """
+        library = self._add_library_if_not_exist(
+            "osvvm", "Library 'OSVVM' previously defined. Skipping addition of builtin OSVVM (2021.12)."
+        )
+        if library is None:
+            return
 
-        return files
+        simulator_coverage_api = self._simulator_class.get_osvvm_coverage_api()
+        supports_vhdl_package_generics = self._simulator_class.supports_vhdl_package_generics()
 
-    def get_builtins_vhdl_not_2008():
-        """Return built-in VHDL files present both in VHDL 93 and 2002"""
-        files = []
+        if not osvvm_is_installed():
+            raise RuntimeError(
+                """
+Found no OSVVM VHDL files. Did you forget to run
 
-        files += [join("core", "src", "stop_body_93.vhd")]
+git submodule update --init --recursive
 
-        return files
+in your VUnit Git repository? You have to do this first if installing using setup.py."""
+            )
 
-    files = get_builtins_vhdl_all(mock_lang)
+        for file_name in glob(str(VHDL_PATH / "osvvm" / "*.vhd")):
+            bname = Path(file_name).name
 
-    if vhdl_standard == '93':
-        files += get_builtins_vhdl_93(mock_lang, mock_log)
-        files += get_builtins_vhdl_not_2008()
-    elif vhdl_standard == '2002':
-        files += get_builtins_vhdl_not_93(mock_lang, mock_log)
-        files += get_builtins_vhdl_not_2008()
-    elif vhdl_standard == '2008':
-        files += get_builtins_vhdl_not_93(mock_lang, mock_log)
-        files += get_builtins_vhdl_2008()
+            if (bname == "AlertLogPkg_body_BVUL.vhd") or ("2019" in bname):
+                continue
 
-    for file_name in files:
-        library.add_source_files(join(VHDL_PATH, file_name))
+            if ((simulator_coverage_api != "rivierapro") and (bname == "VendorCovApiPkg_Aldec.vhd")) or (
+                (simulator_coverage_api == "rivierapro") and (bname == "VendorCovApiPkg.vhd")
+            ):
+                continue
 
+            if not supports_vhdl_package_generics and (
+                bname
+                in [
+                    "ScoreboardGenericPkg.vhd",
+                    "ScoreboardPkg_int.vhd",
+                    "ScoreboardPkg_slv.vhd",
+                ]
+            ):
+                continue
 
-def add_array_util(library, vhdl_standard):
-    """
-    Add array_pkg utility library
-    """
-    if vhdl_standard != '2008':
-        raise RuntimeError("Array utility only supports vhdl 2008")
+            if supports_vhdl_package_generics and (
+                bname
+                in [
+                    "ScoreboardPkg_int_c.vhd",
+                    "ScoreboardPkg_slv_c.vhd",
+                ]
+            ):
+                continue
 
-    library.add_source_files(join(VHDL_PATH, "array", "src", "*.vhd"))
+            library.add_source_files(file_name, preprocessors=[])
+
+    def _add_json4vhdl(self):
+        """
+        Add JSON-for-VHDL library
+        """
+        library = self._add_library_if_not_exist(
+            "JSON", "Library 'JSON' previously defined. Skipping addition of builtin JSON-for-VHDL (95e848b8)."
+        )
+        if library is None:
+            return
+
+        library.add_source_files(VHDL_PATH / "JSON-for-VHDL" / "src" / "*.vhdl")
+
+    def add_verilog_builtins(self):
+        """
+        Add Verilog builtins
+        """
+        self._vunit_lib.add_source_files(VERILOG_PATH / "vunit_pkg.sv")
+
+    def add_vhdl_builtins(self, external=None):
+        """
+        Add vunit VHDL builtin libraries
+
+        :param external: struct to provide bridges for the external VHDL API.
+
+        :example:
+
+        .. code-block:: python
+
+            Builtins.add_vhdl_builtins(external={
+                'string': ['path/to/custom/file'],
+                'integer': ['path/to/custom/file']
+            })
+        """
+        self._add_data_types(external=external)
+        self._add_files(VHDL_PATH / "*.vhd")
+        for path in (
+            "core",
+            "logging",
+            "string_ops",
+            "check",
+            "dictionary",
+            "run",
+            "path",
+        ):
+            self._add_files(VHDL_PATH / path / "src" / "*.vhd")
 
 
 def osvvm_is_installed():
     """
     Checks if OSVVM is installed within the VUnit directory structure
     """
-    return len(glob(join(VHDL_PATH, "osvvm", "*.vhd"))) != 0
+    return len(glob(str(VHDL_PATH / "osvvm" / "*.vhd"))) != 0
 
 
-def add_osvvm(library, simulator_coverage_api=None, supports_vhdl_package_generics=False):
+def add_verilog_include_dir(include_dirs):
     """
-    Add osvvm library
+    Add VUnit Verilog include directory
     """
-    if not osvvm_is_installed():
-        raise RuntimeError("""
-Found no OSVVM VHDL files. Did you forget to run
-
-git submodule update --init --recursive
-
-in your VUnit Git repository? You have to do this first if installing using setup.py.""")
-
-    for file_name in glob(join(VHDL_PATH, "osvvm", "*.vhd")):
-        if basename(file_name) == "AlertLogPkg_body_BVUL.vhd":
-            continue
-
-        if (simulator_coverage_api != "rivierapro") and (basename(file_name) == "VendorCovApiPkg_Aldec.vhd"):
-            continue
-
-        if (simulator_coverage_api == "rivierapro") and (basename(file_name) == "VendorCovApiPkg.vhd"):
-            continue
-
-        if not supports_vhdl_package_generics and (basename(file_name) in ["ScoreboardGenericPkg.vhd",
-                                                                           "ScoreboardPkg_int.vhd",
-                                                                           "ScoreboardPkg_slv.vhd"]):
-            continue
-
-        library.add_source_files(file_name, preprocessors=[])
+    return [str(VERILOG_PATH / "include")] + include_dirs
 
 
-def add_com(library, vhdl_standard, use_debug_codecs=False, supports_context=True):
+class BuiltinsAdder(object):
     """
-    Add com library
+    Class to manage adding of builtins with dependencies
     """
-    if vhdl_standard != '2008':
-        raise RuntimeError("Communication package only supports vhdl 2008")
 
-    library.add_source_files(join(VHDL_PATH, "com", "src", "com.vhd"))
-    library.add_source_files(join(VHDL_PATH, "com", "src", "com_api.vhd"))
-    library.add_source_files(join(VHDL_PATH, "com", "src", "com_types.vhd"))
-    library.add_source_files(join(VHDL_PATH, "com", "src", "com_codec_api.vhd"))
-    if supports_context:
-        library.add_source_files(join(VHDL_PATH, "com", "src", "com_context.vhd"))
-    library.add_source_files(join(VHDL_PATH, "com", "src", "com_string.vhd"))
-    library.add_source_files(join(VHDL_PATH, "com", "src", "com_debug_codec_builder.vhd"))
-    library.add_source_files(join(VHDL_PATH, "com", "src", "com_std_codec_builder.vhd"))
+    def __init__(self):
+        self._already_added = {}
+        self._types = {}
 
-    if use_debug_codecs:
-        library.add_source_files(join(VHDL_PATH, "com", "src", "com_codec_debug.vhd"))
-    else:
-        library.add_source_files(join(VHDL_PATH, "com", "src", "com_codec.vhd"))
+    def add_type(self, name, function, dependencies=tuple()):
+        self._types[name] = (function, dependencies)
+
+    def add(self, name, args=None):
+        """
+        Add builtin with arguments
+        """
+        args = {} if args is None else args
+
+        if not self._add_check(name, args):
+            function, dependencies = self._types[name]
+            for dep_name in dependencies:
+                self.add(dep_name)
+            function(**args)
+
+    def _add_check(self, name, args=None):
+        """
+        Check if this package has already been added,
+        if it has already been added it must use the same parameters
+
+        @returns False if not yet added
+        """
+        if name not in self._already_added:
+            self._already_added[name] = args
+            return False
+
+        old_args = self._already_added[name]
+        if args != old_args:
+            raise RuntimeError(
+                f"Optional builtin {name!r} added with arguments {args!r} "
+                f"has already been added with arguments {old_args!r}"
+            )
+        return True

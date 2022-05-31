@@ -1,7 +1,8 @@
 .. _cli:
 
 Command Line Interface
-======================
+######################
+
 A :class:`VUnit <vunit.ui.VUnit>` object can be created from command
 line arguments by using the :meth:`from_argv
 <vunit.ui.VUnit.from_argv>` method effectively creating a custom
@@ -13,14 +14,15 @@ specified by the command line arguments and exit the script. The added
 source files are automatically scanned for test cases.
 
 Usage
------
+=====
 
 .. argparse::
    :ref: vunit.vunit_cli._parser_for_documentation
    :prog: run.py
 
 Example Session
----------------
+===============
+
 The :vunit_example:`VHDL User Guide Example <vhdl/user_guide/>` can be run to produce the following output:
 
 .. code-block:: console
@@ -88,7 +90,8 @@ The :vunit_example:`VHDL User Guide Example <vhdl/user_guide/>` can be run to pr
    All passed!
 
 Opening a Test Case in Simulator GUI
-------------------------------------
+====================================
+
 Sometimes the textual error messages and logs are not enough to
 pinpoint the error and a test case needs to be opened in the GUI for
 visual debugging using single stepping, breakpoints and wave form
@@ -129,7 +132,8 @@ possible to perform ``run.py`` with the ``--compile`` flag in a
 separate terminal.
 
 Test Output Paths
------------------
+=================
+
 VUnit creates a separate output directory for each test to provide
 isolation. The test output paths are located under
 ``OUTPUT_PATH/test_output/``. The test names have been washed of any
@@ -149,24 +153,10 @@ and then a test name.
    When using the ``run_all_in_same_sim`` pragma all tests within the
    test bench share the same output folder named after the test bench.
 
-.. _continuous_integration:
+.. _environment_variables:
 
-Continuous Integration Environment
-----------------------------------
-VUnit is easily utilized with continuous integration environments such as
-`Jenkins`_. Once a project ``run.py`` has been setup, tests can be run in a
-headless environment with standardized xUnit style output to a file.
-
-.. code-block:: console
-   :caption: Execute VUnit tests on CI server with XML output
-
-    python run.py --xunit-xml test_output.xml
-
-After tests have finished running, the ``test_output.xml`` file can be parsed
-using standard xUnit test parsers such as `Jenkins xUnit Plugin`_.
-
-.. _Jenkins: http://jenkins-ci.org/
-.. _Jenkins xUnit Plugin: http://wiki.jenkins-ci.org/display/JENKINS/xUnit+Plugin
+Environment Variables
+=====================
 
 .. _simulator_selection:
 
@@ -188,28 +178,118 @@ path can be explicitly configured by setting a
 
    VUNIT_GHDL_PATH=/opt/ghdl/bin
 
-Simulator Specific Environment Variables
-----------------------------------------
+Simulator Specific
+------------------
 
 - ``VUNIT_MODELSIM_INI`` By default VUnit copies the *modelsim.ini*
   file from the tool install folder as a starting point. Setting this
   environment variable selects another *modelsim.ini* file as the
   starting point allowing the user to customize it.
 
-
 .. _test_output_envs:
 
-Test Output Path Length Environment Variables
----------------------------------------------
+Test Output Path Length
+-----------------------
 - ``VUNIT_SHORT_TEST_OUTPUT_PATHS`` Unfortunately file system paths
   are still practically limited to 260 characters on Windows. VUnit
   tries to limit the length of the test output paths on Windows to
   avoid this limitation but still includes as much of the test name
   name as possible leaving a margin of 100 characters. VUnit however
-  cannot forsee user specifc test output file lengths and this
+  cannot forsee user specific test output file lengths and this
   environment variable can be set to minimize output path lengths on
   Windows. On other operating systems this limitation is not relevant.
 
 - ``VUNIT_TEST_OUTPUT_PATH_MARGIN`` Can be used to change the test
   output path margin on Windows. By default the test output path is
   shortened to allow a 100 character margin.
+
+Language revision selection
+---------------------------
+
+The VHDL revision can be specified through the :ref:`python_interface`
+(see :class:`vunit.ui.VUnit`).
+Alternatively, environment variable ``VUNIT_VHDL_STANDARD`` can be set to
+``93``|``1993``, ``02``|``2002``, ``08``|``2008`` (default) or ``19``|``2019``.
+
+.. IMPORTANT::
+  Note that VHDL revision 2019 is unsupported by most vendors, and support of VHDL 2008 features is uneven.
+  Check the documentation of the simulator before using features requiring revisions equal or newer than 2008.
+
+.. _json_export:
+
+JSON Export
+===========
+
+VUnit supports exporting project information through the ``--export-json`` command
+line argument. A JSON file is written containing the list of all files
+added to the project as well as a list of all tests. Each test has a
+mapping to its source code location.
+
+The feature can be used for IDE-integration where the IDE can know the
+path to all files, the library mapping of files and the source code
+location of all tests.
+
+The JSON export file has three top level values:
+
+  - ``export_format_version``: The `semantic <https://semver.org/>`_ version of the format
+  - ``files``: List of project files. Each file item has ``file_name`` and ``library_name``.
+  - ``tests``: List of tests. Each test has ``attributes``, ``location`` and ``name``
+    information. Attributes is the list of test attributes. The ``location`` contains the file name as well as
+    the offset and length in characters of the symbol that defines the test. ``name`` is the name of the test.
+
+.. code-block:: json
+   :caption: Example JSON export file (file names are always absolute but the example has been simplified)
+
+   {
+       "export_format_version": {
+           "major": 1,
+           "minor": 0,
+           "patch": 0
+       },
+       "files": [
+           {
+               "library_name": "lib",
+               "file_name": "tb_example_many.vhd"
+           },
+           {
+               "library_name": "lib",
+               "file_name": "tb_example.vhd"
+           }
+       ],
+       "tests": [
+           {
+               "attributes": {},
+               "location": {
+                   "file_name": "tb_example_many.vhd",
+                   "length": 9,
+                   "offset": 556
+               },
+               "name": "lib.tb_example_many.test_pass"
+           },
+           {
+               "attributes": {},
+               "location": {
+                   "file_name": "tb_example_many.vhd",
+                   "length": 9,
+                   "offset": 624
+               },
+               "name": "lib.tb_example_many.test_fail"
+           },
+           {
+               "attributes": {
+                   ".attr": null
+               },
+               "location": {
+                   "file_name": "tb_example.vhd",
+                   "length": 18,
+                   "offset": 465
+               },
+               "name": "lib.tb_example.all"
+           }
+       ]
+   }
+
+
+.. note:: Several tests may map to the same source code location if
+          the user created multiple :ref:`configurations
+          <configurations>` of the same basic tests.

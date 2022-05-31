@@ -2,14 +2,12 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 library vunit_lib;
 use vunit_lib.run_pkg.all;
-use vunit_lib.run_base_pkg.all;
 use vunit_lib.run_types_pkg.all;
 use vunit_lib.check_pkg.all;
-use vunit_lib.log_types_pkg.all;
 use vunit_lib.path.all;
 
 entity tb_path is
@@ -24,14 +22,15 @@ begin
     test_runner_setup(runner, runner_cfg);
 
     while test_suite loop
-      if run("Verify that joining a single path returns that path") then
-        check_equal(join("some_path"), "some_path");
-      elsif run("Verify that joining an empty path with a second path returns the second path") then
-        check_equal(join("", "some_path"), "some_path");
-      elsif run("Verify the joining of two paths") then
-        check_equal(join("foo", "bar"), "foo/bar");
-      elsif run("Verify that a separator ending the first path is ignored") then
-        check_equal(join("foo/", "bar"), "foo/bar");
+      if run("Test joining paths") then
+        check_equal(join(""), "");
+        check_equal(join("", "p2"), "p2");
+        check_equal(join("p1"), "p1");
+        check_equal(join("p1", p5 => "p5", p10 => "p10"), "p1/p5/p10");
+        check_equal(join("p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", "p9", "p10"),
+                         "p1/p2/p3/p4/p5/p6/p7/p8/p9/p10");
+      elsif run("Verify that a separator ending a path component is ignored") then
+        check_equal(join("/p1/", "p2/", "p3", "/", "p4"), "/p1/p2/p3/p4");
       end if;
     end loop;
 

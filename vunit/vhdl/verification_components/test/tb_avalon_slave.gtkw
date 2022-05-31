@@ -1,0 +1,38 @@
+[*]
+[*] GTKWave Analyzer v3.3.89 (w)1999-2018 BSI
+[*] Tue Jul 31 12:25:32 2018
+[*]
+[dumpfile] "/home/slawek/git/github/vunit/vunit/vhdl/verification_components/vunit_out/test_output/vunit_lib.tb_avalon_slave.num_cycles_2,waitrequest_prob_0.4,readdatavalid_prob_1.0,data_width_32.burst_wr_block_rd_block_65f77a631932f84558fdd96efbd954f322029e05/ghdl/wave.ghw"
+[dumpfile_mtime] "Tue Jul 31 12:22:54 2018"
+[dumpfile_size] 2770
+[savefile] "/home/slawek/git/github/vunit/vunit/vhdl/verification_components/test/tb_avalon_slave.gtkw"
+[timestart] 0
+[size] 1544 794
+[pos] 325 97
+*-26.000000 180000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] top.
+[treeopen] top.tb_avalon_slave.
+[sst_width] 229
+[signals_width] 269
+[sst_expanded] 1
+[sst_vpaned_height] 425
+@28
+top.tb_avalon_slave.dut_slave.clk
+@22
+#{top.tb_avalon_slave.dut_slave.address[31:0]} top.tb_avalon_slave.dut_slave.address[31] top.tb_avalon_slave.dut_slave.address[30] top.tb_avalon_slave.dut_slave.address[29] top.tb_avalon_slave.dut_slave.address[28] top.tb_avalon_slave.dut_slave.address[27] top.tb_avalon_slave.dut_slave.address[26] top.tb_avalon_slave.dut_slave.address[25] top.tb_avalon_slave.dut_slave.address[24] top.tb_avalon_slave.dut_slave.address[23] top.tb_avalon_slave.dut_slave.address[22] top.tb_avalon_slave.dut_slave.address[21] top.tb_avalon_slave.dut_slave.address[20] top.tb_avalon_slave.dut_slave.address[19] top.tb_avalon_slave.dut_slave.address[18] top.tb_avalon_slave.dut_slave.address[17] top.tb_avalon_slave.dut_slave.address[16] top.tb_avalon_slave.dut_slave.address[15] top.tb_avalon_slave.dut_slave.address[14] top.tb_avalon_slave.dut_slave.address[13] top.tb_avalon_slave.dut_slave.address[12] top.tb_avalon_slave.dut_slave.address[11] top.tb_avalon_slave.dut_slave.address[10] top.tb_avalon_slave.dut_slave.address[9] top.tb_avalon_slave.dut_slave.address[8] top.tb_avalon_slave.dut_slave.address[7] top.tb_avalon_slave.dut_slave.address[6] top.tb_avalon_slave.dut_slave.address[5] top.tb_avalon_slave.dut_slave.address[4] top.tb_avalon_slave.dut_slave.address[3] top.tb_avalon_slave.dut_slave.address[2] top.tb_avalon_slave.dut_slave.address[1] top.tb_avalon_slave.dut_slave.address[0]
+#{top.tb_avalon_slave.dut_slave.byteenable[3:0]} top.tb_avalon_slave.dut_slave.byteenable[3] top.tb_avalon_slave.dut_slave.byteenable[2] top.tb_avalon_slave.dut_slave.byteenable[1] top.tb_avalon_slave.dut_slave.byteenable[0]
+@23
+#{top.tb_avalon_slave.burstcount[7:0]} top.tb_avalon_slave.burstcount[7] top.tb_avalon_slave.burstcount[6] top.tb_avalon_slave.burstcount[5] top.tb_avalon_slave.burstcount[4] top.tb_avalon_slave.burstcount[3] top.tb_avalon_slave.burstcount[2] top.tb_avalon_slave.burstcount[1] top.tb_avalon_slave.burstcount[0]
+@28
+top.tb_avalon_slave.dut_slave.waitrequest
+top.tb_avalon_slave.dut_slave.write
+@22
+#{top.tb_avalon_slave.dut_slave.writedata[31:0]} top.tb_avalon_slave.dut_slave.writedata[31] top.tb_avalon_slave.dut_slave.writedata[30] top.tb_avalon_slave.dut_slave.writedata[29] top.tb_avalon_slave.dut_slave.writedata[28] top.tb_avalon_slave.dut_slave.writedata[27] top.tb_avalon_slave.dut_slave.writedata[26] top.tb_avalon_slave.dut_slave.writedata[25] top.tb_avalon_slave.dut_slave.writedata[24] top.tb_avalon_slave.dut_slave.writedata[23] top.tb_avalon_slave.dut_slave.writedata[22] top.tb_avalon_slave.dut_slave.writedata[21] top.tb_avalon_slave.dut_slave.writedata[20] top.tb_avalon_slave.dut_slave.writedata[19] top.tb_avalon_slave.dut_slave.writedata[18] top.tb_avalon_slave.dut_slave.writedata[17] top.tb_avalon_slave.dut_slave.writedata[16] top.tb_avalon_slave.dut_slave.writedata[15] top.tb_avalon_slave.dut_slave.writedata[14] top.tb_avalon_slave.dut_slave.writedata[13] top.tb_avalon_slave.dut_slave.writedata[12] top.tb_avalon_slave.dut_slave.writedata[11] top.tb_avalon_slave.dut_slave.writedata[10] top.tb_avalon_slave.dut_slave.writedata[9] top.tb_avalon_slave.dut_slave.writedata[8] top.tb_avalon_slave.dut_slave.writedata[7] top.tb_avalon_slave.dut_slave.writedata[6] top.tb_avalon_slave.dut_slave.writedata[5] top.tb_avalon_slave.dut_slave.writedata[4] top.tb_avalon_slave.dut_slave.writedata[3] top.tb_avalon_slave.dut_slave.writedata[2] top.tb_avalon_slave.dut_slave.writedata[1] top.tb_avalon_slave.dut_slave.writedata[0]
+@28
+top.tb_avalon_slave.dut_slave.read
+@22
+#{top.tb_avalon_slave.dut_slave.readdata[31:0]} top.tb_avalon_slave.dut_slave.readdata[31] top.tb_avalon_slave.dut_slave.readdata[30] top.tb_avalon_slave.dut_slave.readdata[29] top.tb_avalon_slave.dut_slave.readdata[28] top.tb_avalon_slave.dut_slave.readdata[27] top.tb_avalon_slave.dut_slave.readdata[26] top.tb_avalon_slave.dut_slave.readdata[25] top.tb_avalon_slave.dut_slave.readdata[24] top.tb_avalon_slave.dut_slave.readdata[23] top.tb_avalon_slave.dut_slave.readdata[22] top.tb_avalon_slave.dut_slave.readdata[21] top.tb_avalon_slave.dut_slave.readdata[20] top.tb_avalon_slave.dut_slave.readdata[19] top.tb_avalon_slave.dut_slave.readdata[18] top.tb_avalon_slave.dut_slave.readdata[17] top.tb_avalon_slave.dut_slave.readdata[16] top.tb_avalon_slave.dut_slave.readdata[15] top.tb_avalon_slave.dut_slave.readdata[14] top.tb_avalon_slave.dut_slave.readdata[13] top.tb_avalon_slave.dut_slave.readdata[12] top.tb_avalon_slave.dut_slave.readdata[11] top.tb_avalon_slave.dut_slave.readdata[10] top.tb_avalon_slave.dut_slave.readdata[9] top.tb_avalon_slave.dut_slave.readdata[8] top.tb_avalon_slave.dut_slave.readdata[7] top.tb_avalon_slave.dut_slave.readdata[6] top.tb_avalon_slave.dut_slave.readdata[5] top.tb_avalon_slave.dut_slave.readdata[4] top.tb_avalon_slave.dut_slave.readdata[3] top.tb_avalon_slave.dut_slave.readdata[2] top.tb_avalon_slave.dut_slave.readdata[1] top.tb_avalon_slave.dut_slave.readdata[0]
+@28
+top.tb_avalon_slave.dut_slave.readdatavalid
+[pattern_trace] 1
+[pattern_trace] 0

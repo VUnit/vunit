@@ -4,20 +4,21 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
+
+-- vunit: run_all_in_same_sim
 
 library ieee;
 use ieee.std_logic_1164.all;
 library vunit_lib;
 use vunit_lib.run_types_pkg.all;
-use vunit_lib.run_base_pkg.all;
 use vunit_lib.run_pkg.all;
-use vunit_lib.log_types_pkg.all;
-use vunit_lib.check_types_pkg.all;
-use vunit_lib.check_special_types_pkg.all;
+use vunit_lib.runner_pkg.all;
+use vunit_lib.log_levels_pkg.all;
+use vunit_lib.logger_pkg.all;
+use vunit_lib.checker_pkg.all;
 use vunit_lib.check_pkg.all;
 use work.test_support.all;
-use work.test_count.all;
 
 entity tb_check_zero_one_hot is
   generic (
@@ -30,12 +31,13 @@ architecture test_fixture of tb_check_zero_one_hot is
   signal check_zero_one_hot_in_1, check_zero_one_hot_in_2, check_zero_one_hot_in_3 : std_logic_vector(3 downto 0) := (others => '0');
   signal check_zero_one_hot_en_1, check_zero_one_hot_en_2, check_zero_one_hot_en_3 : std_logic := '1';
 
-  shared variable check_zero_one_hot_checker2, check_zero_one_hot_checker3 : checker_t;
+  constant my_checker2 : checker_t := new_checker("my_checker2");
+  constant my_checker3 : checker_t := new_checker("my_checker3", default_log_level => info);
 
 begin
   clock: process is
   begin
-    while runner.phase < test_runner_exit loop
+    while get_phase(runner_state) < test_runner_exit loop
       clk <= '1', '0' after 5 ns;
       wait for 10 ns;
     end loop;
@@ -43,19 +45,19 @@ begin
   end process clock;
 
   check_zero_one_hot_1 : check_zero_one_hot(clk, check_zero_one_hot_en_1, check_zero_one_hot_in_1);
-  check_zero_one_hot_2 : check_zero_one_hot(check_zero_one_hot_checker2, clk, check_zero_one_hot_en_2, check_zero_one_hot_in_2, active_clock_edge => falling_edge);
-  check_zero_one_hot_3 : check_zero_one_hot(check_zero_one_hot_checker3, clk, check_zero_one_hot_en_3, check_zero_one_hot_in_3);
+  check_zero_one_hot_2 : check_zero_one_hot(my_checker2, clk, check_zero_one_hot_en_2, check_zero_one_hot_in_2, active_clock_edge => falling_edge);
+  check_zero_one_hot_3 : check_zero_one_hot(my_checker3, clk, check_zero_one_hot_en_3, check_zero_one_hot_in_3);
 
   check_zero_one_hot_runner : process
-    variable pass : boolean;
+    variable passed : boolean;
     variable stat : checker_stat_t;
     constant reversed_and_offset_expr : std_logic_vector(23 downto 20) := "1000";
-    constant pass_level : log_level_t := debug_low2;
+    constant default_level : log_level_t := error;
 
     procedure test_concurrent_check (
       signal clk                        : in  std_logic;
       signal check_input                : out std_logic_vector;
-      variable checker : inout checker_t ;
+      checker : checker_t;
       constant level                    : in  log_level_t := error;
       constant active_rising_clock_edge : in  boolean := true) is
     begin
@@ -66,15 +68,22 @@ begin
       wait until clock_edge(clk, active_rising_clock_edge);
       wait for 1 ns;
       verify_passed_checks(checker, stat, 4);
+      verify_failed_checks(checker, stat, 0);
+      mock(get_logger(checker));
       apply_sequence("1001;100H;000X", clk, check_input, active_rising_clock_edge);
       wait until clock_edge(clk, active_rising_clock_edge);
       wait for 1 ns;
-      verify_log_call(set_count(get_count + 3), "Zero one-hot check failed - Got 000X.", expected_level => level);
+      check_log(get_logger(checker), "Zero one-hot check failed - Got 1001.", level);
+      check_log(get_logger(checker), "Zero one-hot check failed - Got 100H.", level);
+      check_log(get_logger(checker), "Zero one-hot check failed - Got 000X.", level);
+      unmock(get_logger(checker));
+      verify_passed_checks(checker, stat, 4);
+      verify_failed_checks(checker, stat, 3);
+      reset_checker_stat(checker);
       apply_sequence("0000", clk, check_input, active_rising_clock_edge);
     end procedure test_concurrent_check;
 
   begin
-    custom_checker_init_from_scratch(check_zero_one_hot_checker3, default_level => info);
     test_runner_setup(runner, runner_cfg);
 
     while test_suite loop
@@ -86,107 +95,173 @@ begin
         check_zero_one_hot("HL00");
         verify_passed_checks(stat, 4);
 
-        get_checker_stat(check_zero_one_hot_checker3, stat);
-        check_zero_one_hot(check_zero_one_hot_checker3, "0000");
-        check_zero_one_hot(check_zero_one_hot_checker3, "LL00");
-        check_zero_one_hot(check_zero_one_hot_checker3, "1000");
-        check_zero_one_hot(check_zero_one_hot_checker3, "HL00");
-        verify_passed_checks(check_zero_one_hot_checker3, stat, 4);
+        get_checker_stat(my_checker3, stat);
+        check_zero_one_hot(my_checker3, "0000");
+        check_zero_one_hot(my_checker3, "LL00");
+        check_zero_one_hot(my_checker3, "1000");
+        check_zero_one_hot(my_checker3, "HL00");
+        verify_passed_checks(my_checker3, stat, 4);
 
         get_checker_stat(stat);
-        check_zero_one_hot(pass, "0000");
-        counting_assert(pass, "Should return pass = true on passing check");
-        check_zero_one_hot(pass, "LL00");
-        counting_assert(pass, "Should return pass = true on passing check");
-        check_zero_one_hot(pass, "1000");
-        counting_assert(pass, "Should return pass = true on passing check");
-        check_zero_one_hot(pass, "HL00");
-        counting_assert(pass, "Should return pass = true on passing check");
+        check_zero_one_hot(passed, "0000");
+        assert_true(passed, "Should return pass = true on passing check");
+        check_zero_one_hot(passed, "LL00");
+        assert_true(passed, "Should return pass = true on passing check");
+        check_zero_one_hot(passed, "1000");
+        assert_true(passed, "Should return pass = true on passing check");
+        check_zero_one_hot(passed, "HL00");
+        assert_true(passed, "Should return pass = true on passing check");
         verify_passed_checks(stat, 4);
 
         get_checker_stat(stat);
-        pass := check_zero_one_hot("0000");
-        counting_assert(pass, "Should return pass = true on passing check");
-        pass := check_zero_one_hot("LL00");
-        counting_assert(pass, "Should return pass = true on passing check");
-        pass := check_zero_one_hot("1000");
-        counting_assert(pass, "Should return pass = true on passing check");
-        pass := check_zero_one_hot("HL00");
-        counting_assert(pass, "Should return pass = true on passing check");
+        passed := check_zero_one_hot("0000");
+        assert_true(passed, "Should return pass = true on passing check");
+        passed := check_zero_one_hot("LL00");
+        assert_true(passed, "Should return pass = true on passing check");
+        passed := check_zero_one_hot("1000");
+        assert_true(passed, "Should return pass = true on passing check");
+        passed := check_zero_one_hot("HL00");
+        assert_true(passed, "Should return pass = true on passing check");
         verify_passed_checks(stat, 4);
 
-        get_checker_stat(check_zero_one_hot_checker3, stat);
-        check_zero_one_hot(check_zero_one_hot_checker3, pass, "0000");
-        counting_assert(pass, "Should return pass = true on passing check");
-        check_zero_one_hot(check_zero_one_hot_checker3, pass, "LL00");
-        counting_assert(pass, "Should return pass = true on passing check");
-        check_zero_one_hot(check_zero_one_hot_checker3, pass, "1000");
-        counting_assert(pass, "Should return pass = true on passing check");
-        check_zero_one_hot(check_zero_one_hot_checker3, pass, "HL00");
-        counting_assert(pass, "Should return pass = true on passing check");
-        verify_passed_checks(check_zero_one_hot_checker3, stat, 4);
-        verify_num_of_log_calls(get_count);
+        get_checker_stat(my_checker3, stat);
+        check_zero_one_hot(my_checker3, passed, "0000");
+        assert_true(passed, "Should return pass = true on passing check");
+        check_zero_one_hot(my_checker3, passed, "LL00");
+        assert_true(passed, "Should return pass = true on passing check");
+        check_zero_one_hot(my_checker3, passed, "1000");
+        assert_true(passed, "Should return pass = true on passing check");
+        check_zero_one_hot(my_checker3, passed, "HL00");
+        assert_true(passed, "Should return pass = true on passing check");
+        verify_passed_checks(my_checker3, stat, 4);
+
+        get_checker_stat(my_checker3, stat);
+        passed := check_zero_one_hot(my_checker3, "0000");
+        assert_true(passed, "Should return pass = true on passing check");
+        passed := check_zero_one_hot(my_checker3, "LL00");
+        assert_true(passed, "Should return pass = true on passing check");
+        passed := check_zero_one_hot(my_checker3, "1000");
+        assert_true(passed, "Should return pass = true on passing check");
+        passed := check_zero_one_hot(my_checker3, "HL00");
+        assert_true(passed, "Should return pass = true on passing check");
+        verify_passed_checks(my_checker3, stat, 4);
+
       elsif run("Test pass message") then
-        enable_pass_msg;
+        mock(check_logger);
         check_zero_one_hot("00000");
-        verify_log_call(inc_count, "Zero one-hot check passed - Got 0_0000.", pass_level);
+        check_only_log(check_logger, "Zero one-hot check passed - Got 0_0000.", pass);
+
         check_zero_one_hot("00000", "");
-        verify_log_call(inc_count, "Got 0_0000.", pass_level);
+        check_only_log(check_logger, "Got 0_0000.", pass);
+
         check_zero_one_hot("00000", "Checking my data");
-        verify_log_call(inc_count, "Checking my data - Got 0_0000.", pass_level);
+        check_only_log(check_logger, "Checking my data - Got 0_0000.", pass);
+
         check_zero_one_hot("00000", result("for my data"));
-        verify_log_call(inc_count, "Zero one-hot check passed for my data - Got 0_0000.", pass_level);
-        disable_pass_msg;
+        check_only_log(check_logger, "Zero one-hot check passed for my data - Got 0_0000.", pass);
+        unmock(check_logger);
+
       elsif run("Test should fail on more than one high bit") then
+        get_checker_stat(stat);
+        mock(check_logger);
         check_zero_one_hot("01001");
-        verify_log_call(inc_count, "Zero one-hot check failed - Got 0_1001.");
+        check_only_log(check_logger, "Zero one-hot check failed - Got 0_1001.", default_level);
+
         check_zero_one_hot("0100H");
-        verify_log_call(inc_count, "Zero one-hot check failed - Got 0_100H.");
-        check_zero_one_hot(check_zero_one_hot_checker3, "01001");
-        verify_log_call(inc_count, "Zero one-hot check failed - Got 0_1001.", expected_level => info);
-        check_zero_one_hot(check_zero_one_hot_checker3, "0100H");
-        verify_log_call(inc_count, "Zero one-hot check failed - Got 0_100H.", expected_level => info);
+        check_only_log(check_logger, "Zero one-hot check failed - Got 0_100H.", default_level);
 
-        check_zero_one_hot(pass, "01001");
-        counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Zero one-hot check failed - Got 0_1001.");
-        check_zero_one_hot(pass, "0100H");
-        counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Zero one-hot check failed - Got 0_100H.");
-        check_zero_one_hot(check_zero_one_hot_checker3, pass, "01001");
-        counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Zero one-hot check failed - Got 0_1001.", expected_level => info);
-        check_zero_one_hot(check_zero_one_hot_checker3, pass, "0100H");
-        counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Zero one-hot check failed - Got 0_100H.", expected_level => info);
+        check_zero_one_hot(passed, "01001");
+        assert_true(not passed, "Should return pass = false on failing check");
+        check_only_log(check_logger, "Zero one-hot check failed - Got 0_1001.", default_level);
 
-        pass := check_zero_one_hot("01001");
-        counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Zero one-hot check failed - Got 0_1001.");
-        pass := check_zero_one_hot("0100H");
-        counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Zero one-hot check failed - Got 0_100H.");
+        check_zero_one_hot(passed, "0100H");
+        assert_true(not passed, "Should return pass = false on failing check");
+        check_only_log(check_logger, "Zero one-hot check failed - Got 0_100H.", default_level);
+
+        passed := check_zero_one_hot("01001");
+        assert_true(not passed, "Should return pass = false on failing check");
+        check_only_log(check_logger, "Zero one-hot check failed - Got 0_1001.", default_level);
+
+        passed := check_zero_one_hot("0100H");
+        assert_true(not passed, "Should return pass = false on failing check");
+        check_only_log(check_logger, "Zero one-hot check failed - Got 0_100H.", default_level);
+        unmock(check_logger);
+        verify_passed_checks(stat, 0);
+        verify_failed_checks(stat, 6);
+        reset_checker_stat;
+
+        get_checker_stat(my_checker3, stat);
+        mock(get_logger(my_checker3));
+        check_zero_one_hot(my_checker3, "01001");
+        check_only_log(get_logger(my_checker3), "Zero one-hot check failed - Got 0_1001.", info);
+
+        check_zero_one_hot(my_checker3, "0100H");
+        check_only_log(get_logger(my_checker3), "Zero one-hot check failed - Got 0_100H.", info);
+
+        check_zero_one_hot(my_checker3, passed, "01001");
+        assert_true(not passed, "Should return pass = false on failing check");
+        check_only_log(get_logger(my_checker3), "Zero one-hot check failed - Got 0_1001.", info);
+
+        check_zero_one_hot(my_checker3, passed, "0100H");
+        assert_true(not passed, "Should return pass = false on failing check");
+        check_only_log(get_logger(my_checker3), "Zero one-hot check failed - Got 0_100H.", info);
+
+        passed := check_zero_one_hot(my_checker3, "01001");
+        assert_true(not passed, "Should return pass = false on failing check");
+        check_only_log(get_logger(my_checker3), "Zero one-hot check failed - Got 0_1001.", info);
+
+        passed := check_zero_one_hot(my_checker3, "0100H");
+        assert_true(not passed, "Should return pass = false on failing check");
+        check_only_log(get_logger(my_checker3), "Zero one-hot check failed - Got 0_100H.", info);
+        unmock(get_logger(my_checker3));
+        verify_passed_checks(my_checker3, stat, 0);
+        verify_failed_checks(my_checker3, stat, 6);
+        reset_checker_stat(my_checker3);
+
       elsif run("Test should fail on unknowns") then
+        get_checker_stat(stat);
+        mock(check_logger);
         check_zero_one_hot("0000X");
-        verify_log_call(inc_count, "Zero one-hot check failed - Got 0_000X.");
-        check_zero_one_hot(check_zero_one_hot_checker3, "0000X");
-        verify_log_call(inc_count, "Zero one-hot check failed - Got 0_000X.", expected_level => info);
+        check_only_log(check_logger, "Zero one-hot check failed - Got 0_000X.", default_level);
 
-        check_zero_one_hot(pass, "0000X");
-        counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Zero one-hot check failed - Got 0_000X.");
-        pass := check_zero_one_hot("0000X");
-        counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Zero one-hot check failed - Got 0_000X.");
-        check_zero_one_hot(check_zero_one_hot_checker3, pass, "0000X");
-        counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Zero one-hot check failed - Got 0_000X.", expected_level => info);
+        check_zero_one_hot(passed, "0000X");
+        assert_true(not passed, "Should return pass = false on failing check");
+        check_only_log(check_logger, "Zero one-hot check failed - Got 0_000X.", default_level);
+
+        passed := check_zero_one_hot("0000X");
+        assert_true(not passed, "Should return pass = false on failing check");
+        check_only_log(check_logger, "Zero one-hot check failed - Got 0_000X.", default_level);
+        unmock(check_logger);
+        verify_passed_checks(stat, 0);
+        verify_failed_checks(stat, 3);
+        reset_checker_stat;
+
+        get_checker_stat(my_checker3, stat);
+        mock(get_logger(my_checker3));
+        check_zero_one_hot(my_checker3, "0000X");
+        check_only_log(get_logger(my_checker3), "Zero one-hot check failed - Got 0_000X.", info);
+
+        check_zero_one_hot(my_checker3, passed, "0000X");
+        assert_true(not passed, "Should return pass = false on failing check");
+        check_only_log(get_logger(my_checker3), "Zero one-hot check failed - Got 0_000X.", info);
+
+        passed := check_zero_one_hot(my_checker3, "0000X");
+        assert_true(not passed, "Should return pass = false on failing check");
+        check_only_log(get_logger(my_checker3), "Zero one-hot check failed - Got 0_000X.", info);
+        unmock(get_logger(my_checker3));
+        verify_passed_checks(my_checker3, stat, 0);
+        verify_failed_checks(my_checker3, stat, 3);
+        reset_checker_stat(my_checker3);
+
       elsif run("Test should be possible to use concurrently") then
         test_concurrent_check(clk, check_zero_one_hot_in_1, default_checker);
+
       elsif run("Test should be possible to use concurrently with negative active clock edge") then
-        test_concurrent_check(clk, check_zero_one_hot_in_2, check_zero_one_hot_checker2, error, false);
+        test_concurrent_check(clk, check_zero_one_hot_in_2, my_checker2, error, false);
+
       elsif run("Test should be possible to use concurrently with custom checker") then
-        test_concurrent_check(clk, check_zero_one_hot_in_3, check_zero_one_hot_checker3, info);
+        test_concurrent_check(clk, check_zero_one_hot_in_3, my_checker3, info);
+
       elsif run("Test should pass on unknowns when not enabled") then
         wait until rising_edge(clk);
         wait for 1 ns;
@@ -206,7 +281,7 @@ begin
         wait for 1 ns;
         verify_passed_checks(stat, 3);
         verify_failed_checks(stat, 0);
-        verify_num_of_log_calls(get_count);
+
       elsif run("Test should handle reversed and or offset expressions") then
         get_checker_stat(stat);
         check_zero_one_hot(reversed_and_offset_expr);
@@ -214,13 +289,10 @@ begin
       end if;
     end loop;
 
-    get_and_print_test_result(stat);
-    test_runner_cleanup(runner, stat);
+    test_runner_cleanup(runner);
     wait;
   end process;
 
   test_runner_watchdog(runner, 2 us);
 
 end test_fixture;
-
--- vunit_pragma run_all_in_same_sim

@@ -1,21 +1,29 @@
+#!/usr/bin/env python3
+
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
-from os.path import join, dirname
+"""
+VHDL UART
+---------
+
+A more realistic test bench of an UART to show VUnit VHDL usage on a
+typical module.
+"""
+
+from pathlib import Path
 from vunit import VUnit
 
-ui = VUnit.from_argv()
-ui.add_osvvm()
+VU = VUnit.from_argv()
+VU.add_osvvm()
+VU.add_verification_components()
 
-src_path = join(dirname(__file__), "src")
+SRC_PATH = Path(__file__).parent / "src"
 
-uart_lib = ui.add_library("uart_lib")
-uart_lib.add_source_files(join(src_path, "*.vhd"))
+VU.add_library("uart_lib").add_source_files(SRC_PATH / "*.vhd")
+VU.add_library("tb_uart_lib").add_source_files(SRC_PATH / "test" / "*.vhd")
 
-tb_uart_lib = ui.add_library("tb_uart_lib")
-tb_uart_lib.add_source_files(join(src_path, "test", "*.vhd"))
-
-ui.main()
+VU.main()

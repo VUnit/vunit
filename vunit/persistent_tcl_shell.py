@@ -2,13 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2016, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 A persistent TCL shell to avoid startup overhead in TCL-based simulators
 """
 
-from __future__ import print_function
 import threading
 import logging
 from vunit.ostools import Process
@@ -50,7 +49,7 @@ class PersistentTclShell(object):
         except Process.NonZeroExitCode:
             # Print output if background vsim process startup failed
             LOGGER.error("Failed to start re-usable background process")
-            print(consumer.output)
+            LOGGER.error(consumer.output)
             raise
         return process
 
@@ -68,10 +67,15 @@ class PersistentTclShell(object):
         Read a variable from the persistent TCL shell
         """
         process = self._process()
-        process.writeline("puts #VUNIT_READVAR=${%s}" % varname)
+        process.writeline(f"puts #VUNIT_READVAR=${varname!s}")
         consumer = ReadVarOutputConsumer()
         process.consume_output(consumer)
         return consumer.var
+
+    def read_bool(self, varname):
+        result = self.read_var(varname)
+        assert result in ("true", "false")
+        return result == "true"
 
     def teardown(self):
         """
@@ -88,7 +92,10 @@ class PersistentTclShell(object):
             self._processes = {}
 
     def __del__(self):
-        self.teardown()
+        try:
+            self.teardown()
+        except KeyboardInterrupt:
+            LOGGER.debug("PersistentTclShell.__del__: Ignoring KeyboardInterrupt")
 
 
 def output_consumer(line):
@@ -99,26 +106,30 @@ def output_consumer(line):
         return True
 
     print(line)
+    return None
 
 
 class SilentOutputConsumer(object):
     """
     Consume output until reaching #VUNIT_RETURN, silent
     """
+
     def __init__(self):
         self.output = ""
 
     def __call__(self, line):
         if line.endswith("#VUNIT_RETURN"):
             return True
-        else:
-            self.output += line + "\n"
+
+        self.output += line + "\n"
+        return None
 
 
 class ReadVarOutputConsumer(object):
     """
     Consume output from modelsim and print with indentation
     """
+
     def __init__(self):
         self.var = None
 

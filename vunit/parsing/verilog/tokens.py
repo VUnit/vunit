@@ -2,13 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2016, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Verilog tokens
 """
 
-from vunit.parsing.tokenizer import new_token_kind
+from typing import Dict
+from vunit.parsing.tokenizer import new_token_kind, TokenKind
 
 
 def __token(kind):
@@ -26,7 +27,8 @@ def __keyword(kind):
     KEYWORDS[kind] = token_kind
     return token_kind
 
-KEYWORDS = {}
+
+KEYWORDS: Dict[str, TokenKind] = {}
 
 PREPROCESSOR = __token("preprocessor")
 STRING = __token("string")
@@ -36,12 +38,17 @@ ESCAPED_NEWLINE = __token("escaped_newline")
 NEWLINE = __token("newline")
 WHITESPACE = __token("whitespace")
 MULTI_COMMENT = __token("multi_comment")
+COLON = __token("colon")
 SEMI_COLON = __token("semi_colon")
 DOUBLE_COLON = __token("double_colon")
 HASH = __token("hash")
 EQUAL = __token("equal")
 LPAR = __token("lpar")
 RPAR = __token("rpar")
+LBRACKET = __token("lbracket")
+RBRACKET = __token("rbracket")
+LBRACE = __token("lbrace")
+RBRACE = __token("rbrace")
 COMMA = __token("comma")
 OTHER = __token("other")
 

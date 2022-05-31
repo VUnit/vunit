@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -10,7 +10,7 @@ use ieee.numeric_std.all;
 -- pragma translate_off
 library vunit_lib;
 use vunit_lib.check_pkg.all;
-use vunit_lib.log_pkg.all;
+use vunit_lib.logger_pkg.all;
 -- pragma translate_on
 
 entity uart_tx is

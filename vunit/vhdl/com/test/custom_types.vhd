@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 library vunit_lib;
 context vunit_lib.vunit_context;
@@ -91,7 +91,7 @@ package custom_types_pkg is
   type record9_msg_type_t is (foo, bar);
   type record9_t is record
     msg_type : record9_msg_type_t;
-    slv   : std_logic_vector(byte_msb_c downto byte_lsb_c);
+    slv   : std_logic_vector(byte_msb downto byte_lsb);
     str   : string(1 to 3);
     int_2d : int_2d_t(1 to 2, 4 downto -1);
   end record record9_t;

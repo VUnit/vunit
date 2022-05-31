@@ -1,0 +1,44 @@
+[*]
+[*] GTKWave Analyzer v3.3.89 (w)1999-2018 BSI
+[*] Wed Aug  1 10:47:45 2018
+[*]
+[dumpfile] "/home/slawek/git/github/vunit/vunit/vhdl/verification_components/vunit_out/test_output/vunit_lib.tb_avalon_master.waitrequest_prob_0.0,transfers_16,readdatavalid_prob_1.0,write_prob_1.0,read_prob_1.0.random_burstcount_264398a89671e8a3153a653d88de6afc2f73ba13/ghdl/wave.ghw"
+[dumpfile_mtime] "Wed Aug  1 10:45:42 2018"
+[dumpfile_size] 5698
+[savefile] "/home/slawek/git/github/vunit/vunit/vhdl/verification_components/test/tb_avalon_master.gtkw"
+[timestart] 59500000
+[size] 1731 670
+[pos] -1 -1
+*-25.000000 224000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] top.
+[treeopen] top.tb_avalon_master.
+[sst_width] 229
+[signals_width] 366
+[sst_expanded] 1
+[sst_vpaned_height] 337
+@800200
+-master
+@28
+top.tb_avalon_master.dut.clk
+@22
+#{top.tb_avalon_master.dut.address[31:0]} top.tb_avalon_master.dut.address[31] top.tb_avalon_master.dut.address[30] top.tb_avalon_master.dut.address[29] top.tb_avalon_master.dut.address[28] top.tb_avalon_master.dut.address[27] top.tb_avalon_master.dut.address[26] top.tb_avalon_master.dut.address[25] top.tb_avalon_master.dut.address[24] top.tb_avalon_master.dut.address[23] top.tb_avalon_master.dut.address[22] top.tb_avalon_master.dut.address[21] top.tb_avalon_master.dut.address[20] top.tb_avalon_master.dut.address[19] top.tb_avalon_master.dut.address[18] top.tb_avalon_master.dut.address[17] top.tb_avalon_master.dut.address[16] top.tb_avalon_master.dut.address[15] top.tb_avalon_master.dut.address[14] top.tb_avalon_master.dut.address[13] top.tb_avalon_master.dut.address[12] top.tb_avalon_master.dut.address[11] top.tb_avalon_master.dut.address[10] top.tb_avalon_master.dut.address[9] top.tb_avalon_master.dut.address[8] top.tb_avalon_master.dut.address[7] top.tb_avalon_master.dut.address[6] top.tb_avalon_master.dut.address[5] top.tb_avalon_master.dut.address[4] top.tb_avalon_master.dut.address[3] top.tb_avalon_master.dut.address[2] top.tb_avalon_master.dut.address[1] top.tb_avalon_master.dut.address[0]
+@24
+#{top.tb_avalon_master.burstcount[7:0]} top.tb_avalon_master.burstcount[7] top.tb_avalon_master.burstcount[6] top.tb_avalon_master.burstcount[5] top.tb_avalon_master.burstcount[4] top.tb_avalon_master.burstcount[3] top.tb_avalon_master.burstcount[2] top.tb_avalon_master.burstcount[1] top.tb_avalon_master.burstcount[0]
+@22
+#{top.tb_avalon_master.dut.byteenable[3:0]} top.tb_avalon_master.dut.byteenable[3] top.tb_avalon_master.dut.byteenable[2] top.tb_avalon_master.dut.byteenable[1] top.tb_avalon_master.dut.byteenable[0]
+@29
+top.tb_avalon_master.dut.waitrequest
+@28
+top.tb_avalon_master.dut.write
+@22
+#{top.tb_avalon_master.dut.writedata[31:0]} top.tb_avalon_master.dut.writedata[31] top.tb_avalon_master.dut.writedata[30] top.tb_avalon_master.dut.writedata[29] top.tb_avalon_master.dut.writedata[28] top.tb_avalon_master.dut.writedata[27] top.tb_avalon_master.dut.writedata[26] top.tb_avalon_master.dut.writedata[25] top.tb_avalon_master.dut.writedata[24] top.tb_avalon_master.dut.writedata[23] top.tb_avalon_master.dut.writedata[22] top.tb_avalon_master.dut.writedata[21] top.tb_avalon_master.dut.writedata[20] top.tb_avalon_master.dut.writedata[19] top.tb_avalon_master.dut.writedata[18] top.tb_avalon_master.dut.writedata[17] top.tb_avalon_master.dut.writedata[16] top.tb_avalon_master.dut.writedata[15] top.tb_avalon_master.dut.writedata[14] top.tb_avalon_master.dut.writedata[13] top.tb_avalon_master.dut.writedata[12] top.tb_avalon_master.dut.writedata[11] top.tb_avalon_master.dut.writedata[10] top.tb_avalon_master.dut.writedata[9] top.tb_avalon_master.dut.writedata[8] top.tb_avalon_master.dut.writedata[7] top.tb_avalon_master.dut.writedata[6] top.tb_avalon_master.dut.writedata[5] top.tb_avalon_master.dut.writedata[4] top.tb_avalon_master.dut.writedata[3] top.tb_avalon_master.dut.writedata[2] top.tb_avalon_master.dut.writedata[1] top.tb_avalon_master.dut.writedata[0]
+@28
+top.tb_avalon_master.dut.read
+@22
+#{top.tb_avalon_master.dut.readdata[31:0]} top.tb_avalon_master.dut.readdata[31] top.tb_avalon_master.dut.readdata[30] top.tb_avalon_master.dut.readdata[29] top.tb_avalon_master.dut.readdata[28] top.tb_avalon_master.dut.readdata[27] top.tb_avalon_master.dut.readdata[26] top.tb_avalon_master.dut.readdata[25] top.tb_avalon_master.dut.readdata[24] top.tb_avalon_master.dut.readdata[23] top.tb_avalon_master.dut.readdata[22] top.tb_avalon_master.dut.readdata[21] top.tb_avalon_master.dut.readdata[20] top.tb_avalon_master.dut.readdata[19] top.tb_avalon_master.dut.readdata[18] top.tb_avalon_master.dut.readdata[17] top.tb_avalon_master.dut.readdata[16] top.tb_avalon_master.dut.readdata[15] top.tb_avalon_master.dut.readdata[14] top.tb_avalon_master.dut.readdata[13] top.tb_avalon_master.dut.readdata[12] top.tb_avalon_master.dut.readdata[11] top.tb_avalon_master.dut.readdata[10] top.tb_avalon_master.dut.readdata[9] top.tb_avalon_master.dut.readdata[8] top.tb_avalon_master.dut.readdata[7] top.tb_avalon_master.dut.readdata[6] top.tb_avalon_master.dut.readdata[5] top.tb_avalon_master.dut.readdata[4] top.tb_avalon_master.dut.readdata[3] top.tb_avalon_master.dut.readdata[2] top.tb_avalon_master.dut.readdata[1] top.tb_avalon_master.dut.readdata[0]
+@28
+top.tb_avalon_master.dut.readdatavalid
+@1000200
+-master
+[pattern_trace] 1
+[pattern_trace] 0

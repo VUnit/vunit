@@ -1,10 +1,21 @@
+#!/usr/bin/env python3
+
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
-from os.path import join, dirname
+"""
+Generating tests
+----------------
+
+Demonstrates generating multiple test runs of the same test bench
+with different generic values. Also demonstrates use of ``output_path`` generic
+to create test bench output files in location specified by VUnit python runner.
+"""
+
+from pathlib import Path
 from itertools import product
 from vunit import VUnit
 
@@ -19,13 +30,12 @@ def make_post_check(data_width, sign):
         This function recives the output_path of the test
         """
 
-        expected = ", ".join([str(data_width),
-                              str(sign).lower()]) + "\n"
+        expected = ", ".join([str(data_width), str(sign).lower()]) + "\n"
 
-        output_file = join(output_path, "generics.txt")
+        output_file = Path(output_path) / "generics.txt"
 
-        print("Post check: %s" % output_file)
-        with open(output_file, "r") as fread:
+        print("Post check: %s" % str(output_file))
+        with output_file.open("r") as fread:
             got = fread.read()
             if not got == expected:
                 print("Content mismatch, got %r expected %r" % (got, expected))
@@ -45,25 +55,23 @@ def generate_tests(obj, signs, data_widths):
         config_name = "data_width=%i,sign=%s" % (data_width, sign)
 
         # Add the configuration with a post check function to verify the output
-        obj.add_config(name=config_name,
-                       generics=dict(
-                           data_width=data_width,
-                           sign=sign),
-                       post_check=make_post_check(data_width, sign))
+        obj.add_config(
+            name=config_name,
+            generics=dict(data_width=data_width, sign=sign),
+            post_check=make_post_check(data_width, sign),
+        )
 
 
-test_path = join(dirname(__file__), "test")
+VU = VUnit.from_argv()
+LIB = VU.add_library("lib")
+LIB.add_source_files(Path(__file__).parent / "test" / "*.vhd")
 
-ui = VUnit.from_argv()
-lib = ui.add_library("lib")
-lib.add_source_files(join(test_path, "*.vhd"))
-
-tb_generated = lib.entity("tb_generated")
+TB_GENERATED = LIB.test_bench("tb_generated")
 
 # Just set a generic for all configurations within the test bench
-tb_generated.set_generic("message", "set-for-entity")
+TB_GENERATED.set_generic("message", "set-for-entity")
 
-for test in tb_generated.get_tests():
+for test in TB_GENERATED.get_tests():
     if test.name == "Test 2":
         # Test 2 should only be run with signed width of 16
         generate_tests(test, [True], [16])
@@ -72,4 +80,4 @@ for test in tb_generated.get_tests():
         # Run all other tests with signed/unsigned and data width in range [1,5[
         generate_tests(test, [False, True], range(1, 5))
 
-ui.main()
+VU.main()

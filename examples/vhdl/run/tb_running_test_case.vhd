@@ -1,3 +1,9 @@
+-- This Source Code Form is subject to the terms of the Mozilla Public
+-- License, v. 2.0. If a copy of the MPL was not distributed with this file,
+-- You can obtain one at http://mozilla.org/MPL/2.0/.
+--
+-- Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
+
 library vunit_lib;
 context vunit_lib.vunit_context;
 
@@ -14,7 +20,6 @@ begin
 
     while test_suite loop
       if run("Test scenario A") or run("Test scenario B") then
-        info("Start");
         start_stimuli <= true;
         wait until stimuli_done;
       elsif run("Test something else") then

@@ -5,16 +5,23 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
-use work.check_types_pkg.checker_stat_t;
-use work.run_base_pkg.all;
+use work.logger_pkg.all;
+use work.runner_pkg.all;
 use work.run_types_pkg.all;
 
 library ieee;
 use ieee.std_logic_1164.all;
 
 package run_pkg is
+  signal runner : runner_sync_t := (runner_event_idx => idle_runner,
+                                    runner_exit_status_idx => runner_exit_with_errors,
+                                    runner_timeout_update_idx => idle_runner,
+                                    runner_timeout_idx => idle_runner);
+
+  constant runner_state : runner_t := new_runner;
+
   procedure test_runner_setup (
     signal runner : inout runner_sync_t;
     constant runner_cfg : in string := runner_cfg_default);
@@ -41,13 +48,10 @@ package run_pkg is
 
   procedure test_runner_cleanup (
     signal runner: inout runner_sync_t;
-    constant checker_stat : in checker_stat_t := (0, 0, 0);
-    constant disable_simulation_exit : in    boolean := false);
-
-  procedure test_runner_cleanup (
-    signal runner: inout runner_sync_t;
-    constant external_failure : in boolean;
-    constant disable_simulation_exit : in boolean := false);
+    external_failure : boolean := false;
+    allow_disabled_errors : boolean := false;
+    allow_disabled_failures : boolean := false;
+    fail_on_warning : boolean := false);
 
   impure function test_suite_error (
     constant err : boolean)
@@ -71,43 +75,57 @@ package run_pkg is
 
   alias in_test_case is test_case[return boolean];
 
+  -- Set watchdog timeout dynamically relative to current time
+  -- Overrides time argument to test_runner_watchdog procedure
+  procedure set_timeout(signal runner : inout runner_sync_t;
+                        constant timeout : in time);
+
   procedure test_runner_watchdog (
     signal runner                    : inout runner_sync_t;
     constant timeout                 : in    time;
-    constant disable_simulation_exit : in    boolean := false);
+    constant do_runner_cleanup : boolean := true);
+
+  function timeout_notification (
+    signal runner : runner_sync_t
+  ) return boolean;
 
   procedure lock_entry (
-    signal runner : out runner_sync_t;
-    constant phase : in runner_phase_t;
-    constant me : in string := "";
+    signal runner : inout runner_sync_t;
+    constant phase : in runner_legal_phase_t;
+    constant logger : in logger_t := runner_trace_logger;
+    constant path_offset : in natural := 0;
     constant line_num  : in natural := 0;
     constant file_name : in string := "");
 
   procedure unlock_entry (
-    signal runner : out runner_sync_t;
-    constant phase : in runner_phase_t;
-    constant me : in string := "";
+    signal runner : inout runner_sync_t;
+    constant phase : in runner_legal_phase_t;
+    constant logger : in logger_t := runner_trace_logger;
+    constant path_offset : in natural := 0;
     constant line_num  : in natural := 0;
     constant file_name : in string := "");
 
   procedure lock_exit (
-    signal runner : out runner_sync_t;
-    constant phase : in runner_phase_t;
-    constant me : in string := "";
+    signal runner : inout runner_sync_t;
+    constant phase : in runner_legal_phase_t;
+    constant logger : in logger_t := runner_trace_logger;
+    constant path_offset : in natural := 0;
     constant line_num  : in natural := 0;
     constant file_name : in string := "");
 
   procedure unlock_exit (
-    signal runner : out runner_sync_t;
-    constant phase : in runner_phase_t;
-    constant me : in string := "";
+    signal runner : inout runner_sync_t;
+    constant phase : in runner_legal_phase_t;
+    constant logger : in logger_t := runner_trace_logger;
+    constant path_offset : in natural := 0;
     constant line_num  : in natural := 0;
     constant file_name : in string := "");
 
   procedure wait_until (
     signal runner : in runner_sync_t;
-    constant phase : in runner_phase_t;
-    constant me : in string := "";
+    constant phase : in runner_legal_phase_t;
+    constant logger : in logger_t := runner_trace_logger;
+    constant path_offset : in natural := 0;
     constant line_num  : in natural := 0;
     constant file_name : in string := "");
 
@@ -147,5 +165,9 @@ package run_pkg is
   alias test_suite_cleanup_exit_gate is exit_gate[runner_sync_t];
   alias test_runner_cleanup_entry_gate is entry_gate[runner_sync_t];
   alias test_runner_cleanup_exit_gate is exit_gate[runner_sync_t];
+
+  -- Private
+  procedure notify(signal runner : inout runner_sync_t;
+                   idx : natural := runner_event_idx);
 
 end package;

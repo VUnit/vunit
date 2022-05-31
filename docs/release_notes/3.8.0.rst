@@ -1,0 +1,9 @@
+- Verification components
+   - Avalon
+      - Add Avalon memory mapped slave and master. :vunit_issue:`359`
+      - Add Avalon stream source and sink. :vunit_issue:`361`
+   - AXI
+      - Add AXI stream monitor
+   - Wishbone
+      - Strict command order in wishbone master. :vunit_issue:`372`
+- Remove warnings when using built-in RivieraPRO libraries. :vunit_issue:`374`

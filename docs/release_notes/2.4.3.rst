@@ -1,0 +1,1 @@
+- SystemVerilog: Fix dependency scanning with instance directly after block label  :vunit_issue:`305`.

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015-2017, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Provides documentation and version information
@@ -13,21 +13,30 @@ def license_text():
     """
     Returns licence text
     """
-    return """VUnit
------
+    return """\
+**VUnit**, except for the projects below, is released under the terms of `Mozilla Public License, v. 2.0`_.
+|copy| 2014-2022 Lars Asplund, lars.anders.asplund@gmail.com.
 
-VUnit except for OSVVM (see below) is released under the terms of
-Mozilla Public License, v. 2.0.
+The following libraries are `redistributed`_ with VUnit for convenience:
 
-Copyright (c) 2014-2017, Lars Asplund lars.anders.asplund@gmail.com
+* **OSVVM** (``vunit/vhdl/osvvm``): these files are licensed under the terms of `Apache License, v 2.0`_,
+  |copy| 2010 - 2022 by `SynthWorks Design Inc`_. All rights reserved.
 
-OSVVM
------
+* **JSON-for-VHDL** (``vunit/vhdl/JSON-for-VHDL``): these files are licensed under the terms of `Apache License,
+  v 2.0`_, |copy| 2015 - 2022 Patrick Lehmann.
 
-OSVVM is redistributed as a submodule to VUnit for your convenience. OSVVM and derivative work
-located under examples/vhdl/osvvm_integration/src are licensed under the terms of Artistic License 2.0.
+The font used in VUnit's logo and illustrations is 'Tratex', the traffic sign typeface used on swedish road signs:
 
-Copyright (c) 2006-2016, SynthWorks Design Inc http://www.synthworks.com
+- `transportstyrelsen.se: Teckensnitt <https://transportstyrelsen.se/sv/vagtrafik/Trafikregler/Om-vagmarken/Teckensnitt/>`__
+- `Wikipedia: Tratex <https://en.wikipedia.org/wiki/Tratex>`__
+
+
+.. |copy|   unicode:: U+000A9 .. COPYRIGHT SIGN
+.. _redistributed: https://github.com/VUnit/vunit/blob/master/.gitmodules
+.. _Mozilla Public License, v. 2.0: http://mozilla.org/MPL/2.0/
+.. _ARTISTIC License: http://www.perlfoundation.org/artistic_license_2_0
+.. _Apache License, v 2.0: http://www.apache.org/licenses/LICENSE-2.0
+.. _SynthWorks Design Inc: http://www.synthworks.com
 """
 
 
@@ -35,34 +44,29 @@ def doc():
     """
     Returns short introduction to VUnit
     """
-    return r"""What is VUnit?
-==============
-
-VUnit is an open source unit testing framework for VHDL/SystemVerilog
+    return (
+        r"""VUnit is an open source unit testing framework for VHDL/SystemVerilog
 released under the terms of Mozilla Public License, v. 2.0. It
 features the functionality needed to realize continuous and automated
 testing of your HDL code. VUnit doesn't replace but rather complements
 traditional testing methodologies by supporting a "test early and
-often" approach through automation.
+often" approach through automation. **Read more on our**
+`Website <https://vunit.github.io>`__
 
-**Read more on our** `Website <https://vunit.github.io>`__
+Contributing in the form of code, feedback, ideas or bug reports are
+welcome. Read our `contribution guide
+<https://vunit.github.io/contributing.html>`__ to get started.
 
-License
-=======
-""" + license_text()
+"""
+        + license_text()
+    )
 
 
 def version():
     """
     Returns VUnit version
     """
-    if PRE_RELEASE:
-        return '%i.%i.%irc0' % (VERSION[0], VERSION[1], VERSION[2] + 1)
-
-    return '%i.%i.%i' % (VERSION[0], VERSION[1], VERSION[2])
+    return VERSION
 
 
-VERSION = (2, 2, 0)
-
-# DO NOT TOUCH: Only set to False by PyPI deployment script
-PRE_RELEASE = True
+VERSION = "4.6.1rc0"
