@@ -970,6 +970,108 @@ package body check_pkg is
     signal en                  : in std_logic;
     signal start_event         : in std_logic;
     signal end_event           : in std_logic;
+    signal expr                : in unsigned;
+    constant msg               : in string      := check_result_tag;
+    constant level             : in log_level_t := null_log_level;
+    constant active_clock_edge : in edge_t      := rising_edge;
+    constant allow_restart     : in boolean     := false;
+    constant line_num          : in natural     := 0;
+    constant file_name         : in string      := "") is
+
+    variable state                : check_stable_fsm_state_t := idle;
+    variable ref                  : std_logic_vector(expr'range);
+    variable clock_edge_counter   : natural;
+    variable is_stable            : boolean                  := true;
+    variable exit_stability_check : boolean;
+  begin
+    -- pragma translate_off
+    stability_check : loop
+      wait_on_edge(clock, en, active_clock_edge);
+
+      run_stability_check(checker, start_event, end_event, std_logic_vector(expr), msg, level, active_clock_edge,
+                          allow_restart, line_num, file_name, state, ref, clock_edge_counter,
+                          is_stable, exit_stability_check);
+      exit when exit_stability_check;
+    end loop;
+  -- pragma translate_on
+  end;
+
+  procedure check_stable(
+    signal clock               : in std_logic;
+    signal en                  : in std_logic;
+    signal start_event         : in std_logic;
+    signal end_event           : in std_logic;
+    signal expr                : in unsigned;
+    constant msg               : in string      := check_result_tag;
+    constant level             : in log_level_t := null_log_level;
+    constant active_clock_edge : in edge_t      := rising_edge;
+    constant allow_restart     : in boolean     := false;
+    constant line_num          : in natural     := 0;
+    constant file_name         : in string      := "") is
+  begin
+    -- pragma translate_off
+    check_stable(default_checker, clock, en, start_event, end_event, expr, msg, level, active_clock_edge,
+                 allow_restart, line_num, file_name);
+  -- pragma translate_on
+  end;
+
+  procedure check_stable(
+    constant checker           : in checker_t;
+    signal clock               : in std_logic;
+    signal en                  : in std_logic;
+    signal start_event         : in std_logic;
+    signal end_event           : in std_logic;
+    signal expr                : in signed;
+    constant msg               : in string      := check_result_tag;
+    constant level             : in log_level_t := null_log_level;
+    constant active_clock_edge : in edge_t      := rising_edge;
+    constant allow_restart     : in boolean     := false;
+    constant line_num          : in natural     := 0;
+    constant file_name         : in string      := "") is
+
+    variable state                : check_stable_fsm_state_t := idle;
+    variable ref                  : std_logic_vector(expr'range);
+    variable clock_edge_counter   : natural;
+    variable is_stable            : boolean                  := true;
+    variable exit_stability_check : boolean;
+  begin
+    -- pragma translate_off
+    stability_check : loop
+      wait_on_edge(clock, en, active_clock_edge);
+
+      run_stability_check(checker, start_event, end_event, (std_logic_vector(expr)), msg, level, active_clock_edge,
+                          allow_restart, line_num, file_name, state, ref, clock_edge_counter,
+                          is_stable, exit_stability_check);
+      exit when exit_stability_check;
+    end loop;
+  -- pragma translate_on
+  end;
+
+  procedure check_stable(
+    signal clock               : in std_logic;
+    signal en                  : in std_logic;
+    signal start_event         : in std_logic;
+    signal end_event           : in std_logic;
+    signal expr                : in signed;
+    constant msg               : in string      := check_result_tag;
+    constant level             : in log_level_t := null_log_level;
+    constant active_clock_edge : in edge_t      := rising_edge;
+    constant allow_restart     : in boolean     := false;
+    constant line_num          : in natural     := 0;
+    constant file_name         : in string      := "") is
+  begin
+    -- pragma translate_off
+    check_stable(default_checker, clock, en, start_event, end_event, expr, msg, level, active_clock_edge,
+                 allow_restart, line_num, file_name);
+  -- pragma translate_on
+  end;
+
+  procedure check_stable(
+    constant checker           : in checker_t;
+    signal clock               : in std_logic;
+    signal en                  : in std_logic;
+    signal start_event         : in std_logic;
+    signal end_event           : in std_logic;
     signal expr                : in std_logic;
     constant msg               : in string      := check_result_tag;
     constant level             : in log_level_t := null_log_level;
