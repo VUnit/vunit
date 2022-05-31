@@ -246,7 +246,7 @@ package body run_pkg is
         set_running_test_case(runner_state, name);
         return true;
       elsif get_test_case_name(runner_state, get_active_test_case_index(runner_state)) = name then
-        error(runner_trace_logger, "Test case: " & name & " cannot be run more than once unless re-initialization.");
+        error(runner_trace_logger, "Test case: " & name & " cannot be run more than once.");
         return false;
       end if;
     end if;
