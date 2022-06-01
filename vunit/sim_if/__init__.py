@@ -177,7 +177,7 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         """
         return False
 
-    def merge_coverage(self, file_name, args):  # pylint: disable=unused-argument, no-self-use
+    def merge_coverage(self, file_name, args):  # pylint: disable=unused-argument
         """
         Hook for simulator interface to creating coverage reports
         """

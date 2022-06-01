@@ -250,7 +250,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         flags = source_file.compile_options.get("ghdl.flags", [])
         if flags != []:
             warn(
-                ("'ghdl.flags' is deprecated and it will be removed in future releases; " "use 'ghdl.a_flags' instead"),
+                ("'ghdl.flags' is deprecated and it will be removed in future releases; use 'ghdl.a_flags' instead"),
                 Warning,
             )
             a_flags += flags
