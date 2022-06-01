@@ -72,7 +72,12 @@ class VHDLDesignFile(object):  # pylint: disable=too-many-instance-attributes
         """
         Return a new VHDLDesignFile instance by parsing the code
         """
+        vsrc = check_comments(code) # return a list withe components marked as "-- Verilog Source"
         code = remove_comments(code).lower()
+        if vsrc:                    # restore capitalization
+            for i in vsrc: 
+                code=re.sub(r'\b'+i.lower()+r'\b',i,code, flags=(re.MULTILINE | re.IGNORECASE | re.DOTALL))
+                      
         return cls(
             entities=list(VHDLEntity.find(code)),
             architectures=list(VHDLArchitecture.find(code)),
@@ -1015,6 +1020,34 @@ class VHDLReference(object):
                 )
         return references
 
+#-----------------------------------------------------------------------------------------
+# proposal
+
+    _component_re = re.compile(
+        r"[a-zA-Z]\w*\s*\:\s*(?:component)?\s*(?:(?:(?P<lib>[a-zA-Z]\w*))\.)?(?P<ent>[a-zA-Z]\w*)\s*"
+        r"(?:generic|port) map\s*\([\s\w\=\>\,\.\)\(\+\-\'\"]*\);",
+        re.IGNORECASE,
+    )
+
+    @classmethod
+    def _find_component_references(cls, code):
+        """
+        Find all component references from instantiations and return it as entity refernce
+        """
+        references = []
+        uses = cls._find_uses(code)
+        for match in cls._component_re.finditer(code):
+            if match.group("lib"):
+                references.append(cls("entity",match.group("lib"), match.group("ent")))
+            else:    
+                for use in uses:
+                  if use.design_unit == match.group("ent"):
+                    references.append(cls("entity", use.library, match.group("ent")))
+            
+        return references
+
+#-----------------------------------------------------------------------------------------
+
     _configuration_reference_re = re.compile(
         r"\bconfiguration\s+(?P<lib>[a-zA-Z]\w*)\.(?P<cfg>[a-zA-Z]\w*)",
         re.MULTILINE | re.IGNORECASE,
@@ -1052,6 +1085,7 @@ class VHDLReference(object):
             + cls._find_entity_references(code)
             + cls._find_configuration_references(code)
             + cls._find_package_instance_references(code)
+            + cls._find_component_references(code) # add proposal
         )
 
     def __init__(self, reference_type, library, design_unit, name_within=None):
@@ -1101,6 +1135,24 @@ def _comment_repl(match):
         return match.group(0)
     return " " * len(text)
 
+def check_comments(code):  # for restore capitalization
+    """
+    Return the a list of components marked as '-- Verilog Source'
+    """
+    VHDL_REMOVE_COMMENT_RE = r"(?:(?:\"[^\"]*\")|(^\s*--[^\n]*))"
+    VHDL_REMOVE_COMMENT_COMPILED_RE = re.compile(VHDL_REMOVE_COMMENT_RE, re.MULTILINE)
+    mycode = VHDL_REMOVE_COMMENT_COMPILED_RE.sub(_comment_repl, code)
+    sv_component_re = re.compile(
+        r"[a-zA-Z]\w*\s*\:\s*(?:component)?\s*(?:(?:[a-zA-Z]\w*)\.)?([a-zA-Z]\w*)\s*--\s*[vV]erilog\s*[sS]ource\s*"
+        r"(?:generic|port) map\s*\([\s\w\=\>\,\.\)\(\+\-\'\"]*\);",
+        re.IGNORECASE,
+    )
+	
+    ciasar={}
+    verilog_component_instantiations=list(sv_component_re.findall(mycode))
+    for ci in verilog_component_instantiations:
+        ciasar[ci]=1
+    return (list(ciasar.keys()))    
 
 def remove_comments(code):
     """
