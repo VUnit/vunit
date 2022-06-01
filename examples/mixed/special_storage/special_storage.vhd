@@ -392,7 +392,7 @@ data_b <= (others => '0');
 --inRam_0 : entity design_work.PF_DPSRAM_SPECIAL 
 --inRam_0 : component design_work.PF_DPSRAM_SPECIAL  
 --inRam_0 : PF_DPSRAM_SPECIAL -- verilog source
-inRam_0 : PF_DPSRAM_SPECIAL -- verilog source
+inRam_0 : PF_DPSRAM_SPECIAL 
         port map( 
                 -- a-side of RAM used for communication
                 -- b-side of RAM used for functional works

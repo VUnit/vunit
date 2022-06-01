@@ -22,6 +22,6 @@ end package;
 package body data_types_private_pkg is
   impure function to_string(data_type : data_type_t) return string is
   begin
-    return split(data_type_t'image(data_type), "_", 1)(1).all;
+    -- return split(data_type_t'image(data_type), "_", 1)(1).all;
   end;
 end package body;
