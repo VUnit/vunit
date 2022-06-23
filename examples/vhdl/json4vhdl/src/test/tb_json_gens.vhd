@@ -26,7 +26,7 @@ begin
       constant img_arr : integer_vector := jsonGetIntegerArray(JSONContent, "Image");
     begin
       -- Content extracted from the JSON
-      info("JSONContent: " & lf & JSONContent.Content);
+      info("JSONContent: " & lf & jsonGetContent(JSONContent));
 
       -- Integer array, extracted by function jsonGetIntegerArray with data from the JSON
       for i in 0 to img_arr'length-1 loop
