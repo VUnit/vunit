@@ -312,6 +312,35 @@ end architecture;
         self.assertEqual([test.name for test in lib1.test_bench("tb_ent").get_tests("*1")], ["test1"])
         self.assertEqual([test.name for test in lib1.test_bench("tb_ent2").get_tests()], [])
 
+    def test_get_test_bench_with_explicit_constant_runner_cfg(self):
+        self.create_file(
+            "tb_ent.vhd",
+            """
+entity tb_ent is
+  generic (constant runner_cfg : in string);
+end entity;
+
+architecture a of tb_ent is
+begin
+  main : process
+  begin
+    if run("test1") then
+    elsif run("test2") then
+    end if;
+  end process;
+end architecture;
+        """,
+        )
+
+        ui = self._create_ui()
+        lib1 = ui.add_library("lib1")
+        lib1.add_source_file("tb_ent.vhd")
+        self.assertEqual(lib1.test_bench("tb_ent").name, "tb_ent")
+        self.assertEqual(
+            [test.name for test in lib1.test_bench("tb_ent").get_tests()],
+            ["test1", "test2"],
+        )
+
     def test_get_entities_case_insensitive(self):
         ui = self._create_ui()
         lib = ui.add_library("lib")

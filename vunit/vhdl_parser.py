@@ -521,7 +521,7 @@ class VHDLEntity(object):
                 # Ignore function generics
                 continue
 
-            generic_list.append(VHDLInterfaceElement.parse(interface_element))
+            generic_list.append(VHDLInterfaceElement.parse(interface_element, is_constant=True))
 
         return generic_list
 
@@ -631,7 +631,7 @@ class VHDLInterfaceElement(object):
         return VHDLInterfaceElement(self.identifier, self.subtype_indication, init_value=self.init_value)
 
     @classmethod
-    def parse(cls, code, is_signal=False):
+    def parse(cls, code, is_signal=False, is_constant=False):
         """
         Returns a new instance by parsing the code
         """
@@ -640,6 +640,10 @@ class VHDLInterfaceElement(object):
             # Note, the string must be a raw string for the word boundary '\b' to work properly
             # see documentation https://docs.python.org/3/howto/regex.html#more-metacharacters
             code = re.sub(r"\bsignal\b", "", code)
+
+        if is_constant:
+            # Remove 'constant' string if a constant is being parsed
+            code = re.sub(r"\bconstant\b", "", code)
 
         interface_element_string = code
 
