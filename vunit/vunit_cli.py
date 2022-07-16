@@ -149,7 +149,15 @@ def _create_argument_parser(description=None, for_documentation=False):
         help="Only elaborate test benches without running",
     )
 
-    parser.add_argument("--clean", action="store_true", default=False, help="Remove output path first")
+    parser.add_argument(
+        "--clean",
+        action="store_true",
+        default=False,
+        help="Remove output path first. "
+        "This is useful, for example, to force a complete "
+        "recompile when compilation artifacts are obsolete "
+        "due to a simulator version update.",
+    )
 
     parser.add_argument(
         "-o",
