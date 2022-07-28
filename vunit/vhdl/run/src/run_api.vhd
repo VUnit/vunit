@@ -168,6 +168,6 @@ package run_pkg is
 
   -- Private
   procedure notify(signal runner : inout runner_sync_t;
-                   idx : natural := runner_event_idx);
+                   idx : natural);
 
 end package;

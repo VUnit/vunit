@@ -18,7 +18,7 @@ use std.textio.all;
 
 package body run_pkg is
   procedure notify(signal runner : inout runner_sync_t;
-                   idx : natural := runner_event_idx) is
+                   idx : natural) is
   begin
     if runner(idx) /= runner_event then
       runner(idx) <= runner_event;
@@ -54,7 +54,7 @@ package body run_pkg is
 
     set_phase(runner_state, test_runner_setup);
     runner(runner_exit_status_idx) <= runner_exit_with_errors;
-    notify(runner);
+    notify(runner, runner_event_idx);
 
     trace(runner_trace_logger, "Entering test runner setup phase.");
     entry_gate(runner);
@@ -89,7 +89,7 @@ package body run_pkg is
     end if;
     exit_gate(runner);
     set_phase(runner_state, test_suite_setup);
-    notify(runner);
+    notify(runner, runner_event_idx);
     trace(runner_trace_logger, "Entering test suite setup phase.");
     entry_gate(runner);
   end test_runner_setup;
@@ -104,12 +104,12 @@ package body run_pkg is
     failure_if(runner_trace_logger, external_failure, "External failure.");
 
     set_phase(runner_state, test_runner_cleanup);
-    notify(runner);
+    notify(runner, runner_event_idx);
     trace(runner_trace_logger, "Entering test runner cleanup phase.");
     entry_gate(runner);
     exit_gate(runner);
     set_phase(runner_state, test_runner_exit);
-    notify(runner);
+    notify(runner, runner_event_idx);
     trace(runner_trace_logger, "Entering test runner exit phase.");
 
     if not final_log_check(allow_disabled_errors => allow_disabled_errors,
@@ -119,7 +119,7 @@ package body run_pkg is
     end if;
 
     runner(runner_exit_status_idx) <= runner_exit_without_errors;
-    notify(runner);
+    notify(runner, runner_event_idx);
 
     if has_active_python_runner(runner_state) then
       core_pkg.test_suite_done;
@@ -371,7 +371,7 @@ package body run_pkg is
   begin
     lock_entry(runner_state, phase);
     log(logger, "Locked " & replace(runner_phase_t'image(phase), "_", " ") & " phase entry gate.", trace, path_offset + 1, line_num, file_name);
-    notify(runner);
+    notify(runner, runner_event_idx);
   end;
 
   procedure unlock_entry (
@@ -384,7 +384,7 @@ package body run_pkg is
   begin
     unlock_entry(runner_state, phase);
     log(logger, "Unlocked " & replace(runner_phase_t'image(phase), "_", " ") & " phase entry gate.", trace, path_offset + 1, line_num, file_name);
-    notify(runner);
+    notify(runner, runner_event_idx);
   end;
 
   procedure lock_exit (
@@ -397,7 +397,7 @@ package body run_pkg is
   begin
     lock_exit(runner_state, phase);
     log(logger, "Locked " & replace(runner_phase_t'image(phase), "_", " ") & " phase exit gate.", trace, path_offset + 1, line_num, file_name);
-    notify(runner);
+    notify(runner, runner_event_idx);
   end;
 
   procedure unlock_exit (
@@ -410,7 +410,7 @@ package body run_pkg is
   begin
     unlock_exit(runner_state, phase);
     log(logger, "Unlocked " & replace(runner_phase_t'image(phase), "_", " ") & " phase exit gate.", trace, path_offset + 1, line_num, file_name);
-    notify(runner);
+    notify(runner, runner_event_idx);
   end;
 
   procedure wait_until (
@@ -435,7 +435,7 @@ package body run_pkg is
       trace(runner_trace_logger, "Halting on " & replace(runner_phase_t'image(get_phase(runner_state)), "_", " ") & " phase entry gate.");
       wait on runner until not entry_is_locked(runner_state, get_phase(runner_state)) for max_locked_time;
     end if;
-    notify(runner);
+    notify(runner, runner_event_idx);
     trace(runner_trace_logger, "Passed " & replace(runner_phase_t'image(get_phase(runner_state)), "_", " ") & " phase entry gate.");
   end procedure entry_gate;
 
