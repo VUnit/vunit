@@ -39,6 +39,15 @@ package wait_pkg is
   --
   -- wait on source until condition for timeout;
   --
+  -- if initial_eval is false. This is the default behavior. A VHDL wait statement only evaluates the
+  -- condition on the next events (changes in signal value) in source or condition. Oftentimes we don't
+  -- want to wait for the next event if condition is already true. This behavior can be achieved by
+  -- setting initial_eval to true. It is equivalent to:
+  --
+  -- if not condition then
+  --   wait on source until condition for timeout;
+  -- end if;
+  --
   -- The timeout message is:
   --
   -- * The wait procedure status by default
@@ -48,13 +57,22 @@ package wait_pkg is
   --
   -- The timeout message log entry will be done to the logger specified by the parameter with the same name.
   --
-  -- For non-boolean source signals the stable attribute can be used.
+  -- For non-boolean source signals you can create a boolean source signal which toggles on every event
+  -- in the non-boolean signal:
   --
-  -- wait_until(source'stable, condition, timeout);
+  -- boolean_source <= boolean_source xor non_boolean_source'event;
+  -- wait_until(boolean_source, condition, timeout);
   --
-  -- source'stable is a boolean signal that is true when the source signal has been stable for more
-  -- than 0 ns, i.e. it will have a delta-sized false pulse when there is an event in the source signal.
-  -- This pulse is the event that will trigger the wait procedure.
+  -- To avoid declaring a new signal boolean_source you can also use the stable attribute:
+  --
+  -- wait_until(non_boolean_source'stable, condition, timeout);
+  --
+  -- non_boolean_source'stable is a boolean signal that is true when the source signal has been stable for more
+  -- than 0 ns, i.e. it will have a delta-sized false pulse when there is an event in the non-boolean source signal.
+  -- This pulse is the event that will trigger the wait procedure. Note that the pulse has
+  -- two events (falling and rising edge) when the non-boolean signal has a single event. This is a problem
+  -- if the non-boolean signal has several events in adjacent delta cycles (the 'stable pulses will merge into one long pulse), or
+  -- if there are two wait procedures a delta cycle apart (the two events in the 'stable pulse will trigger both).
   --
   -- To wait on several signals you need to declare an extra boolean event
   -- signal and then call the concurrent sense procedure with your source
@@ -79,6 +97,7 @@ package wait_pkg is
     signal source : in boolean;
     signal condition : in boolean;
     constant timeout : in delay_length := max_timeout;
+    constant initial_eval : in boolean := false;
     constant logger : in logger_t := default_logger;
     constant msg : in string := default_timeout_msg_tag;
     constant path_offset : in natural := 0;
@@ -87,10 +106,13 @@ package wait_pkg is
 
   -- Equivalent to:
   --
-  -- wait until condition for timeout;
+  -- if not (condition and initial_eval) then
+  --   wait until condition for timeout;
+  -- end if;
   procedure wait_until(
     signal condition : in boolean;
     constant timeout : in delay_length := max_timeout;
+    constant initial_eval : in boolean := false;
     constant logger : in logger_t := default_logger;
     constant msg : in string := default_timeout_msg_tag;
     constant path_offset : in natural := 0;
@@ -99,10 +121,13 @@ package wait_pkg is
 
   -- Equivalent to:
   --
-  -- wait on source for timeout;
+  -- if not (source'event and initial_eval) then
+  --   wait on source for timeout;
+  -- end if;
   procedure wait_on(
     signal source : in boolean;
     constant timeout : in delay_length := max_timeout;
+    constant initial_eval : in boolean := false;
     constant logger : in logger_t := default_logger;
     constant msg : in string := default_timeout_msg_tag;
     constant path_offset : in natural := 0;

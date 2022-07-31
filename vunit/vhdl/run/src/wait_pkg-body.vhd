@@ -36,12 +36,15 @@ package body wait_pkg is
 
   procedure wait_no_msg(
     signal source : in boolean;
+    constant initial_eval : in boolean;
     variable timeout : inout delay_length;
     variable do_exit : out boolean
   ) is
     constant t_start : delay_length := now;
   begin
-    wait on runner(runner_timeout_idx), source until source'event or timeout_notification(runner) for timeout;
+    if not (source'event and initial_eval) then
+      wait on runner(runner_timeout_idx), source until source'event or timeout_notification(runner) for timeout;
+    end if;
 
     if source'event then
       do_exit := true;
@@ -56,14 +59,17 @@ package body wait_pkg is
   procedure wait_no_msg(
     signal source : in boolean;
     signal condition : in boolean;
+    constant initial_eval : in boolean;
     variable timeout : inout delay_length;
     variable do_exit : out boolean
   ) is
     constant t_start : delay_length := now;
   begin
-    wait on runner(runner_timeout_idx), source until (source'event and condition) or timeout_notification(runner) for timeout;
+    if not (condition and initial_eval) then
+      wait on runner(runner_timeout_idx), source until (source'event and condition) or timeout_notification(runner) for timeout;
+    end if;
 
-    if (source'event and condition) then
+    if ((source'event or initial_eval) and condition) then
       do_exit := true;
       return;
     end if;
@@ -114,6 +120,7 @@ package body wait_pkg is
     signal source : in boolean;
     signal condition : in boolean;
     constant timeout : in delay_length := max_timeout;
+    constant initial_eval : in boolean := false;
     constant logger : in logger_t := default_logger;
     constant msg : in string := default_timeout_msg_tag;
     constant path_offset : in natural := 0;
@@ -124,7 +131,7 @@ package body wait_pkg is
   begin
 
     loop
-      wait_no_msg(source, condition, remaining_timeout, do_exit);
+      wait_no_msg(source, condition, initial_eval, remaining_timeout, do_exit);
       exit when do_exit;
 
       info(logger,
@@ -138,6 +145,7 @@ package body wait_pkg is
   procedure wait_until(
     signal condition : in boolean;
     constant timeout : in delay_length := max_timeout;
+    constant initial_eval : in boolean := false;
     constant logger : in logger_t := default_logger;
     constant msg : in string := default_timeout_msg_tag;
     constant path_offset : in natural := 0;
@@ -147,7 +155,7 @@ package body wait_pkg is
     variable do_exit : boolean;
   begin
     loop
-      wait_no_msg(condition, condition, remaining_timeout, do_exit);
+      wait_no_msg(condition, condition, initial_eval, remaining_timeout, do_exit);
       exit when do_exit;
 
       info(logger,
@@ -159,6 +167,7 @@ package body wait_pkg is
   procedure wait_on(
     signal source : in boolean;
     constant timeout : in delay_length := max_timeout;
+    constant initial_eval : in boolean := false;
     constant logger : in logger_t := default_logger;
     constant msg : in string := default_timeout_msg_tag;
     constant path_offset : in natural := 0;
@@ -168,7 +177,7 @@ package body wait_pkg is
     variable do_exit : boolean;
   begin
     loop
-      wait_no_msg(source, remaining_timeout, do_exit);
+      wait_no_msg(source, initial_eval, remaining_timeout, do_exit);
       exit when do_exit;
 
       info(logger,
