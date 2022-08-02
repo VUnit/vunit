@@ -14,6 +14,7 @@ use std.textio.all;
 use work.checker_pkg.all;
 use work.logger_pkg.all;
 use work.log_levels_pkg.all;
+use work.string_ops.all;
 
 package check_pkg is
 
@@ -26,8 +27,8 @@ package check_pkg is
   impure function get_checker_stat return checker_stat_t;
   procedure reset_checker_stat;
 
-  constant check_result_tag : string    := "<+/->";
-  function result (msg : string := "") return string;
+  alias check_result_tag is decorate_tag;
+  alias result is decorate[string return string];
 
   type edge_t is (rising_edge, falling_edge, both_edges);
   type trigger_event_t is (first_pipe, first_no_pipe, penultimate);
