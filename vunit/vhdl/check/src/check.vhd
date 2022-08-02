@@ -34,18 +34,6 @@ package body check_pkg is
     constant msg          : string;
     constant ctx          : string)
     return string is
-    constant msg_i : string(1 to msg'length) := msg;
-
-    function replace_result_tag (msg, check_result : string) return string is
-    begin
-      if msg'length < check_result_tag'length then
-        return msg;
-      elsif msg(1 to check_result_tag'length) = check_result_tag then
-        return check_result & msg(check_result_tag'length + 1 to msg'right);
-      else
-        return msg;
-      end if;
-    end function replace_result_tag;
 
     function append_context (msg, ctx : string) return string is
     begin
@@ -58,7 +46,11 @@ package body check_pkg is
       end if;
     end function append_context;
   begin
-    return append_context(replace_result_tag(msg_i, check_result), ctx);
+    if not is_decorated(msg) then
+      return append_context(msg, ctx);
+    else
+      return append_context(check_result & undecorate(msg), ctx);
+    end if;
   end function std_msg;
 
 
@@ -119,18 +111,6 @@ package body check_pkg is
       return false;
     end if;
   end start_condition;
-
-  function result (msg : string := "") return string is
-  begin
-    if msg = "" then
-      return check_result_tag;
-    elsif msg(msg'left) = '.' or msg(msg'left) = ',' or msg(msg'left) = ':' or
-      msg(msg'left) = ';' or msg(msg'left) = '?' or msg(msg'left) = '!' then
-      return check_result_tag & msg;
-    else
-      return check_result_tag & " " & msg;
-    end if;
-  end;
 
   function to_ordinal_number (num : unsigned) return string is
     constant num_str      : string := to_integer_string(num);
