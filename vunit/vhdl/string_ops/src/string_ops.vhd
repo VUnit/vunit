@@ -113,6 +113,38 @@ package string_ops is
   function to_nibble_string (
     constant value : signed)
     return string;
+
+  -- Initial tag in subprogram string input parameters. If supported, the tag is
+  -- used to indicate that the subprogram shall take the remainder of the string
+  -- and decorate it with information internal to the subprogram. The resulting
+  -- string as the actual parameter to be used. The decoration to be performed
+  -- is specific to the subprogram being called.
+  constant decorate_tag : string := "<+/->";
+
+  -- Used by caller of a subprogram supporting string decoration. The function
+  -- returns:
+  -- 1. decorate_tag if input is the empty string. The called subprogram is in
+  --    full control of the string used. For example, the decorate_tag may
+  --    be translated to "BFM has performed 5 transactions"
+  -- 2. decorate_tag & str if str starts with one of the punctuation marks '.', ',',
+  --    ':', ';', '?', or '!'. For example, if the provided string is
+  --    ". Completed init sequence." the subprogram may translate the decorated string
+  --    to "BFM has performed 5 transactions. Completed init sequence."
+  -- 3. decorate_tag & " " & str if str doesn't start with one of the punctuation marks.
+  --    If str = "after completing init sequence." the subprogram may translate
+  --    the decorated string to "BFM has performed 5 transactions after completing init
+  --    sequence."
+  --
+  -- Note: The function is very specific to VUnit and is not recommended for external use.
+  function decorate(
+  str : string := "") return string;
+
+  -- Return true if str is decorated with decorate_tag, false otherwise.
+  function is_decorated(str : string) return boolean;
+
+  -- Remove decorate_tag from str if str is decorated
+  function undecorate(str : string := "") return string;
+
 end package;
 
 package body string_ops is
@@ -704,5 +736,34 @@ package body string_ops is
   begin
     return to_nibble_string(unsigned(value));
   end function to_nibble_string;
+
+  function decorate(str : string := "") return string is
+  begin
+    if str = "" then
+      return decorate_tag;
+    elsif str(str'left) = '.' or str(str'left) = ',' or str(str'left) = ':' or str(str'left) = ';' or str(str'left) = '?' or str(str'left) = '!' then
+      return decorate_tag & str;
+    else
+      return decorate_tag & " " & str;
+    end if;
+  end;
+
+  function is_decorated(str : string) return boolean is
+  begin
+    if str'length < decorate_tag'length then
+      return false;
+    else
+      return str(str'left to str'left + decorate_tag'length - 1) = decorate_tag;
+    end if;
+  end;
+
+  function undecorate(str : string := "") return string is
+  begin
+    if is_decorated(str) then
+      return str(str'left + decorate_tag'length to str'right);
+    else
+      return str;
+    end if;
+  end;
 
 end package body;
