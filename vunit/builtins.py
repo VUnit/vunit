@@ -244,6 +244,7 @@ in your VUnit Git repository? You have to do this first if installing using setu
             "dictionary",
             "run",
             "path",
+            "id",
         ):
             self._add_files(VHDL_PATH / path / "src" / "*.vhd")
 
