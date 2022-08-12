@@ -16,6 +16,7 @@ context vunit_context is
   use vunit_lib.logger_pkg.all;
   use vunit_lib.log_handler_pkg.all;
   use vunit_lib.log_deprecated_pkg.all;
+  use vunit_lib.id_pkg.all;
   use vunit_lib.ansi_pkg.all;
   use vunit_lib.checker_pkg.all;
   use vunit_lib.check_pkg.all;
