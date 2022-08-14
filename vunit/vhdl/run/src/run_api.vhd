@@ -10,15 +10,16 @@
 use work.logger_pkg.all;
 use work.runner_pkg.all;
 use work.run_types_pkg.all;
+use work.event_private_pkg.all;
 
 library ieee;
 use ieee.std_logic_1164.all;
 
 package run_pkg is
-  signal runner : runner_sync_t := (runner_event_idx => idle_runner,
-                                    runner_exit_status_idx => runner_exit_with_errors,
-                                    runner_timeout_update_idx => idle_runner,
-                                    runner_timeout_idx => idle_runner);
+  signal runner : runner_sync_t := new_basic_event(test_runner_state) & new_basic_event(test_runner_timeout_update) & new_basic_event(test_runner_timeout) & runner_exit_with_errors;
+  alias test_runner_state is runner(runner_state_idx to runner_state_idx + basic_event_length - 1);
+  alias test_runner_timeout_update is runner(runner_timeout_update_idx to runner_timeout_update_idx + basic_event_length - 1);
+  alias test_runner_timeout is runner(runner_timeout_idx to runner_timeout_idx + basic_event_length - 1);
 
   constant runner_state : runner_t := new_runner;
 
@@ -85,6 +86,7 @@ package run_pkg is
     constant timeout                 : in    time;
     constant do_runner_cleanup : boolean := true);
 
+  -- Deprecated function. Use is_active(test_runner_timeout) instead.
   function timeout_notification (
     signal runner : runner_sync_t
   ) return boolean;
