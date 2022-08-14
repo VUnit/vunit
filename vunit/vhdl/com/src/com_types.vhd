@@ -24,6 +24,7 @@ use work.queue_pkg.all;
 use work.queue_2008p_pkg.all;
 use work.queue_pool_pkg.all;
 use work.dict_pkg.all;
+use work.event_private_pkg.all;
 
 package com_types_pkg is
 
@@ -146,9 +147,7 @@ package com_types_pkg is
   -- the network notifies connected actors which can determine the cause of the
   -- event by consulting the com messenger (com_messenger.vhd). Actors can be
   -- connected to different networks but there's only one global messenger.
-  subtype network_t is std_logic;
-  constant network_event : std_logic := '1';
-  constant idle_network : std_logic := 'Z';
+  alias network_t is basic_event_t;
 
   -- Default value for timeout parameters. ModelSim can't handle time'high
   constant max_timeout : time := 1 hr;
