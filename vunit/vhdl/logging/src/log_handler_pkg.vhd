@@ -62,7 +62,7 @@ package log_handler_pkg is
   ---------------------------------------------
   -- Private parts not intended for public use
   ---------------------------------------------
-  impure function get_id(log_handler : log_handler_t) return natural;
+  impure function get_id_number(log_handler : log_handler_t) return natural;
   procedure update_max_logger_name_length(log_handler : log_handler_t; value : natural);
   impure function get_max_logger_name_length(log_handler : log_handler_t) return natural;
 
