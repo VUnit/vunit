@@ -17,6 +17,7 @@ use vunit_lib.run_types_pkg.all;
 use vunit_lib.run_pkg.all;
 use vunit_lib.runner_pkg.all;
 use vunit_lib.core_pkg;
+use vunit_lib.event_common_pkg.all;
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -155,11 +156,7 @@ begin
     begin
       runner_init(runner_state);
       runner(runner_exit_status_idx) <= runner_exit_with_errors;
-      if runner(runner_event_idx) /= runner_event then
-        runner(runner_event_idx) <= runner_event;
-        wait until runner(runner_event_idx) = runner_event;
-        runner(runner_event_idx) <= idle_runner;
-      end if;
+      notify(test_runner_state);
     end;
 
     constant c : checker_t := new_checker("checker_t", default_log_level => failure);
