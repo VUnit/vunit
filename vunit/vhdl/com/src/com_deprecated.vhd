@@ -16,6 +16,7 @@ use work.com_messenger_pkg.all;
 use work.com_types_pkg.all;
 use work.com_pkg.all;
 use work.com_common_pkg.all;
+use work.event_common_pkg.all;
 
 use std.textio.all;
 

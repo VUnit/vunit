@@ -11,25 +11,15 @@ use ieee.std_logic_1164.all;
 
 use work.com_messenger_pkg.all;
 use work.com_types_pkg.all;
+use work.event_common_pkg.all;
 
 package com_common_pkg is
   shared variable messenger :       messenger_t;
-
-  procedure notify (signal net : inout network_t);
 
   impure function no_error_status (status : com_status_t; old_api : boolean := false) return boolean;
 end package com_common_pkg;
 
 package body com_common_pkg is
-  procedure notify (signal net : inout network_t) is
-  begin
-    if net /= network_event then
-      net <= network_event;
-      wait until net = network_event;
-      net <= idle_network;
-    end if;
-  end procedure notify;
-
   impure function no_error_status (status : com_status_t; old_api : boolean := false) return boolean is
   begin
     return (status = ok) or ((status = timeout) and messenger.timeout_is_allowed and old_api);
