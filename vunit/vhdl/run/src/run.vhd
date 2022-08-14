@@ -15,16 +15,24 @@ use work.dictionary.all;
 use work.path.all;
 use work.core_pkg;
 use std.textio.all;
+use work.event_common_pkg.all;
+use work.event_private_pkg.all;
 
 package body run_pkg is
   procedure notify(signal runner : inout runner_sync_t;
                    idx : natural) is
   begin
-    if runner(idx) /= runner_event then
-      runner(idx) <= runner_event;
-      wait until runner(idx) = runner_event;
-      runner(idx) <= idle_runner;
-    end if;
+    -- Input to notify must be static, hence the case statement
+    case idx is
+      when runner_state_idx =>
+        notify(runner(runner_state_idx to runner_state_idx + basic_event_length - 1));
+      when runner_timeout_update_idx =>
+        notify(runner(runner_timeout_update_idx to runner_timeout_update_idx + basic_event_length - 1));
+      when runner_timeout_idx =>
+        notify(runner(runner_timeout_idx to runner_timeout_idx + basic_event_length - 1));
+      when others =>
+        failure(runner_trace_logger, "Unknown target event for notification (index = " & integer'image(idx) & ").");
+    end case;
   end procedure notify;
 
   procedure test_runner_setup (
@@ -54,7 +62,7 @@ package body run_pkg is
 
     set_phase(runner_state, test_runner_setup);
     runner(runner_exit_status_idx) <= runner_exit_with_errors;
-    notify(runner, runner_event_idx);
+    notify(runner, runner_state_idx);
 
     trace(runner_trace_logger, "Entering test runner setup phase.");
     entry_gate(runner);
@@ -89,7 +97,7 @@ package body run_pkg is
     end if;
     exit_gate(runner);
     set_phase(runner_state, test_suite_setup);
-    notify(runner, runner_event_idx);
+    notify(runner, runner_state_idx);
     trace(runner_trace_logger, "Entering test suite setup phase.");
     entry_gate(runner);
   end test_runner_setup;
@@ -104,12 +112,12 @@ package body run_pkg is
     failure_if(runner_trace_logger, external_failure, "External failure.");
 
     set_phase(runner_state, test_runner_cleanup);
-    notify(runner, runner_event_idx);
+    notify(runner, runner_state_idx);
     trace(runner_trace_logger, "Entering test runner cleanup phase.");
     entry_gate(runner);
     exit_gate(runner);
     set_phase(runner_state, test_runner_exit);
-    notify(runner, runner_event_idx);
+    notify(runner, runner_state_idx);
     trace(runner_trace_logger, "Entering test runner exit phase.");
 
     if not final_log_check(allow_disabled_errors => allow_disabled_errors,
@@ -119,7 +127,7 @@ package body run_pkg is
     end if;
 
     runner(runner_exit_status_idx) <= runner_exit_without_errors;
-    notify(runner, runner_event_idx);
+    notify(runner, runner_state_idx);
 
     if has_active_python_runner(runner_state) then
       core_pkg.test_suite_done;
@@ -288,10 +296,10 @@ package body run_pkg is
   begin
 
     loop
-      wait until (runner(runner_exit_status_idx) = runner_exit_without_errors or
-                  runner(runner_timeout_update_idx) = runner_event) for current_timeout;
+      wait until (runner(runner_exit_status_idx) = runner_exit_without_errors) or
+                  is_active(test_runner_timeout_update) for current_timeout;
 
-      if runner(runner_timeout_update_idx) = runner_event then
+      if is_active(test_runner_timeout_update) then
         debug(runner_trace_logger, "Update watchdog timeout " & time'image(current_timeout) & ".");
         current_timeout := get_timeout(runner_state);
       else
@@ -301,7 +309,7 @@ package body run_pkg is
 
     if not (runner(runner_exit_status_idx) = runner_exit_without_errors) then
       notify(runner, runner_timeout_idx);
-      wait until runner(runner_timeout_idx) = idle_runner;
+      wait until not is_active(test_runner_timeout);
       error(runner_trace_logger, "Test runner timeout after " & time'image(current_timeout) & ".");
       if do_runner_cleanup then
         test_runner_cleanup(runner);
@@ -313,7 +321,9 @@ package body run_pkg is
     signal runner : runner_sync_t
   ) return boolean is
   begin
-    return runner(runner_timeout_idx) = runner_event;
+    -- Cannot use better logging functions since timeout_notification is pure
+    report "timeout_notification(runner) is deprecated and will be removed in future releases. Use is_active(test_runner_timeout) instead.";
+    return runner(runner_timeout_idx) = p_triggered_event;
   end;
 
   impure function test_suite_error (
@@ -371,7 +381,7 @@ package body run_pkg is
   begin
     lock_entry(runner_state, phase);
     log(logger, "Locked " & replace(runner_phase_t'image(phase), "_", " ") & " phase entry gate.", trace, path_offset + 1, line_num, file_name);
-    notify(runner, runner_event_idx);
+    notify(runner, runner_state_idx);
   end;
 
   procedure unlock_entry (
@@ -384,7 +394,7 @@ package body run_pkg is
   begin
     unlock_entry(runner_state, phase);
     log(logger, "Unlocked " & replace(runner_phase_t'image(phase), "_", " ") & " phase entry gate.", trace, path_offset + 1, line_num, file_name);
-    notify(runner, runner_event_idx);
+    notify(runner, runner_state_idx);
   end;
 
   procedure lock_exit (
@@ -397,7 +407,7 @@ package body run_pkg is
   begin
     lock_exit(runner_state, phase);
     log(logger, "Locked " & replace(runner_phase_t'image(phase), "_", " ") & " phase exit gate.", trace, path_offset + 1, line_num, file_name);
-    notify(runner, runner_event_idx);
+    notify(runner, runner_state_idx);
   end;
 
   procedure unlock_exit (
@@ -410,7 +420,7 @@ package body run_pkg is
   begin
     unlock_exit(runner_state, phase);
     log(logger, "Unlocked " & replace(runner_phase_t'image(phase), "_", " ") & " phase exit gate.", trace, path_offset + 1, line_num, file_name);
-    notify(runner, runner_event_idx);
+    notify(runner, runner_state_idx);
   end;
 
   procedure wait_until (
@@ -435,7 +445,7 @@ package body run_pkg is
       trace(runner_trace_logger, "Halting on " & replace(runner_phase_t'image(get_phase(runner_state)), "_", " ") & " phase entry gate.");
       wait on runner until not entry_is_locked(runner_state, get_phase(runner_state)) for max_locked_time;
     end if;
-    notify(runner, runner_event_idx);
+    notify(runner, runner_state_idx);
     trace(runner_trace_logger, "Passed " & replace(runner_phase_t'image(get_phase(runner_state)), "_", " ") & " phase entry gate.");
   end procedure entry_gate;
 
