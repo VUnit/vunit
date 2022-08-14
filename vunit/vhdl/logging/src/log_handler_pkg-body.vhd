@@ -16,10 +16,10 @@ use work.file_pkg.all;
 
 package body log_handler_pkg is
 
-  constant display_handler_id : natural := 0;
-  constant next_log_handler_id : integer_vector_ptr_t := new_integer_vector_ptr(1, value => display_handler_id+1);
+  constant display_handler_id_number : natural := 0;
+  constant next_log_handler_id_number : integer_vector_ptr_t := new_integer_vector_ptr(1, value => display_handler_id_number+1);
 
-  constant id_idx : natural := 0;
+  constant id_number_idx : natural := 0;
   constant file_name_idx : natural := 1;
   constant format_idx : natural := 2;
   constant use_color_idx : natural := 3;
@@ -45,13 +45,13 @@ package body log_handler_pkg is
     set(log_handler.p_data, file_id_idx, to_integer(file_id));
   end procedure;
 
-  impure function new_log_handler(id : natural;
+  impure function new_log_handler(id_number : natural;
                                   file_name : string;
                                   format : log_format_t;
                                   use_color : boolean) return log_handler_t is
     constant log_handler : log_handler_t := (p_data => new_integer_vector_ptr(log_handler_length));
   begin
-    set(log_handler.p_data, id_idx, id);
+    set(log_handler.p_data, id_number_idx, id_number);
     set(log_handler.p_data, file_name_idx, to_integer(new_string_ptr(file_name)));
     set(log_handler.p_data, file_id_idx, to_integer(null_file_id));
     init_log_file(log_handler, file_name);
@@ -63,14 +63,14 @@ package body log_handler_pkg is
   impure function new_log_handler(file_name : string;
                                   format : log_format_t := verbose;
                                   use_color : boolean := false) return log_handler_t is
-    constant id : natural := get(next_log_handler_id, 0);
+    constant id_number : natural := get(next_log_handler_id_number, 0);
   begin
-    set(next_log_handler_id, 0, id + 1);
-    return new_log_handler(id, file_name, format, use_color);
+    set(next_log_handler_id_number, 0, id_number + 1);
+    return new_log_handler(id_number, file_name, format, use_color);
   end;
 
   -- Display handler; Write to stdout
-  constant p_display_handler : log_handler_t := new_log_handler(display_handler_id,
+  constant p_display_handler : log_handler_t := new_log_handler(display_handler_id_number,
                                                                 stdout_file_name,
                                                                 format => verbose,
                                                                 use_color => true);
@@ -80,9 +80,9 @@ package body log_handler_pkg is
     return p_display_handler;
   end function;
 
-  impure function get_id(log_handler : log_handler_t) return natural is
+  impure function get_id_number(log_handler : log_handler_t) return natural is
   begin
-    return get(log_handler.p_data, id_idx);
+    return get(log_handler.p_data, id_number_idx);
   end;
 
   impure function get_file_name (log_handler : log_handler_t) return string is

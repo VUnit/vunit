@@ -13,24 +13,22 @@ use work.string_ops.all;
 use work.print_pkg.print;
 use work.ansi_pkg.all;
 use work.location_pkg.all;
+use work.id_pkg.all;
 
 package body logger_pkg is
-  constant root_logger_id : natural := 0;
-  constant next_logger_id : integer_vector_ptr_t := new_integer_vector_ptr(1, value => root_logger_id + 1);
   constant global_log_count : integer_vector_ptr_t := new_integer_vector_ptr(1, value => 0);
   constant p_mock_queue_length : integer_vector_ptr_t := new_integer_vector_ptr(1, value => 0);
   constant mock_queue : queue_t := new_queue;
 
   constant id_idx : natural := 0;
-  constant name_idx : natural := 1;
-  constant parent_idx : natural := 2;
-  constant children_idx : natural := 3;
-  constant log_count_idx : natural := 4;
-  constant stop_counts_idx : natural := 5;
-  constant handlers_idx : natural := 6;
-  constant state_idx : natural := 7;
-  constant log_level_filters_idx : natural := 8;
-  constant logger_length : natural := 9;
+  constant parent_idx : natural := 1;
+  constant children_idx : natural := 2;
+  constant log_count_idx : natural := 3;
+  constant stop_counts_idx : natural := 4;
+  constant handlers_idx : natural := 5;
+  constant state_idx : natural := 6;
+  constant log_level_filters_idx : natural := 7;
+  constant logger_length : natural := 8;
 
   constant log_level_invisible : integer := 0;
   constant log_level_visible : integer := 1;
@@ -56,15 +54,14 @@ package body logger_pkg is
     set(children, length(children)-1, to_integer(child));
   end;
 
-  impure function new_logger(id : natural;
-                             name : string;
+  impure function new_logger(id : id_t;
                              parent : logger_t) return logger_t is
     variable logger : logger_t;
     variable log_handler : log_handler_t;
   begin
     logger := (p_data => new_integer_vector_ptr(logger_length));
-    set(logger.p_data, id_idx, id);
-    set(logger.p_data, name_idx, to_integer(new_string_ptr(name)));
+    set(logger.p_data, id_idx, to_integer(id));
+
     set(logger.p_data, parent_idx, to_integer(parent));
     set(logger.p_data, children_idx, to_integer(new_integer_vector_ptr));
     set(logger.p_data, log_count_idx, to_integer(new_integer_vector_ptr(log_level_t'pos(log_level_t'high)+1, value => 0)));
@@ -112,16 +109,16 @@ package body logger_pkg is
                                  include_children : boolean) is
     constant log_level_filters : integer_vector_ptr_t :=
       to_integer_vector_ptr(get(logger.p_data, log_level_filters_idx));
-    constant handler_id : natural := get_id(log_handler);
+    constant handler_id_number : natural := get_id_number(log_handler);
     variable log_level_filter : integer_vector_ptr_t;
     variable log_level_setting : natural;
 
   begin
-    if handler_id >= length(log_level_filters) then
-      resize(log_level_filters, handler_id + 1, value => to_integer(null_ptr));
+    if handler_id_number >= length(log_level_filters) then
+      resize(log_level_filters, handler_id_number + 1, value => to_integer(null_ptr));
     end if;
 
-    log_level_filter := to_integer_vector_ptr(get(log_level_filters, handler_id));
+    log_level_filter := to_integer_vector_ptr(get(log_level_filters, handler_id_number));
 
     if log_level_filter = null_ptr then
       -- Only show valid log levels by default
@@ -132,7 +129,7 @@ package body logger_pkg is
         end if;
       end loop;
 
-      set(log_level_filters, handler_id, to_integer(log_level_filter));
+      set(log_level_filters, handler_id_number, to_integer(log_level_filter));
     end if;
 
     if visible then
@@ -153,16 +150,16 @@ package body logger_pkg is
     end if;
   end;
 
-  impure function new_logger(name : string; parent : logger_t) return logger_t is
-    constant id : natural := get(next_logger_id, 0);
+  impure function get_id(logger : logger_t) return id_t is
   begin
-    set(next_logger_id, 0, id + 1);
-    return new_logger(id, name, parent);
+    return to_id(get(logger.p_data, id_idx));
   end;
 
-  impure function get_id(logger : logger_t) return natural is
+  impure function new_logger(name : string; parent : logger_t) return logger_t is
+    constant parent_id : id_t := get_id(parent);
+    constant id : id_t := get_id(name, parent_id);
   begin
-    return get(logger.p_data, id_idx);
+    return new_logger(id, parent);
   end;
 
   impure function get_real_parent(parent : logger_t) return logger_t is
@@ -206,6 +203,7 @@ package body logger_pkg is
   begin
     if name = "" then
       core_failure("Invalid logger name """ & full_name & """");
+	  return false;
     end if;
 
     for i in full_name'range loop
@@ -254,13 +252,8 @@ package body logger_pkg is
   end;
 
   impure function get_full_name(logger : logger_t) return string is
-    variable parent : logger_t := get_parent(logger);
   begin
-    if parent = null_logger or get_id(parent) = root_logger_id then
-      return get_name(logger);
-    else
-      return get_full_name(parent) & ":" & get_name(logger);
-    end if;
+    return full_name(get_id(logger));
   end;
 
   impure function get_max_name_length(logger : logger_t) return natural is
@@ -284,7 +277,7 @@ package body logger_pkg is
 
   impure function get_name(logger : logger_t) return string is
   begin
-    return to_string(to_string_ptr(get(logger.p_data, name_idx)));
+    return name(get_id(logger));
   end;
 
   impure function get_parent(logger : logger_t) return logger_t is
@@ -450,13 +443,13 @@ package body logger_pkg is
                                        log_handler : log_handler_t) return integer_vector_ptr_t is
     constant log_level_filters : integer_vector_ptr_t :=
       to_integer_vector_ptr(get(logger.p_data, log_level_filters_idx));
-    constant handler_id : natural := get_id(log_handler);
+    constant handler_id_number : natural := get_id_number(log_handler);
   begin
-    if handler_id >= length(log_level_filters) then
-      resize(log_level_filters, handler_id + 1, value => to_integer(null_ptr));
+    if handler_id_number >= length(log_level_filters) then
+      resize(log_level_filters, handler_id_number + 1, value => to_integer(null_ptr));
     end if;
 
-    return to_integer_vector_ptr(get(log_level_filters, handler_id));
+    return to_integer_vector_ptr(get(log_level_filters, handler_id_number));
   end;
 
   impure function get_log_level_filter(logger : logger_t;
@@ -1028,7 +1021,7 @@ package body logger_pkg is
   end;
 
   impure function new_root_logger return logger_t is
-    variable logger : logger_t := new_logger(root_logger_id, "", null_logger);
+    variable logger : logger_t := new_logger(root_id, null_logger);
   begin
     p_set_log_handlers(logger, (0 => display_handler));
 
