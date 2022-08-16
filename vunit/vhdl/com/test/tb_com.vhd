@@ -78,7 +78,7 @@ begin
       elsif run("Test that no name actors can be created") then
         actor := new_actor;
         check(actor /= null_actor, "Failed to create no name actor");
-        check_equal(name(actor), "");
+        check_equal(name(actor)(1 to 7), "_actor_");
       elsif run("Test that the null actor has no name") then
         check_equal(name(null_actor), "");
       elsif run("Test that two actors of the same name cannot be created") then
@@ -451,11 +451,11 @@ begin
         send(net, actor_vec, msg, 10 ns);
         check_equal(now - t_start, 10 ns);
         check_log(com_logger, "FULL INBOX ERROR.", failure);
-        check_log(com_logger, "[4:- - ->  (-)] =>  inbox", trace);
+        check_log(com_logger, "[4:- - -> _actor_" & to_string(actor_vec(0).id) & " (-)] => _actor_" & to_string(actor_vec(0).id) & " inbox", trace);
         check_log(com_logger, "FULL INBOX ERROR.", failure);
-        check_log(com_logger, "[5:- - ->  (-)] =>  inbox", trace);
+        check_log(com_logger, "[5:- - -> _actor_" & to_string(actor_vec(1).id) & " (-)] => _actor_" & to_string(actor_vec(1).id) & " inbox", trace);
         check_log(com_logger, "FULL INBOX ERROR.", failure);
-        check_log(com_logger, "[6:- - ->  (-)] =>  inbox", trace);
+        check_log(com_logger, "[6:- - -> _actor_" & to_string(actor_vec(2).id) & " (-)] => _actor_" & to_string(actor_vec(2).id) & " inbox", trace);
         unmock(com_logger);
       elsif run("Test receiving from several actors") then
         for i in 0 to 2 loop

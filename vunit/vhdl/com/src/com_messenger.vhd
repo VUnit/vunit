@@ -15,6 +15,7 @@ use work.string_ptr_pkg.all;
 use work.codec_pkg.all;
 use work.logger_pkg.all;
 use work.log_levels_pkg.all;
+use work.id_pkg.all;
 
 use std.textio.all;
 
@@ -197,7 +198,7 @@ package body com_messenger_pkg is
 
   type actor_item_t is record
     actor             : actor_t;
-    name              : line;
+    id                : id_t;
     deferred_creation : boolean;
     inbox             : mailbox_ptr_t;
     outbox            : mailbox_ptr_t;
@@ -212,7 +213,7 @@ package body com_messenger_pkg is
     body
       variable null_actor_item : actor_item_t := (
         actor             => null_actor,
-        name              => null,
+        id                => null_id,
         deferred_creation => false,
         inbox             => create(0),
         outbox            => create(0),
@@ -268,8 +269,8 @@ package body com_messenger_pkg is
   begin
     for i in actors'reverse_range loop
       ret_val := actors(i).actor;
-      if actors(i).name /= null then
-        exit when actors(i).name.all = name;
+      if actors(i).id /= null_id then
+        exit when full_name(actors(i).id) = name;
       end if;
     end loop;
 
@@ -283,6 +284,8 @@ package body com_messenger_pkg is
     outbox_size        : in natural := natural'high)
     return actor_t is
     variable old_actors : actor_item_array_ptr_t;
+    variable id : id_t;
+    variable actor_id : integer;
   begin
     old_actors := actors;
     actors     := new actor_item_array_t(0 to actors'length);
@@ -291,7 +294,13 @@ package body com_messenger_pkg is
       actors(i) := old_actors(i);
     end loop;
     deallocate(old_actors);
-    actors(actors'length - 1) := ((id => actors'length - 1), new string'(name),
+    actor_id := actors'length - 1;
+    if name = "" then
+      id := get_id("_actor_" & to_string(actor_id));
+    else
+      id := get_id(name);
+    end if;
+    actors(actors'length - 1) := ((id => actor_id), id,
                                   deferred_creation, create(inbox_size), create(outbox_size), null, (null, null, null));
 
     return actors(actors'length - 1).actor;
@@ -311,8 +320,8 @@ package body com_messenger_pkg is
 
   impure function name (actor : actor_t) return string is
   begin
-    if actors(actor.id).name /= null then
-      return actors(actor.id).name.all;
+    if actors(actor.id).id /= null_id then
+      return full_name(actors(actor.id).id);
     else
       return "";
     end if;
@@ -407,7 +416,6 @@ package body com_messenger_pkg is
       end loop;
     end loop;
 
-    deallocate(actors(actor.id).name);
     deallocate(actors(actor.id).inbox);
     deallocate(actors(actor.id).outbox);
     actors(actor.id) := null_actor_item;
