@@ -711,13 +711,16 @@ begin
       check_core_failure("Invalid logger name ""foo,bar""");
 
       tmp_logger := get_logger("parent:foo,bar");
-      check_core_failure("Invalid logger name ""parent:foo,bar""");
+      check_core_failure("Invalid logger name ""foo,bar""");
+
+      tmp_logger := get_logger("par,ent:foo");
+      check_core_failure("Invalid logger name ""par,ent:foo""");
 
       tmp_logger := get_logger("");
       check_core_failure("Invalid logger name """"");
 
       tmp_logger := get_logger(":");
-      check_core_failure("Invalid logger name """"");
+      check_core_failure("Invalid logger name "":""");
 
       unmock_core_failure;
 
