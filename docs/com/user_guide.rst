@@ -53,9 +53,10 @@ Basic Message Passing
 Sending and Receiving
 ---------------------
 
-To send a message we must first create an actor for the receiver. The actor
-below has a name passed to the ``new_actor`` function but ``com`` also allows
-unnamed actors
+To send a message we must first create an actor for the receiver. This is done with the ``new_actor``
+function which takes an optional name parameter. If no name is given the actor will be assigned
+a name internally on the format ``_actor_<n>`` where ``n`` denotes an integer unique to the
+actor.
 
 .. code-block:: vhdl
 
@@ -63,7 +64,7 @@ unnamed actors
 
 To send a message to the receiver the sender must have access to the value of the ``my_receiver`` constant.
 If the receiver made ``my_receiver`` publically available, for example with a package, it can be accessed
-directly. If not, it can be found with the ``find`` function providing it has a name.
+directly. If not, it can be found with the ``find`` function providing it has been given an explict name.
 
 .. code-block:: vhdl
 
@@ -814,8 +815,8 @@ The result is something like this
   Mailbox: inbox
     Size: 2147483647
     Messages:
-      0. 5:- - -> memory BFM (write)
-      1. 6:- - -> memory BFM (read)
+      0. 5:- _actor_3 -> memory BFM (write)
+      1. 6:- _actor_3 -> memory BFM (read)
 
 The size is the maximum number of messages that the mailbox can contain (this is dynamically allocated) while the
 list at the bottom shows the actual messages in the mailbox. Message 0 is the oldest message and the first one
@@ -838,9 +839,9 @@ actor's creation is deferred. For example,
     Mailbox: inbox
       Size: 2147483647
       Messages:
-        0. 8:- - -> driver (add)
-        1. 9:- - -> driver (add)
-        2. 10:- - -> driver (add)
+        0. 8:- _actor_3 -> driver (add)
+        1. 9:- _actor_3 -> driver (add)
+        2. 10:- _actor_3 -> driver (add)
     Mailbox: outbox
       Size: 2147483647
       Messages:
