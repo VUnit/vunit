@@ -159,6 +159,10 @@ package body logger_pkg is
     constant parent_id : id_t := get_id(parent);
     constant id : id_t := get_id(name, parent_id);
   begin
+    if id = null_id then
+      return null_logger;
+    end if;
+
     return new_logger(id, parent);
   end;
 
@@ -170,65 +174,14 @@ package body logger_pkg is
     return parent;
   end;
 
-  impure function head(name : string; dot_idx : natural) return string is
-  begin
-    if dot_idx = 0 then
-      return name;
-    else
-      return name(name'left to dot_idx-1);
-    end if;
-  end;
-
-  impure function tail(name : string; dot_idx : natural) return string is
-  begin
-    if dot_idx = 0 then
-      return "";
-    else
-      return name(dot_idx+1 to name'right);
-    end if;
-  end;
-
-  impure function validate_logger_name(name : string;
-                                       parent : logger_t) return boolean is
-    function join(s1, s2 : string) return string is
-    begin
-      if s1 = "" then
-        return s2;
-      else
-        return s1 & ":" & s2;
-      end if;
-    end;
-
-    constant full_name : string := join(get_name(parent), name);
-  begin
-    if name = "" then
-      core_failure("Invalid logger name """ & full_name & """");
-	  return false;
-    end if;
-
-    for i in full_name'range loop
-      if full_name(i) = ',' then
-        core_failure("Invalid logger name """ & full_name & """");
-        return false;
-      end if;
-    end loop;
-
-    return true;
-  end;
-
   impure function get_logger(name : string;
                              parent : logger_t := null_logger) return logger_t is
     constant real_parent : logger_t := get_real_parent(parent);
     variable child, logger : logger_t;
     constant stripped_name : string := strip(name, ":");
-    constant dot_idx : integer := find(stripped_name, ':');
-    constant head_name : string := head(stripped_name, dot_idx);
-    constant tail_name : string := tail(stripped_name, dot_idx);
+    variable split_name : lines_t := split(stripped_name, ":", 1);
+    constant head_name : string := split_name(0).all;
   begin
-    if not validate_logger_name(head_name, real_parent) then
-      return null_logger;
-    end if;
-
     logger := null_logger;
     for i in 0 to num_children(real_parent)-1 loop
       child := get_child(real_parent, i);
@@ -241,11 +194,17 @@ package body logger_pkg is
 
     if logger = null_logger then
       logger := new_logger(head_name, real_parent);
+      if logger = null_logger then
+        core_failure("Invalid logger name """ & name & """");
+        return null_logger;
+      end if;
       set_log_handlers(logger, get_log_handlers(real_parent));
     end if;
 
-    if dot_idx /= 0 then
-      return get_logger(tail_name, logger);
+    if split_name'length > 1 then
+      if split_name(1).all /= "" then
+        return get_logger(split_name(1).all, logger);
+      end if;
     end if;
 
     return logger;
