@@ -65,6 +65,11 @@ package id_pkg is
 
   -- Return the name for id without hierarchy.
   impure function name(id : id_t) return string;
+
+  -- TODO: Deallocate procedure. Will it be used? Deallocating an ID means that the
+  -- children subtree has to be deallocated as well. In general it will be hard for
+  -- any part of the code knowing how IDs have been shared, what children have been
+  -- added and whether or not they are still in used.
 end package;
 
 package body id_pkg is
