@@ -345,7 +345,6 @@ package body logger_pkg is
 
   procedure set_stop_level(logger : logger_t;
                            log_level : alert_log_level_t) is
-    variable stop_count : natural;
   begin
     for level in log_level_t'low to log_level_t'high loop
       disable_stop(logger, level,
@@ -627,14 +626,6 @@ package body logger_pkg is
     end if;
   end;
 
-  procedure clear_log_count(logger : logger_t; idx : natural) is
-    constant log_counts : integer_vector_ptr_t := to_integer_vector_ptr(get(logger.p_data, idx));
-  begin
-    for lvl in log_level_t'low to log_level_t'high loop
-      set(log_counts, log_level_t'pos(lvl), 0);
-    end loop;
-  end;
-
   impure function get_log_count(logger : logger_t;
                                 idx : natural;
                                 log_level : log_level_t := null_log_level) return natural is
@@ -792,7 +783,7 @@ package body logger_pkg is
   end;
 
   procedure check_no_log is
-    variable fail : boolean := length(mock_queue) > 0;
+    constant fail : boolean := length(mock_queue) > 0;
   begin
     while length(mock_queue) > 0 loop
       report "Got unexpected log item " & LF & LF & pop_log_item_string(true) & LF;
@@ -980,7 +971,7 @@ package body logger_pkg is
   end;
 
   impure function new_root_logger return logger_t is
-    variable logger : logger_t := new_logger(root_id, null_logger);
+    constant logger : logger_t := new_logger(root_id, null_logger);
   begin
     p_set_log_handlers(logger, (0 => display_handler));
 
@@ -1166,7 +1157,7 @@ package body logger_pkg is
         end;
 
         variable count : natural;
-        variable level_is_disabled : boolean := is_disabled(logger, log_level);
+        constant level_is_disabled : boolean := is_disabled(logger, log_level);
       begin
         count := get_log_count(logger, log_level);
         if count > 0 and not (allow_disabled and level_is_disabled) then
