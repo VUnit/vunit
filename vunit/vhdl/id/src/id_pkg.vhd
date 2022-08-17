@@ -28,6 +28,8 @@ use work.string_ptr_pkg.all;
 use work.string_ops.all;
 use work.core_pkg.all;
 
+use std.textio.all;
+
 package id_pkg is
   -- ID record, all fields are private
   type id_t is record
@@ -70,6 +72,16 @@ package id_pkg is
   -- children subtree has to be deallocated as well. In general it will be hard for
   -- any part of the code knowing how IDs have been shared, what children have been
   -- added and whether or not they are still in used.
+
+  -- Return an ASCII representation of the subtree of IDs rooted in the given ID.
+  -- If no ID is given the full ID tree is returned. The returned string starts
+  -- with a linefeed character (LF) such that the first line of the tree comes on
+  -- a separate line. This will make the first line aligned with the rest of the tree
+  -- when printed in a log message. The initial LF can be omitted by setting initial_lf
+  -- to false.
+  impure function get_tree(id : id_t := null_id; initial_lf : boolean := true) return string;
+
+  -- TODO: Define behavior for all subprograms when called with a null_id or a root_id.
 end package;
 
 package body id_pkg is
@@ -225,6 +237,38 @@ package body id_pkg is
     else
       return full_name(parent) & ":" & name(id);
     end if;
+  end;
+
+  impure function get_tree(id : id_t := null_id; initial_lf : boolean := true) return string is
+    impure function get_subtree(subtree_root : id_t; child_indentation : string := "") return string is
+      variable ret_val : line;
+    begin
+      if subtree_root = root_id then
+        -- The root ID has no name but in pretty-printing it is clearer if it is given a "symbol".
+        write(ret_val, string'("(root)"));
+      else
+        write(ret_val, name(subtree_root));
+      end if;
+
+      if num_children(subtree_root) > 0 then
+        for idx in 0 to num_children(subtree_root) - 2 loop
+          write(ret_val, LF & child_indentation & "+---" & get_subtree(get_child(subtree_root, idx), child_indentation & "|   "));
+        end loop;
+        write(ret_val, LF & child_indentation & "\---" & get_subtree(get_child(subtree_root, num_children(subtree_root) - 1), child_indentation & "    "));
+      end if;
+
+      return ret_val.all;
+    end;
+  begin
+    if id = null_id then
+      return get_tree(root_id, initial_lf);
+    end if;
+
+    if initial_lf then
+      return LF & get_subtree(id);
+    end if;
+
+    return get_subtree(id);
   end;
 
 end package body;
