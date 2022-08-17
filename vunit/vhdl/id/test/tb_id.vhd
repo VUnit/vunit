@@ -10,6 +10,7 @@ use vunit_lib.id_pkg.all;
 use vunit_lib.check_pkg.all;
 use vunit_lib.logger_pkg.all;
 use vunit_lib.core_pkg.all;
+use vunit_lib.print_pkg.all;
 
 entity tb_id is
   generic(
@@ -21,6 +22,7 @@ architecture tb of tb_id is
 begin
   main : process
     variable id, grandparent, parent, child, second_child : id_t;
+    constant id_tree : string := get_tree;
   begin
     test_runner_setup(runner, runner_cfg);
 
@@ -169,6 +171,79 @@ begin
         check_equal(num_children(get_id("grandparent:parent")), 1);
         check(get_id("grandparent:parent:child") = child);
         check(get_id("grandparent:child") = second_child);
+
+      elsif run("Test pretty-printing ID tree") then
+        check_equal(id_tree(id_tree'left to id_tree'left + 6), LF & "(root)");
+
+        grandparent := get_id("grandparent");
+        check_equal(get_tree(grandparent), LF & "grandparent");
+        check_equal(get_tree(grandparent, initial_lf => false), "grandparent");
+
+        id := get_id("grandparent:1st parent");
+        check_equal(get_tree(grandparent),
+LF &
+"grandparent" & LF &
+"\---1st parent");
+
+        id := get_id("grandparent:2nd parent");
+        check_equal(get_tree(grandparent),
+LF &
+"grandparent" & LF &
+"+---1st parent" & LF &
+"\---2nd parent");
+
+        id := get_id("grandparent:1st parent:1st child");
+        check_equal(get_tree(grandparent),
+LF &
+"grandparent" & LF &
+"+---1st parent" & LF &
+"|   \---1st child" & LF &
+"\---2nd parent");
+
+        id := get_id("grandparent:1st parent:2nd child");
+        check_equal(get_tree(grandparent),
+LF &
+"grandparent" & LF &
+"+---1st parent" & LF &
+"|   +---1st child" & LF &
+"|   \---2nd child" & LF &
+"\---2nd parent");
+
+        id := get_id("grandparent:1st parent:3rd child");
+        check_equal(get_tree(grandparent),
+LF &
+"grandparent" & LF &
+"+---1st parent" & LF &
+"|   +---1st child" & LF &
+"|   +---2nd child" & LF &
+"|   \---3rd child" & LF &
+"\---2nd parent");
+
+        id := get_id("grandparent:2nd parent:4th child");
+        check_equal(get_tree(grandparent),
+LF &
+"grandparent" & LF &
+"+---1st parent" & LF &
+"|   +---1st child" & LF &
+"|   +---2nd child" & LF &
+"|   \---3rd child" & LF &
+"\---2nd parent" & LF &
+"    \---4th child");
+
+        id := get_id("grandparent:1st parent:1st child:1st grandchild");
+        check_equal(get_tree(grandparent),
+LF &
+"grandparent" & LF &
+"+---1st parent" & LF &
+"|   +---1st child" & LF &
+"|   |   \---1st grandchild" & LF &
+"|   +---2nd child" & LF &
+"|   \---3rd child" & LF &
+"\---2nd parent" & LF &
+"    \---4th child");
+
+      print("Full ID tree:" & get_tree);
+
       end if;
     end loop;
 
