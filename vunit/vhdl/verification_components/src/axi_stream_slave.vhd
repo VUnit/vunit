@@ -140,6 +140,8 @@ begin
         else
           unexpected_msg_type(msg_type);
         end if;
+
+        delete(msg);
       end loop;
 
       notify_bus_process_done <= '1';
