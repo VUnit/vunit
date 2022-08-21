@@ -97,12 +97,15 @@ begin
         drive_invalid_output(tdata, tkeep, tstrb, tid, tdest, tuser);
       end if;
 
-      -- Wait for messages to arrive on the queue, posted by the process above
-      wait until rising_edge(aclk) and (not is_empty(message_queue) or areset_n = '0');
-
       if (areset_n = '0') then
         tvalid <= '0';
+        wait until areset_n = '1' and rising_edge(aclk);
       else
+        if is_empty(message_queue) then
+          -- Wait for messages to arrive on the queue, posted by the process above
+          wait until (not is_empty(message_queue) or areset_n = '0') and rising_edge(aclk);
+        end if;
+
         while not is_empty(message_queue) loop
           msg := pop(message_queue);
           msg_type := message_type(msg);

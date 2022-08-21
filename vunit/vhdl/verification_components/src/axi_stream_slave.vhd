@@ -92,8 +92,10 @@ begin
   begin
     rnd.InitSeed(rnd'instance_name);
     loop
+      if is_empty(message_queue) then
         -- Wait for messages to arrive on the queue, posted by the process above
-      wait until rising_edge(aclk) and (not is_empty(message_queue));
+        wait until rising_edge(aclk) and (not is_empty(message_queue));
+      end if;
 
       while not is_empty(message_queue) loop
         msg := pop(message_queue);
