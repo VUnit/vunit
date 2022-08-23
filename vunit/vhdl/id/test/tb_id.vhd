@@ -21,8 +21,9 @@ end entity;
 architecture tb of tb_id is
 begin
   main : process
-    variable id, grandparent, parent, child, second_child : id_t;
+    variable id, grandparent, parent, child, second_child, grandchild : id_t;
     constant id_tree : string := get_tree;
+    variable n_children : natural := 0;
   begin
     test_runner_setup(runner, runner_cfg);
 
@@ -38,15 +39,28 @@ begin
       elsif run("Test creating new ID with parent") then
         parent := get_id("parent");
         child := get_id("child", parent);
+        grandchild := get_id("second_child:grandchild", parent);
+        second_child := get_id("parent:second_child");
         check_equal(name(parent), "parent");
         check_equal(name(child), "child");
+        check_equal(name(second_child), "second_child");
+        check_equal(name(grandchild), "grandchild");
         check_equal(full_name(parent), "parent");
         check_equal(full_name(child), "parent:child");
+        check_equal(full_name(second_child), "parent:second_child");
+        check_equal(full_name(grandchild), "parent:second_child:grandchild");
         check(get_parent(parent) = root_id);
         check(get_parent(child) = parent);
-        check_equal(num_children(parent), 1);
+        check(get_parent(second_child) = parent);
+        check(get_parent(grandchild) = second_child);
+        check(get_parent(second_child) = parent);
+        check_equal(num_children(parent), 2);
+        check_equal(num_children(second_child), 1);
         check_equal(num_children(child), 0);
+        check_equal(num_children(grandchild), 0);
         check(get_child(parent, 0) = child);
+        check(get_child(parent, 1) = second_child);
+        check(get_child(second_child, 0) = grandchild);
 
       elsif run("Test creating new ID with parent from manual path") then
         parent := get_id("parent");
@@ -159,6 +173,8 @@ begin
       elsif run("Test ID to/from integer conversion") then
         id := get_id("id");
         check(to_id(to_integer(id)) = id);
+        check(to_id(to_integer(null_id)) = null_id);
+        check(to_id(to_integer(root_id)) = root_id);
 
       elsif run("Test same name IDs at different hierarchy positions") then
         child := get_id("grandparent:parent:child");
@@ -181,68 +197,90 @@ begin
 
         id := get_id("grandparent:1st parent");
         check_equal(get_tree(grandparent),
-LF &
-"grandparent" & LF &
-"\---1st parent");
+                    LF & "grandparent" & LF & "\---1st parent");
 
         id := get_id("grandparent:2nd parent");
         check_equal(get_tree(grandparent),
-LF &
-"grandparent" & LF &
-"+---1st parent" & LF &
-"\---2nd parent");
+                    LF & "grandparent" & LF & "+---1st parent" & LF & "\---2nd parent");
 
         id := get_id("grandparent:1st parent:1st child");
         check_equal(get_tree(grandparent),
-LF &
-"grandparent" & LF &
-"+---1st parent" & LF &
-"|   \---1st child" & LF &
-"\---2nd parent");
+                    LF & "grandparent" & LF & "+---1st parent" & LF & "|   \---1st child" & LF & "\---2nd parent");
 
         id := get_id("grandparent:1st parent:2nd child");
         check_equal(get_tree(grandparent),
-LF &
-"grandparent" & LF &
-"+---1st parent" & LF &
-"|   +---1st child" & LF &
-"|   \---2nd child" & LF &
-"\---2nd parent");
+                    LF & "grandparent" & LF & "+---1st parent" & LF & "|   +---1st child" & LF & "|   \---2nd child" & LF & "\---2nd parent");
 
         id := get_id("grandparent:1st parent:3rd child");
         check_equal(get_tree(grandparent),
-LF &
-"grandparent" & LF &
-"+---1st parent" & LF &
-"|   +---1st child" & LF &
-"|   +---2nd child" & LF &
-"|   \---3rd child" & LF &
-"\---2nd parent");
+                    LF & "grandparent" & LF & "+---1st parent" & LF & "|   +---1st child" & LF & "|   +---2nd child" & LF & "|   \---3rd child" & LF & "\---2nd parent");
 
         id := get_id("grandparent:2nd parent:4th child");
         check_equal(get_tree(grandparent),
-LF &
-"grandparent" & LF &
-"+---1st parent" & LF &
-"|   +---1st child" & LF &
-"|   +---2nd child" & LF &
-"|   \---3rd child" & LF &
-"\---2nd parent" & LF &
-"    \---4th child");
+                    LF & "grandparent" & LF & "+---1st parent" & LF & "|   +---1st child" & LF & "|   +---2nd child" & LF & "|   \---3rd child" & LF & "\---2nd parent" & LF & "    \---4th child");
 
         id := get_id("grandparent:1st parent:1st child:1st grandchild");
         check_equal(get_tree(grandparent),
-LF &
-"grandparent" & LF &
-"+---1st parent" & LF &
-"|   +---1st child" & LF &
-"|   |   \---1st grandchild" & LF &
-"|   +---2nd child" & LF &
-"|   \---3rd child" & LF &
-"\---2nd parent" & LF &
-"    \---4th child");
+                    LF & "grandparent" & LF & "+---1st parent" & LF & "|   +---1st child" & LF & "|   |   \---1st grandchild" & LF & "|   +---2nd child" & LF & "|   \---3rd child" & LF & "\---2nd parent" & LF & "    \---4th child");
 
-      print("Full ID tree:" & get_tree);
+        print("Full ID tree:" & get_tree);
+
+      elsif run("Test that created identities exist") then
+        check_true(exists(""));
+        id := get_id("parent:child:grandchild");
+        check_true(exists("parent"));
+        check_true(exists("parent:child"));
+        check_true(exists("parent:child:grandchild"));
+        id := get_id("parent");
+        id := get_id("parent:child");
+        id := get_id("parent:child:grandchild");
+        check_true(exists("child", get_id("parent")));
+        check_true(exists("child:grandchild", get_id("parent")));
+        check_true(exists("grandchild", get_id("parent:child")));
+
+      elsif run("Test that non-existing identities do not exist") then
+        check_false(exists("parent"));
+        id := get_id("parent:child");
+        check_false(exists("child"));
+
+      elsif run("Test root_id") then
+        check(get_parent(root_id) = null_id);
+        n_children := num_children(root_id);
+        id := get_id("id");
+        check_equal(num_children(root_id), n_children + 1);
+        check(get_child(root_id, n_children) = id);
+        check_equal(full_name(root_id), "");
+        check_equal(name(root_id), "");
+
+      elsif run("Test get_parent(null_id)") then
+        mock_core_failure;
+        id := get_parent(null_id);
+        check_core_failure("get_parent is not defined for null_id.");
+        unmock_core_failure;
+
+      elsif run("Test num_children(null_id)") then
+        mock_core_failure;
+        n_children := num_children(null_id);
+        check_core_failure("num_children is not defined for null_id.");
+        unmock_core_failure;
+
+      elsif run("Test get_child(null_id)") then
+        mock_core_failure;
+        id := get_child(null_id, 0);
+        check_core_failure("get_child is not defined for null_id.");
+        unmock_core_failure;
+
+      elsif run("Test full_name(null_id)") then
+        mock_core_failure;
+        info(full_name(null_id));
+        check_core_failure("full_name is not defined for null_id.");
+        unmock_core_failure;
+
+      elsif run("Test name(null_id)") then
+        mock_core_failure;
+        info(name(null_id));
+        check_core_failure("name is not defined for null_id.");
+        unmock_core_failure;
 
       end if;
     end loop;
