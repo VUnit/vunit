@@ -43,7 +43,8 @@ package id_pkg is
   impure function root_id return id_t;
 
   -- Get ID object with given name and parent if it exists. Create a new ID otherwise.
-  -- If no parent is given the ID is a top-level user ID (child to root_id)
+  -- The name string can be with or without hierarchy, for example "a_name" or
+  -- "parent_name:child_name". If no parent is given the name is relative to root_id.
   impure function get_id(name : string; parent : id_t := null_id) return id_t;
 
   impure function get_parent(id : id_t) return id_t;
@@ -68,10 +69,10 @@ package id_pkg is
   -- Return the name for id without hierarchy.
   impure function name(id : id_t) return string;
 
-  -- TODO: Deallocate procedure. Will it be used? Deallocating an ID means that the
-  -- children subtree has to be deallocated as well. In general it will be hard for
-  -- any part of the code knowing how IDs have been shared, what children have been
-  -- added and whether or not they are still in used.
+  -- Return true if an identity with given name already exists, false otherwise.
+  -- The name string can be with or without hierarchy, for example "a_name" or
+  -- "parent_name:child_name". If no parent is given the name is relative to root_id.
+  impure function exists(name : string; parent : id_t := null_id) return boolean;
 
   -- Return an ASCII representation of the subtree of IDs rooted in the given ID.
   -- If no ID is given the full ID tree is returned. The returned string starts
@@ -80,8 +81,6 @@ package id_pkg is
   -- when printed in a log message. The initial LF can be omitted by setting initial_lf
   -- to false.
   impure function get_tree(id : id_t := null_id; initial_lf : boolean := true) return string;
-
-  -- TODO: Define behavior for all subprograms when called with a null_id or a root_id.
 end package;
 
 package body id_pkg is
@@ -120,15 +119,15 @@ package body id_pkg is
     return new_id(id_number, name, parent);
   end;
 
-  impure function get_id(name : string; parent : id_t := null_id) return id_t is
-    impure function get_real_parent(parent : id_t) return id_t is
-    begin
-      if parent = null_id then
-        return root_id;
-      end if;
-      return parent;
-    end;
+  impure function get_real_parent(parent : id_t) return id_t is
+  begin
+    if parent = null_id then
+      return root_id;
+    end if;
+    return parent;
+  end;
 
+  impure function get_id(name : string; parent : id_t := null_id) return id_t is
     impure function validate_name(name : string; parent : id_t) return boolean is
       function join(s1, s2 : string) return string is
       begin
@@ -183,20 +182,44 @@ package body id_pkg is
     return id;
   end;
 
+  procedure null_id_failure(subprogram_name : string) is
+  begin
+    core_failure(subprogram_name & " is not defined for null_id.");
+  end;
+
   impure function get_parent(id : id_t) return id_t is
   begin
+    if id = null_id then
+      null_id_failure("get_parent");
+      return null_id;
+    end if;
+
     return to_id(get(id.p_data, parent_idx));
   end;
 
   impure function num_children(id : id_t) return natural is
-    constant children : integer_vector_ptr_t := to_integer_vector_ptr(get(id.p_data, children_idx));
+    variable children : integer_vector_ptr_t;
   begin
+    if id = null_id then
+      null_id_failure("num_children");
+      return 0;
+    end if;
+
+    children := to_integer_vector_ptr(get(id.p_data, children_idx));
+
     return length(children);
   end;
 
   impure function get_child(id : id_t; idx : natural) return id_t is
-    constant children : integer_vector_ptr_t := to_integer_vector_ptr(get(id.p_data, children_idx));
+    variable children : integer_vector_ptr_t;
   begin
+    if id = null_id then
+      null_id_failure("get_child");
+      return null_id;
+    end if;
+
+    children := to_integer_vector_ptr(get(id.p_data, children_idx));
+
     return (p_data => to_integer_vector_ptr(get(children, idx)));
   end;
 
@@ -226,12 +249,23 @@ package body id_pkg is
 
   impure function name(id : id_t) return string is
   begin
+     if id = null_id then
+      null_id_failure("name");
+      return "";
+    end if;
+
     return to_string(to_string_ptr(get(id.p_data, name_idx)));
   end;
 
   impure function full_name(id : id_t) return string is
-    constant parent : id_t := get_parent(id);
+    variable parent : id_t;
   begin
+     if id = null_id then
+      null_id_failure("full_name");
+      return "";
+    end if;
+
+    parent := get_parent(id);
     if parent = null_id or (parent = root_id) then
       return name(id);
     else
@@ -239,7 +273,40 @@ package body id_pkg is
     end if;
   end;
 
-  impure function get_tree(id : id_t := null_id; initial_lf : boolean := true) return string is
+  impure function exists(name : string; parent : id_t := null_id) return boolean is
+    constant stripped_name : string := strip(name, ":");
+    constant real_parent : id_t := get_real_parent(parent);
+    variable split_name : lines_t := split(stripped_name, ":", 1);
+    constant head_name : string := split_name(0).all;
+
+    variable id, child : id_t;
+  begin
+    if name = "" then
+      return parent = null_id;
+    end if;
+
+    id := null_id;
+    for i in 0 to num_children(real_parent) - 1 loop
+      child := get_child(real_parent, i);
+
+      if work.id_pkg.name(child) = head_name then
+        id := child;
+        exit;
+      end if;
+    end loop;
+
+    if id = null_id then
+      return false;
+    end if;
+
+    if split_name'length > 1 then
+      return exists(split_name(1).all, id);
+    end if;
+
+    return true;
+  end;
+
+ impure function get_tree(id : id_t := null_id; initial_lf : boolean := true) return string is
     impure function get_subtree(subtree_root : id_t; child_indentation : string := "") return string is
       variable ret_val : line;
     begin
