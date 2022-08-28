@@ -213,10 +213,10 @@ At the root of the tree is a symbol ``(root)`` which represents the predefined `
 but is given a symbol in the tree representation for clarity. The lack of name means that we cannot create a new
 identity with no name as that is already taken.
 
-In general we can determine if an identity is taken by calling ``exists`` with the full name of the identity
-or a partial name relative to a parent identity. For example, calling ``exists("")`` would always return ``true``.
-In this case ``exists("tb_dut:interface_1_checker")`` and ``exists("interface_1_checker", parent => get_id("tb_dut")``
-would also return ``true`` but ``exists("interface_1_checker")`` would return ``false``.
+In general we can determine if an identity is taken by calling ``has_id`` with the full name of the identity
+or a partial name relative to a parent identity. For example, calling ``has_id("")`` would always return ``true``.
+In this case ``has_id("tb_dut:interface_1_checker")`` and ``has_id("interface_1_checker", parent => get_id("tb_dut")``
+would also return ``true`` but ``has_id("interface_1_checker")`` would return ``false``.
 
 The ``get_tree`` function works by traversing the entire identity tree to collect the name of each identity.
 We can write our own functionality based on traversing the tree by using the ``get_parent`` function described
