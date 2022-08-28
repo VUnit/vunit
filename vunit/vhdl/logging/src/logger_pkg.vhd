@@ -7,6 +7,7 @@
 use work.log_levels_pkg.all;
 use work.log_handler_pkg.all;
 use work.integer_vector_ptr_pkg.all;
+use work.id_pkg.all;
 
 package logger_pkg is
 
@@ -18,10 +19,19 @@ package logger_pkg is
   type logger_vec_t is array (natural range <>) of logger_t;
   impure function root_logger return logger_t;
 
-  -- Get a logger with name.
-  -- Can also optionally be relative to a parent logger
+  -- Get a logger with name. A new one is created if it doesn't
+  -- already exist. Can also optionally be relative to a parent logger.
+  -- If a new logger is created then a new identity with the name/parent
+  -- is also created.
   impure function get_logger(name : string;
                              parent : logger_t := null_logger) return logger_t;
+
+  -- Get logger by identity. Create a new identity and/or logger if they
+  -- don't already exist.
+  impure function get_logger(id : id_t) return logger_t;
+
+  -- Return true if logger with id already exists, false otherwise.
+  impure function has_logger(id : id_t) return boolean;
 
   -------------------------------------
   -- Log procedures for each log level
@@ -168,6 +178,9 @@ package logger_pkg is
 
   -- Get the full name of this logger get_name(get_logger("parent:child")) = "parent:child"
   impure function get_full_name(logger : logger_t) return string;
+
+  -- Get identity for this logger.
+  impure function get_id(logger : logger_t) return id_t;
 
   -- Get the parent of this logger
   impure function get_parent(logger : logger_t) return logger_t;

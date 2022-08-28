@@ -174,40 +174,84 @@ package body logger_pkg is
     return parent;
   end;
 
+  impure function has_logger(id : id_t) return boolean is
+    impure function has_logger(lineage : id_vec_t; search_root : logger_t) return boolean is
+      constant n_children : natural := num_children(search_root);
+      variable child : logger_t;
+      variable child_id : id_t;
+    begin
+      for idx in 0 to n_children - 1 loop
+        child := get_child(search_root, idx);
+        child_id := get_id(child);
+
+        if child_id = lineage(lineage'left) then
+          if lineage'length = 1 then
+            return true;
+          end if;
+
+          return has_logger(lineage(lineage'left + 1 to lineage'right), child);
+        end if;
+      end loop;
+
+      return false;
+    end;
+
+    constant lineage : id_vec_t := get_lineage(id);
+  begin
+    if id = root_id then
+      return false;
+    end if;
+
+    return has_logger(lineage(lineage'left + 1 to lineage'right), root_logger);
+  end;
+
+  impure function get_logger(id : id_t) return logger_t is
+    impure function get_logger(lineage : id_vec_t; parent : logger_t) return logger_t is
+      constant n_children : natural := num_children(parent);
+      variable child : logger_t;
+      variable child_id : id_t;
+      variable logger : logger_t := null_logger;
+    begin
+      for idx in 0 to n_children - 1 loop
+        child := get_child(parent, idx);
+        child_id := get_id(child);
+        if child_id = lineage(lineage'left) then
+          logger := child;
+          exit;
+        end if;
+      end loop;
+
+      if logger = null_logger then
+        logger := new_logger(lineage(lineage'left), parent);
+        set_log_handlers(logger, get_log_handlers(parent));
+      end if;
+
+      if lineage'length > 1 then
+        return get_logger(lineage(lineage'left + 1 to lineage'right), logger);
+      end if;
+
+      return logger;
+    end;
+
+    constant lineage : id_vec_t := get_lineage(id);
+  begin
+    if id = null_id then
+      return null_logger;
+    end if;
+
+    return get_logger(lineage(lineage'left + 1 to lineage'right), root_logger);
+  end;
+
   impure function get_logger(name : string;
                              parent : logger_t := null_logger) return logger_t is
     constant real_parent : logger_t := get_real_parent(parent);
-    variable child, logger : logger_t;
-    constant stripped_name : string := strip(name, ":");
-    variable split_name : lines_t := split(stripped_name, ":", 1);
-    constant head_name : string := split_name(0).all;
+    constant id : id_t := get_id(name, get_id(real_parent));
   begin
-    logger := null_logger;
-    for i in 0 to num_children(real_parent)-1 loop
-      child := get_child(real_parent, i);
-
-      if get_name(child) = head_name then
-        logger := child;
-        exit;
-      end if;
-    end loop;
-
-    if logger = null_logger then
-      logger := new_logger(head_name, real_parent);
-      if logger = null_logger then
-        core_failure("Invalid logger name """ & name & """");
-        return null_logger;
-      end if;
-      set_log_handlers(logger, get_log_handlers(real_parent));
+    if id = null_id then
+      return null_logger;
     end if;
 
-    if split_name'length > 1 then
-      if split_name(1).all /= "" then
-        return get_logger(split_name(1).all, logger);
-      end if;
-    end if;
-
-    return logger;
+    return get_logger(id);
   end;
 
   impure function get_full_name(logger : logger_t) return string is
