@@ -10,6 +10,8 @@ from vunit import VUnit
 root = Path(__file__).parent
 
 ui = VUnit.from_argv()
-ui.add_library("lib").add_source_files(root / "test" / "*.vhd")
+lib = ui.add_library("lib")
+lib.add_source_files(root / "test" / "*.vhd")
+lib.add_source_files(root / ".." / "logging" / "test" / "test_support_pkg.vhd")
 
 ui.main()

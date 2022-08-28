@@ -16,6 +16,7 @@ use work.log_handler_pkg.all;
 use work.core_pkg.all;
 use work.test_support_pkg.all;
 use work.print_pkg.all;
+use work.id_pkg.all;
 
 entity tb_log is
   generic (
@@ -586,7 +587,7 @@ begin
         assert_false(has_stop_count(tmp_logger, log_level));
       end loop;
 
-    elsif run("Get logger") then
+    elsif run("Get logger by name") then
       tmp_logger := get_logger("logger:child");
       assert_equal(get_name(tmp_logger), "child");
       assert_equal(get_full_name(tmp_logger), "logger:child");
@@ -603,6 +604,34 @@ begin
 
       tmp_logger := get_logger("nested", parent => logger);
       assert_true(tmp_logger = nested_logger);
+
+    elsif run("Get logger by id") then
+      tmp_logger := get_logger(get_id("logger:child"));
+      assert_equal(get_name(tmp_logger), "child");
+      assert_equal(get_full_name(tmp_logger), "logger:child");
+
+      tmp_logger := get_logger(get_id("logger:child:grandchild"));
+      assert_equal(get_name(tmp_logger), "grandchild");
+      assert_equal(get_full_name(tmp_logger), "logger:child:grandchild");
+
+      tmp_logger := get_logger(get_id("default"));
+      assert_true(tmp_logger = default_logger);
+
+      tmp_logger := get_logger(get_id("logger:nested"));
+      assert_true(tmp_logger = nested_logger);
+
+      tmp_logger := get_logger(get_id("nested", parent => get_id(logger)));
+      assert_true(tmp_logger = nested_logger);
+
+    elsif run("Test has_logger") then
+      tmp_logger := get_logger("parent:child");
+      assert_true(has_logger(get_id("parent:child")));
+      assert_true(has_logger(get_id("parent")));
+
+      assert_false(has_logger(root_id));
+      assert_false(has_logger(get_id("id")));
+      assert_false(has_logger(get_id("parent:child2")));
+      assert_false(has_logger(get_id("parent:child:grandchild")));
 
     elsif run("Create hierarchical logger") then
       tmp_logger := get_logger("logger:child");
@@ -708,19 +737,19 @@ begin
 
       mock_core_failure;
       tmp_logger := get_logger("foo,bar");
-      check_core_failure("Invalid logger name ""foo,bar""");
+      check_core_failure("Invalid ID name ""foo,bar""");
 
       tmp_logger := get_logger("parent:foo,bar");
-      check_core_failure("Invalid logger name ""foo,bar""");
+      check_core_failure("Invalid ID name ""parent:foo,bar""");
 
       tmp_logger := get_logger("par,ent:foo");
-      check_core_failure("Invalid logger name ""par,ent:foo""");
+      check_core_failure("Invalid ID name ""par,ent""");
 
       tmp_logger := get_logger("");
-      check_core_failure("Invalid logger name """"");
+      check_core_failure("Invalid ID name """"");
 
       tmp_logger := get_logger(":");
-      check_core_failure("Invalid logger name "":""");
+      check_core_failure("Invalid ID name """"");
 
       unmock_core_failure;
 
