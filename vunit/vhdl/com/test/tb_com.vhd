@@ -73,7 +73,7 @@ begin
         check(actor /= null_actor, "Failed to create named actor");
         check_equal(name(actor), "actor");
         check_equal(num_of_actors, n_actors + 1, "Expected one extra actor");
-        check(new_actor("other actor").id /= new_actor("another actor").id, "Failed to create unique actors");
+        check(new_actor("other actor").p_id_number /= new_actor("another actor").p_id_number, "Failed to create unique actors");
         check_equal(num_of_actors, n_actors + 3, "Expected two extra actors");
       elsif run("Test that no name actors can be created") then
         actor := new_actor;
@@ -91,7 +91,7 @@ begin
         n_actors := num_of_actors;
         actor    := new_actor;
         actor2   := new_actor;
-        check(actor.id /= actor2.id, "The two actors must have different identities");
+        check(actor.p_id_number /= actor2.p_id_number, "The two actors must have different identities");
         check_equal(num_of_actors, n_actors + 2);
         check_equal(num_of_deferred_creations, 0);
 
@@ -451,11 +451,11 @@ begin
         send(net, actor_vec, msg, 10 ns);
         check_equal(now - t_start, 10 ns);
         check_log(com_logger, "FULL INBOX ERROR.", failure);
-        check_log(com_logger, "[4:- - -> _actor_" & to_string(actor_vec(0).id) & " (-)] => _actor_" & to_string(actor_vec(0).id) & " inbox", trace);
+        check_log(com_logger, "[4:- - -> _actor_" & to_string(actor_vec(0).p_id_number) & " (-)] => _actor_" & to_string(actor_vec(0).p_id_number) & " inbox", trace);
         check_log(com_logger, "FULL INBOX ERROR.", failure);
-        check_log(com_logger, "[5:- - -> _actor_" & to_string(actor_vec(1).id) & " (-)] => _actor_" & to_string(actor_vec(1).id) & " inbox", trace);
+        check_log(com_logger, "[5:- - -> _actor_" & to_string(actor_vec(1).p_id_number) & " (-)] => _actor_" & to_string(actor_vec(1).p_id_number) & " inbox", trace);
         check_log(com_logger, "FULL INBOX ERROR.", failure);
-        check_log(com_logger, "[6:- - -> _actor_" & to_string(actor_vec(2).id) & " (-)] => _actor_" & to_string(actor_vec(2).id) & " inbox", trace);
+        check_log(com_logger, "[6:- - -> _actor_" & to_string(actor_vec(2).p_id_number) & " (-)] => _actor_" & to_string(actor_vec(2).p_id_number) & " inbox", trace);
         unmock(com_logger);
       elsif run("Test receiving from several actors") then
         for i in 0 to 2 loop
