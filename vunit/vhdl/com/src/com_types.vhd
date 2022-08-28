@@ -50,10 +50,10 @@ package com_types_pkg is
 
   -- All fields of the actor type are private
   type actor_t is record
-    id : natural;
+    p_id_number : natural;
   end record actor_t;
   type actor_vec_t is array (integer range <>) of actor_t;
-  constant null_actor : actor_t := (id => 0);
+  constant null_actor : actor_t := (p_id_number => 0);
 
   -- Mailboxes owned by an actor
   type mailbox_id_t is (inbox, outbox);
@@ -525,8 +525,8 @@ package body com_types_pkg is
     push(queue, value.id);
     push(queue, value.msg_type.p_code);
     push(queue, com_status_t'pos(value.status));
-    push(queue, value.sender.id);
-    push(queue, value.receiver.id);
+    push(queue, value.sender.p_id_number);
+    push(queue, value.receiver.p_id_number);
     push(queue, value.request_id);
     push_queue_ref(queue, value.data);
     value := null_msg;
@@ -538,8 +538,8 @@ package body com_types_pkg is
     ret_val.id := pop(queue);
     ret_val.msg_type := (p_code => pop(queue));
     ret_val.status := com_status_t'val(integer'(pop(queue)));
-    ret_val.sender.id := pop(queue);
-    ret_val.receiver.id := pop(queue);
+    ret_val.sender.p_id_number := pop(queue);
+    ret_val.receiver.p_id_number := pop(queue);
     ret_val.request_id := pop(queue);
     ret_val.data := pop_queue_ref(queue);
 
