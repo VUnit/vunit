@@ -4,24 +4,9 @@
 --
 -- Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 --
--- Description: id_pkg provides an object-oriented approach to handle VHDL name hierarchies
--- programatically. For example, if my_bfm'path_name = ":my_testbench:my_bfm:" then
--- my_bfm_id := get_id(my_bfm'path_name) will create and return an ID for my_bfm but also
--- create an ID for my_testbench. parent(my_bfm_id) will return that ID. If
--- any of the IDs already existed they will not be created but just returned.
---
--- All IDs are unique and have parent-child relationships that create a single global tree
--- of IDs rooted in the root_id. root_id is a predefined nameless parent to all top-level
--- user IDs, for example my_testbench in the previous example.
---
--- While VHDL path_name and instance_name can be used to create ID hierarchies it is also
--- possible to create other hierarchies that have no relation to the name hierarchy defined
--- by VHDL. This is useful when the logical structure is different from the code structure.
--- For example, if my_bfm is wrapped in a block statement to enable local signal declarations
--- the code structure changes and so does the name hierarchy if path_name or instance_name
--- is used. Creating the structure manually with my_bfm_id := get_id("my_testbench:my_bfm")
--- avoids that problem. Note that the leading and trailing ':' present in path_name and
--- instance_name are not needed.
+-- Description: id_pkg provides a way of creating a hierarchical
+-- structure of named objects in a testbench. For an overview see
+-- the user guide.
 
 use work.integer_vector_ptr_pkg.all;
 use work.string_ptr_pkg.all;
@@ -36,6 +21,7 @@ package id_pkg is
     p_data : integer_vector_ptr_t;
   end record;
   constant null_id : id_t := (p_data => null_ptr);
+  type id_vec_t is array (integer range <>) of id_t;
 
   -- root_id is a nameless and predefined ID that is the parent to
   -- all user created top-level IDs (no parent was specified at creation)
@@ -72,7 +58,7 @@ package id_pkg is
   -- Return true if an identity with given name already exists, false otherwise.
   -- The name string can be with or without hierarchy, for example "a_name" or
   -- "parent_name:child_name". If no parent is given the name is relative to root_id.
-  impure function exists(name : string; parent : id_t := null_id) return boolean;
+  impure function has_id(name : string; parent : id_t := null_id) return boolean;
 
   -- Return an ASCII representation of the subtree of IDs rooted in the given ID.
   -- If no ID is given the full ID tree is returned. The returned string starts
@@ -81,6 +67,12 @@ package id_pkg is
   -- when printed in a log message. The initial LF can be omitted by setting initial_lf
   -- to false.
   impure function get_tree(id : id_t := null_id; initial_lf : boolean := true) return string;
+
+  -- Return an identity vector where the leftmost identity is root_id and the rightmost
+  -- identity is that of the id parameter. The identities in between are the sequence
+  -- of descendants leading from root_id to id.
+  impure function get_lineage(id : id_t) return id_vec_t;
+
 end package;
 
 package body id_pkg is
@@ -273,7 +265,7 @@ package body id_pkg is
     end if;
   end;
 
-  impure function exists(name : string; parent : id_t := null_id) return boolean is
+  impure function has_id(name : string; parent : id_t := null_id) return boolean is
     constant stripped_name : string := strip(name, ":");
     constant real_parent : id_t := get_real_parent(parent);
     variable split_name : lines_t := split(stripped_name, ":", 1);
@@ -300,7 +292,7 @@ package body id_pkg is
     end if;
 
     if split_name'length > 1 then
-      return exists(split_name(1).all, id);
+      return has_id(split_name(1).all, id);
     end if;
 
     return true;
@@ -336,6 +328,32 @@ package body id_pkg is
     end if;
 
     return get_subtree(id);
+  end;
+
+  impure function get_lineage(id : id_t) return id_vec_t is
+    impure function get_lineage_i(id : id_t) return id_vec_t is
+      variable parts : lines_t := split(full_name(id), ":");
+      constant length : positive := parts'length + 1;
+      variable lineage : id_vec_t(1 to length);
+      variable tmp_id : id_t := id;
+    begin
+      for idx in length downto 1 loop
+        lineage(idx) := tmp_id;
+        exit when tmp_id = root_id;
+        tmp_id := get_parent(tmp_id);
+      end loop;
+
+      return lineage;
+    end;
+  begin
+    if id = null_id then
+      null_id_failure("get_lineage");
+      return (1 to 0 => null_id);
+    elsif id = root_id then
+      return (1 => root_id);
+    end if;
+
+    return get_lineage_i(id);
   end;
 
 end package body;
