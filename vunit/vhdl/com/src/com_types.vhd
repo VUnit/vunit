@@ -44,9 +44,10 @@ package com_types_pkg is
                         unknown_request_id_error,
                         deprecated_interface_error,
                         insufficient_size_error,
-                        duplicate_actor_name_error);
+                        duplicate_actor_name_error,
+                        new_actor_from_root_id_error);
 
-  subtype com_error_t is com_status_t range timeout to duplicate_actor_name_error;
+  subtype com_error_t is com_status_t range timeout to new_actor_from_root_id_error;
 
   -- All fields of the actor type are private
   type actor_t is record

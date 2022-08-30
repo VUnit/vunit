@@ -58,7 +58,7 @@ begin
                                                                                         null, null
                                                                                        );
     variable null_messenger_state                               : messenger_state_t := (null, null);
-
+    variable id : id_t;
   begin
     test_runner_setup(runner, runner_cfg);
 
@@ -72,22 +72,58 @@ begin
         actor    := new_actor("actor");
         check(actor /= null_actor, "Failed to create named actor");
         check_equal(name(actor), "actor");
+        check(get_id(actor) = get_id("actor"));
         check_equal(num_of_actors, n_actors + 1, "Expected one extra actor");
         check(new_actor("other actor").p_id_number /= new_actor("another actor").p_id_number, "Failed to create unique actors");
         check_equal(num_of_actors, n_actors + 3, "Expected two extra actors");
+
+      elsif run("Test that actors can be created from identities") then
+        n_actors := num_of_actors;
+        id := get_id("actor");
+        actor := new_actor(id);
+        check(actor /= null_actor, "Failed to create actor from identity");
+        check_equal(name(actor), "actor");
+        check(get_id(actor) = id);
+        check_equal(num_of_actors, n_actors + 1, "Expected one extra actor");
+        check(new_actor(get_id("other actor")).p_id_number /= new_actor(get_id("another actor")).p_id_number, "Failed to create unique actors");
+        check_equal(num_of_actors, n_actors + 3, "Expected two extra actors");
+
       elsif run("Test that no name actors can be created") then
         actor := new_actor;
         check(actor /= null_actor, "Failed to create no name actor");
         check_equal(name(actor)(1 to 7), "_actor_");
-      elsif run("Test that the null actor has no name") then
+        check(get_id(actor) /= null_id);
+
+      elsif run("Test that null_id actors can be created") then
+        actor := new_actor(null_id);
+        check(actor /= null_actor, "Failed to create no name actor");
+        check_equal(name(actor)(1 to 7), "_actor_");
+        check(get_id(actor) /= null_id);
+
+      elsif run("Test that the null actor has no name and identity") then
         check_equal(name(null_actor), "");
-      elsif run("Test that two actors of the same name cannot be created") then
+        check(get_id(actor) = null_id);
+
+      elsif run("Test that two actors with the same name/identity cannot be created") then
         actor := new_actor("actor2");
         mock(com_logger);
         actor := new_actor("actor2");
         check_only_log(com_logger, "DUPLICATE ACTOR NAME ERROR.", failure);
         unmock(com_logger);
-      elsif run("Test that multiple no-name actors can be created") then
+
+        actor := new_actor(get_id("actor3"));
+        mock(com_logger);
+        actor := new_actor(get_id("actor3"));
+        check_only_log(com_logger, "DUPLICATE ACTOR NAME ERROR.", failure);
+        unmock(com_logger);
+
+      elsif run("Test that no actor can be created for root_id") then
+        mock(com_logger);
+        actor := new_actor(root_id);
+        check_only_log(com_logger, "NEW ACTOR FROM ROOT ID ERROR.", failure);
+        unmock(com_logger);
+
+      elsif run("Test that multiple no-name actors can be created by name") then
         n_actors := num_of_actors;
         actor    := new_actor;
         actor2   := new_actor;
@@ -95,24 +131,55 @@ begin
         check_equal(num_of_actors, n_actors + 2);
         check_equal(num_of_deferred_creations, 0);
 
+      elsif run("Test that multiple no-name actors can be created by id") then
+        n_actors := num_of_actors;
+        actor    := new_actor(null_id);
+        actor2   := new_actor(null_id);
+        check(actor.p_id_number /= actor2.p_id_number, "The two actors must have different identities");
+        check_equal(num_of_actors, n_actors + 2);
+        check_equal(num_of_deferred_creations, 0);
+
       -- Find
-      elsif run("Test that a created actor can be found") then
+      elsif run("Test that a created actor can be found by name") then
         actor := new_actor("actor to be found");
         check(find("actor to be found", false) /= null_actor, "Failed to find created actor");
         check_equal(num_of_deferred_creations, 0, "Expected no deferred creations");
         check_false(is_deferred(actor));
-      elsif run("Test that an actor not created is found and its creation is deferred") then
+
+      elsif run("Test that a created actor can be found by id") then
+        id := get_id("actor to be found");
+        actor := new_actor(id);
+        check(find(id, false) /= null_actor, "Failed to find created actor");
+        check_equal(num_of_deferred_creations, 0, "Expected no deferred creations");
+        check_false(is_deferred(actor));
+
+      elsif run("Test that an actor not created is found by name and its creation is deferred") then
         check_equal(num_of_deferred_creations, 0, "Expected no deferred creations");
         actor := find("actor with deferred creation");
         check(actor /= null_actor, "Failed to find actor with deferred creation");
         check_equal(num_of_deferred_creations, 1, "Expected one deferred creations");
         check(is_deferred(actor));
-      elsif run("Test that deferred creation can be suppressed when an actor is not found") then
+
+      elsif run("Test that an actor not created is found by id and its creation is deferred") then
+        check_equal(num_of_deferred_creations, 0, "Expected no deferred creations");
+        actor := find(get_id("actor with deferred creation"));
+        check(actor /= null_actor, "Failed to find actor with deferred creation");
+        check_equal(num_of_deferred_creations, 1, "Expected one deferred creations");
+        check(is_deferred(actor));
+
+      elsif run("Test that deferred creation can be suppressed when an actor is not found by name") then
         actor  := new_actor("actor");
         actor2 := find("actor with deferred creation", false);
         check(actor2 = null_actor, "Didn't expect to find any actor");
         check_equal(num_of_deferred_creations, 0, "Expected no deferred creations");
-      elsif run("Test that a created actor get the correct mailbox size") then
+
+      elsif run("Test that deferred creation can be suppressed when an actor is not found by id") then
+        actor  := new_actor("actor");
+        actor2 := find(get_id("actor with deferred creation"), false);
+        check(actor2 = null_actor, "Didn't expect to find any actor");
+        check_equal(num_of_deferred_creations, 0, "Expected no deferred creations");
+
+      elsif run("Test that a created actor by name gets the correct mailbox size") then
         actor := new_actor("actor with max inbox");
         check_equal(mailbox_size(actor), positive'high, result("for inbox size"));
         check_equal(mailbox_size(actor, outbox), positive'high, result("for outbox size"));
@@ -130,7 +197,22 @@ begin
         check_equal(mailbox_size(new_actor("actor to be created", 42, 99)), 42, result("for inbox size"));
         check_equal(mailbox_size(find("actor to be created"), outbox), 99, result("for outbox size"));
 
-      elsif run("Test that mailboxes can be resize") then
+      elsif run("Test that a created actor by id gets the correct mailbox size") then
+        actor := new_actor(get_id("actor with max inbox"));
+        check_equal(mailbox_size(actor), positive'high, result("for inbox size"));
+        check_equal(mailbox_size(actor, outbox), positive'high, result("for outbox size"));
+
+        actor2 := new_actor(get_id("actor with bounded inbox"), 23, 17);
+        check_equal(mailbox_size(actor2), 23, result("for inbox size"));
+        check_equal(mailbox_size(actor2, outbox), 17, result("for outbox size"));
+
+        check_equal(mailbox_size(find(get_id("actor to be created"))), 1, result("for inbox size"));
+        check_equal(mailbox_size(find(get_id("actor to be created")), outbox), positive'high, result("for outbox size"));
+
+        check_equal(mailbox_size(new_actor(get_id("actor to be created"), 42, 99)), 42, result("for inbox size"));
+        check_equal(mailbox_size(find(get_id("actor to be created")), outbox), 99, result("for outbox size"));
+
+      elsif run("Test that mailboxes can be resized") then
         actor := new_actor("actor with max inbox");
 
         resize_mailbox(actor, 17);
@@ -170,6 +252,18 @@ begin
         check(find("") = null_actor, "Must not find a no-name actor");
         check_equal(num_of_deferred_creations, 0);
 
+      elsif run("Test that null_id actors can't be found") then
+        actor  := new_actor(null_id);
+        actor2 := new_actor(null_id);
+        check(find(null_id) = null_actor, "Must not find a null_id actor");
+        check_equal(num_of_deferred_creations, 0);
+
+      elsif run("Test that root_id actors can't be found") then
+        actor  := new_actor(null_id);
+        actor2 := new_actor(null_id);
+        check(find(root_id) = null_actor, "Must not find a root_id actor");
+        check_equal(num_of_deferred_creations, 0);
+
       -- Destroy
       elsif run("Test that a created actor can be destroyed") then
         actor    := new_actor("actor to destroy");
@@ -181,12 +275,14 @@ begin
         check(find("actor to destroy", false) = null_actor, "A destroyed actor should not be found");
         check(find("actor to keep", false) /= null_actor,
               "Actors other than the one destroyed must not be affected");
+
       elsif run("Test that a non-existing actor cannot be destroyed") then
         actor := null_actor;
         mock(com_logger);
         destroy(actor);
         check_only_log(com_logger, "UNKNOWN ACTOR ERROR.", failure);
         unmock(com_logger);
+
       elsif run("Test that all actors can be destroyed") then
         reset_messenger;
         actor  := new_actor("actor to destroy");
@@ -266,6 +362,7 @@ begin
         push_string(msg, "hello");
         send(net, self, msg);
         check(msg.data = null_queue);
+
       elsif run("Test that an actor can send a message to another actor") then
         start_receiver <= true;
         wait for 1 ns;
@@ -277,6 +374,7 @@ begin
         check(msg.receiver = my_receiver);
         wait until hello_world_received for 1 ns;
         check(hello_world_received, "Expected ""hello world"" to be received at the server");
+
       elsif run("Test that an actor can send a reply to a message from an a priori unknown actor") then
         start_server <= true;
         wait for 1 ns;
@@ -287,6 +385,7 @@ begin
         receive(net, self, reply_msg);
         check(reply_msg.status = ok, "Expected no receive problems");
         check_equal(pop_string(reply_msg), "request acknowledge");
+
       elsif run("Test that an actor can send a message to itself") then
         msg := new_msg;
         push_string(msg, "hello");
@@ -294,6 +393,7 @@ begin
         receive(net, self, msg2);
         check(msg2.status = ok, "Expected no receive problems");
         check_equal(pop_string(msg2), "hello");
+
       elsif run("Test that no-name actors can communicate") then
         actor := new_actor;
         msg   := new_msg;
@@ -301,6 +401,7 @@ begin
         send(net, actor, msg);
         receive(net, actor, msg2);
         check_equal(pop_string(msg2), "hello");
+
       elsif run("Test that an actor can poll for incoming messages") then
         wait_for_message(net, self, status, 0 ns);
         check(status = timeout, "Expected timeout");
@@ -313,6 +414,7 @@ begin
         check(msg2.status = ok, "Expected no problems with receive");
         check_equal(pop_string(msg2), "hello again");
         check(msg2.sender = self, "Expected message from myself");
+
       elsif run("Test that sending to a non-existing actor results in an error") then
         msg := new_msg;
         push_string(msg, "hello");
@@ -320,6 +422,7 @@ begin
         send(net, null_actor, msg);
         check_only_log(com_logger, "UNKNOWN RECEIVER ERROR.", failure);
         unmock(com_logger);
+
       elsif run("Test that an actor can send to an actor with deferred creation") then
         actor := find("deferred actor");
         msg   := new_msg;
@@ -329,6 +432,7 @@ begin
         receive(net, actor, msg2);
         check(msg2.status = ok, "Expected no problems with receive");
         check_equal(pop_string(msg2), "hello actor to be created");
+
       elsif run("Test that receiving from an actor with deferred creation results in an error") then
         actor := find("deferred actor");
         mock(com_logger);
@@ -336,12 +440,14 @@ begin
         check_log(com_logger, "DEFERRED RECEIVER ERROR.", failure);
         check_only_log(com_logger, "DEFERRED RECEIVER ERROR.", failure);
         unmock(com_logger);
+
       elsif run("Test that empty messages can be sent") then
         msg := new_msg;
         send(net, self, msg);
         receive(net, self, msg2);
         check(msg2.status = ok, "Expected no problems with receive");
         check_equal(length(msg2.data), 0);
+
       elsif run("Test that each sent message gets an increasing message number") then
         msg := new_msg;
         send(net, self, msg);
@@ -353,6 +459,7 @@ begin
         check(msg2.id = 1, "Expected first message id to be 1");
         receive(net, self, msg2);
         check(msg2.id = 2, "Expected first message id to be 2");
+
       elsif run("Test that each published message gets an increasing message number") then
         for i in actor_vec'range loop
           actor_vec(i) := new_actor;
@@ -367,6 +474,7 @@ begin
             check_equal(msg.id, j);
           end loop;
         end loop;
+
       elsif run("Test that a limited-inbox receiver can receive as expected without blocking") then
         start_limited_inbox <= true;
         actor               := find("limited inbox");
@@ -390,6 +498,7 @@ begin
         check_equal(t_stop - t_start, 10 ns, "Expected a 10 ns blocking period on third message");
 
         wait until limited_inbox_actor_done;
+
       elsif run("Test that sending to a limited-inbox receiver times out as expected") then
         start_limited_inbox <= true;
         actor               := find("limited inbox");
@@ -406,6 +515,7 @@ begin
         check_log(com_logger, "FULL INBOX ERROR.", failure);
         check_only_log(com_logger, "[3:- - -> limited inbox (-)] => limited inbox inbox", trace);
         unmock(com_logger);
+
       elsif run("Test that messages can be awaited from several actors") then
         actor  := new_actor;
         actor2 := new_actor;
@@ -427,6 +537,7 @@ begin
         check_false(has_message(actor));
         get_message(net, actor2, msg);
         check_equal(pop_string(msg), "To actor2");
+
       elsif run("Test sending to several actors") then
         actor_vec := (new_actor, new_actor, new_actor);
         for n in 0 to 2 loop
@@ -439,6 +550,7 @@ begin
             check_equal(pop_string(msg), "hello");
           end loop;
         end loop;
+
       elsif run("Test sending to several actors with timeout") then
         actor_vec := (new_actor(inbox_size => 1), new_actor(inbox_size => 1), new_actor(inbox_size => 1));
         msg       := new_msg;
@@ -457,6 +569,7 @@ begin
         check_log(com_logger, "FULL INBOX ERROR.", failure);
         check_log(com_logger, "[6:- - -> _actor_" & to_string(actor_vec(2).p_id_number) & " (-)] => _actor_" & to_string(actor_vec(2).p_id_number) & " inbox", trace);
         unmock(com_logger);
+
       elsif run("Test receiving from several actors") then
         for i in 0 to 2 loop
           actor_vec(i) := new_actor;
@@ -469,6 +582,7 @@ begin
           receive(net, actor_vec(1 to 2), msg);
           check_equal(name(msg.sender), pop_string(msg));
         end loop;
+
       elsif run("Test that the sender and the receiver of a message can be retrieved") then
         actor  := new_actor;
         actor2 := new_actor;
@@ -484,6 +598,7 @@ begin
         receive(net, actor, msg);
         check(sender(msg) = null_actor);
         check(receiver(msg) = actor);
+
       elsif run("Test that get_message will wake up sender blocking on full inbox") then
         actor         := new_actor("actor", 1);
         start_server6 <= true;
@@ -539,6 +654,7 @@ begin
         check(msg.receiver = null_actor);
         wait until hello_subscriber_received = "11" for 1 ns;
         check(hello_subscriber_received = "11", "Expected ""hello subscribers"" to be received at the subscribers");
+
       elsif run("Test that subscribers receive messages sent on outbound subscription") then
         my_sender   := new_actor;
         my_receiver := new_actor;
@@ -579,6 +695,7 @@ begin
         check(msg2.receiver = self);
         wait_for_message(net, self, status, 0 ns);
         check(status = timeout, "Expected only one message");
+
       elsif run("Test that actors don't get send messages on a publish subscription") then
         publisher := new_actor("publisher");
         subscribe(self, publisher);
@@ -589,6 +706,7 @@ begin
 
         wait_for_message(net, self, status, 0 ns);
         check(status = timeout, "Expected no message");
+
       elsif run("Test that actors can subscribe to inbound traffic") then
         my_receiver := new_actor;
         subscribe(self, my_receiver, inbound);
@@ -621,6 +739,7 @@ begin
         send(net, actor, msg);
         wait_for_message(net, self, status, 0 ns);
         check(status = timeout, "Expected no message");
+
       elsif run("Test request/reply with actor having inbound subscribers") then
         subscriber    := new_actor("subscriber");
         start_server5 <= true;
@@ -637,6 +756,7 @@ begin
 
         receive(net, subscriber, reply_msg, 0 ns);
         check_equal(pop_string(reply_msg), "request");
+
       elsif run("Test chained subscribers") then
         my_sender   := new_actor;
         my_receiver := new_actor;
@@ -692,6 +812,7 @@ begin
         publish(net, self, msg);
         wait_for_message(net, self, status, 0 ns);
         check(status = timeout, "Expected no message");
+
       elsif run("Test that a destroyed subscriber is not addressed by the publisher") then
         subscriber := new_actor("subscriber");
         subscribe(subscriber, self);
@@ -703,12 +824,14 @@ begin
         destroy(subscriber);
         push_string(msg, "hello subscriber");
         publish(net, self, msg);
+
       elsif run("Test that an actor can only subscribe once to the same publisher") then
         subscribe(self, self);
         mock(com_logger);
         subscribe(self, self);
         check_only_log(com_logger, "ALREADY A SUBSCRIBER ERROR.", failure);
         unmock(com_logger);
+
       elsif run("Test that publishing to subscribers with full inboxes results is an error") then
         start_limited_inbox_subscriber <= true;
         wait for 1 ns;
@@ -724,6 +847,7 @@ begin
                        "[2:- test runner -> limited inbox subscriber (-)] => limited inbox subscriber inbox",
                        trace);
         unmock(com_logger);
+
       elsif run("Test that publishing to subscribers with full inboxes results passes if waiting") then
         start_limited_inbox_subscriber <= true;
         wait for 1 ns;
@@ -781,6 +905,7 @@ begin
         push_string(request_msg, "request3");
         request(net, server, request_msg, ack);
         check_false(ack, "Expected negative acknowledgement");
+
       elsif run("Test that waiting and getting a reply with timeout works") then
         start_server4 <= true;
         server        := find("server4");
@@ -815,6 +940,7 @@ begin
         wait_for_reply(net, request_msg, status);
         get_reply(net, request_msg, reply_msg);
         check_equal(pop_string(reply_msg), "reply4");
+
       elsif run("Test waiting and getting a reply out-of-order") then
         start_server2 <= true;
         server        := find("server2");

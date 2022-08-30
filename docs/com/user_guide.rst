@@ -62,6 +62,12 @@ actor.
 
   constant my_receiver : actor_t := new_actor("my receiver");
 
+Internally an identity (see :ref:`identity package <id_user_guide>`) will be created for each actor
+and it is also possible to create an actor directly from an identity.
+
+  constant my_receiver_id : id_t := get_id("my receiver");
+  constant my_receiver : actor_t := new_actor(my_receiver_id);
+
 To send a message to the receiver the sender must have access to the value of the ``my_receiver`` constant.
 If the receiver made ``my_receiver`` publically available, for example with a package, it can be accessed
 directly. If not, it can be found with the ``find`` function providing it has been given an explict name.
@@ -69,6 +75,12 @@ directly. If not, it can be found with the ``find`` function providing it has be
 .. code-block:: vhdl
 
   constant found_receiver : actor_t := find("my receiver");
+
+or
+
+.. code-block:: vhdl
+
+  constant found_receiver : actor_t := find(my_receiver_id);
 
 The next step is to create a message to send and we start by creating an empty message
 
@@ -523,7 +535,7 @@ It's also possible to wait for a reply with a timeout.
 
 
 Deferred Actor Creation
------------------------------
+-----------------------
 
 When finding an actor using the ``find`` function there is a potential race condition. What if the actor hasn't been
 created yet? The default VUnit solution is that the ``find`` function creates a temporary actor with limited
@@ -693,27 +705,27 @@ be aware of:
 * A subscription on the inbound traffic of an actor won't pick up replies to an anonymously request.
 
 Blocking subscribers
--------------------------
+--------------------
 
 Although the intent of the publisher/subscriber pattern is to decouple the publisher from the subscribers it can still
 be affected if a subscriber inbox is full. A message transaction will be blocked until all of its subscribers and any
 regular receiver have available space in their inboxes.
 
 Unsubscribing
------------------
+-------------
 
 An actor can unsubscribe from a subscription at any time by calling ``unsubscribe`` with the same parameters used when
 calling the ``subscribe`` procedure.
 
-****************************
+*********
 Debugging
-****************************
+*********
 Message passing provides a communication mechanism an abstraction level above the normal signalling in VHDL.
 This also means that there is a need for an equally elevated level of debugging. To support that ``com`` has
 a number of built-in features specially targeting debugging.
 
 Logging Messages
------------------
+----------------
 
 One way of debugging is to inspect the messages that flow through the system, for example by subscribing to actor
 traffic. You can use previously presented functions to find out sender, receiver and message content but you can
@@ -861,9 +873,9 @@ all deferred actors.
   messenger_state := get_messenger_state;
   debug(get_messenger_state_string);
 
-****************************
+***************
 Deprecated APIs
-****************************
+***************
 
 ``com`` maintains a number of deprecated APIs for better backward compatibility. Using these APIs will result in
 a runtime error unless enabled by calling the ``allow_deprecated`` procedure.

@@ -27,12 +27,19 @@ package com_messenger_pkg is
     -- Handling of actors
     -----------------------------------------------------------------------------
     impure function create (
+      id : id_t;
+      inbox_size : positive := positive'high;
+      outbox_size : positive := positive'high
+      ) return actor_t;
+    impure function create (
       name : string := "";
       inbox_size : positive := positive'high;
       outbox_size : positive := positive'high
       ) return actor_t;
     impure function find (name  : string; enable_deferred_creation : boolean := true) return actor_t;
+    impure function find (id  : id_t; enable_deferred_creation : boolean := true) return actor_t;
     impure function name (actor : actor_t) return string;
+    impure function get_id (actor : actor_t) return id_t;
 
     procedure destroy (actor : inout actor_t);
     procedure reset_messenger;
@@ -277,15 +284,28 @@ package body com_messenger_pkg is
     return ret_val;
   end;
 
+  impure function find_actor (id : id_t) return actor_t is
+    variable ret_val : actor_t;
+  begin
+    for i in actors'reverse_range loop
+      ret_val := actors(i).actor;
+      if actors(i).id /= null_id then
+        exit when actors(i).id = id;
+      end if;
+    end loop;
+
+    return ret_val;
+  end;
+
   impure function create_actor (
-    name              :    string  := "";
+    id : id_t;
     deferred_creation : in boolean := false;
     inbox_size        : in natural := natural'high;
     outbox_size        : in natural := natural'high)
     return actor_t is
     variable old_actors : actor_item_array_ptr_t;
-    variable id : id_t;
-    variable actor_id : integer;
+    variable actor_id_number : integer;
+    variable resolved_id : id_t;
   begin
     old_actors := actors;
     actors     := new actor_item_array_t(0 to actors'length);
@@ -294,17 +314,42 @@ package body com_messenger_pkg is
       actors(i) := old_actors(i);
     end loop;
     deallocate(old_actors);
-    actor_id := actors'length - 1;
-    if name = "" then
-      id := get_id("_actor_" & to_string(actor_id));
+    actor_id_number := actors'length - 1;
+    if id = null_id then
+      resolved_id := get_id("_actor_" & to_string(actor_id_number));
     else
-      id := get_id(name);
+      resolved_id := id;
     end if;
-    actors(actors'length - 1) := ((p_id_number => actor_id), id,
+    actors(actors'length - 1) := ((p_id_number => actor_id_number), resolved_id,
                                   deferred_creation, create(inbox_size), create(outbox_size), null, (null, null, null));
 
     return actors(actors'length - 1).actor;
   end function;
+
+  impure function create_actor (
+    name              :    string  := "";
+    deferred_creation : in boolean := false;
+    inbox_size        : in natural := natural'high;
+    outbox_size        : in natural := natural'high)
+    return actor_t is
+    variable id : id_t;
+  begin
+    id := null_id when name = "" else get_id(name);
+
+    return create_actor(id, deferred_creation, inbox_size, outbox_size);
+  end function;
+
+  impure function find (id : id_t; enable_deferred_creation : boolean := true) return actor_t is
+    constant actor : actor_t := find_actor(id);
+  begin
+    if (id = null_id) or (id = root_id) then
+      return null_actor;
+    elsif (actor = null_actor) and enable_deferred_creation then
+      return create_actor(id, true, 1);
+    else
+      return actor;
+    end if;
+  end;
 
   impure function find (name : string; enable_deferred_creation : boolean := true) return actor_t is
     constant actor : actor_t := find_actor(name);
@@ -328,6 +373,32 @@ package body com_messenger_pkg is
 
   end;
 
+  impure function get_id (actor : actor_t) return id_t is
+  begin
+    return actors(actor.p_id_number).id;
+  end;
+
+  impure function create (
+    id : id_t;
+    inbox_size : positive := positive'high;
+    outbox_size : positive := positive'high
+    ) return actor_t is
+    variable actor : actor_t := find_actor(id);
+  begin
+    if id = root_id then
+      check_failed(new_actor_from_root_id_error);
+    elsif actor = null_actor then
+      actor := create_actor(id, false, inbox_size, outbox_size);
+    elsif actors(actor.p_id_number).deferred_creation then
+      actors(actor.p_id_number).deferred_creation := false;
+      actors(actor.p_id_number).inbox.size        := inbox_size;
+      actors(actor.p_id_number).outbox.size       := outbox_size;
+    else
+      check_failed(duplicate_actor_name_error);
+    end if;
+
+    return actor;
+  end;
 
   impure function create (
     name : string := "";
@@ -336,7 +407,7 @@ package body com_messenger_pkg is
     ) return actor_t is
     variable actor : actor_t := find_actor(name);
   begin
-    if (actor = null_actor) or (name = "") then
+    if actor = null_actor then
       actor := create_actor(name, false, inbox_size, outbox_size);
     elsif actors(actor.p_id_number).deferred_creation then
       actors(actor.p_id_number).deferred_creation := false;
