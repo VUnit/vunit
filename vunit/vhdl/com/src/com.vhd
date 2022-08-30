@@ -37,14 +37,33 @@ package body com_pkg is
     return messenger.create(name, inbox_size, outbox_size);
   end;
 
+  impure function new_actor (
+    id : id_t;
+    inbox_size : positive := positive'high;
+    outbox_size : positive := positive'high
+  ) return actor_t is
+  begin
+    return messenger.create(id, inbox_size, outbox_size);
+  end;
+
   impure function find (name : string; enable_deferred_creation : boolean := true) return actor_t is
   begin
     return messenger.find(name, enable_deferred_creation);
   end;
 
+  impure function find (id : id_t; enable_deferred_creation : boolean := true) return actor_t is
+  begin
+    return messenger.find(id, enable_deferred_creation);
+  end;
+
   impure function name (actor : actor_t) return string is
   begin
     return messenger.name(actor);
+  end;
+
+  impure function get_id(actor : actor_t) return id_t is
+  begin
+    return messenger.get_id(actor);
   end;
 
   procedure destroy (actor : inout actor_t) is
