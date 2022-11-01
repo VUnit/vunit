@@ -12,7 +12,7 @@ import logging
 import inspect
 from pathlib import Path
 from copy import copy
-from vunit.sim_if.factory import SIMULATOR_FACTORY
+
 
 
 LOGGER = logging.getLogger(__name__)
@@ -123,6 +123,7 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
         """
         Set sim option
         """
+        from vunit.sim_if.factory import SIMULATOR_FACTORY
         SIMULATOR_FACTORY.check_sim_option(name, value)
         self.sim_options[name] = copy(value)
 

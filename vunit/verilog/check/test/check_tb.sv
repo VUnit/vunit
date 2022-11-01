@@ -43,6 +43,10 @@ module check_tb;
          begin
             $sformat(err_msg, "CHECK_EQUAL_ERROR: Failure message not as expected.\n RECV: |%f|\n  EXP: |%f|\n", actual, expected);
             $error(err_msg);
+            `ifdef XCELIUM
+               $finish(1);
+            `else
+            `endif
          end;
    endfunction;
    `TEST_SUITE begin

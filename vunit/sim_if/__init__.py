@@ -49,6 +49,8 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
     # True if simulator supports ANSI colors in GUI mode
     supports_colors_in_gui = False
 
+    incremental_compile = True
+
     def __init__(self, output_path, gui):
         self._output_path = output_path
         self._gui = gui
@@ -259,7 +261,7 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         failures = []
 
         if target_files is None:
-            source_files = project.get_files_in_compile_order(dependency_graph=dependency_graph)
+            source_files = project.get_files_in_compile_order(incremental=self.incremental_compile, dependency_graph=dependency_graph)
         else:
             source_files = project.get_minimal_file_set_in_compile_order(target_files)
 
