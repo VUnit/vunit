@@ -4,7 +4,7 @@
 set -e
 
 docker build \
-  --build-arg IMAGE="python:3.10-slim-bullseye" \
+  --build-arg IMAGE="python:3-slim-bullseye" \
   --build-arg LLVM_VER=9 \
   --build-arg GNAT_VER=9 \
   --target vunit \
