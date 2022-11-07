@@ -136,6 +136,37 @@ begin
       read <= '0';
 
       wait until rising_edge(clk) and rd_ack_cnt = tb_cfg.num_cycles-1;
+    
+    elsif run("byte enable") then
+      info(tb_logger, "Writing with byte enable...");
+      address <= (others => 'U');
+      burstcount(0) <= '1';
+
+      for i in 0 to tb_cfg.num_cycles-1 loop
+        if i = 0 then
+          address <= std_logic_vector(to_unsigned(0, address'length));
+          burstcount <= std_logic_vector(to_unsigned(tb_cfg.num_cycles, burstcount'length));
+        end if;
+        -- set byte enable for last word
+        if i=tb_cfg.num_cycles-1 then
+          byteenable <= std_logic_vector(to_unsigned(1,byteenable'length));
+        end if;
+        write <= '1';
+        writedata <= std_logic_vector(to_unsigned(256+i, writedata'length));
+        wait until rising_edge(clk) and waitrequest = '0';
+      end loop;
+      write <= '0';
+
+      wait until rising_edge(clk);
+      info(tb_logger, "Reading with byte enable...");
+      wait until rising_edge(clk);
+      read <= '1';
+      burstcount <= std_logic_vector(to_unsigned(tb_cfg.num_cycles, burstcount'length));
+      address <= std_logic_vector(to_unsigned(0, address'length));
+      wait until rising_edge(clk) and waitrequest = '0';
+      read <= '0';
+
+      wait until rising_edge(clk) and rd_ack_cnt = tb_cfg.num_cycles-1;
     end if;
 
     wait for 50 ns;
@@ -147,8 +178,15 @@ begin
   rd_ack: process
   begin
     wait until rising_edge(clk) and readdatavalid = '1';
-    check_equal(readdata, std_logic_vector(to_unsigned(rd_ack_cnt,
-          readdata'length)), "readdata");
+    if active_test_case = "byte enable" then
+      if rd_ack_cnt = tb_cfg.num_cycles-1 then
+        check_equal(readdata, std_logic_vector(to_unsigned(rd_ack_cnt,readdata'length)), "readdata");
+      else
+        check_equal(readdata, std_logic_vector(to_unsigned(256+rd_ack_cnt,readdata'length)), "readdata");
+      end if;
+    else
+      check_equal(readdata, std_logic_vector(to_unsigned(rd_ack_cnt,readdata'length)), "readdata");
+    end if;
     rd_ack_cnt <= rd_ack_cnt +1;
   end process;
 
