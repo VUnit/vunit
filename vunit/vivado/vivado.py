@@ -13,8 +13,9 @@ from os import makedirs
 from pathlib import Path
 
 
-def add_from_compile_order_file(vunit_obj, compile_order_file, dependency_scan_defaultlib=True,
-                                fail_on_non_hdl_files=True):
+def add_from_compile_order_file(
+    vunit_obj, compile_order_file, dependency_scan_defaultlib=True, fail_on_non_hdl_files=True
+):  # pylint: disable=too-many-locals
     """
     Add Vivado IP:s from a compile order file
     """
