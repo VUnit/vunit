@@ -46,19 +46,31 @@ begin
   write_handler : process
     variable pending_writes : positive := 1;
     variable addr : natural;
+    variable word_i : std_logic_vector(writedata'length-1 downto 0);
+    variable byteenable_i : std_logic_vector(byteenable'length-1 downto 0);
   begin
     loop
       wait until write = '1' and waitrequest = '0' and rising_edge(clk);
+      word_i := writedata;
+      byteenable_i := byteenable;
       -- Burst write in progress
       if pending_writes > 1 then
         addr := addr + byteenable'length;
         pending_writes := pending_writes -1;
-        write_word(avalon_slave.p_memory, addr, writedata);
+         for idx in 0 to word_i'length/8-1 loop
+          if byteenable_i(idx) then
+            write_byte(avalon_slave.p_memory, addr + idx, to_integer(unsigned(word_i(8*idx+7 downto 8*idx))));
+          end if;
+        end loop;
       -- Burst start or single burst
       else
         addr := to_integer(unsigned(address));
         pending_writes := to_integer(unsigned(burstcount));
-        write_word(avalon_slave.p_memory, addr, writedata);
+        for idx in 0 to word_i'length/8-1 loop
+          if byteenable_i(idx) then
+            write_byte(avalon_slave.p_memory, addr + idx, to_integer(unsigned(word_i(8*idx+7 downto 8*idx))));
+          end if;
+        end loop;
       end if;
     end loop;
   end process;
