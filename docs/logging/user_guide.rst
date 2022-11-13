@@ -305,7 +305,7 @@ Log Location
 
 For simulators supporting VHDL-2019 VUnit adds file name
 and line number location information to all log entries. Currently
-only Riviera-PRO supports VHDL-2019 and it restricts the feature
+only Riviera-PRO and Active-HDL supports VHDL-2019 and they restrict the feature
 to **debug compiled files**. You can compile all files or just the ones
 using logging. For example,
 
