@@ -57,21 +57,16 @@ begin
       if pending_writes > 1 then
         addr := addr + byteenable'length;
         pending_writes := pending_writes -1;
-         for idx in 0 to word_i'length/8-1 loop
-          if byteenable_i(idx) then
-            write_byte(avalon_slave.p_memory, addr + idx, to_integer(unsigned(word_i(8*idx+7 downto 8*idx))));
-          end if;
-        end loop;
       -- Burst start or single burst
       else
         addr := to_integer(unsigned(address));
         pending_writes := to_integer(unsigned(burstcount));
-        for idx in 0 to word_i'length/8-1 loop
-          if byteenable_i(idx) then
-            write_byte(avalon_slave.p_memory, addr + idx, to_integer(unsigned(word_i(8*idx+7 downto 8*idx))));
-          end if;
-        end loop;
       end if;
+      for idx in 0 to word_i'length/8-1 loop
+        if byteenable_i(idx) then
+          write_byte(avalon_slave.p_memory, addr + idx, to_integer(unsigned(word_i(8*idx+7 downto 8*idx))));
+        end if;
+      end loop;
     end loop;
   end process;
 
