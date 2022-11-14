@@ -136,7 +136,7 @@ begin
       read <= '0';
 
       wait until rising_edge(clk) and rd_ack_cnt = tb_cfg.num_cycles-1;
-    
+
     elsif run("byte enable") then
       info(tb_logger, "Writing with byte enable...");
       address <= (others => 'U');
