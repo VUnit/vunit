@@ -425,7 +425,9 @@ the optional parameter. These procedures are also available for ``check``.
     type edge_t is (rising_edge, falling_edge, both_edges);
 
 The condition for failure is continuously evaluated on the clock edge(s)
-specified by ``active_clock_edge`` as long as ``en = '1'``.
+specified by ``active_clock_edge`` as long as ``en = '1'``. If the check
+procedure shall be active at all times, the ``en`` input can be tied to
+the predefined ``check_enabled`` signal.
 
 The figure below shows an example using the concurrent version of
 ``check``.
