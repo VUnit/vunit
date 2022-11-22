@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Provides documentation and version information
@@ -13,14 +13,23 @@ def license_text():
     """
     Returns licence text
     """
-    return """**VUnit**, except for the projects below, is released under the terms of
-`Mozilla Public License, v. 2.0`_. |copy| 2014-2021 Lars Asplund, lars.anders.asplund@gmail.com.
+    return """\
+**VUnit**, except for the projects below, is released under the terms of `Mozilla Public License, v. 2.0`_.
+|copy| 2014-2022 Lars Asplund, lars.anders.asplund@gmail.com.
 
-The following libraries are `redistributed`_ with VUnit for your convenience:
+The following libraries are `redistributed`_ with VUnit for convenience:
 
-* **OSVVM** (``vunit/vhdl/osvvm``): these files are licensed under the terms of `Apache License, v 2.0`_, |copy| 2010 - 2021 by `SynthWorks Design Inc`_. All rights reserved.
+* **OSVVM** (``vunit/vhdl/osvvm``): these files are licensed under the terms of `Apache License, v 2.0`_,
+  |copy| 2010 - 2022 by `SynthWorks Design Inc`_. All rights reserved.
 
-* **JSON-for-VHDL** (``vunit/vhdl/JSON-for-VHDL``): these files are licensed under the terms of `Apache License, v 2.0`_, |copy| 2015 - 2021 Patrick Lehmann.
+* **JSON-for-VHDL** (``vunit/vhdl/JSON-for-VHDL``): these files are licensed under the terms of `Apache License,
+  v 2.0`_, |copy| 2015 - 2022 Patrick Lehmann.
+
+The font used in VUnit's logo and illustrations is 'Tratex', the traffic sign typeface used on swedish road signs:
+
+- `transportstyrelsen.se: Teckensnitt <https://transportstyrelsen.se/sv/vagtrafik/Trafikregler/Om-vagmarken/Teckensnitt/>`__
+- `Wikipedia: Tratex <https://en.wikipedia.org/wiki/Tratex>`__
+
 
 .. |copy|   unicode:: U+000A9 .. COPYRIGHT SIGN
 .. _redistributed: https://github.com/VUnit/vunit/blob/master/.gitmodules
@@ -60,4 +69,4 @@ def version():
     return VERSION
 
 
-VERSION = "4.5.1rc0"
+VERSION = "4.6.1rc0"

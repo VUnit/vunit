@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 context ieee.ieee_std_context;
@@ -38,10 +38,8 @@ begin
   -- If your simulator chokes on the following block,
   -- see https://electronics.stackexchange.com/questions/540769/what-kind-of-vhdl-process-is-this/
   PslChecks : block is
-    constant dx : std_logic_vector(d'left downto 0) := (others => 'X');
-    constant du : std_logic_vector(d'left downto 0) := (others => 'U');
   begin
-    assert always (not rst and wr -> not (d ?= dx or d ?= du))@rising_edge(clkw)
+    assert always (not rst and wr -> not is_x(d))@rising_edge(clkw)
       report "wrote X|U to FIFO";
     assert always (not rst and f -> not wr)@rising_edge(clkw)
       report "Wrote to FIFO while full";

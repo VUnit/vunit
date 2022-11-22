@@ -2,9 +2,11 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 use std.textio.all;
+use work.codec_pkg.all;
+use work.codec_builder_pkg.all;
 
 package body integer_array_pkg is
   type binary_file_t is file of character;
@@ -452,5 +454,42 @@ package body integer_array_pkg is
     end loop;
     file_close(fread);
     return arr;
+  end;
+
+  function encode (
+    data : integer_array_t
+  ) return string is
+  begin
+    return encode(data.length) & encode(data.width) & encode(data.height) &
+    encode(data.depth) & encode(data.bit_width) & encode(data.is_signed) &
+    encode(data.lower_limit) & encode(data.upper_limit) & encode(data.data);
+  end;
+
+  function decode (
+    code : string
+  ) return integer_array_t is
+    variable result : integer_array_t;
+    variable index : positive := code'left;
+  begin
+    decode(code, index, result);
+
+    return result;
+  end;
+
+  procedure decode (
+    constant code   : string;
+    variable index  : inout positive;
+    variable result : out integer_array_t
+  ) is
+  begin
+    decode(code, index, result.length);
+    decode(code, index, result.width);
+    decode(code, index, result.height);
+    decode(code, index, result.depth);
+    decode(code, index, result.bit_width);
+    decode(code, index, result.is_signed);
+    decode(code, index, result.lower_limit);
+    decode(code, index, result.upper_limit);
+    decode(code, index, result.data);
   end;
 end package body;

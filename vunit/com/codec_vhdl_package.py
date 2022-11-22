@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Module containing the CodecVHDLPackage class.
@@ -228,7 +228,7 @@ class CodecVHDLPackage(VHDLPackage):
                         else:
                             encoding_list.append(f"encode({element.subtype_indication.code!s}'({value!s}))")
 
-                if parameter_list == []:
+                if not parameter_list:
                     parameter_part = ""
                     alias_signature = value + "[return string];"
                 else:

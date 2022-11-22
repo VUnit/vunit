@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Contains classes to manage the creation of test benches and runnable test cases thereof
@@ -111,7 +111,7 @@ def tb_filter(design_unit):
 
     elif has_runner_cfg and not has_tb_name:
         LOGGER.warning(
-            "%s %s has runner_cfg %s but the file name and the %s name does not match regex %s\n" "in file %s",
+            "%s %s has runner_cfg %s but the file name and the %s name does not match regex %s\nin file %s",
             design_unit_type,
             design_unit.name,
             generic_type,

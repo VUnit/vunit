@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Preprocessing of VHDL files to add file_name and line_num arguments to function calls
@@ -109,7 +109,7 @@ class LocationPreprocessor(object):
 
     _already_fixed_file_name_pattern = re.compile(r"file_name\s*=>", re.MULTILINE)
     _already_fixed_line_num_pattern = re.compile(r"line_num\s*=>", re.MULTILINE)
-    _subprogram_declaration_start_backwards_pattern = re.compile(r"\s+(erudecorp|noitcnuf)")
+    _subprogram_declaration_start_backwards_pattern = re.compile(r"\s+(erudecorp|noitcnuf)", re.IGNORECASE)
     _assignment_pattern = re.compile(r"\s*(:=|<=)", re.MULTILINE)
 
     def run(self, code, file_name):

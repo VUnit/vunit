@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Acceptance test of VUnit end to end functionality
@@ -133,11 +133,11 @@ class TestVunitArtificial(unittest.TestCase):
                 ("failed", "lib.tb_fail_on_fatal_and_early_finish.fatal1"),
                 ("failed", "lib.tb_fail_on_fatal_and_early_finish.finish0"),
                 ("failed", "lib.tb_fail_on_fatal_and_early_finish.finish1"),
-                ("passed", "lib.tb_with_parameter_config.Test 0"),
-                ("passed", "lib.tb_with_parameter_config.cfg.Test 1"),
-                ("passed", "lib.tb_with_parameter_config.Test 2"),
-                ("passed", "lib.tb_with_parameter_config.cfg.Test 3"),
-                ("passed", "lib.tb_with_parameter_config.cfg.Test 4"),
+                ("passed", "lib2.tb_with_parameter_config.Test 0"),
+                ("passed", "lib2.tb_with_parameter_config.cfg.Test 1"),
+                ("passed", "lib2.tb_with_parameter_config.Test 2"),
+                ("passed", "lib2.tb_with_parameter_config.cfg.Test 3"),
+                ("passed", "lib2.tb_with_parameter_config.cfg.Test 4"),
                 ("passed", "lib.tb_same_sim_all_pass.cfg.Test 1"),
                 ("passed", "lib.tb_same_sim_all_pass.cfg.Test 2"),
                 ("passed", "lib.tb_same_sim_all_pass.cfg.Test 3"),
@@ -200,7 +200,7 @@ EXPECTED_REPORT = (
     ("passed", "lib.tb_with_checks.Test passing check"),
     ("failed", "lib.tb_with_checks.Test failing check"),
     ("failed", "lib.tb_with_checks.Test non-stopping failing check"),
-    ("passed", "lib.tb_set_generic.all"),
+    ("passed", "lib2.tb_set_generic.all"),
     ("passed", "lib.tb_with_generic_config.Test 0"),
     ("passed", "lib.tb_with_generic_config.cfg.Test 1"),
     ("passed", "lib.tb_with_generic_config.Test 2"),

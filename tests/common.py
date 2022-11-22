@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Common functions re-used between test cases
@@ -92,7 +92,7 @@ def create_tempdir(path: Path = None):
     """
 
     if path is None:
-        path = Path(__file__).parent / ("tempdir_%i" % random.randint(0, 2 ** 64 - 1))
+        path = Path(__file__).parent / ("tempdir_%i" % random.randint(0, 2**64 - 1))
 
     if path.exists():
         shutil.rmtree(path)

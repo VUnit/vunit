@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.math_real.all;
@@ -120,26 +120,26 @@ package body queue_pkg is
 
   procedure push_type (
     queue        : queue_t;
-    element_type : queue_element_type_t
+    element_type : data_type_t
   ) is begin
-    unsafe_push(queue, character'val(queue_element_type_t'pos(element_type)));
+    unsafe_push(queue, character'val(data_type_t'pos(element_type)));
   end;
 
   impure function pop_type (
     queue : queue_t
-  ) return queue_element_type_t is begin
-    return queue_element_type_t'val(character'pos(unsafe_pop(queue)));
+  ) return data_type_t is begin
+    return data_type_t'val(character'pos(unsafe_pop(queue)));
   end;
 
   procedure check_type (
     queue        : queue_t;
-    element_type : queue_element_type_t
+    element_type : data_type_t
   ) is
-    constant popped_type : queue_element_type_t := pop_type(queue);
+    constant popped_type : data_type_t := pop_type(queue);
   begin
     if popped_type /= element_type then
-      report "Got queue element of type " & queue_element_type_t'image(popped_type) &
-        ", expected " & queue_element_type_t'image(element_type) & "." severity error;
+      report "Got queue element of type " & to_string(popped_type) &
+        ", expected " & to_string(element_type) & "." severity error;
     end if;
   end;
 
@@ -376,14 +376,14 @@ package body queue_pkg is
     queue : queue_t;
     value : std_ulogic_vector
   ) is begin
-    push_type(queue, vhdl_std_ulogic_vector);
+    push_type(queue, ieee_std_ulogic_vector);
     push_variable_string(queue, encode(value));
   end;
 
   impure function pop (
     queue : queue_t
   ) return std_ulogic_vector is begin
-    check_type(queue, vhdl_std_ulogic_vector);
+    check_type(queue, ieee_std_ulogic_vector);
     return decode(pop_variable_string(queue));
   end;
 
@@ -601,4 +601,5 @@ package body queue_pkg is
       data        => unsafe_pop(queue)
     );
   end;
+
 end package body;

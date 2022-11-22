@@ -36,8 +36,8 @@ load-plugins=
 # no Warning level messages displayed, use"--disable=all --enable=classes
 # --disable=W"
 #disable=
-disable=too-few-public-methods, locally-disabled, redefined-variable-type, duplicate-code, file-ignored,
-  useless-object-inheritance, bad-continuation,
+disable=too-few-public-methods, locally-disabled, duplicate-code, file-ignored,
+  useless-object-inheritance,
 # Failed to suppress this locally in ostools.py
   subprocess-popen-preexec-fn
 
@@ -47,11 +47,6 @@ disable=too-few-public-methods, locally-disabled, redefined-variable-type, dupli
 # (visual studio) and html. You can also give a reporter class, eg
 # mypackage.mymodule.MyReporterClass.
 output-format=text
-
-# Put messages in a separate file for each module / package specified on the
-# command line instead of printing them on stdout. Reports (if any) will be
-# written in a file name "pylint_global.[txt|html]".
-files-output=no
 
 # Tells whether to display a full report or only the messages
 reports=no
@@ -83,9 +78,6 @@ additional-builtins=
 
 
 [BASIC]
-
-# List of builtins function names that should not be used, separated by a comma
-bad-functions=map,filter,apply,input
 
 # Regular expression which should only match correct module names
 module-rgx=(([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+))$
@@ -162,9 +154,6 @@ ignore-long-lines=^\s*(# )?<?https?://\S+>?$
 # Allow the body of an if to be on the same line as the test if there is no
 # else.
 single-line-if-stmt=no
-
-# List of optional constructs for which whitespace checking is disabled
-no-space-check=trailing-comma,dict-separator
 
 # Maximum number of lines in a module
 max-module-lines=1000

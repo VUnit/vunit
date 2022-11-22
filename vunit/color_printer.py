@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Provides capability to print in color to the terminal in both Windows and Linux.
@@ -29,8 +29,7 @@ class ColorPrinter(object):
     def __init__(self):
         pass
 
-    @staticmethod
-    def write(text, output_file=None, fg=None, bg=None):  # pylint: disable=unused-argument
+    def write(self, text, output_file=None, fg=None, bg=None):  # pylint: disable=unused-argument
         """
         Print the text in color to the output_file
         uses stdout if output_file is None
@@ -45,8 +44,7 @@ class NoColorPrinter(ColorPrinter):
     def __init__(self):
         ColorPrinter.__init__(self)
 
-    @staticmethod
-    def write(text, output_file=None, fg=None, bg=None):  # pylint: disable=unused-argument
+    def write(self, text, output_file=None, fg=None, bg=None):  # pylint: disable=unused-argument
         """
         Print the text in color to the output_file
         uses stdout if output_file is None

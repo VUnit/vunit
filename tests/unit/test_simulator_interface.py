@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Test the SimulatorInterface class
@@ -254,14 +254,14 @@ class TestOptions(unittest.TestCase):
     def test_string_option(self):
         option = StringOption("optname")
         self._test_ok(option, "hello")
-        self._test_ok(option, u"hello")
+        self._test_ok(option, "hello")
         self._test_not_ok(option, False, "Option 'optname' must be a string. Got False")
         self._test_not_ok(option, ["foo"], "Option 'optname' must be a string. Got ['foo']")
 
     def test_list_of_string_option(self):
         option = ListOfStringOption("optname")
         self._test_ok(option, ["hello", "foo"])
-        self._test_ok(option, [u"hello"])
+        self._test_ok(option, ["hello"])
         self._test_not_ok(option, [True], "Option 'optname' must be a list of strings. " "Got [True]")
         self._test_not_ok(
             option,

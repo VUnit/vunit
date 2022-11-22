@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Contains classes to represent a test bench and test cases
@@ -142,7 +142,7 @@ class TestBench(ConfigurationVisitor):
                 return test_case
         raise KeyError(name)
 
-    def get_configuration_dicts(self):
+    def get_configuration_dicts(self):  # pylint: disable=arguments-differ
         """
         Get all configurations within the test bench
 
@@ -358,7 +358,7 @@ class TestConfigurationVisitor(ConfigurationVisitor):
         if not self._enable_configuration:
             raise RuntimeError("Individual test configuration is not possible with run_all_in_same_sim")
 
-    def get_configuration_dicts(self):
+    def get_configuration_dicts(self):  # pylint: disable=arguments-differ
         """
         Get all configurations of this test
         """

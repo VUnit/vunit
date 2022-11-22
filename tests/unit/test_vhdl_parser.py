@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Test of the VHDL parser
@@ -297,8 +297,20 @@ end entity;
         entity = self.parse_single_entity(
             """\
 entity name is
-   port (clk : in std_logic;
-         data : out std_logic_vector(11-1 downto 0));
+port (
+    clk : in std_logic;
+ \t data : out std_logic_vector(11-1 downto 0);
+    signal_data2 : in std_logic;
+\t  data3 :\tin signal_type;
+    data4_signal : in\tstd_logic;
+    data5\t: in type_signal;
+\t\tsignal clk2 : in std_logic;
+    signal\tdata7 : out std_logic_vector(11-1 downto 0);
+    signal signal_data8 : in std_logic;
+    signal\t data9 : in signal_type;
+    signal data10_signal :\tin std_logic;\t
+    signal \t data11 : in type_signal
+);
 end entity;
 """
         )
@@ -308,7 +320,7 @@ end entity;
         self.assertNotEqual(entity.ports, [])
 
         ports = entity.ports
-        self.assertEqual(len(ports), 2)
+        self.assertEqual(len(ports), 12)
 
         self.assertEqual(ports[0].identifier, "clk")
         self.assertEqual(ports[0].init_value, None)
@@ -322,6 +334,75 @@ end entity;
         self.assertEqual(ports[1].subtype_indication.code, "std_logic_vector(11-1 downto 0)")
         self.assertEqual(ports[1].subtype_indication.type_mark, "std_logic_vector")
         self.assertEqual(ports[1].subtype_indication.constraint, "(11-1 downto 0)")
+
+        self.assertEqual(ports[2].identifier, "signal_data2")
+        self.assertEqual(ports[2].init_value, None)
+        self.assertEqual(ports[2].mode, "in")
+        self.assertEqual(ports[2].subtype_indication.code, "std_logic")
+        self.assertEqual(ports[2].subtype_indication.type_mark, "std_logic")
+        self.assertEqual(ports[2].subtype_indication.constraint, None)
+
+        self.assertEqual(ports[3].identifier, "data3")
+        self.assertEqual(ports[3].init_value, None)
+        self.assertEqual(ports[3].mode, "in")
+        self.assertEqual(ports[3].subtype_indication.code, "signal_type")
+        self.assertEqual(ports[3].subtype_indication.type_mark, "signal_type")
+        self.assertEqual(ports[3].subtype_indication.constraint, None)
+
+        self.assertEqual(ports[4].identifier, "data4_signal")
+        self.assertEqual(ports[4].init_value, None)
+        self.assertEqual(ports[4].mode, "in")
+        self.assertEqual(ports[4].subtype_indication.code, "std_logic")
+        self.assertEqual(ports[4].subtype_indication.type_mark, "std_logic")
+        self.assertEqual(ports[4].subtype_indication.constraint, None)
+
+        self.assertEqual(ports[5].identifier, "data5")
+        self.assertEqual(ports[5].init_value, None)
+        self.assertEqual(ports[5].mode, "in")
+        self.assertEqual(ports[5].subtype_indication.code, "type_signal")
+        self.assertEqual(ports[5].subtype_indication.type_mark, "type_signal")
+        self.assertEqual(ports[5].subtype_indication.constraint, None)
+
+        self.assertEqual(ports[6].identifier, "clk2")
+        self.assertEqual(ports[6].init_value, None)
+        self.assertEqual(ports[6].mode, "in")
+        self.assertEqual(ports[6].subtype_indication.code, "std_logic")
+        self.assertEqual(ports[6].subtype_indication.type_mark, "std_logic")
+
+        self.assertEqual(ports[7].identifier, "data7")
+        self.assertEqual(ports[7].init_value, None)
+        self.assertEqual(ports[7].mode, "out")
+        self.assertEqual(ports[7].subtype_indication.code, "std_logic_vector(11-1 downto 0)")
+        self.assertEqual(ports[7].subtype_indication.type_mark, "std_logic_vector")
+        self.assertEqual(ports[7].subtype_indication.constraint, "(11-1 downto 0)")
+
+        self.assertEqual(ports[8].identifier, "signal_data8")
+        self.assertEqual(ports[8].init_value, None)
+        self.assertEqual(ports[8].mode, "in")
+        self.assertEqual(ports[8].subtype_indication.code, "std_logic")
+        self.assertEqual(ports[8].subtype_indication.type_mark, "std_logic")
+        self.assertEqual(ports[8].subtype_indication.constraint, None)
+
+        self.assertEqual(ports[9].identifier, "data9")
+        self.assertEqual(ports[9].init_value, None)
+        self.assertEqual(ports[9].mode, "in")
+        self.assertEqual(ports[9].subtype_indication.code, "signal_type")
+        self.assertEqual(ports[9].subtype_indication.type_mark, "signal_type")
+        self.assertEqual(ports[9].subtype_indication.constraint, None)
+
+        self.assertEqual(ports[10].identifier, "data10_signal")
+        self.assertEqual(ports[10].init_value, None)
+        self.assertEqual(ports[10].mode, "in")
+        self.assertEqual(ports[10].subtype_indication.code, "std_logic")
+        self.assertEqual(ports[10].subtype_indication.type_mark, "std_logic")
+        self.assertEqual(ports[10].subtype_indication.constraint, None)
+
+        self.assertEqual(ports[11].identifier, "data11")
+        self.assertEqual(ports[11].init_value, None)
+        self.assertEqual(ports[11].mode, "in")
+        self.assertEqual(ports[11].subtype_indication.code, "type_signal")
+        self.assertEqual(ports[11].subtype_indication.type_mark, "type_signal")
+        self.assertEqual(ports[11].subtype_indication.constraint, None)
 
     def test_parsing_simple_package_body(self):
         package_body = self.parse_single_package_body(

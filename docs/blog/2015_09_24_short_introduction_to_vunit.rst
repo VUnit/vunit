@@ -31,27 +31,29 @@ tests or a selected subset thereof. As soon as we introduce manual steps
 in this workflow we tend to postpone the testing and the short code/test
 cycle is broken.
 
-VUnit provides a `check
-package <https://github.com/VUnit/vunit/blob/master/vunit/vhdl/check/user_guide.md>`__
-for making tests self-checking and the `test
-runner <https://github.com/VUnit/vunit/blob/master/user_guide.md>`__ is
-responsible for the execution. The test runner will scan your project
+VUnit provides a :vunit_file:`check package <vunit/vhdl/check/user_guide.md>`
+for making tests self-checking and the :vunit_file:`test runner <user_guide.md>`
+is responsible for the execution. The test runner will scan your project
 directories for source files and tests, figure out their dependencies
 and what have been modified, compile what's needed and then run the
 selected tests as specified from command line. For example,
 
 .. code:: console
 
-    $ python run.py # Incrementally compile and run all testbenches and test cases found. Report pass/fail result for each
+    # Incrementally compile and run all testbenches and test cases found.
+    # Report pass/fail result for each.
+    $ python run.py
     test case
 
-    $ python run.py *tb_foo* # Run all test cases in testbench tb_foo
+    # Run all test cases in testbench tb_foo
+    $ python run.py *tb_foo*
 
-    $ python run.py -p 6 *tb_foo* # Speed up the test by running the test cases in 6 parallel threads. Make use of all the
-    CPU cores!
+    # Speed up the test by running the test cases in 6 parallel threads.
+    # Make use of all the CPU cores!
+    $ python run.py -p 6 *tb_foo*
 
-    $ python run.py --gui "*tb_foo.Test that reset initializes all outputs" # Launch the tb_foo test case "Test that reset
-    initializes all outputs" in the simulator GUI such that it can be debugged
+    # Launch the tb_foo test case "Test that reset initializes all outputs" in the simulator GUI such that it can be debugged
+    $ python run.py --gui "*tb_foo.Test that reset initializes all outputs"
 
 VUnit is lightweight. A typical setup adds 8 lines to your normal
 testbench code and one extra line for each test case in that testbench.
@@ -75,26 +77,22 @@ number of other useful features. For example,
    Message passing can be used for sending transactions without some of
    the limitations of pin-wiggling and procedure-based transactions but
    it is also the basis for several other communication patterns. For
-   more info see the user
-   `guide <https://github.com/VUnit/vunit/blob/master/vunit/vhdl/com/user_guide.md>`__.
+   more info see the :vunit_file:`com user guide <vunit/vhdl/com/user_guide.md>`.
 
 -  An array package that can handle multidimensional arrays. It's
    typically used for input and output data sets to the DUT. The package
    supports reading/writing arrays from/to file which enables file-based
-   testing. For more information see this
-   `example <https://github.com/VUnit/vunit/tree/master/examples/vhdl/array>`__.
+   testing. For more information see this :vunit_example:`example <vhdl/array`.
 
 -  A general purpose logging framework supporting display and file
    output, different output levels, filtering on level and design
    hierarchy, output formatting, automatic file and line localization of
    log entries, multiple loggers, and spreadsheet tool integration. For
-   more information see the user
-   `guide <https://github.com/VUnit/vunit/blob/master/vunit/vhdl/logging/user_guide.md>`__.
+   more information see the :vunit_file:`logging user guide <vunit/vhdl/logging/user_guide.md>`.
 
 VUnit is a truly open project formed by its community. If you want to
 follow the progress you can click on "watch" on the project
 `homepage <https://github.com/VUnit/vunit>`__. If you like what you see
 click on "star". If it's something you don't like or you miss a feature
 you should create an `issue <https://github.com/VUnit/vunit/issues>`__.
-You can also make your own code
-`contributions <https://github.com/VUnit/vunit/blob/master/developing.md>`__.
+You can also make your own code :vunit_file:`contributions <developing.md>`.

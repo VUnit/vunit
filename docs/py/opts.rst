@@ -23,27 +23,27 @@ The following compilation options are known.
    Must be a list of strings.
 
 ``modelsim.vcom_flags``
-   Extra arguments passed to ModelSim ``vcom`` command.
+   Extra arguments passed to ModelSim ``vcom`` command when compiling VHDL files.
    Must be a list of strings.
 
 ``modelsim.vlog_flags``
-   Extra arguments passed to ModelSim ``vlog`` command.
+   Extra arguments passed to ModelSim ``vlog`` command when compiling Verilog files.
    Must be a list of strings.
 
 ``rivierapro.vcom_flags``
-   Extra arguments passed to Riviera PRO ``vcom`` command.
+   Extra arguments passed to Riviera PRO ``vcom`` command when compiling VHDL files.
    Must be a list of strings.
 
 ``rivierapro.vlog_flags``
-   Extra arguments passed to Riviera PRO ``vlog`` command.
+   Extra arguments passed to Riviera PRO ``vlog`` command when compiling Verilog files.
    Must be a list of strings.
 
 ``activehdl.vcom_flags``
-   Extra arguments passed to Active HDL ``vcom`` command.
+   Extra arguments passed to Active HDL ``vcom`` command when compiling VHDL files.
    Must be a list of strings.
 
 ``activehdl.vlog_flags``
-   Extra arguments passed to Active HDL ``vcom`` command.
+   Extra arguments passed to Active HDL ``vcom`` command when compiling Verilog files.
    Must be a list of strings.
 
 ``enable_coverage``
@@ -88,7 +88,7 @@ The following simulation options are known.
   coverage settings.
 
   For GHDL with GCC backend there is less configurability for coverage, and all
-  necessary flags are set by the the ``enable_coverage`` sim and compile options.
+  necessary flags are set by the ``enable_coverage`` sim and compile options.
 
   An example of a ``run.py`` file using coverage can be found
   :vunit_example:`here <vhdl/coverage>`.

@@ -184,7 +184,7 @@ message, pushing data, and sending). That gives an extra level of type safety (a
 
   memory_bfm_pkg.write(net, my_unsigned_address, my_std_logic_vector_data);
 
-If you do not expect the receiver to receive massages of a type it can't handle you can add this else statement
+If you do not expect the receiver to receive messages of a type it can't handle you can add this else statement
 
 .. code-block:: vhdl
 
@@ -553,7 +553,7 @@ the actual testing starts. You can find out by calling the ``num_of_deferred_cre
 Publisher/Subscriber Pattern
 ****************************
 
-A common message pattern is the publisher/subscriber pattern where a publisher actor publishes a messages rather than
+A common message pattern is the publisher/subscriber pattern where a publisher actor publishes a message rather than
 sending it. Actors interested in these messages subscribe to the publisher and the published messages are received just
 like messages sent directly to the subscribers. The purpose of this pattern is to decouple the publisher from the
 subscribers, it doesn't have to know who the subscribers are and there is no need to update the publisher when
@@ -760,7 +760,7 @@ still see a difference when compared to the string presented above.
 
   30000 ps - vunit_lib:com -   TRACE - test sequencer inbox => [3:2 memory BFM -> test sequencer (read reply)]
 
-First is an actor mailbox (``test sequencer inbox``), than an arrow (``=>``) followed by the message string
+First is an actor mailbox (``test sequencer inbox``), then an arrow (``=>``) followed by the message string
 enclosed in square brackets. This means that the message was removed from the mailbox, for example as a result
 of a ``receive_reply`` call. ``com`` also logs when a message is put into a mailbox. In this
 example that event is logged 10 ns earlier and is the result of a ``reply`` call

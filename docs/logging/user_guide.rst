@@ -100,7 +100,7 @@ before ``test_runner_cleanup`` is considered a failure.
 
 Simulation stop is controlled via a stop count mechanism. The stop count mechanism works in the following way:
 
-- Stop count may be ether set or not set for a specific logger and log level.
+- Stop count may be either set or not set for a specific logger and log level.
 - When a log is made to a logger it is checked if there is a stop count set.
 
   - If set it is decremented and reaching zero means simulation stops.
@@ -145,7 +145,7 @@ which will result in the following output.
 
     INFO: Hello world
 
-There default ``verbose`` format which adds more details to the
+The default ``verbose`` format which adds more details to the
 output looks like this:
 
 .. code-block:: console
@@ -267,7 +267,7 @@ state.  The ``unmock`` call also checks that all recorded log messages
 have been checked by a corresponding ``check_log`` or
 ``check_only_log`` procedure.
 
-It is possible to mock several logger or log levels simultaneously.
+It is possible to mock several loggers or log levels simultaneously.
 All mocked log messages are written to the same global mock queue.
 The number of log messages in this queue is returned by the
 ``mock_queue_length`` function.
@@ -305,7 +305,7 @@ Log Location
 
 For simulators supporting VHDL-2019 VUnit adds file name
 and line number location information to all log entries. Currently
-only Riviera-PRO supports VHDL-2019 and it restricts the feature
+only Riviera-PRO and Active-HDL supports VHDL-2019 and they restrict the feature
 to **debug compiled files**. You can compile all files or just the ones
 using logging. For example,
 

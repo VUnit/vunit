@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 library vunit_lib;
 context vunit_lib.vunit_context;
@@ -12,6 +12,7 @@ context vunit_lib.com_context;
 use vunit_lib.queue_pkg.all;
 use vunit_lib.integer_vector_ptr_pkg.all;
 use vunit_lib.integer_array_pkg.all;
+use vunit_lib.dict_pkg.all;
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -39,6 +40,7 @@ begin
     variable boolv : boolean_vector(0 to 1);
     variable integer_vector_ptr, integer_vector_ptr_copy : integer_vector_ptr_t;
     variable integer_array, integer_array_copy : integer_array_t;
+    variable dict : dict_t;
 
     constant my_msg_type : msg_type_t := new_msg_type("my msg type");
   begin
@@ -268,6 +270,13 @@ begin
         push_integer_array_t_ref(msg, integer_array);
         check(integer_array = null_integer_array);
         check(pop_integer_array_t_ref(msg) = integer_array_copy);
+      elsif run("Test push and pop of dict_t") then
+        msg := new_msg;
+        dict := new_dict;
+        set_integer(dict, "key", 17);
+        push_dict_t_ref(msg, dict);
+        check(dict = null_dict);
+        check_equal(get_integer(pop_dict_t_ref(msg), "key"), 17);
       elsif run("Test push and pop of msg_t") then
         msg := new_msg;
         msg2 := new_msg;

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Interface towards Aldec Riviera Pro
@@ -308,15 +308,15 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
 
         tcl = """
 proc vunit_load {{}} {{
-    # Make the variable 'aldec' visible; otherwise, the Matlab interface
-    # is broken because vsim does not find the library aldec_matlab_cosim.
-    global aldec
-    # Make the variable 'LICENSE_QUEUE' visible (if set); otherwise vsim
-    # will not wait for simulation licenses.
-    global LICENSE_QUEUE
+    # Run the 'vsim' command in the global variable context using 'uplevel'.
+    # This will make variables such as 'aldec' and 'LICENSE_QUEUE' visible, if set.
+    # Otherwise:
+    # - The Matlab interface is broken because vsim does not find the
+    #   library aldec_matlab_cosim
+    # - vsim will not wait for simulation licenses
 
     set vsim_failed [catch {{
-        eval vsim {{{vsim_flags}}}
+        uplevel #0 vsim {{{vsim_flags}}}
     }}]
 
     if {{${{vsim_failed}}}} {{

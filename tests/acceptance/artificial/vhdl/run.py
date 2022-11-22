@@ -2,23 +2,30 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 from pathlib import Path
+from glob import glob
 from vunit import VUnit
 
-ROOT = Path(__file__).parent
+root = Path(__file__).parent
 
-VU = VUnit.from_argv()
-LIB = VU.add_library("lib")
-LIB.add_source_files(ROOT / "*.vhd")
+vu = VUnit.from_argv()
+lib = vu.add_library("lib")
+lib2 = vu.add_library("lib2")
+files = glob(str(root / "*.vhd"))
+for file in files:
+    if "tb_set_generic" in file:
+        lib2.add_source_files(file)
+    else:
+        lib.add_source_files(file)
 
 
 def configure_tb_with_generic_config():
     """
     Configure tb_with_generic_config test bench
     """
-    bench = LIB.entity("tb_with_generic_config")
+    bench = lib.entity("tb_with_generic_config")
     tests = [bench.test("Test %i" % i) for i in range(5)]
 
     bench.set_generic("set_generic", "set-for-entity")
@@ -53,11 +60,13 @@ def configure_tb_same_sim_all_pass(ui):
 
 
 def configure_tb_set_generic(ui):
-    tb = ui.library("lib").entity("tb_set_generic")
+    libs = ui.get_libraries("lib2")
+    lib2 = ui.library("lib2")
+    tb = lib2.entity("tb_set_generic")
     is_ghdl = ui._simulator_class.name == "ghdl"
     tb.set_generic("is_ghdl", is_ghdl)
-    tb.set_generic("true_boolean", True)
-    tb.set_generic("false_boolean", False)
+    lib2.set_generic("true_boolean", True)
+    libs.set_generic("false_boolean", False)
     tb.set_generic("negative_integer", -10000)
     tb.set_generic("positive_integer", 99999)
     if not is_ghdl:
@@ -82,10 +91,10 @@ def configure_tb_assert_stop_level(ui):
 
 
 configure_tb_with_generic_config()
-configure_tb_same_sim_all_pass(VU)
-configure_tb_set_generic(VU)
-configure_tb_assert_stop_level(VU)
-LIB.entity("tb_no_generic_override").set_generic("g_val", False)
-LIB.entity("tb_ieee_warning").test("pass").set_sim_option("disable_ieee_warnings", True)
-LIB.entity("tb_other_file_tests").scan_tests_from_file(str(ROOT / "other_file_tests.vhd"))
-VU.main()
+configure_tb_same_sim_all_pass(vu)
+configure_tb_set_generic(vu)
+configure_tb_assert_stop_level(vu)
+lib.entity("tb_no_generic_override").set_generic("g_val", False)
+lib.entity("tb_ieee_warning").test("pass").set_sim_option("disable_ieee_warnings", True)
+lib.entity("tb_other_file_tests").scan_tests_from_file(str(root / "other_file_tests.vhd"))
+vu.main()

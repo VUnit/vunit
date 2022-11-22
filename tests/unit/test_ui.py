@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 #
 # pylint: disable=too-many-public-methods, too-many-lines
 
@@ -234,8 +234,6 @@ end architecture;
         lib.add_source_files(str(Path(__file__).parent / "missing.vhd"), allow_empty=True)
 
     def test_get_test_benchs_and_test(self):
-        ui = self._create_ui()
-        lib = ui.add_library("lib")
         self.create_file(
             "tb_ent.vhd",
             """
@@ -268,29 +266,80 @@ end architecture;
         """,
         )
 
+        self.create_file(
+            "tb_ent3.vhd",
+            """
+entity tb_ent3 is
+  generic (runner_cfg : string);
+end entity;
+
+architecture a of tb_ent3 is
+begin
+end architecture;
+        """,
+        )
+
         ui = self._create_ui()
-        lib = ui.add_library("lib")
-        lib.add_source_file("tb_ent.vhd")
-        lib.add_source_file("tb_ent2.vhd")
-        self.assertEqual(lib.test_bench("tb_ent").name, "tb_ent")
-        self.assertEqual(lib.test_bench("tb_ent2").name, "tb_ent2")
-        self.assertEqual(lib.test_bench("tb_ent").library.name, "lib")
+        lib1 = ui.add_library("lib1")
+        lib2 = ui.add_library("lib2")
+        lib1.add_source_file("tb_ent.vhd")
+        lib1.add_source_file("tb_ent2.vhd")
+        lib2.add_source_file("tb_ent3.vhd")
+        self.assertEqual(lib1.test_bench("tb_ent").name, "tb_ent")
+        self.assertEqual(lib1.test_bench("tb_ent2").name, "tb_ent2")
+        self.assertEqual(lib1.test_bench("tb_ent").library.name, "lib1")
 
         self.assertEqual(
-            [test_bench.name for test_bench in lib.get_test_benches()],
+            [test_bench.name for test_bench in lib1.get_test_benches()],
             ["tb_ent", "tb_ent2"],
         )
-        self.assertEqual([test_bench.name for test_bench in lib.get_test_benches("*2")], ["tb_ent2"])
+        self.assertEqual([test_bench.name for test_bench in lib1.get_test_benches("*2")], ["tb_ent2"])
 
-        self.assertEqual(lib.test_bench("tb_ent").test("test1").name, "test1")
-        self.assertEqual(lib.test_bench("tb_ent").test("test2").name, "test2")
+        libs = ui.get_libraries("lib*")
+        self.assertEqual(
+            [test_bench.name for test_bench in libs.get_test_benches()],
+            ["tb_ent", "tb_ent2", "tb_ent3"],
+        )
+        self.assertEqual([test_bench.name for test_bench in libs.get_test_benches("*3")], ["tb_ent3"])
+
+        self.assertEqual(lib1.test_bench("tb_ent").test("test1").name, "test1")
+        self.assertEqual(lib1.test_bench("tb_ent").test("test2").name, "test2")
 
         self.assertEqual(
-            [test.name for test in lib.test_bench("tb_ent").get_tests()],
+            [test.name for test in lib1.test_bench("tb_ent").get_tests()],
             ["test1", "test2"],
         )
-        self.assertEqual([test.name for test in lib.test_bench("tb_ent").get_tests("*1")], ["test1"])
-        self.assertEqual([test.name for test in lib.test_bench("tb_ent2").get_tests()], [])
+        self.assertEqual([test.name for test in lib1.test_bench("tb_ent").get_tests("*1")], ["test1"])
+        self.assertEqual([test.name for test in lib1.test_bench("tb_ent2").get_tests()], [])
+
+    def test_get_test_bench_with_explicit_constant_runner_cfg(self):
+        self.create_file(
+            "tb_ent.vhd",
+            """
+entity tb_ent is
+  generic (constant runner_cfg : in string);
+end entity;
+
+architecture a of tb_ent is
+begin
+  main : process
+  begin
+    if run("test1") then
+    elsif run("test2") then
+    end if;
+  end process;
+end architecture;
+        """,
+        )
+
+        ui = self._create_ui()
+        lib1 = ui.add_library("lib1")
+        lib1.add_source_file("tb_ent.vhd")
+        self.assertEqual(lib1.test_bench("tb_ent").name, "tb_ent")
+        self.assertEqual(
+            [test.name for test in lib1.test_bench("tb_ent").get_tests()],
+            ["test1", "test2"],
+        )
 
     def test_get_entities_case_insensitive(self):
         ui = self._create_ui()
@@ -407,11 +456,47 @@ end entity;
         self.assertEqual(len(ui.get_source_files(file_name)), 2)
         self.assertEqual(len(lib1.get_source_files(file_name)), 1)
         self.assertEqual(len(lib2.get_source_files(file_name)), 1)
+        self.assertEqual(len(ui.get_libraries("lib*").get_source_files(file_name)), 2)
+        self.assertEqual(len(ui.get_libraries("lib2").get_source_files(file_name)), 1)
 
         ui.get_source_file(file_name, library_name="lib1")
         ui.get_source_file(file_name, library_name="lib2")
         lib1.get_source_file(file_name)
         lib2.get_source_file(file_name)
+
+    def test_get_libraries(self):
+        ui = self._create_ui()
+
+        libs = ui.get_libraries()
+        self.assertEqual(len(libs), 1)
+        self.assertEqual(libs[0].name, "vunit_lib")
+
+        ui.add_library("lib1")
+        ui.add_library("lib2")
+
+        self.assertEqual(len(ui.get_libraries()), 3)
+        self.assertEqual(len(ui.get_libraries("lib*")), 2)
+        libs = ui.get_libraries("lib1")
+        self.assertEqual(len(libs), 1)
+        self.assertEqual(libs[0].name, "lib1")
+        libs = ui.get_libraries("*2")
+        self.assertEqual(len(libs), 1)
+        self.assertEqual(libs[0].name, "lib2")
+
+    def test_get_libraries_errors(self):
+        ui = self._create_ui()
+        ui.add_library("lib1")
+        ui.add_library("lib2")
+        non_existant_name = "non_existant"
+
+        self.assertRaisesRegex(
+            ValueError,
+            f".*{non_existant_name}.*allow_empty.*",
+            ui.get_libraries,
+            non_existant_name,
+        )
+
+        self.assertEqual(len(ui.get_libraries(non_existant_name, allow_empty=True)), 0)
 
     def test_get_compile_order_smoke_test(self):
         ui = self._create_ui()
@@ -801,7 +886,7 @@ Listed 2 files""".splitlines()
         source_file = lib.add_source_file(file_name)
 
         # Use methods on all types of interface objects
-        for obj in [source_file, ui, lib, lib.get_source_files(file_name)]:
+        for obj in [source_file, ui, lib, lib.get_source_files(file_name), ui.get_libraries("lib")]:
             obj.set_compile_option("ghdl.flags", [])
             self.assertEqual(source_file.get_compile_option("ghdl.flags"), [])
 
@@ -1077,13 +1162,16 @@ endmodule
         """
         ui = self._create_ui()
         lib = ui.add_library("lib")
-        for method in (lib.set_sim_option, ui.set_sim_option):
+        libs = ui.get_libraries("lib")
+        for method in (lib.set_sim_option, ui.set_sim_option, libs.set_sim_option):
             method("disable_ieee_warnings", True, allow_empty=True)
             self.assertRaises(ValueError, method, "disable_ieee_warnings", True)
 
         for method in (
             lib.set_compile_option,
             lib.add_compile_option,
+            libs.set_compile_option,
+            libs.add_compile_option,
             ui.set_compile_option,
             ui.add_compile_option,
         ):

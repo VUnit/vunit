@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Interface for GHDL simulator
@@ -107,7 +107,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         self._vhdl_standard = None
         self._coverage_test_dirs = set()
 
-    def has_valid_exit_code(self):
+    def has_valid_exit_code(self):  # pylint: disable=arguments-differ
         """
         Return if the simulation should fail with nonzero exit codes
         """
@@ -250,7 +250,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         flags = source_file.compile_options.get("ghdl.flags", [])
         if flags != []:
             warn(
-                ("'ghdl.flags' is deprecated and it will be removed in future releases; " "use 'ghdl.a_flags' instead"),
+                ("'ghdl.flags' is deprecated and it will be removed in future releases; use 'ghdl.a_flags' instead"),
                 Warning,
             )
             a_flags += flags

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Interface towards Aldec Active HDL
@@ -15,7 +15,6 @@ import re
 import logging
 from ..exceptions import CompileError
 from ..ostools import Process, write_file, file_exists, renew_path
-from ..vhdl_standard import VHDL
 from ..test.suites import get_result_file_name
 from . import SimulatorInterface, ListOfStringOption, StringOption
 from .vsim_simulator_mixin import get_is_test_suite_done_tcl, fix_path
@@ -109,10 +108,7 @@ class ActiveHDLInterface(SimulatorInterface):
         """
         Convert standard to format of Active-HDL command line flag
         """
-        if vhdl_standard <= VHDL.STD_2019:
-            return f"-{vhdl_standard!s}"
-
-        raise ValueError(f"Invalid VHDL standard {vhdl_standard!s}")
+        return f"-{vhdl_standard!s}"
 
     def compile_vhdl_file_command(self, source_file):
         """

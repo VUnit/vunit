@@ -2,23 +2,33 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 from pathlib import Path
+from glob import glob
 from vunit.verilog import VUnit
 
-ROOT = Path(__file__).parent
+root = Path(__file__).parent
 
-VU = VUnit.from_argv()
-LIB = VU.add_library("lib")
-LIB.add_source_files(ROOT / "*.sv", defines={"DEFINE_FROM_RUN_PY": ""})
+vu = VUnit.from_argv()
+lib = vu.add_library("lib")
+lib2 = vu.add_library("lib2")
+files = glob(str(root / "*.sv"))
+for file in files:
+    if "tb_with_parameter_config" in file:
+        lib2.add_source_files(file, defines={"DEFINE_FROM_RUN_PY": ""})
+    else:
+        lib.add_source_files(file, defines={"DEFINE_FROM_RUN_PY": ""})
 
 
 def configure_tb_with_parameter_config():
     """
     Configure tb_with_parameter_config test bench
     """
-    bench = LIB.module("tb_with_parameter_config")
+    lib2.set_parameter("lib_parameter", "set-for-lib")
+    libs = vu.get_libraries("lib2")
+    libs.set_parameter("libs_parameter", "set-for-libs")
+    bench = lib2.module("tb_with_parameter_config")
     tests = [bench.test("Test %i" % i) for i in range(5)]
 
     bench.set_parameter("set_parameter", "set-for-module")
@@ -53,6 +63,6 @@ def configure_tb_same_sim_all_pass(ui):
 
 
 configure_tb_with_parameter_config()
-configure_tb_same_sim_all_pass(VU)
-LIB.module("tb_other_file_tests").scan_tests_from_file(str(ROOT / "other_file_tests.sv"))
-VU.main()
+configure_tb_same_sim_all_pass(vu)
+lib.module("tb_other_file_tests").scan_tests_from_file(str(root / "other_file_tests.sv"))
+vu.main()

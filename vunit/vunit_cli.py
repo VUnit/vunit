@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 .. _custom_cli:
@@ -149,7 +149,15 @@ def _create_argument_parser(description=None, for_documentation=False):
         help="Only elaborate test benches without running",
     )
 
-    parser.add_argument("--clean", action="store_true", default=False, help="Remove output path first")
+    parser.add_argument(
+        "--clean",
+        action="store_true",
+        default=False,
+        help="Remove output path first. "
+        "This is useful, for example, to force a complete "
+        "recompile when compilation artifacts are obsolete "
+        "due to a simulator version update.",
+    )
 
     parser.add_argument(
         "-o",

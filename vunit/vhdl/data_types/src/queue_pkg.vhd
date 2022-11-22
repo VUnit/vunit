@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -12,6 +12,7 @@ use ieee.numeric_std.all;
 use work.integer_vector_ptr_pkg.all;
 use work.string_ptr_pkg.all;
 use work.integer_array_pkg.all;
+use work.data_types_private_pkg.all;
 
 package queue_pkg is
   type queue_t is record
@@ -326,16 +327,6 @@ package queue_pkg is
   alias push_integer_array_t_ref is push_ref[queue_t, integer_array_t];
   alias pop_integer_array_t_ref is pop_ref[queue_t return integer_array_t];
 
-  -- Private
-  type queue_element_type_t is (
-    vhdl_character, vhdl_integer, vunit_byte, vhdl_string, vhdl_boolean, vhdl_real, vhdl_bit, ieee_std_ulogic,
-    vhdl_severity_level, vhdl_file_open_status, vhdl_file_open_kind, vhdl_bit_vector, vhdl_std_ulogic_vector,
-    ieee_complex, ieee_complex_polar, ieee_numeric_bit_unsigned, ieee_numeric_bit_signed,
-    ieee_numeric_std_unsigned, ieee_numeric_std_signed, vhdl_time, vunit_integer_vector_ptr_t,
-    vunit_string_ptr_t, vunit_queue_t, vunit_integer_array_t, vhdl_boolean_vector, vhdl_integer_vector,
-    vhdl_real_vector, vhdl_time_vector, ieee_ufixed, ieee_sfixed, ieee_float
-  );
-
   function encode (
     data : queue_t
   ) return string;
@@ -355,12 +346,12 @@ package queue_pkg is
 
   procedure push_type (
     queue        : queue_t;
-    element_type : queue_element_type_t
+    element_type : data_type_t
   );
 
   procedure check_type (
     queue        : queue_t;
-    element_type : queue_element_type_t
+    element_type : data_type_t
   );
 
   procedure unsafe_push (
@@ -390,4 +381,14 @@ package queue_pkg is
     queue  : queue_t;
     length : natural
   ) return string;
+
+  -- Private
+  procedure unsafe_push (
+    queue : queue_t;
+    value : integer_vector_ptr_t
+  );
+
+  impure function unsafe_pop (
+    queue : queue_t
+  ) return integer_vector_ptr_t;
 end package;

@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -503,10 +503,12 @@ begin
       check_equal(now, timestamp, result(" setting up transaction stalled"));
 
       wait until rising_edge(aclk);
+      wait for 1 ps;
       mocklogger := get_logger("check");
       mock(mocklogger);
 
       wait until rising_edge(aclk) and tvalid = '1';
+      wait for 1 ps;
 
       check_log(mocklogger, "TDATA mismatch, check non-blocking - Got 0000_0011 (3). Expected 0000_0110 (6).", error);
       check_log(mocklogger, "TKEEP mismatch, check non-blocking - Got 0 (0). Expected 1 (1).", error);
@@ -524,7 +526,7 @@ begin
 
       unmock(mocklogger);
 
-      check_equal(now, timestamp + 20 ns, " transaction time incorrect");
+      check_equal(now, timestamp + 20 ns + 1 ps, " transaction time incorrect");
 
     elsif run("test random stall on master") or run("test random pop stall on slave") then
       wait until rising_edge(aclk);

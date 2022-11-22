@@ -1,0 +1,21 @@
+- Add Python 3.9 and 3.10 to classifiers.
+- Use MAJOR and MINOR constants to check supported Python version. :vunit_issue:`724`
+- Fix pylint issues.
+- Use f-strings for string formatting. :vunit_issue:`743` :vunit_issue:`747`
+- Specify encoding when using 'open'. :vunit_issue:`748`
+- Set black line-length to 120 characters. :vunit_issue:`736`
+- Use Path from pathlib, instead of `open()`.
+- Add support for log location based on VHDL-2019 call paths. :vunit_issue:`729`
+- GHDL supports VHDL package generics. :vunit_issue:`753`
+- Bump OSVVM to 2021.09.
+- [Tox] Use pytest for collecting coverage, add py310.
+- [Tests] mark array_axis_vcs and verilog_ams examples as xfail. :vunit_issue:`751`
+- [Logging/log_deprecated_pkg] fix compilation issues with Cadence tools. :vunit_issue:`731`
+- [Parsing/tokenizer] partial revert of 5141f7c :vunit_issue:`735` :vunit_issue:`745`
+- [UI] make glob search recursive by default.
+- [VCs] bugfix AXI stream slave nonblocking check. :vunit_issue:`720`
+- [Examples] add shebang to run scripts. :vunit_issue:`738`
+- [Example/vhdl/user_guide] add VHDL 1993 variant, clean use statements, skip in acceptance tests if VHDL context not supported. :vunit_issue:`737`
+- [Examples/vhdl/array_axis_vcs] Fix PSL check for valid fifo in data during write. :vunit_issue:`750` :vunit_issue:`766`
+- [Docs] bump sphinx_btd_theme to v1, revert temporary pinning of Sphinx and docutils, remove redundant delete message call from com user guide example, fix ref to Travis CI (deprecated) (GitHub Actions is used now), add section about envvars, document VUNIT_VHDL_STANDARD, use 'exec' directive to generate content in examples, update 'Credits and License', add refs to Tratex. :vunit_issue:`730` :vunit_issue:`739` :vunit_issue:`761`
+- [CI] add emojis/icons, avoid deployments from forks, fix deploy condition event, add job using setup-ghdl-ci, update images from Debian Buster to Debian Bullseye, do not overload image tags.

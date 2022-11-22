@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // You can obtain one at http://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+// Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 
 `include "vunit_defines.svh"
@@ -12,8 +12,12 @@ module tb_with_parameter_config;
    parameter string output_path = "";
    parameter string set_parameter = "default";
    parameter string config_parameter = "default";
+   parameter string lib_parameter = "default";
+   parameter string libs_parameter = "default";
 
    `TEST_SUITE begin
+      `CHECK_EQUAL(lib_parameter, "set-for-lib");
+      `CHECK_EQUAL(libs_parameter, "set-for-libs");
       `TEST_CASE("Test 0") begin
          `CHECK_EQUAL(set_parameter, "set-for-module");
          `CHECK_EQUAL(config_parameter, "default");

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Create monolithic release notes file from several input files
@@ -36,7 +36,7 @@ def create_release_notes():
     releases = get_releases(source_path)
     latest_release = releases[0]
 
-    with (source_path / "release_notes.rst").open("w") as fptr:
+    with (source_path / "release_notes.rst").open("w", encoding="utf-8") as fptr:
         fptr.write(
             f"""
 .. _release_notes:

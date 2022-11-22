@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -23,6 +23,7 @@ use work.logger_pkg.all;
 use work.queue_pkg.all;
 use work.queue_2008p_pkg.all;
 use work.queue_pool_pkg.all;
+use work.dict_pkg.all;
 
 package com_types_pkg is
 
@@ -393,6 +394,11 @@ package com_types_pkg is
   impure function pop_ref(msg : msg_t) return integer_array_t;
   alias push_integer_array_t_ref is push_ref[msg_t, integer_array_t];
   alias pop_integer_array_t_ref is pop_ref[msg_t return integer_array_t];
+
+  procedure push_ref(constant msg : msg_t; value : inout dict_t);
+  impure function pop_ref(msg : msg_t) return dict_t;
+  alias push_dict_t_ref is push_ref[msg_t, dict_t];
+  alias pop_dict_t_ref is pop_ref[msg_t return dict_t];
 
 end package;
 
@@ -853,5 +859,16 @@ package body com_types_pkg is
   begin
     return pop_ref(msg.data);
   end;
+
+  procedure push_ref(constant msg : msg_t; value : inout dict_t) is
+  begin
+    push_ref(msg.data, value);
+  end;
+
+  impure function pop_ref(msg : msg_t) return dict_t is
+  begin
+    return pop_ref(msg.data);
+  end;
+
 
 end package body com_types_pkg;

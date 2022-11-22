@@ -369,7 +369,7 @@ Common to all point checks is that the condition for failure is
 evaluated at a single point in time, either when the subprogram is
 called as part of sequential code or synchronous to a clock in a clocked
 and usually concurrent procedure call. There are six unclocked versions
-of each point check and they correspond to the two function and four
+of each point check and they correspond to the two functions and four
 procedures previously described for ``check``. The only difference to the
 parameter lists is that the boolean ``expr`` parameter is replaced by
 one or more parameters specific to the point check.
@@ -425,12 +425,15 @@ the optional parameter. These procedures are also available for ``check``.
     type edge_t is (rising_edge, falling_edge, both_edges);
 
 The condition for failure is continuously evaluated on the clock edge(s)
-specified by ``active_clock_edge`` as long as ``en = '1'``.
+specified by ``active_clock_edge`` as long as ``en = '1'``. If the check
+procedure shall be active at all times, the ``en`` input can be tied to
+the predefined ``check_enabled`` signal.
 
 The figure below shows an example using the concurrent version of
 ``check``.
 
 .. figure:: images/check_true.png
+   :align: center
    :alt:
 
 ``expr`` is evaluated on every rising clock edge except for edge 3 where
@@ -885,6 +888,7 @@ edge for the end event. Bits within ``expr`` may change drive strength
 stable. Below is an example with two windows that will pass.
 
 .. figure:: images/check_stable_passing.png
+   :align: center
    :alt:
 
 Here are two examples of failing checks. Note that any unknown value
@@ -894,6 +898,7 @@ if the unknown value is constant. The check will also fail if
 value.
 
 .. figure:: images/check_stable_failing.png
+   :align: center
    :alt:
 
 ``check_stable`` can handle one clock cycle windows and back-to-back
@@ -935,6 +940,7 @@ expected to be high four enabled clock edges after that which is at
 clock edge seven due to ``en`` being low at clock edge five.
 
 .. figure:: images/check_next_passing.png
+   :align: center
    :alt:
 
 When ``allow_overlapping`` is ``true`` ``check_next`` will allow a new
@@ -943,6 +949,7 @@ completed. Here is an example with two overlapping and passing
 sequences.
 
 .. figure:: images/check_next_passing_with_overlap.png
+   :align: center
    :alt:
 
 In case ``allow_overlapping`` is ``false`` ``check_next`` will fail at
@@ -951,7 +958,12 @@ the second start event
 When ``allow_missing_start`` is ``true`` ``check_next`` will allow
 ``expr = '1'`` when there is no corresponding start event. When
 ``allow_missing_start`` is ``false`` such a situation will lead to a
-failure.
+failure. Here is an example where ``expr`` is at ``'1'`` for one
+cycles with no corresponding start event.
+
+.. figure:: images/check_next_passing_with_missing_start.png
+   :align: center
+   :alt:
 
 Any unknown value  (``U``, ``X``, ``Z``, ``W``, or ``-``) on ``start_event``
 will cause an error.
@@ -995,12 +1007,14 @@ controlled by the ``trigger_event`` parameter:
 The figure below shows two overlapping sequences that pass.
 
 .. figure:: images/check_sequence_first_pipe_passing.png
+   :align: center
    :alt:
 
 In this example the sequence is started but not completed and the check
 fails.
 
 .. figure:: images/check_sequence_first_pipe_failing.png
+   :align: center
    :alt:
 
 -  ``first_no_pipe`` - Same as ``first_pipe`` with the exception that
@@ -1012,6 +1026,7 @@ second is interrupted. However, since only one sequence is handled at a
 time the second is ignored and the check pass.
 
 .. figure:: images/check_sequence_first_no_pipe_passing.png
+   :align: center
    :alt:
 
 -  ``penultimate`` - The difference with the previous modes is that
@@ -1026,12 +1041,14 @@ early interrupted sequence that doesn't cause a failure in this mode
 (which it did in the example for the ``first_pipe`` mode.
 
 .. figure:: images/check_sequence_penultimate_passing.png
+   :align: center
    :alt:
 
 In this example the sequence is interrupted after the second to last bit
 is activated and the check fails.
 
 .. figure:: images/check_sequence_penultimate_failing.png
+   :align: center
    :alt:
 
 
@@ -1042,7 +1059,7 @@ Unconditional Checks
 ~~~~~~~~~~~~~~~~~~~~
 
 The check library has two unconditional checks, ``check_passed`` and
-``check_failed``, that contains no expression parameter to evaluate.
+``check_failed``, that contain no expression parameter to evaluate.
 They are used when the pass/fail status is already given by the program
 flow. For example,
 

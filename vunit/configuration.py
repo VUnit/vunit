@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Contains Configuration class which contains configuration of a test run
@@ -145,7 +145,7 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
         if self.pre_config is None:
             return True
 
-        args = inspect.getargspec(self.pre_config).args  # pylint: disable=deprecated-method
+        args = inspect.getfullargspec(self.pre_config).args
 
         kwargs = {
             "output_path": output_path,
@@ -165,7 +165,7 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
         if self.post_check is None:
             return True
 
-        args = inspect.getargspec(self.post_check).args  # pylint: disable=deprecated-method
+        args = inspect.getfullargspec(self.post_check).args
 
         kwargs = {"output_path": lambda: output_path, "output": read_output}
 
