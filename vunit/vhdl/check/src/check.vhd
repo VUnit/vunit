@@ -12,6 +12,7 @@ use ieee.numeric_std.all;
 use std.textio.all;
 use work.checker_pkg.all;
 use work.string_ops.all;
+use work.location_pkg.all;
 
 package body check_pkg is
   type boolean_vector is array (natural range <>) of boolean;
@@ -236,6 +237,65 @@ package body check_pkg is
     -- pragma translate_on
     return pass;
   end;
+
+  impure function check(
+    constant expr        : in boolean;
+    constant msg         : in string      := check_result_tag & ".";
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+    variable check_result : check_result_t;
+    variable location : location_t := get_location(path_offset + 1, line_num, file_name);
+  begin
+    -- pragma translate_off
+    check_result.is_pass := expr;
+    check_result.checker := default_checker;
+    check_result.level := level;
+    check_result.line_num := location.line_num;
+    check_result.file_name := new_string_ptr(location.file_name.all);
+    if expr then
+      if is_pass_visible(default_checker) then
+        check_result.msg := new_string_ptr(std_msg("Check passed", msg, ""));
+      else
+        check_result.msg := null_string_ptr;
+      end if;
+    else
+      check_result.msg := new_string_ptr(std_msg("Check failed", msg, ""));
+    end if;
+  -- pragma translate_on    -- pragma translate_on
+    return check_result;
+  end;
+
+  procedure log(check_result : check_result_t) is
+  begin
+    -- pragma translate_off
+    if check_result.is_pass then
+      if is_pass_visible(check_result.checker) then
+        passing_check(check_result.checker, to_string(check_result.msg), 0, check_result.line_num, to_string(check_result.file_name));
+      else
+        passing_check(check_result.checker);
+      end if;
+    else
+      failing_check(check_result.checker, to_string(check_result.msg), check_result.level, 0, check_result.line_num, to_string(check_result.file_name));
+    end if;
+
+    if check_result.msg /= null_string_ptr then
+      deallocate(check_result.msg);
+    end if;
+    deallocate(check_result.file_name);
+    -- pragma translate_on
+  end;
+
+  procedure notify_if_fail(check_result : check_result_t; signal event : inout any_event_t) is
+  begin
+    if not check_result.is_pass then
+      notify(event);
+    end if;
+    log(check_result);
+  end;
+
 
   procedure check(
     signal clock               : in std_logic;
@@ -2514,6 +2574,56 @@ package body check_pkg is
     return pass;
   end;
 
+  impure function check_equal(
+    constant checker     : in checker_t;
+    constant got         : in unsigned;
+    constant expected    : in unsigned;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+    variable check_result : check_result_t;
+    variable location : location_t := get_location(path_offset + 1, line_num, file_name);
+  begin
+    -- pragma translate_off
+    check_result.is_pass := got = expected;
+    check_result.checker := checker;
+    check_result.level := level;
+    check_result.line_num := location.line_num;
+    check_result.file_name := new_string_ptr(location.file_name.all);
+
+    if (got = expected) then
+      if is_pass_visible(checker) then
+        check_result.msg := new_string_ptr(std_msg("Equality check passed", msg, "Got " & to_nibble_string(got) & " (" & to_integer_string(got) & ")" & "."));
+      else
+        check_result.msg := null_string_ptr;
+      end if;
+    else
+      check_result.msg := new_string_ptr(std_msg("Equality check failed", msg, "Got " & to_nibble_string(got) & " (" & to_integer_string(got) & ")" & ". " & "Expected " & to_nibble_string(expected) & " (" & to_integer_string(expected) & ")" & "."));
+    end if;
+    -- pragma translate_on
+
+    return check_result;
+  end;
+
+  impure function check_equal(
+    constant got         : in unsigned;
+    constant expected    : in unsigned;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+  begin
+    -- pragma translate_off
+    return check_equal(default_checker, got, expected, msg, level, path_offset + 1, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+
   procedure check_equal(
     constant got         : in unsigned;
     constant expected    : in natural;
@@ -2631,6 +2741,56 @@ package body check_pkg is
     -- pragma translate_on
     return pass;
   end;
+
+  impure function check_equal(
+    constant checker     : in checker_t;
+    constant got         : in unsigned;
+    constant expected    : in natural;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+    variable check_result : check_result_t;
+    variable location : location_t := get_location(path_offset + 1, line_num, file_name);
+  begin
+    -- pragma translate_off
+    check_result.is_pass := got = expected;
+    check_result.checker := checker;
+    check_result.level := level;
+    check_result.line_num := location.line_num;
+    check_result.file_name := new_string_ptr(location.file_name.all);
+
+    if (got = expected) then
+      if is_pass_visible(checker) then
+        check_result.msg := new_string_ptr(std_msg("Equality check passed", msg, "Got " & to_nibble_string(got) & " (" & to_integer_string(got) & ")" & "."));
+      else
+        check_result.msg := null_string_ptr;
+      end if;
+    else
+      check_result.msg := new_string_ptr(std_msg("Equality check failed", msg, "Got " & to_nibble_string(got) & " (" & to_integer_string(got) & ")" & ". " & "Expected " & to_string(expected) & " (" & to_nibble_string(to_sufficient_unsigned(expected, got'length)) & ")" & "."));
+    end if;
+    -- pragma translate_on
+
+    return check_result;
+  end;
+
+  impure function check_equal(
+    constant got         : in unsigned;
+    constant expected    : in natural;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+  begin
+    -- pragma translate_off
+    return check_equal(default_checker, got, expected, msg, level, path_offset + 1, line_num, file_name);
+    -- pragma translate_on
+  end;
+
 
   procedure check_equal(
     constant got         : in natural;
@@ -2750,6 +2910,56 @@ package body check_pkg is
     return pass;
   end;
 
+  impure function check_equal(
+    constant checker     : in checker_t;
+    constant got         : in natural;
+    constant expected    : in unsigned;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+    variable check_result : check_result_t;
+    variable location : location_t := get_location(path_offset + 1, line_num, file_name);
+  begin
+    -- pragma translate_off
+    check_result.is_pass := got = expected;
+    check_result.checker := checker;
+    check_result.level := level;
+    check_result.line_num := location.line_num;
+    check_result.file_name := new_string_ptr(location.file_name.all);
+
+    if (got = expected) then
+      if is_pass_visible(checker) then
+        check_result.msg := new_string_ptr(std_msg("Equality check passed", msg, "Got " & to_string(got) & " (" & to_nibble_string(to_sufficient_unsigned(got, expected'length)) & ")" & "."));
+      else
+        check_result.msg := null_string_ptr;
+      end if;
+    else
+      check_result.msg := new_string_ptr(std_msg("Equality check failed", msg, "Got " & to_string(got) & " (" & to_nibble_string(to_sufficient_unsigned(got, expected'length)) & ")" & ". " & "Expected " & to_nibble_string(expected) & " (" & to_integer_string(expected) & ")" & "."));
+    end if;
+    -- pragma translate_on
+
+    return check_result;
+  end;
+
+  impure function check_equal(
+    constant got         : in natural;
+    constant expected    : in unsigned;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+  begin
+    -- pragma translate_off
+    return check_equal(default_checker, got, expected, msg, level, path_offset + 1, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+
   procedure check_equal(
     constant got         : in unsigned;
     constant expected    : in std_logic_vector;
@@ -2868,6 +3078,56 @@ package body check_pkg is
     return pass;
   end;
 
+  impure function check_equal(
+    constant checker     : in checker_t;
+    constant got         : in unsigned;
+    constant expected    : in std_logic_vector;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+    variable check_result : check_result_t;
+    variable location : location_t := get_location(path_offset + 1, line_num, file_name);
+  begin
+    -- pragma translate_off
+    check_result.is_pass := got = expected;
+    check_result.checker := checker;
+    check_result.level := level;
+    check_result.line_num := location.line_num;
+    check_result.file_name := new_string_ptr(location.file_name.all);
+
+    if (got = expected) then
+      if is_pass_visible(checker) then
+        check_result.msg := new_string_ptr(std_msg("Equality check passed", msg, "Got " & to_nibble_string(got) & " (" & to_integer_string(got) & ")" & "."));
+      else
+        check_result.msg := null_string_ptr;
+      end if;
+    else
+      check_result.msg := new_string_ptr(std_msg("Equality check failed", msg, "Got " & to_nibble_string(got) & " (" & to_integer_string(got) & ")" & ". " & "Expected " & to_nibble_string(expected) & " (" & to_integer_string(expected) & ")" & "."));
+    end if;
+    -- pragma translate_on
+
+    return check_result;
+  end;
+
+  impure function check_equal(
+    constant got         : in unsigned;
+    constant expected    : in std_logic_vector;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+  begin
+    -- pragma translate_off
+    return check_equal(default_checker, got, expected, msg, level, path_offset + 1, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+
   procedure check_equal(
     constant got         : in std_logic_vector;
     constant expected    : in unsigned;
@@ -2986,6 +3246,56 @@ package body check_pkg is
     return pass;
   end;
 
+  impure function check_equal(
+    constant checker     : in checker_t;
+    constant got         : in std_logic_vector;
+    constant expected    : in unsigned;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+    variable check_result : check_result_t;
+    variable location : location_t := get_location(path_offset + 1, line_num, file_name);
+  begin
+    -- pragma translate_off
+    check_result.is_pass := got = expected;
+    check_result.checker := checker;
+    check_result.level := level;
+    check_result.line_num := location.line_num;
+    check_result.file_name := new_string_ptr(location.file_name.all);
+
+    if (got = expected) then
+      if is_pass_visible(checker) then
+        check_result.msg := new_string_ptr(std_msg("Equality check passed", msg, "Got " & to_nibble_string(got) & " (" & to_integer_string(got) & ")" & "."));
+      else
+        check_result.msg := null_string_ptr;
+      end if;
+    else
+      check_result.msg := new_string_ptr(std_msg("Equality check failed", msg, "Got " & to_nibble_string(got) & " (" & to_integer_string(got) & ")" & ". " & "Expected " & to_nibble_string(expected) & " (" & to_integer_string(expected) & ")" & "."));
+    end if;
+    -- pragma translate_on
+
+    return check_result;
+  end;
+
+  impure function check_equal(
+    constant got         : in std_logic_vector;
+    constant expected    : in unsigned;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+  begin
+    -- pragma translate_off
+    return check_equal(default_checker, got, expected, msg, level, path_offset + 1, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+
   procedure check_equal(
     constant got         : in std_logic_vector;
     constant expected    : in std_logic_vector;
@@ -3103,6 +3413,56 @@ package body check_pkg is
     -- pragma translate_on
     return pass;
   end;
+
+  impure function check_equal(
+    constant checker     : in checker_t;
+    constant got         : in std_logic_vector;
+    constant expected    : in std_logic_vector;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+    variable check_result : check_result_t;
+    variable location : location_t := get_location(path_offset + 1, line_num, file_name);
+  begin
+    -- pragma translate_off
+    check_result.is_pass := got = expected;
+    check_result.checker := checker;
+    check_result.level := level;
+    check_result.line_num := location.line_num;
+    check_result.file_name := new_string_ptr(location.file_name.all);
+
+    if (got = expected) then
+      if is_pass_visible(checker) then
+        check_result.msg := new_string_ptr(std_msg("Equality check passed", msg, "Got " & to_nibble_string(got) & " (" & to_integer_string(got) & ")" & "."));
+      else
+        check_result.msg := null_string_ptr;
+      end if;
+    else
+      check_result.msg := new_string_ptr(std_msg("Equality check failed", msg, "Got " & to_nibble_string(got) & " (" & to_integer_string(got) & ")" & ". " & "Expected " & to_nibble_string(expected) & " (" & to_integer_string(expected) & ")" & "."));
+    end if;
+    -- pragma translate_on
+
+    return check_result;
+  end;
+
+  impure function check_equal(
+    constant got         : in std_logic_vector;
+    constant expected    : in std_logic_vector;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+  begin
+    -- pragma translate_off
+    return check_equal(default_checker, got, expected, msg, level, path_offset + 1, line_num, file_name);
+    -- pragma translate_on
+  end;
+
 
   procedure check_equal(
     constant got         : in std_logic_vector;
@@ -3222,6 +3582,56 @@ package body check_pkg is
     return pass;
   end;
 
+  impure function check_equal(
+    constant checker     : in checker_t;
+    constant got         : in std_logic_vector;
+    constant expected    : in natural;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+    variable check_result : check_result_t;
+    variable location : location_t := get_location(path_offset + 1, line_num, file_name);
+  begin
+    -- pragma translate_off
+    check_result.is_pass := got = expected;
+    check_result.checker := checker;
+    check_result.level := level;
+    check_result.line_num := location.line_num;
+    check_result.file_name := new_string_ptr(location.file_name.all);
+
+    if (got = expected) then
+      if is_pass_visible(checker) then
+        check_result.msg := new_string_ptr(std_msg("Equality check passed", msg, "Got " & to_nibble_string(got) & " (" & to_integer_string(got) & ")" & "."));
+      else
+        check_result.msg := null_string_ptr;
+      end if;
+    else
+      check_result.msg := new_string_ptr(std_msg("Equality check failed", msg, "Got " & to_nibble_string(got) & " (" & to_integer_string(got) & ")" & ". " & "Expected " & to_string(expected) & " (" & to_nibble_string(to_sufficient_unsigned(expected, got'length)) & ")" & "."));
+    end if;
+    -- pragma translate_on
+
+    return check_result;
+  end;
+
+  impure function check_equal(
+    constant got         : in std_logic_vector;
+    constant expected    : in natural;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+  begin
+    -- pragma translate_off
+    return check_equal(default_checker, got, expected, msg, level, path_offset + 1, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+
   procedure check_equal(
     constant got         : in natural;
     constant expected    : in std_logic_vector;
@@ -3340,6 +3750,56 @@ package body check_pkg is
     return pass;
   end;
 
+  impure function check_equal(
+    constant checker     : in checker_t;
+    constant got         : in natural;
+    constant expected    : in std_logic_vector;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+    variable check_result : check_result_t;
+    variable location : location_t := get_location(path_offset + 1, line_num, file_name);
+  begin
+    -- pragma translate_off
+    check_result.is_pass := got = expected;
+    check_result.checker := checker;
+    check_result.level := level;
+    check_result.line_num := location.line_num;
+    check_result.file_name := new_string_ptr(location.file_name.all);
+
+    if (got = expected) then
+      if is_pass_visible(checker) then
+        check_result.msg := new_string_ptr(std_msg("Equality check passed", msg, "Got " & to_string(got) & " (" & to_nibble_string(to_sufficient_unsigned(got, expected'length)) & ")" & "."));
+      else
+        check_result.msg := null_string_ptr;
+      end if;
+    else
+      check_result.msg := new_string_ptr(std_msg("Equality check failed", msg, "Got " & to_string(got) & " (" & to_nibble_string(to_sufficient_unsigned(got, expected'length)) & ")" & ". " & "Expected " & to_nibble_string(expected) & " (" & to_integer_string(expected) & ")" & "."));
+    end if;
+    -- pragma translate_on
+
+    return check_result;
+  end;
+
+  impure function check_equal(
+    constant got         : in natural;
+    constant expected    : in std_logic_vector;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+  begin
+    -- pragma translate_off
+    return check_equal(default_checker, got, expected, msg, level, path_offset + 1, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+
   procedure check_equal(
     constant got         : in signed;
     constant expected    : in signed;
@@ -3457,6 +3917,56 @@ package body check_pkg is
     -- pragma translate_on
     return pass;
   end;
+
+  impure function check_equal(
+    constant checker     : in checker_t;
+    constant got         : in signed;
+    constant expected    : in signed;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+    variable check_result : check_result_t;
+    variable location : location_t := get_location(path_offset + 1, line_num, file_name);
+  begin
+    -- pragma translate_off
+    check_result.is_pass := got = expected;
+    check_result.checker := checker;
+    check_result.level := level;
+    check_result.line_num := location.line_num;
+    check_result.file_name := new_string_ptr(location.file_name.all);
+
+    if (got = expected) then
+      if is_pass_visible(checker) then
+        check_result.msg := new_string_ptr(std_msg("Equality check passed", msg, "Got " & to_nibble_string(got) & " (" & to_integer_string(got) & ")" & "."));
+      else
+        check_result.msg := null_string_ptr;
+      end if;
+    else
+      check_result.msg := new_string_ptr(std_msg("Equality check failed", msg, "Got " & to_nibble_string(got) & " (" & to_integer_string(got) & ")" & ". " & "Expected " & to_nibble_string(expected) & " (" & to_integer_string(expected) & ")" & "."));
+    end if;
+    -- pragma translate_on
+
+    return check_result;
+  end;
+
+  impure function check_equal(
+    constant got         : in signed;
+    constant expected    : in signed;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+  begin
+    -- pragma translate_off
+    return check_equal(default_checker, got, expected, msg, level, path_offset + 1, line_num, file_name);
+    -- pragma translate_on
+  end;
+
 
   procedure check_equal(
     constant got         : in signed;
@@ -3576,6 +4086,56 @@ package body check_pkg is
     return pass;
   end;
 
+  impure function check_equal(
+    constant checker     : in checker_t;
+    constant got         : in signed;
+    constant expected    : in integer;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+    variable check_result : check_result_t;
+    variable location : location_t := get_location(path_offset + 1, line_num, file_name);
+  begin
+    -- pragma translate_off
+    check_result.is_pass := got = expected;
+    check_result.checker := checker;
+    check_result.level := level;
+    check_result.line_num := location.line_num;
+    check_result.file_name := new_string_ptr(location.file_name.all);
+
+    if (got = expected) then
+      if is_pass_visible(checker) then
+        check_result.msg := new_string_ptr(std_msg("Equality check passed", msg, "Got " & to_nibble_string(got) & " (" & to_integer_string(got) & ")" & "."));
+      else
+        check_result.msg := null_string_ptr;
+      end if;
+    else
+      check_result.msg := new_string_ptr(std_msg("Equality check failed", msg, "Got " & to_nibble_string(got) & " (" & to_integer_string(got) & ")" & ". " & "Expected " & to_string(expected) & " (" & to_nibble_string(to_sufficient_signed(expected, got'length)) & ")" & "."));
+    end if;
+    -- pragma translate_on
+
+    return check_result;
+  end;
+
+  impure function check_equal(
+    constant got         : in signed;
+    constant expected    : in integer;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+  begin
+    -- pragma translate_off
+    return check_equal(default_checker, got, expected, msg, level, path_offset + 1, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+
   procedure check_equal(
     constant got         : in integer;
     constant expected    : in signed;
@@ -3694,6 +4254,56 @@ package body check_pkg is
     return pass;
   end;
 
+  impure function check_equal(
+    constant checker     : in checker_t;
+    constant got         : in integer;
+    constant expected    : in signed;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+    variable check_result : check_result_t;
+    variable location : location_t := get_location(path_offset + 1, line_num, file_name);
+  begin
+    -- pragma translate_off
+    check_result.is_pass := got = expected;
+    check_result.checker := checker;
+    check_result.level := level;
+    check_result.line_num := location.line_num;
+    check_result.file_name := new_string_ptr(location.file_name.all);
+
+    if (got = expected) then
+      if is_pass_visible(checker) then
+        check_result.msg := new_string_ptr(std_msg("Equality check passed", msg, "Got " & to_string(got) & " (" & to_nibble_string(to_sufficient_signed(got, expected'length)) & ")" & "."));
+      else
+        check_result.msg := null_string_ptr;
+      end if;
+    else
+      check_result.msg := new_string_ptr(std_msg("Equality check failed", msg, "Got " & to_string(got) & " (" & to_nibble_string(to_sufficient_signed(got, expected'length)) & ")" & ". " & "Expected " & to_nibble_string(expected) & " (" & to_integer_string(expected) & ")" & "."));
+    end if;
+    -- pragma translate_on
+
+    return check_result;
+  end;
+
+  impure function check_equal(
+    constant got         : in integer;
+    constant expected    : in signed;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+  begin
+    -- pragma translate_off
+    return check_equal(default_checker, got, expected, msg, level, path_offset + 1, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+
   procedure check_equal(
     constant got         : in integer;
     constant expected    : in integer;
@@ -3812,6 +4422,56 @@ package body check_pkg is
     return pass;
   end;
 
+  impure function check_equal(
+    constant checker     : in checker_t;
+    constant got         : in integer;
+    constant expected    : in integer;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+    variable check_result : check_result_t;
+    variable location : location_t := get_location(path_offset + 1, line_num, file_name);
+  begin
+    -- pragma translate_off
+    check_result.is_pass := got = expected;
+    check_result.checker := checker;
+    check_result.level := level;
+    check_result.line_num := location.line_num;
+    check_result.file_name := new_string_ptr(location.file_name.all);
+
+    if (got = expected) then
+      if is_pass_visible(checker) then
+        check_result.msg := new_string_ptr(std_msg("Equality check passed", msg, "Got " & to_string(got) & "."));
+      else
+        check_result.msg := null_string_ptr;
+      end if;
+    else
+      check_result.msg := new_string_ptr(std_msg("Equality check failed", msg, "Got " & to_string(got) & ". " & "Expected " & to_string(expected) & "."));
+    end if;
+    -- pragma translate_on
+
+    return check_result;
+  end;
+
+  impure function check_equal(
+    constant got         : in integer;
+    constant expected    : in integer;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+  begin
+    -- pragma translate_off
+    return check_equal(default_checker, got, expected, msg, level, path_offset + 1, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+
   procedure check_equal(
     constant got         : in std_logic;
     constant expected    : in std_logic;
@@ -3930,6 +4590,56 @@ package body check_pkg is
     return pass;
   end;
 
+  impure function check_equal(
+    constant checker     : in checker_t;
+    constant got         : in std_logic;
+    constant expected    : in std_logic;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+    variable check_result : check_result_t;
+    variable location : location_t := get_location(path_offset + 1, line_num, file_name);
+  begin
+    -- pragma translate_off
+    check_result.is_pass := got = expected;
+    check_result.checker := checker;
+    check_result.level := level;
+    check_result.line_num := location.line_num;
+    check_result.file_name := new_string_ptr(location.file_name.all);
+
+    if (got = expected) then
+      if is_pass_visible(checker) then
+        check_result.msg := new_string_ptr(std_msg("Equality check passed", msg, "Got " & to_string(got) & "."));
+      else
+        check_result.msg := null_string_ptr;
+      end if;
+    else
+      check_result.msg := new_string_ptr(std_msg("Equality check failed", msg, "Got " & to_string(got) & ". " & "Expected " & to_string(expected) & "."));
+    end if;
+    -- pragma translate_on
+
+    return check_result;
+  end;
+
+  impure function check_equal(
+    constant got         : in std_logic;
+    constant expected    : in std_logic;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+  begin
+    -- pragma translate_off
+    return check_equal(default_checker, got, expected, msg, level, path_offset + 1, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+
   procedure check_equal(
     constant got         : in std_logic;
     constant expected    : in boolean;
@@ -4048,6 +4758,56 @@ package body check_pkg is
     return pass;
   end;
 
+  impure function check_equal(
+    constant checker     : in checker_t;
+    constant got         : in std_logic;
+    constant expected    : in boolean;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+    variable check_result : check_result_t;
+    variable location : location_t := get_location(path_offset + 1, line_num, file_name);
+  begin
+    -- pragma translate_off
+    check_result.is_pass := got = expected;
+    check_result.checker := checker;
+    check_result.level := level;
+    check_result.line_num := location.line_num;
+    check_result.file_name := new_string_ptr(location.file_name.all);
+
+    if (got = expected) then
+      if is_pass_visible(checker) then
+        check_result.msg := new_string_ptr(std_msg("Equality check passed", msg, "Got " & to_string(got) & "."));
+      else
+        check_result.msg := null_string_ptr;
+      end if;
+    else
+      check_result.msg := new_string_ptr(std_msg("Equality check failed", msg, "Got " & to_string(got) & ". " & "Expected " & to_string(expected) & "."));
+    end if;
+    -- pragma translate_on
+
+    return check_result;
+  end;
+
+  impure function check_equal(
+    constant got         : in std_logic;
+    constant expected    : in boolean;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+  begin
+    -- pragma translate_off
+    return check_equal(default_checker, got, expected, msg, level, path_offset + 1, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+
   procedure check_equal(
     constant got         : in boolean;
     constant expected    : in std_logic;
@@ -4166,6 +4926,56 @@ package body check_pkg is
     return pass;
   end;
 
+  impure function check_equal(
+    constant checker     : in checker_t;
+    constant got         : in boolean;
+    constant expected    : in std_logic;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+    variable check_result : check_result_t;
+    variable location : location_t := get_location(path_offset + 1, line_num, file_name);
+  begin
+    -- pragma translate_off
+    check_result.is_pass := got = expected;
+    check_result.checker := checker;
+    check_result.level := level;
+    check_result.line_num := location.line_num;
+    check_result.file_name := new_string_ptr(location.file_name.all);
+
+    if (got = expected) then
+      if is_pass_visible(checker) then
+        check_result.msg := new_string_ptr(std_msg("Equality check passed", msg, "Got " & to_string(got) & "."));
+      else
+        check_result.msg := null_string_ptr;
+      end if;
+    else
+      check_result.msg := new_string_ptr(std_msg("Equality check failed", msg, "Got " & to_string(got) & ". " & "Expected " & to_string(expected) & "."));
+    end if;
+    -- pragma translate_on
+
+    return check_result;
+  end;
+
+  impure function check_equal(
+    constant got         : in boolean;
+    constant expected    : in std_logic;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+  begin
+    -- pragma translate_off
+    return check_equal(default_checker, got, expected, msg, level, path_offset + 1, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+
   procedure check_equal(
     constant got         : in boolean;
     constant expected    : in boolean;
@@ -4283,6 +5093,56 @@ package body check_pkg is
     -- pragma translate_on
     return pass;
   end;
+
+  impure function check_equal(
+    constant checker     : in checker_t;
+    constant got         : in boolean;
+    constant expected    : in boolean;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+    variable check_result : check_result_t;
+    variable location : location_t := get_location(path_offset + 1, line_num, file_name);
+  begin
+    -- pragma translate_off
+    check_result.is_pass := got = expected;
+    check_result.checker := checker;
+    check_result.level := level;
+    check_result.line_num := location.line_num;
+    check_result.file_name := new_string_ptr(location.file_name.all);
+
+    if (got = expected) then
+      if is_pass_visible(checker) then
+        check_result.msg := new_string_ptr(std_msg("Equality check passed", msg, "Got " & to_string(got) & "."));
+      else
+        check_result.msg := null_string_ptr;
+      end if;
+    else
+      check_result.msg := new_string_ptr(std_msg("Equality check failed", msg, "Got " & to_string(got) & ". " & "Expected " & to_string(expected) & "."));
+    end if;
+    -- pragma translate_on
+
+    return check_result;
+  end;
+
+  impure function check_equal(
+    constant got         : in boolean;
+    constant expected    : in boolean;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+  begin
+    -- pragma translate_off
+    return check_equal(default_checker, got, expected, msg, level, path_offset + 1, line_num, file_name);
+    -- pragma translate_on
+  end;
+
 
   procedure check_equal(
     constant got         : in string;
@@ -4402,6 +5262,56 @@ package body check_pkg is
     return pass;
   end;
 
+  impure function check_equal(
+    constant checker     : in checker_t;
+    constant got         : in string;
+    constant expected    : in string;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+    variable check_result : check_result_t;
+    variable location : location_t := get_location(path_offset + 1, line_num, file_name);
+  begin
+    -- pragma translate_off
+    check_result.is_pass := got = expected;
+    check_result.checker := checker;
+    check_result.level := level;
+    check_result.line_num := location.line_num;
+    check_result.file_name := new_string_ptr(location.file_name.all);
+
+    if (got = expected) then
+      if is_pass_visible(checker) then
+        check_result.msg := new_string_ptr(std_msg("Equality check passed", msg, "Got " & to_string(got) & "."));
+      else
+        check_result.msg := null_string_ptr;
+      end if;
+    else
+      check_result.msg := new_string_ptr(std_msg("Equality check failed", msg, "Got " & to_string(got) & ". " & "Expected " & to_string(expected) & "."));
+    end if;
+    -- pragma translate_on
+
+    return check_result;
+  end;
+
+  impure function check_equal(
+    constant got         : in string;
+    constant expected    : in string;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+  begin
+    -- pragma translate_off
+    return check_equal(default_checker, got, expected, msg, level, path_offset + 1, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+
   procedure check_equal(
     constant got         : in character;
     constant expected    : in character;
@@ -4520,6 +5430,56 @@ package body check_pkg is
     return pass;
   end;
 
+  impure function check_equal(
+    constant checker     : in checker_t;
+    constant got         : in character;
+    constant expected    : in character;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+    variable check_result : check_result_t;
+    variable location : location_t := get_location(path_offset + 1, line_num, file_name);
+  begin
+    -- pragma translate_off
+    check_result.is_pass := got = expected;
+    check_result.checker := checker;
+    check_result.level := level;
+    check_result.line_num := location.line_num;
+    check_result.file_name := new_string_ptr(location.file_name.all);
+
+    if (got = expected) then
+      if is_pass_visible(checker) then
+        check_result.msg := new_string_ptr(std_msg("Equality check passed", msg, "Got " & to_string(got) & "."));
+      else
+        check_result.msg := null_string_ptr;
+      end if;
+    else
+      check_result.msg := new_string_ptr(std_msg("Equality check failed", msg, "Got " & to_string(got) & ". " & "Expected " & to_string(expected) & "."));
+    end if;
+    -- pragma translate_on
+
+    return check_result;
+  end;
+
+  impure function check_equal(
+    constant got         : in character;
+    constant expected    : in character;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+  begin
+    -- pragma translate_off
+    return check_equal(default_checker, got, expected, msg, level, path_offset + 1, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+
   procedure check_equal(
     constant got         : in time;
     constant expected    : in time;
@@ -4637,6 +5597,56 @@ package body check_pkg is
     -- pragma translate_on
     return pass;
   end;
+
+  impure function check_equal(
+    constant checker     : in checker_t;
+    constant got         : in time;
+    constant expected    : in time;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+    variable check_result : check_result_t;
+    variable location : location_t := get_location(path_offset + 1, line_num, file_name);
+  begin
+    -- pragma translate_off
+    check_result.is_pass := got = expected;
+    check_result.checker := checker;
+    check_result.level := level;
+    check_result.line_num := location.line_num;
+    check_result.file_name := new_string_ptr(location.file_name.all);
+
+    if (got = expected) then
+      if is_pass_visible(checker) then
+        check_result.msg := new_string_ptr(std_msg("Equality check passed", msg, "Got " & to_string(got) & "."));
+      else
+        check_result.msg := null_string_ptr;
+      end if;
+    else
+      check_result.msg := new_string_ptr(std_msg("Equality check failed", msg, "Got " & to_string(got) & ". " & "Expected " & to_string(expected) & "."));
+    end if;
+    -- pragma translate_on
+
+    return check_result;
+  end;
+
+  impure function check_equal(
+    constant got         : in time;
+    constant expected    : in time;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+  begin
+    -- pragma translate_off
+    return check_equal(default_checker, got, expected, msg, level, path_offset + 1, line_num, file_name);
+    -- pragma translate_on
+  end;
+
 
   -----------------------------------------------------------------------------
   -- check_match
