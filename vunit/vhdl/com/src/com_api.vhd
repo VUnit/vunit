@@ -20,7 +20,7 @@ use work.event_private_pkg.all;
 package com_pkg is
   -- Global predefined network. See network_t description in com_types.vhd for
   -- more information.
-  signal net : network_t := new_basic_event(com_network);
+  signal net : network_t := new_basic_event(com_net_event);
 
   -----------------------------------------------------------------------------
   -- Handling of actors

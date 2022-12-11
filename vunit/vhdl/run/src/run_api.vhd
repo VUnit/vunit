@@ -16,10 +16,13 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 package run_pkg is
-  signal runner : runner_sync_t := new_basic_event(test_runner_state) & new_basic_event(test_runner_timeout_update) & new_basic_event(test_runner_timeout) & runner_exit_with_errors;
-  alias test_runner_state is runner(runner_state_idx to runner_state_idx + basic_event_length - 1);
-  alias test_runner_timeout_update is runner(runner_timeout_update_idx to runner_timeout_update_idx + basic_event_length - 1);
-  alias test_runner_timeout is runner(runner_timeout_idx to runner_timeout_idx + basic_event_length - 1);
+  signal runner : runner_sync_t := new_basic_event(runner_phase_event) & new_basic_event(runner_timeout_update_event) &
+  new_basic_event(runner_timeout_event) & new_basic_event(vunit_error_event)  & new_basic_event(runner_cleanup_event) & runner_exit_with_errors;
+  alias runner_phase is runner(runner_phase_idx to runner_phase_idx + basic_event_length - 1);
+  alias runner_timeout_update is runner(runner_timeout_update_idx to runner_timeout_update_idx + basic_event_length - 1);
+  alias runner_timeout is runner(runner_timeout_idx to runner_timeout_idx + basic_event_length - 1);
+  alias vunit_error is runner(vunit_error_idx to vunit_error_idx + basic_event_length - 1);
+  alias runner_cleanup is runner(runner_cleanup_idx to runner_cleanup_idx + basic_event_length - 1);
 
   constant runner_state : runner_t := new_runner;
 
@@ -84,7 +87,9 @@ package run_pkg is
   procedure test_runner_watchdog (
     signal runner                    : inout runner_sync_t;
     constant timeout                 : in    time;
-    constant do_runner_cleanup : boolean := true);
+    constant do_runner_cleanup : boolean := true;
+    constant line_num          : in natural     := 0;
+    constant file_name         : in string      := "");
 
   -- Deprecated function. Use is_active(test_runner_timeout) instead.
   function timeout_notification (
@@ -167,9 +172,5 @@ package run_pkg is
   alias test_suite_cleanup_exit_gate is exit_gate[runner_sync_t];
   alias test_runner_cleanup_entry_gate is entry_gate[runner_sync_t];
   alias test_runner_cleanup_exit_gate is exit_gate[runner_sync_t];
-
-  -- Private
-  procedure notify(signal runner : inout runner_sync_t;
-                   idx : natural);
 
 end package;

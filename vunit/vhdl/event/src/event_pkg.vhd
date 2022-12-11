@@ -15,21 +15,28 @@ use work.event_private_pkg.all;
 use work.event_common_pkg.all;
 use work.string_ops.all;
 use work.logger_pkg.all;
+use work.log_levels_pkg.all;
 use work.string_ptr_pkg.all;
 use work.id_pkg.all;
 use work.integer_vector_ptr_pkg.all;
 
 package event_pkg is
-  constant event_length : positive := 33;
+  constant event_length : positive := 34;
   subtype event_t is any_event_t(0 to event_length - 1);
   constant null_event : event_t := (others => 'X');
 
-  constant event_pkg_logger : logger_t := get_logger("vunit_lib:event_pkg:logger");
+  constant event_pkg_id : id_t := get_id("vunit_lib:event_pkg");
+  constant event_pkg_logger : logger_t := get_logger(event_pkg_id);
 
   -- Create a new user event. The result of the call MUST
   -- be assigned to a SIGNAL. Results in an error if an event
   -- has already been created for the given id.
   impure function new_event(id : id_t) return event_t;
+
+  -- Shorthand for new_event(get_id(name)) unless name = "". In that case
+  -- the event gets an internally assigned name on the format
+  -- vunit_lib:event_pkg:_event_x where x is an integer making the name unique.
+  impure function new_event(name : string := "") return event_t;
 
   -- Return true if an event for the given id exists, false otherwise
   impure function has_event(id : id_t) return boolean;
@@ -56,6 +63,17 @@ package event_pkg is
   impure function is_active_msg(
     signal event : any_event_t;
     constant msg : in string := decorate_tag;
+    constant log_level : in log_level_t := info;
+    constant logger : in logger_t := event_pkg_logger;
+    constant path_offset : in natural := 0;
+    constant line_num : in natural := 0;
+    constant file_name : in string := ""
+  ) return boolean;
+
+  impure function log_active(
+    signal event : any_event_t;
+    constant msg : in string := decorate_tag;
+    constant log_level : in log_level_t := info;
     constant logger : in logger_t := event_pkg_logger;
     constant path_offset : in natural := 0;
     constant line_num : in natural := 0;
@@ -81,19 +99,35 @@ package body event_pkg is
 
   impure function new_event(id : id_t) return event_t is
     variable ret_val : event_t;
+    variable resolved_id : id_t;
   begin
-    if has_event(id) then
-      error(event_pkg_logger, "Event already created for " & full_name(id) & ".");
-      return null_event;
+    if id = null_id then
+      resolved_id := get_id("_event_" & integer'image(length(event_ids)), parent => event_pkg_id);
+    else
+      resolved_id := id;
+
+      if has_event(id) then
+        error(event_pkg_logger, "Event already created for " & full_name(id) & ".");
+        return null_event;
+      end if;
     end if;
 
     resize(event_ids, length(event_ids) + 1);
-    set(event_ids, length(event_ids) - 1, to_integer(id));
+    set(event_ids, length(event_ids) - 1, to_integer(resolved_id));
 
-    ret_val(p_event_idx) := p_no_event;
-    ret_val(p_identifier_idx to ret_val'high) := std_logic_vector(to_unsigned(to_integer(id), ret_val'high - p_identifier_idx + 1));
+    ret_val(p_event_idx to p_identifier_idx - 1) := p_inactive_event;
+    ret_val(p_identifier_idx to ret_val'high) := std_logic_vector(to_unsigned(to_integer(resolved_id), ret_val'high - p_identifier_idx + 1));
 
     return ret_val;
+  end;
+
+  impure function new_event(name : string := "") return event_t is
+  begin
+    if name = "" then
+      return new_event(null_id);
+    else
+      return new_event(get_id(name));
+    end if;
   end;
 
   impure function id(signal event : event_t) return id_t is
@@ -120,41 +154,55 @@ package body event_pkg is
   end;
 
   impure function create_event_msg(msg : string := ""; signal event : any_event_t) return string is
-    function append_event_name(msg, event_name : string) return string is
-    begin
-      if event_name = "" then
-        return "Event activated" & msg;
-      else
-        return "Event " & event_name & " activated" & msg;
-      end if;
-    end function;
   begin
     if not is_decorated(msg) then
       return msg;
     else
-      return append_event_name(undecorate(msg), full_name(event));
+      return "Event " & full_name(event) & " activated" & undecorate(msg);
     end if;
   end;
 
   impure function is_active_msg(
     signal event : any_event_t;
     constant msg : in string := decorate_tag;
+    constant log_level : in log_level_t := info;
     constant logger : in logger_t := event_pkg_logger;
     constant path_offset : in natural := 0;
     constant line_num : in natural := 0;
     constant file_name : in string := ""
   ) return boolean is
-    constant event_msg : string := create_event_msg(msg, event);
   begin
     if not is_active(event) then
       return false;
     end if;
 
-    if event_msg /= "" then
-      info(logger, event_msg, line_num => line_num, file_name => file_name, path_offset => path_offset + 1);
-    end if;
+    log(logger, create_event_msg(msg, event), log_level, line_num => line_num, file_name => file_name, path_offset => path_offset + 1);
 
     return true;
+  end;
+
+  impure function log_active(
+    signal event : any_event_t;
+    constant msg : in string := decorate_tag;
+    constant log_level : in log_level_t := info;
+    constant logger : in logger_t := event_pkg_logger;
+    constant path_offset : in natural := 0;
+    constant line_num : in natural := 0;
+    constant file_name : in string := ""
+  ) return boolean is
+    variable ignored_value : boolean;
+  begin
+    ignored_value := is_active_msg(
+      event,
+      msg,
+      log_level,
+      logger,
+      line_num => line_num,
+      file_name => file_name,
+      path_offset => path_offset + 1
+    );
+
+    return false;
   end;
 
 end package body;

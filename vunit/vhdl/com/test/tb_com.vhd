@@ -402,6 +402,18 @@ begin
         receive(net, actor, msg2);
         check_equal(pop_string(msg2), "hello");
 
+      elsif run("Test that many back-to-back messages don't hit the simulator's delta cycle limit") then
+        actor := new_actor;
+        for iter in 1 to 10000 loop
+          msg   := new_msg;
+          push(msg, iter);
+          send(net, actor, msg);
+        end loop;
+        for iter in 1 to 10000 loop
+          receive(net, actor, msg2);
+          check_equal(pop_integer(msg2), iter);
+        end loop;
+
       elsif run("Test that an actor can poll for incoming messages") then
         wait_for_message(net, self, status, 0 ns);
         check(status = timeout, "Expected timeout");
