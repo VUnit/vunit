@@ -68,6 +68,27 @@ api_template = """  procedure check_equal(
     constant file_name   : in string      := "")
     return boolean;
 
+  impure function check_equal(
+    constant checker     : in checker_t;
+    constant got         : in $got_type;
+    constant expected    : in $expected_type;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t;
+
+  impure function check_equal(
+    constant got         : in $got_type;
+    constant expected    : in $expected_type;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t;
+
 """
 
 impl_template = """  procedure check_equal(
@@ -187,6 +208,56 @@ impl_template = """  procedure check_equal(
     -- pragma translate_on
     return pass;
   end;
+
+  impure function check_equal(
+    constant checker     : in checker_t;
+    constant got         : in $got_type;
+    constant expected    : in $expected_type;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+    variable check_result : check_result_t;
+    variable location : location_t := get_location(path_offset + 1, line_num, file_name);
+  begin
+    -- pragma translate_off
+    check_result.is_pass := got = expected;
+    check_result.checker := checker;
+    check_result.level := level;
+    check_result.line_num := location.line_num;
+    check_result.file_name := new_string_ptr(location.file_name.all);
+
+    if (got = expected) then
+      if is_pass_visible(checker) then
+        check_result.msg := new_string_ptr(std_msg("Equality check passed", msg, "Got " & $got_str & "."));
+      else
+        check_result.msg := null_string_ptr;
+      end if;
+    else
+      check_result.msg := new_string_ptr(std_msg("Equality check failed", msg, "Got " & $got_str & ". " & "Expected " & $expected_str & "."));
+    end if;
+    -- pragma translate_on
+
+    return check_result;
+  end;
+
+  impure function check_equal(
+    constant got         : in $got_type;
+    constant expected    : in $expected_type;
+    constant msg         : in string      := check_result_tag;
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t is
+  begin
+    -- pragma translate_off
+    return check_equal(default_checker, got, expected, msg, level, path_offset + 1, line_num, file_name);
+    -- pragma translate_on
+  end;
+
 
 """
 
