@@ -324,7 +324,7 @@ package body com_deprecated_pkg is
     messenger.send(message.sender, receiver, mailbox_id, message.request_id, message.payload.all, receipt);
     message.id       := receipt.id;
     message.receiver := receiver;
-    notify(net);
+    notify_net(net);
 
     if not keep_message then
       delete(message);
@@ -361,7 +361,7 @@ package body com_deprecated_pkg is
       started_with_full_inbox := messenger.is_full(receiver, inbox);
       message                 := get_message(receiver);
       if started_with_full_inbox then
-        notify(net);
+        notify_net(net);
       end if;
     else
       message          := new message_t;
@@ -409,7 +409,7 @@ package body com_deprecated_pkg is
       return;
     elsif messenger.find_and_stash_reply_message(receiver, request_id, mailbox_id) then
       if started_with_full_inbox then
-        notify(net);
+        notify_net(net);
       end if;
       return;
     else
@@ -417,7 +417,7 @@ package body com_deprecated_pkg is
       if not messenger.has_reply_stash_message(receiver, request_id) then
         status := work.com_types_pkg.timeout;
       elsif started_with_full_inbox then
-        notify(net);
+        notify_net(net);
       end if;
     end if;
   end procedure wait_for_reply_stash_message;
@@ -489,7 +489,7 @@ package body com_deprecated_pkg is
     end if;
 
     messenger.publish(message.sender, message.payload.all);
-    notify(net);
+    notify_net(net);
 
     if not keep_message then
       delete(message);
@@ -515,7 +515,7 @@ package body com_deprecated_pkg is
     messenger.send(message.sender, receiver, inbox, message.request_id, message.payload.all, receipt);
     message.id       := receipt.id;
     message.receiver := receiver;
-    notify(net);
+    notify_net(net);
 
     if not keep_message then
       delete(message);
@@ -879,7 +879,7 @@ package body com_deprecated_pkg is
     end if;
 
     messenger.publish(message.sender, message.payload.all);
-    notify(net);
+    notify_net(net);
 
     if not keep_message then
       delete(message);
