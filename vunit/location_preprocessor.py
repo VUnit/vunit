@@ -69,6 +69,9 @@ class LocationPreprocessor(object):
             "lock_exit",
             "unlock_entry",
             "unlock_exit",
+            "test_runner_watchdog",
+            "is_active_msg",
+            "log_active",
         ]
         self._subprograms_without_arguments = []
 

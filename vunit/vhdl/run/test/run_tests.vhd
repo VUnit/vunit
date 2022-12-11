@@ -156,7 +156,7 @@ begin
     begin
       runner_init(runner_state);
       runner(runner_exit_status_idx) <= runner_exit_with_errors;
-      notify(test_runner_state);
+      notify(runner_phase);
     end;
 
     constant c : checker_t := new_checker("checker_t", default_log_level => failure);

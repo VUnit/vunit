@@ -148,17 +148,17 @@ package body com_pkg is
 
     if msg.sender /= null_actor then
       if messenger.has_subscribers(msg.sender, outbound) then
-        wait_on_subscribers(msg.sender, (0             => outbound), timeout - (now - t_start));
+        wait_on_subscribers(msg.sender, (0 => outbound), timeout - (now - t_start));
         messenger.internal_publish(msg.sender, msg, (0 => outbound));
       end if;
     end if;
 
     if (mailbox_id = inbox) and messenger.has_subscribers(receiver, inbound) then
-      wait_on_subscribers(receiver, (0             => inbound), timeout - (now - t_start));
+      wait_on_subscribers(receiver, (0 => inbound), timeout - (now - t_start));
       messenger.internal_publish(receiver, msg, (0 => inbound));
     end if;
 
-    notify(net);
+    notify_net(net);
     msg.data := null_queue;
   end;
 
@@ -270,7 +270,7 @@ package body com_pkg is
   begin
     wait_on_subscribers(sender, (published, outbound), timeout);
     messenger.publish(sender, msg, (published, outbound));
-    notify(net);
+    notify_net(net);
     recycle(queue_pool, msg.data);
   end;
 
@@ -398,7 +398,7 @@ package body com_pkg is
     messenger.delete_envelope(actor, position, mailbox_id);
 
     if started_with_full_mailbox then
-      notify(net);
+      notify_net(net);
     end if;
   end;
 
