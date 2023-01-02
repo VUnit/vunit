@@ -2,7 +2,6 @@ vunit.ui
 ========
 
 .. autoclass:: vunit.ui.VUnit()
-   :exclude-members: add_preprocessor
 
 LibraryList
 -----------
@@ -44,6 +43,11 @@ Results
 .. autoclass:: vunit.ui.results.Report()
 
 .. autoclass:: vunit.ui.results.TestResult()
+
+Preprocessor
+------------
+
+.. autoclass:: vunit.ui.preprocessor.Preprocessor()
 
 .. |compile_option| replace::
    The name of the compile option (See :ref:`Compilation options <compile_options>`)
