@@ -1,0 +1,28 @@
+<div class="highlight"><pre><span></span><span class="n">test_runner</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">process</span><span class="w"></span>
+<span class="k">begin</span><span class="w"></span>
+<span class="w">  </span><span class="n">phase</span><span class="p">(</span><span class="s">&quot;TEST RUNNER SETUP&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="s">&quot;The testbench is initialized from the runner_cfg generic. This allows for &quot;</span><span class="w"> </span><span class="o">&amp;</span><span class="w"></span>
+<span class="w">    </span><span class="s">&quot;configuration of features such as coloration of log entries. This phase &quot;</span><span class="w"> </span><span class="o">&amp;</span><span class="w"></span>
+<span class="w">    </span><span class="s">&quot;call comes before initialization, so it will not be affected by any of the &quot;</span><span class="w"> </span><span class="o">&amp;</span><span class="w"></span>
+<span class="w">    </span><span class="s">&quot;settings and the resulting log entry will be without special colors.&quot;</span><span class="w"></span>
+<span class="w">  </span><span class="p">);</span><span class="w"></span>
+<span class="w">  </span><span class="gr">test_runner_setup</span><span class="p">(</span><span class="n">runner</span><span class="p">,</span><span class="w"> </span><span class="n">runner_cfg</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">  </span><span class="n">phase</span><span class="p">(</span><span class="s">&quot;TEST CASE&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="s">&quot;This is where we run all the test code.&quot;</span><span class="w"></span>
+<span class="w">  </span><span class="p">);</span><span class="w"></span>
+<span class="w">  </span><span class="n">reset</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="sc">&#39;1&#39;</span><span class="p">;</span><span class="w"></span>
+<span class="w">  </span><span class="k">wait</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="n">ns</span><span class="p">;</span><span class="w"></span>
+<span class="w">  </span><span class="n">reset</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="sc">&#39;0&#39;</span><span class="p">;</span><span class="w"></span>
+<span class="w">  </span><span class="k">wait</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="n">ns</span><span class="p">;</span><span class="w"> </span><span class="c1">-- The test code is just a wait statement in this dummy example</span><span class="w"></span>
+<span class="w">  </span><span class="n">check_equal</span><span class="p">(</span><span class="n">error_flag</span><span class="p">,</span><span class="w"> </span><span class="sc">&#39;0&#39;</span><span class="p">);</span><span class="w"></span>
+<span class="w">  </span><span class="n">check_true</span><span class="p">(</span><span class="n">full_coverage</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">  </span><span class="n">phase</span><span class="p">(</span><span class="s">&quot;TEST RUNNER CLEANUP&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="s">&quot;Housekeeping performed by VUnit before ending the simulation. For example, &quot;</span><span class="w"> </span><span class="o">&amp;</span><span class="w"></span>
+<span class="w">    </span><span class="s">&quot;if VUnit was configure not to end the simulation upon detecting the first error, &quot;</span><span class="w"> </span><span class="o">&amp;</span><span class="w"></span>
+<span class="w">    </span><span class="s">&quot;it will fail the simulation during this phase if any errors have been detected.&quot;</span><span class="w"></span>
+<span class="w">  </span><span class="p">);</span><span class="w"></span>
+<span class="w">  </span><span class="gr">test_runner_cleanup</span><span class="p">(</span><span class="n">runner</span><span class="p">);</span><span class="w"></span>
+<span class="k">end</span><span class="w"> </span><span class="k">process</span><span class="p">;</span><span class="w"></span>
+</pre></div>

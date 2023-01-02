@@ -10,7 +10,7 @@ from csv import writer
 from pathlib import Path
 from random import choices
 from vunit import VUnit
-from tools.blog_support import highlight_code, highlight_log
+from tools.doc_support import highlight_code, highlight_log
 
 
 class LogRegistry:
@@ -33,9 +33,9 @@ root = Path(__file__).parent
 
 lib = vu.add_library("lib")
 lib.add_source_files(root / "*.vhd")
-lib.add_source_files(root / ".." / "vunit_events" / "incrementer.vhd")
-lib.add_source_files(root / ".." / "vunit_events" / "incrementer_pkg.vhd")
-lib.add_source_files(root / ".." / "vunit_events" / "event_pkg.vhd")
+lib.add_source_files(root / ".." / ".." / ".." / "data_types" / "src" / "vunit_events" / "incrementer.vhd")
+lib.add_source_files(root / ".." / ".." / ".." / "data_types" / "src" / "vunit_events" / "incrementer_pkg.vhd")
+lib.add_source_files(root / ".." / ".." / ".." / "data_types" / "src" / "vunit_events" / "event_pkg.vhd")
 
 log_registry = LogRegistry()
 
