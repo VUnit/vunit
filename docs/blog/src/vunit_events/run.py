@@ -29,7 +29,7 @@ class WaitStatementPreprocessor(Preprocessor):
         super().__init__(order)
 
         # Regular expression finding wait statements on the form
-        # wait [on sensitivity_lsit] [until condition] [for timeout];
+        # wait [on sensitivity_list] [until condition] [for timeout];
         self._wait_re = re.compile(
             r"wait(\s+on\s+(?P<sensitivity_list>.*?))?(\s+until\s+(?P<condition>.*?))?(\s+for\s+(?P<timeout>.*?))?;",
             re.MULTILINE | re.DOTALL | re.IGNORECASE,

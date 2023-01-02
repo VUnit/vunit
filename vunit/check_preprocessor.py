@@ -9,14 +9,16 @@ Preprocessing of check functions
 """
 
 import re
+from vunit.ui.preprocessor import Preprocessor
 
 
-class CheckPreprocessor(object):
+class CheckPreprocessor(Preprocessor):
     """
-    Preprocessing of check functions adding helpful message to check_relation calls
+    Preprocessing of check functions adding helpful message to check_relation calls.
     """
 
-    def __init__(self):
+    def __init__(self, order=2000):
+        super().__init__(order)
         self._find_operators = re.compile(r"\?/=|\?<=|\?>=|\?<|\?>|\?=|/=|<=|>=|<|>|=", re.MULTILINE)
         self._find_quotes = re.compile(r'"|' + r"'", re.MULTILINE)
         self._find_comments = re.compile(r"--|/\*|\*/", re.MULTILINE)
@@ -25,9 +27,6 @@ class CheckPreprocessor(object):
         self._trailing_paranthesis = re.compile(r"[\s)]*")
 
     def run(self, code, file_name):  # pylint: disable=unused-argument
-        """
-        Preprocess code and return result also given the file_name of the original file
-        """
         check_relation_pattern = re.compile(r"[^a-zA-Z0-9_](?P<call>check_relation)\s*(?P<parameters>\()", re.MULTILINE)
 
         check_relation_calls = list(check_relation_pattern.finditer(code))
