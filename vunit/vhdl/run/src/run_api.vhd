@@ -17,12 +17,11 @@ use ieee.std_logic_1164.all;
 
 package run_pkg is
   signal runner : runner_sync_t := new_basic_event(runner_phase_event) & new_basic_event(runner_timeout_update_event) &
-  new_basic_event(runner_timeout_event) & new_basic_event(vunit_error_event)  & new_basic_event(runner_cleanup_event) & runner_exit_with_errors;
+  new_basic_event(runner_timeout_event) & new_basic_event(vunit_error_event) & runner_exit_with_errors;
   alias runner_phase is runner(runner_phase_idx to runner_phase_idx + basic_event_length - 1);
   alias runner_timeout_update is runner(runner_timeout_update_idx to runner_timeout_update_idx + basic_event_length - 1);
   alias runner_timeout is runner(runner_timeout_idx to runner_timeout_idx + basic_event_length - 1);
   alias vunit_error is runner(vunit_error_idx to vunit_error_idx + basic_event_length - 1);
-  alias runner_cleanup is runner(runner_cleanup_idx to runner_cleanup_idx + basic_event_length - 1);
 
   constant runner_state : runner_t := new_runner;
 
@@ -96,6 +95,25 @@ package run_pkg is
     signal runner : runner_sync_t
   ) return boolean;
 
+  impure function get_entry_key(phase : runner_legal_phase_t) return key_t;
+  impure function get_exit_key(phase : runner_legal_phase_t) return key_t;
+  impure function is_locked(key : key_t) return boolean;
+  procedure lock(
+    signal runner : inout runner_sync_t;
+    constant key : in key_t;
+    constant logger : in logger_t := runner_trace_logger;
+    constant path_offset : in natural := 0;
+    constant line_num : in natural := 0;
+    constant file_name : in string := "");
+
+  procedure unlock(
+    signal runner : inout runner_sync_t;
+    constant key : in key_t;
+    constant logger : in logger_t := runner_trace_logger;
+    constant path_offset : in natural := 0;
+    constant line_num : in natural := 0;
+    constant file_name : in string := "");
+
   procedure lock_entry (
     signal runner : inout runner_sync_t;
     constant phase : in runner_legal_phase_t;
@@ -136,11 +154,15 @@ package run_pkg is
     constant line_num  : in natural := 0;
     constant file_name : in string := "");
 
+  impure function get_phase return runner_phase_t;
+
+  impure function is_within_gates return boolean;
+
   procedure entry_gate (
     signal runner : inout runner_sync_t);
 
   procedure exit_gate (
-    signal runner : in runner_sync_t);
+    signal runner : inout runner_sync_t);
 
   impure function active_python_runner (
     constant runner_cfg : string)

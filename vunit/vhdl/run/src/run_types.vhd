@@ -40,13 +40,12 @@ package run_types_pkg is
   constant runner_exit_with_errors : std_logic := 'Z';
   constant runner_exit_without_errors : std_logic := '1';
 
-  subtype runner_sync_t is std_logic_vector(0 to 5 * basic_event_length - 1 + 1);
+  subtype runner_sync_t is std_logic_vector(0 to 4 * basic_event_length - 1 + 1);
   constant runner_phase_idx : natural := 0;
   constant runner_timeout_update_idx : natural := basic_event_length;
   constant runner_timeout_idx : natural := 2 * basic_event_length;
   constant vunit_error_idx : natural := 3 * basic_event_length;
-  constant runner_cleanup_idx : natural := 4 * basic_event_length;
-  constant runner_exit_status_idx : natural := 5 * basic_event_length;
+  constant runner_exit_status_idx : natural :=4 * basic_event_length;
 end package;
 
 package body run_types_pkg is
