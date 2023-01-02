@@ -50,9 +50,10 @@ begin
   test_runner : process
   begin
     phase("TEST RUNNER SETUP",
-      "Testbench is initialized from runner_cfg. For example, if log entries should be " &
-      "colored, it is configured in this phase. This log entry comes before the call " &
-      "which means it won't be colored."
+      "The testbench is initialized from the runner_cfg generic. This allows for " &
+      "configuration of features such as coloration of log entries. This phase " &
+      "call comes before initialization, so it will not be affected by any of the " &
+      "settings and the resulting log entry will be without special colors."
     );
     test_runner_setup(runner, runner_cfg);
 
@@ -67,9 +68,9 @@ begin
     check_true(full_coverage);
 
     phase("TEST RUNNER CLEANUP",
-      "Housekeeping tasks VUnit has to do before ending the simulation. For example, " &
-      "if VUnit was configure not to end the simulation on first detected error, it will " &
-      "fail the simulation in this phase if errors were found."
+      "Housekeeping performed by VUnit before ending the simulation. For example, " &
+      "if VUnit was configure not to end the simulation upon detecting the first error, " &
+      "it will fail the simulation during this phase if any errors have been detected."
     );
     test_runner_cleanup(runner);
   end process;

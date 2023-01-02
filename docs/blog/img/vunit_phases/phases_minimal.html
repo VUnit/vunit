@@ -1,0 +1,20 @@
+<div class="highlight" style="background: #002b36; color: #eee8d5;"><pre style="line-height: 125%; background: #002b36; color: #eee8d5;">       0 fs - tb_phases            -   PHASE -          TEST RUNNER SETUP
+                                                        The testbench is initialized from the runner_cfg generic. This allows for 
+                                                        configuration of features such as coloration of log entries. This phase 
+                                                        call comes before initialization, so it will not be affected by any of the 
+                                                        settings and the resulting log entry will be without special colors. 
+                                               
+       <span style="color: #2aa198; ">0 fs</span> - <span style="font_weight: bold; color: #eee8d5; ">tb_phases</span>            -   <span style="color: #eee8d5; ">PHASE</span> -    <span style="background: #9c36b6; "> </span>     <span style="font_weight: bold; color: #4fb636; ">TEST CASE</span>
+                                                  <span style="background: #9c36b6; "> </span>     This is where we run all the test code. 
+                                               
+<span style="color: #2aa198; ">20000000 fs</span> - <span style="font_weight: bold; color: #eee8d5; ">tb_phases</span>            -   <span style="color: #eee8d5; ">PHASE</span> -       <span style="background: #cb4b16; "> </span>  <span style="font_weight: bold; color: #4fb636; ">TEST RUNNER CLEANUP</span>
+                                                     <span style="background: #cb4b16; "> </span>  Housekeeping performed by VUnit before ending the simulation. For example, 
+                                                     <span style="background: #cb4b16; "> </span>  if VUnit was configure not to end the simulation upon detecting the first 
+                                                     <span style="background: #cb4b16; "> </span>  error, it will fail the simulation during this phase if any errors have 
+                                                     <span style="background: #cb4b16; "> </span>  been detected. 
+                                               
+<span style="color: #2aa198; ">20000000 fs</span> - <span style="font_weight: bold; color: #eee8d5; ">runner</span>               -   <span style="font_weight: bold; color: #9c36b6; ">TRACE</span> - Entering test runner cleanup phase.
+<span style="color: #2aa198; ">20000000 fs</span> - <span style="font_weight: bold; color: #eee8d5; ">runner</span>               -   <span style="font_weight: bold; color: #9c36b6; ">TRACE</span> - Passed test runner cleanup phase entry gate.
+<span style="color: #2aa198; ">20000000 fs</span> - <span style="font_weight: bold; color: #eee8d5; ">runner</span>               -   <span style="font_weight: bold; color: #9c36b6; ">TRACE</span> - Passed test runner cleanup phase exit gate.
+<span style="color: #2aa198; ">20000000 fs</span> - <span style="font_weight: bold; color: #eee8d5; ">runner</span>               -   <span style="font_weight: bold; color: #9c36b6; ">TRACE</span> - Entering test runner exit phase.
+</pre></div>

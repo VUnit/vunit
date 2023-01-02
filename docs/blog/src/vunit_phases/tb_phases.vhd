@@ -48,23 +48,25 @@ begin
   test_runner : process
   begin
     phase("TEST RUNNER SETUP",
-      "Testbench is initialized from runner_cfg. For example, if log entries should be " &
-      "colored, it is configured in this phase. This log entry comes before the call " &
-      "which means it won't be colored."
+      "The testbench is initialized from the runner_cfg generic. This allows for " &
+      "configuration of features such as coloration of log entries. This phase " &
+      "call comes before initialization, so it will not be affected by any of the " &
+      "settings and the resulting log entry will be without special colors."
     );
     test_runner_setup(runner, runner_cfg);
 
     phase("TEST SUITE SETUP",
-      "Code common to the entire test suite (set of test cases) that is run before all " &
-      "test cases. For example, if we want to configure what log levels to make visible."
+      "Code common to the entire test suite (set of test cases) that is executed *once* " &
+      "prior to all test cases. For example, if we want to specify what log levels should " &
+      "be visible."
     );
     show(display_handler, debug);
 
     while test_suite loop
       phase("TEST CASE SETUP",
-        "Code run before every test case. For example, if we use the VUnit " &
-        "run_all_in_same_sim attribute to run all test cases in the same simulation we " &
-        "might want to reset the DUT before each test case."
+        "Code executed before *every* test case. For example, if we use the VUnit " &
+        "run_all_in_same_sim attribute to run all test cases in the same simulation, we " &
+        "may need to reset the DUT before each test case."
       );
       -- vunit: run_all_in_same_sim
       reset <= '1';
@@ -76,6 +78,7 @@ begin
           "This is where we run our test case 1 code."
         );
         wait for 10 ns; -- The test code is just a wait statement in this dummy example
+
       elsif run("Test case 2") then
         phase("TEST CASE",
           "This is where we run our test case 2 code."
@@ -85,7 +88,7 @@ begin
       end if;
 
       phase("TEST CASE CLEANUP",
-        "Code run after every test case. For example, there may be some DUT status " &
+        "Code executed after *every* test case. For example, there may be some DUT status " &
         "flags we want to check before ending the test."
       );
       check_equal(error_flag, '0');
@@ -93,16 +96,16 @@ begin
     end loop;
 
     phase("TEST SUITE CLEANUP",
-      "Code common to the entire test suite that is run after all test cases. " &
-      "For example, if we have a coverage metric and want to check that we reached " &
-      "full coverage."
+      "Code common to the entire test suite which is executed *once* after all test " &
+      "cases have been run. For example, it can be used to check if the desired coverage " &
+      "metric has been fully achieved."
     );
     check_true(full_coverage);
 
     phase("TEST RUNNER CLEANUP",
-      "Housekeeping tasks VUnit has to do before ending the simulation. For example, " &
-      "if VUnit was configure not to end the simulation on first detected error, it will " &
-      "fail the simulation in this phase if errors were found."
+      "Housekeeping performed by VUnit before ending the simulation. For example, " &
+      "if VUnit was configure not to end the simulation upon detecting the first error, " &
+      "it will fail the simulation during this phase if any errors have been detected."
     );
     test_runner_cleanup(runner);
   end process;

@@ -1,0 +1,47 @@
+<div class="highlight" style="background: #002b36; color: #eee8d5;"><pre style="line-height: 125%; background: #002b36; color: #eee8d5;">       0 fs - tb_phases            -   PHASE -          TEST RUNNER SETUP
+                                                        The testbench is initialized from the runner_cfg generic. This allows for 
+                                                        configuration of features such as coloration of log entries. This phase 
+                                                        call comes before initialization, so it will not be affected by any of the 
+                                                        settings and the resulting log entry will be without special colors. 
+                                               
+       <span style="color: #2aa198; ">0 fs</span> - <span style="font_weight: bold; color: #eee8d5; ">tb_phases</span>            -   <span style="color: #eee8d5; ">PHASE</span> -  <span style="background: #eee8d5; "> </span>       <span style="font_weight: bold; color: #4fb636; ">TEST SUITE SETUP</span>
+                                                <span style="background: #eee8d5; "> </span>       Code common to the entire test suite (set of test cases) that is executed 
+                                                <span style="background: #eee8d5; "> </span>       *once* prior to all test cases. For example, if we want to specify what log 
+                                                <span style="background: #eee8d5; "> </span>       levels should be visible. 
+                                               
+       <span style="color: #2aa198; ">0 fs</span> - <span style="font_weight: bold; color: #eee8d5; ">tb_phases</span>            -   <span style="color: #eee8d5; ">PHASE</span> -   <span style="background: #268bd2; "> </span>      <span style="font_weight: bold; color: #4fb636; ">TEST CASE SETUP</span>
+                                                 <span style="background: #268bd2; "> </span>      Code executed before *every* test case. For example, if we use the VUnit 
+                                                 <span style="background: #268bd2; "> </span>      run_all_in_same_sim attribute to run all test cases in the same simulation, 
+                                                 <span style="background: #268bd2; "> </span>      we may need to reset the DUT before each test case. 
+                                               
+<span style="color: #2aa198; ">10000000 fs</span> - <span style="font_weight: bold; color: #eee8d5; ">tb_phases</span>            -   <span style="color: #eee8d5; ">PHASE</span> -    <span style="background: #9c36b6; "> </span>     <span style="font_weight: bold; color: #4fb636; ">TEST CASE</span>
+                                                  <span style="background: #9c36b6; "> </span>     This is where we run our test case 1 code. 
+                                               
+<span style="color: #2aa198; ">20000000 fs</span> - <span style="font_weight: bold; color: #eee8d5; ">tb_phases</span>            -   <span style="color: #eee8d5; ">PHASE</span> -     <span style="background: #008080; "> </span>    <span style="font_weight: bold; color: #4fb636; ">TEST CASE CLEANUP</span>
+                                                   <span style="background: #008080; "> </span>    Code executed after *every* test case. For example, there may be some DUT 
+                                                   <span style="background: #008080; "> </span>    status flags we want to check before ending the test. 
+                                               
+<span style="color: #2aa198; ">20000000 fs</span> - <span style="font_weight: bold; color: #eee8d5; ">tb_phases</span>            -   <span style="color: #eee8d5; ">PHASE</span> -   <span style="background: #268bd2; "> </span>      <span style="font_weight: bold; color: #4fb636; ">TEST CASE SETUP</span>
+                                                 <span style="background: #268bd2; "> </span>      Code executed before *every* test case. For example, if we use the VUnit 
+                                                 <span style="background: #268bd2; "> </span>      run_all_in_same_sim attribute to run all test cases in the same simulation, 
+                                                 <span style="background: #268bd2; "> </span>      we may need to reset the DUT before each test case. 
+                                               
+<span style="color: #2aa198; ">30000000 fs</span> - <span style="font_weight: bold; color: #eee8d5; ">tb_phases</span>            -   <span style="color: #eee8d5; ">PHASE</span> -    <span style="background: #9c36b6; "> </span>     <span style="font_weight: bold; color: #4fb636; ">TEST CASE</span>
+                                                  <span style="background: #9c36b6; "> </span>     This is where we run our test case 2 code. 
+                                               
+<span style="color: #2aa198; ">40000000 fs</span> - <span style="font_weight: bold; color: #eee8d5; ">tb_phases</span>            -   <span style="color: #eee8d5; ">PHASE</span> -     <span style="background: #008080; "> </span>    <span style="font_weight: bold; color: #4fb636; ">TEST CASE CLEANUP</span>
+                                                   <span style="background: #008080; "> </span>    Code executed after *every* test case. For example, there may be some DUT 
+                                                   <span style="background: #008080; "> </span>    status flags we want to check before ending the test. 
+                                               
+<span style="color: #2aa198; ">40000000 fs</span> - <span style="font_weight: bold; color: #eee8d5; ">tb_phases</span>            -   <span style="color: #eee8d5; ">PHASE</span> -      <span style="background: #859900; "> </span>   <span style="font_weight: bold; color: #4fb636; ">TEST SUITE CLEANUP</span>
+                                                    <span style="background: #859900; "> </span>   Code common to the entire test suite which is executed *once* after all 
+                                                    <span style="background: #859900; "> </span>   test cases have been run. For example, it can be used to check if the 
+                                                    <span style="background: #859900; "> </span>   desired coverage metric has been fully achieved. 
+                                               
+<span style="color: #2aa198; ">40000000 fs</span> - <span style="font_weight: bold; color: #eee8d5; ">tb_phases</span>            -   <span style="color: #eee8d5; ">PHASE</span> -       <span style="background: #cb4b16; "> </span>  <span style="font_weight: bold; color: #4fb636; ">TEST RUNNER CLEANUP</span>
+                                                     <span style="background: #cb4b16; "> </span>  Housekeeping performed by VUnit before ending the simulation. For example, 
+                                                     <span style="background: #cb4b16; "> </span>  if VUnit was configure not to end the simulation upon detecting the first 
+                                                     <span style="background: #cb4b16; "> </span>  error, it will fail the simulation during this phase if any errors have 
+                                                     <span style="background: #cb4b16; "> </span>  been detected. 
+                                               
+</pre></div>

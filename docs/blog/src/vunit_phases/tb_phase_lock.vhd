@@ -240,11 +240,23 @@ begin
   end generate;
 
   generate_end_of_simulation_process: if enable_end_of_simulation_process generate
+    constant axi_stream_checker_logger : logger_t := get_logger("axis_checker");
+    constant eos_rule_logger : logger_t := get_logger("STREAM_ALL_DONE_EOS", parent => axi_stream_checker_logger);
+    constant eos_rule_checker : checker_t := new_checker(eos_rule_logger);
+
+    procedure check_stream_activity is
+      constant num_of_active_streams : natural := 0;
+    begin
+      show(eos_rule_logger, display_handler, pass);
+      show(eos_rule_logger, file_handler, pass);
+      check_equal(eos_rule_checker, num_of_active_streams, 0, result("for number of active streams"));
+    end;
+  begin
     -- start_snippet end_of_simulation_process
     end_of_simulation_process : process
     begin
       wait until is_active(runner_phase) and (get_phase = test_runner_cleanup) and is_within_gates;
-      info("Performing final checks before the simulation ends.");
+      check_stream_activity;
       wait;
     end process;
     -- end_snippet end_of_simulation_process
@@ -252,7 +264,8 @@ begin
 
   incrementer_inst : entity work.incrementer
     generic map(
-      delay => 10)
+      delay => 10,
+      core_dump_on_vunit_error => false)
     port map(
       clk => clk,
       input_tdata => input_tdata,
