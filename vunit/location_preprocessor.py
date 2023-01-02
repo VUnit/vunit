@@ -11,47 +11,26 @@ to enable better messages
 
 
 import re
+from vunit.ui.preprocessor import Preprocessor
 
 
-class LocationPreprocessor(object):
+class LocationPreprocessor(Preprocessor):
     """
     Preprocessing of VHDL files to add file_name and line_num
     arguments to calls of known function and procedures
     """
 
-    def __init__(self):
+    def __init__(self, order=1000):
+        super().__init__(order)
         self._subprograms_with_arguments = [
             "log",
-            "verbose_high2",
-            "verbose_high1",
-            "verbose",
-            "verbose_low1",
-            "verbose_low2",
-            "debug_high2",
-            "debug_high1",
+            "trace",
             "debug",
-            "debug_low1",
-            "debug_low2",
-            "info_high2",
-            "info_high1",
+            "pass",
             "info",
-            "info_low1",
-            "info_low2",
-            "warning_high2",
-            "warning_high1",
             "warning",
-            "warning_low1",
-            "warning_low2",
-            "error_high2",
-            "error_high1",
             "error",
-            "error_low1",
-            "error_low2",
-            "failure_high2",
-            "failure_high1",
             "failure",
-            "failure_low1",
-            "failure_low2",
             "check",
             "check_failed",
             "check_true",
@@ -116,9 +95,6 @@ class LocationPreprocessor(object):
     _assignment_pattern = re.compile(r"\s*(:=|<=)", re.MULTILINE)
 
     def run(self, code, file_name):
-        """
-        Return preprocessed code given file_name of original file
-        """
         potential_subprogram_call_with_arguments_pattern = re.compile(
             r"[^a-zA-Z0-9_](?P<subprogram>" + "|".join(self._subprograms_with_arguments) + r")\s*(?P<args>\()",
             re.MULTILINE,

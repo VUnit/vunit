@@ -19,6 +19,7 @@ extensions = [
     "sphinx.ext.extlinks",
     "sphinx.ext.intersphinx",
     "sphinx.ext.todo",
+    "sphinx.ext.autosectionlabel",
     "sphinxarg.ext",  # Automatic argparse command line argument documentation
     "exec",
 ]
@@ -26,6 +27,8 @@ extensions = [
 autodoc_default_options = {
     "members": True,
 }
+
+autosectionlabel_prefix_document = True
 
 # The suffix(es) of source filenames.
 source_suffix = {

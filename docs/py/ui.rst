@@ -53,8 +53,8 @@ attributes.
 Attributes set via the python interface will effectively overwrite the value
 of a user attribute set via code comments.
 
-Example
-<<<<<<<
+Attribute example
+<<<<<<<<<<<<<<<<<
 .. code-block:: vhdl
    :caption: VHDL Example
 
@@ -147,8 +147,8 @@ There are two hooks to run user defined Python code.
                 passing test and skipped in case of failure.
 
 
-Example
-<<<<<<<
+Hook example
+<<<<<<<<<<<<
     .. code-block:: python
 
        class DataChecker:

@@ -26,6 +26,7 @@ from vunit.ostools import renew_path
 from vunit.builtins import add_verilog_include_dir
 from vunit.sim_if import SimulatorInterface
 from vunit.vhdl_standard import VHDL
+from vunit.ui.preprocessor import Preprocessor
 
 
 class TestUi(unittest.TestCase):
@@ -157,6 +158,43 @@ end architecture;
                 report='log("Here I am!"); -- VUnitfier preprocessor: Report turned off, keeping original code.',
             )
             self.assertEqual(fread.read(), expectd)
+
+    def test_that_application_order_of_preprocessors_can_be_controlled(self):
+        ui = self._create_ui()
+        ui.add_library("lib")
+        ui.add_preprocessor(TestPreprocessor2(order=1))
+        ui.enable_location_preprocessing(order=-1)
+        ui.enable_check_preprocessing(order=-2)
+        ui.add_preprocessor(TestPreprocessor())
+
+        entity_file = Path(self.create_entity_file())
+        ui.add_source_files(str(entity_file), "lib")
+
+        pp_source = Template(
+            """\
+-- TestPreprocessor2
+-- check_relation(a = b);
+
+library vunit_lib;
+context vunit_lib.vunit_context;
+
+entity $entity is
+end entity;
+
+architecture arch of $entity is
+begin
+    log("Hello World", line_num => 10, file_name => "$file");
+    check_relation(1 /= 2, context_msg => "Expected 1 /= 2. Left is \
+" & to_string(1) & ". Right is " & to_string(2) & ".", line_num => 11, file_name => "$file");
+    report "Here I am!";
+end architecture;
+"""
+        )
+        with (Path(self._preprocessed_path) / "lib" / entity_file.name).open() as fread:
+            self.assertEqual(
+                fread.read(),
+                pp_source.substitute(entity="ent0", file=entity_file.name),
+            )
 
     @mock.patch("vunit.ui.LOGGER.error", autospec=True)
     def test_recovers_from_preprocessing_error(self, logger):
@@ -1305,7 +1343,7 @@ end architecture;
 
 class TestPreprocessor(object):
     """
-    A preprocessor that appends a check_relation call before the orginal code
+    A preprocessor that adds a check_relation call before the orginal code
     """
 
     def __init__(self):
@@ -1314,6 +1352,19 @@ class TestPreprocessor(object):
     @staticmethod
     def run(code, file_name):  # pylint: disable=unused-argument
         return "-- check_relation(a = b);\n" + code
+
+
+class TestPreprocessor2(Preprocessor):
+    """
+    A preprocessor that adds a comment before the orginal code
+    """
+
+    def __init__(self, order):
+        super().__init__(order)
+
+    @staticmethod
+    def run(code, file_name):  # pylint: disable=unused-argument
+        return "-- TestPreprocessor2\n" + code
 
 
 class VUnitfier(object):

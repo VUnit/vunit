@@ -149,9 +149,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self._test_filter = test_filter
         self._vhdl_standard: VHDLStandard = select_vhdl_standard(vhdl_standard)
 
-        self._external_preprocessors = []  # type: ignore
-        self._location_preprocessor = None
-        self._check_preprocessor = None
+        self._preprocessors = []  # type: ignore
 
         self._simulator_class = SIMULATOR_FACTORY.select_simulator()
 
@@ -637,19 +635,19 @@ See https://github.com/VUnit/vunit/issues/777.
     def _preprocess(self, library_name: str, file_name: Union[str, Path], preprocessors):
         """
         Preprocess file_name within library_name using explicit preprocessors
-        if preprocessors is None then use implicit globally defined processors
+        if preprocessors is None then use implicit globally defined preprocessors.
         """
         # @TODO dependency checking etc...
 
         if preprocessors is None:
-            preprocessors = [self._location_preprocessor, self._check_preprocessor]
-            preprocessors = [p for p in preprocessors if p is not None]
-            preprocessors = self._external_preprocessors + preprocessors
+            preprocessors = self._preprocessors
 
         fstr = str(file_name)
 
         if not preprocessors:
             return fstr
+
+        preprocessors.sort(key=lambda x: 0 if not hasattr(x, "order") else x.order)
 
         fname = str(Path(file_name).name)
 
@@ -679,11 +677,13 @@ See https://github.com/VUnit/vunit/issues/777.
 
     def add_preprocessor(self, preprocessor):
         """
-        Add a custom preprocessor to be used on all files, must be called before adding any files
-        """
-        self._external_preprocessors.append(preprocessor)
+        Adds a custom preprocessor to be used on all files. Must be called before adding any files.
 
-    def enable_location_preprocessing(self, additional_subprograms=None, exclude_subprograms=None):
+        :param preprocessor: Instance of of :class:`.Preprocessor`
+        """
+        self._preprocessors.append((preprocessor))
+
+    def enable_location_preprocessing(self, additional_subprograms=None, exclude_subprograms=None, order=100):
         """
         Inserts file name and line number information into VUnit check and log subprograms calls. Custom
         subprograms can also be added. Must be called before adding any files.
@@ -691,6 +691,8 @@ See https://github.com/VUnit/vunit/issues/777.
         :param additional_subprograms: List of custom subprograms to add the line_num and file_name parameters to.
         :param exclude_subprograms: List of VUnit subprograms to exclude from location preprocessing. Used to \
 avoid location preprocessing of other functions sharing name with a VUnit log or check subprogram.
+        :param order: Integer controlling in which order the location preprocessor is applied in relation to \
+other preprocessors. Lowest value first. The order between preprocessors with the same value is undefined.
 
         :example:
 
@@ -700,7 +702,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
                                              exclude_subprograms=['log'])
 
         """
-        preprocessor = LocationPreprocessor()
+        preprocessor = LocationPreprocessor(order)
         if additional_subprograms is not None:
             for subprogram in additional_subprograms:
                 preprocessor.add_subprogram(subprogram)
@@ -708,13 +710,18 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         if exclude_subprograms is not None:
             for subprogram in exclude_subprograms:
                 preprocessor.remove_subprogram(subprogram)
-        self._location_preprocessor = preprocessor
 
-    def enable_check_preprocessing(self):
+        self.add_preprocessor(preprocessor)
+
+    def enable_check_preprocessing(self, order=200):
         """
-        Inserts error context information into VUnit check_relation calls
+        Inserts error context information into VUnit check_relation calls.
+
+        :param order: Integer controlling in which order the check preprocessor is applied in relation to \
+other preprocessors. Lowest value first. The order between preprocessors with the same value is undefined.
+
         """
-        self._check_preprocessor = CheckPreprocessor()
+        self.add_preprocessor(CheckPreprocessor(order))
 
     def main(self, post_run=None):
         """

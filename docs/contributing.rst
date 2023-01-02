@@ -30,8 +30,8 @@ Copyright is given by adding the copyright notice to the beginning of each file.
 Python related
 --------------
 
-Running the tests
-~~~~~~~~~~~~~~~~~
+Running the Python tests
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 The test suite is divided into three parts:
 
@@ -52,8 +52,8 @@ In fact, ``pytest`` is required for running the acceptance tests, because some s
 certain tests to fail.
 See :doc:`pytest:how-to/skipping`.
 
-Example
-'''''''
+Python example
+''''''''''''''
 .. code-block:: shell
    :caption: Example of running all unit tests
 
@@ -95,13 +95,13 @@ above commands.
 VHDL related
 ------------
 
-Running the tests
-~~~~~~~~~~~~~~~~~
+Running the VHDL tests
+~~~~~~~~~~~~~~~~~~~~~~
 Each part of the VUnit VHDL code base has tests with a corresponding ``run.py`` file.
 For example :vunit_file:`vunit/vhdl/verification_components/run.py`.
 
-Example
-'''''''
+VHDL example
+''''''''''''
 .. code-block:: shell
    :caption: Example of running all verification component tests
 
