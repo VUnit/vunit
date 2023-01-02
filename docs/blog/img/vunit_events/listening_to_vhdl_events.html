@@ -1,0 +1,8 @@
+<div class="highlight"><pre><span></span><span class="n">listening_to_vhdl_events</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">process</span><span class="w"> </span><span class="k">is</span><span class="w"></span>
+<span class="w">  </span><span class="k">constant</span><span class="w"> </span><span class="n">logger</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">logger_t</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">get_logger</span><span class="p">(</span><span class="s">&quot;Process waiting on VHDL events&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="k">begin</span><span class="w"></span>
+<span class="w">  </span><span class="k">wait</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">new_data_set</span><span class="p">;</span><span class="w"></span>
+<span class="w">  </span><span class="n">trace</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Got new data set&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="w">  </span><span class="n">handle</span><span class="p">(</span><span class="n">data</span><span class="p">);</span><span class="w"></span>
+<span class="k">end</span><span class="w"> </span><span class="k">process</span><span class="p">;</span><span class="w"></span>
+</pre></div>

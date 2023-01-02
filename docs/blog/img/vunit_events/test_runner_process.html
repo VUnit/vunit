@@ -1,0 +1,21 @@
+<div class="highlight"><pre><span></span><span class="k">begin</span><span class="w"></span>
+<span class="w">  </span><span class="n">test_runner_setup</span><span class="p">(</span><span class="n">runner</span><span class="p">,</span><span class="w"> </span><span class="n">runner_cfg</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="n">data_set_idx</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">n_data_sets</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">loop</span><span class="w"></span>
+<span class="w">    </span><span class="n">data_set</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">load_data_from_file</span><span class="p">(</span><span class="n">data_set_idx</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">n_samples</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">length</span><span class="p">(</span><span class="n">data_set</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">push</span><span class="p">(</span><span class="n">queue</span><span class="p">,</span><span class="w"> </span><span class="n">n_samples</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">notify</span><span class="p">(</span><span class="n">new_data_set</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="n">sample_idx</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">n_samples</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">loop</span><span class="w"></span>
+<span class="w">      </span><span class="n">sample</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">get</span><span class="p">(</span><span class="n">data_set</span><span class="p">,</span><span class="w"> </span><span class="n">sample_idx</span><span class="p">);</span><span class="w"></span>
+<span class="w">      </span><span class="n">drive_dut</span><span class="p">(</span><span class="n">sample</span><span class="p">);</span><span class="w"></span>
+<span class="w">      </span><span class="n">push</span><span class="p">(</span><span class="n">queue</span><span class="p">,</span><span class="w"> </span><span class="n">sample</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="k">end</span><span class="w"> </span><span class="k">loop</span><span class="p">;</span><span class="w"></span>
+<span class="w">  </span><span class="k">end</span><span class="w"> </span><span class="k">loop</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">  </span><span class="n">test_runner_cleanup</span><span class="p">(</span><span class="n">runner</span><span class="p">);</span><span class="w"></span>
+<span class="k">end</span><span class="w"> </span><span class="k">process</span><span class="p">;</span><span class="w"></span>
+
+<span class="n">test_runner_watchdog</span><span class="p">(</span><span class="n">runner</span><span class="p">,</span><span class="w"> </span><span class="mi">500</span><span class="w"> </span><span class="n">ns</span><span class="p">);</span><span class="w"></span>
+</pre></div>
