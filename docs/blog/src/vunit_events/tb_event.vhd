@@ -202,7 +202,7 @@ begin
         if data_set_idx = 0 then
           wait for max_latency;
           read_register(status_reg_addr, status);
-          check_equal(status(n_samples_field), n_samples, result("#processed samples"));
+          check_equal(status(n_samples_field), n_samples, result("for #processed samples"));
         end if;
         -- end_snippet check_latency
 
@@ -260,7 +260,7 @@ begin
         if data_set_idx = 0 then
           wait for max_latency;
           read_register(status_reg_addr, status);
-          notify_if_fail(check_equal(status(n_samples_field), n_samples, result("#processed samples")), vunit_error);
+          notify_if_fail(check_equal(status(n_samples_field), n_samples, result("for #processed samples")), vunit_error);
         end if;
         -- end_snippet notify_if_fail
 

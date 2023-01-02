@@ -1,0 +1,12 @@
+<div class="highlight"><pre><span></span><span class="n">dut_checker</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">process</span><span class="w"></span>
+<span class="k">begin</span><span class="w"></span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="n">is_empty</span><span class="p">(</span><span class="n">queue</span><span class="p">)</span><span class="w"> </span><span class="k">then</span><span class="w"></span>
+<span class="w">    </span><span class="k">wait</span><span class="w"> </span><span class="k">until</span><span class="w"> </span><span class="n">is_active</span><span class="p">(</span><span class="n">new_data_set</span><span class="p">);</span><span class="w"></span>
+<span class="w">  </span><span class="k">end</span><span class="w"> </span><span class="k">if</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">pop</span><span class="p">(</span><span class="n">queue</span><span class="p">)</span><span class="w"> </span><span class="k">loop</span><span class="w"></span>
+<span class="w">    </span><span class="k">wait</span><span class="w"> </span><span class="k">until</span><span class="w"> </span><span class="n">rising_edge</span><span class="p">(</span><span class="n">clk</span><span class="p">)</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="n">output_tvalid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">&#39;1&#39;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">check_equal</span><span class="p">(</span><span class="n">output_tdata</span><span class="p">,</span><span class="w"> </span><span class="n">calculate_expected_output</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">queue</span><span class="p">)));</span><span class="w"></span>
+<span class="w">  </span><span class="k">end</span><span class="w"> </span><span class="k">loop</span><span class="p">;</span><span class="w"></span>
+<span class="k">end</span><span class="w"> </span><span class="k">process</span><span class="p">;</span><span class="w"></span>
+</pre></div>
