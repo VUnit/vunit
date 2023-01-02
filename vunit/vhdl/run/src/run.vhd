@@ -47,9 +47,9 @@ package body run_pkg is
 
     set_phase(runner_state, test_runner_setup);
     runner(runner_exit_status_idx) <= runner_exit_with_errors;
+    trace(runner_trace_logger, "Entering test runner setup phase.");
     notify(runner(runner_phase_idx to runner_phase_idx + basic_event_length - 1));
 
-    trace(runner_trace_logger, "Entering test runner setup phase.");
     entry_gate(runner);
 
     if selected_enabled_test_cases /= null then
@@ -82,8 +82,8 @@ package body run_pkg is
     end if;
     exit_gate(runner);
     set_phase(runner_state, test_suite_setup);
-    notify(runner(runner_phase_idx to runner_phase_idx + basic_event_length - 1));
     trace(runner_trace_logger, "Entering test suite setup phase.");
+    notify(runner(runner_phase_idx to runner_phase_idx + basic_event_length - 1));
     entry_gate(runner);
   end test_runner_setup;
 
@@ -95,10 +95,10 @@ package body run_pkg is
     fail_on_warning : boolean := false) is
   begin
     set_phase(runner_state, test_runner_cleanup);
-    notify(runner(runner_phase_idx to runner_phase_idx + basic_event_length - 1));
+    set_gate_status(runner_state, false);
     trace(runner_trace_logger, "Entering test runner cleanup phase.");
+    notify(runner(runner_phase_idx to runner_phase_idx + basic_event_length - 1));
     entry_gate(runner);
-    notify(runner(runner_cleanup_idx to runner_cleanup_idx + basic_event_length - 1));
     failure_if(runner_trace_logger, external_failure, "External failure.");
 
     if p_has_unhandled_checks then
@@ -108,8 +108,8 @@ package body run_pkg is
 
     exit_gate(runner);
     set_phase(runner_state, test_runner_exit);
-    notify(runner(runner_phase_idx to runner_phase_idx + basic_event_length - 1));
     trace(runner_trace_logger, "Entering test runner exit phase.");
+    notify(runner(runner_phase_idx to runner_phase_idx + basic_event_length - 1));
 
     if not final_log_check(allow_disabled_errors => allow_disabled_errors,
                              allow_disabled_failures => allow_disabled_failures,
@@ -368,6 +368,55 @@ package body run_pkg is
     return test_suite_exit or test_case_exit;
   end function test_exit;
 
+  impure function get_entry_key(phase : runner_legal_phase_t) return key_t is
+  begin
+    return get_entry_key(runner_state, phase);
+  end;
+
+  impure function get_exit_key(phase : runner_legal_phase_t) return key_t is
+  begin
+    return get_exit_key(runner_state, phase);
+  end;
+
+  impure function is_locked(key : key_t) return boolean is
+  begin
+    return is_locked(runner_state, key);
+  end;
+
+  procedure lock(
+    signal runner : inout runner_sync_t;
+    constant key : in key_t;
+    constant logger : in logger_t := runner_trace_logger;
+    constant path_offset : in natural := 0;
+    constant line_num : in natural := 0;
+    constant file_name : in string := "") is
+  begin
+    lock(runner_state, key);
+    if key.p_is_entry_key then
+      log(logger, "Locked " & replace(runner_phase_t'image(key.p_phase), "_", " ") & " phase entry gate.", trace, path_offset + 1, line_num, file_name);
+    else
+      log(logger, "Locked " & replace(runner_phase_t'image(key.p_phase), "_", " ") & " phase exit gate.", trace, path_offset + 1, line_num, file_name);
+    end if;
+    notify(runner(runner_phase_idx to runner_phase_idx + basic_event_length - 1));
+  end;
+
+  procedure unlock(
+    signal runner : inout runner_sync_t;
+    constant key : in key_t;
+    constant logger : in logger_t := runner_trace_logger;
+    constant path_offset : in natural := 0;
+    constant line_num : in natural := 0;
+    constant file_name : in string := "") is
+  begin
+    unlock(runner_state, key);
+    if key.p_is_entry_key then
+      log(logger, "Unlocked " & replace(runner_phase_t'image(key.p_phase), "_", " ") & " phase entry gate.", trace, path_offset + 1, line_num, file_name);
+    else
+      log(logger, "Unocked " & replace(runner_phase_t'image(key.p_phase), "_", " ") & " phase exit gate.", trace, path_offset + 1, line_num, file_name);
+    end if;
+    notify(runner(runner_phase_idx to runner_phase_idx + basic_event_length - 1));
+  end;
+
   procedure lock_entry(
     signal runner : inout runner_sync_t;
     constant phase : in runner_legal_phase_t;
@@ -435,6 +484,16 @@ package body run_pkg is
     end if;
   end;
 
+  impure function get_phase return runner_phase_t is
+  begin
+    return get_phase(runner_state);
+  end;
+
+  impure function is_within_gates return boolean is
+  begin
+    return is_within_gates(runner_state);
+  end;
+
   procedure entry_gate(
     signal runner : inout runner_sync_t) is
   begin
@@ -442,18 +501,21 @@ package body run_pkg is
       trace(runner_trace_logger, "Halting on " & replace(runner_phase_t'image(get_phase(runner_state)), "_", " ") & " phase entry gate.");
       wait on runner until not entry_is_locked(runner_state, get_phase(runner_state)) for max_locked_time;
     end if;
-    notify(runner(runner_phase_idx to runner_phase_idx + basic_event_length - 1));
+    set_gate_status(runner_state, true);
     trace(runner_trace_logger, "Passed " & replace(runner_phase_t'image(get_phase(runner_state)), "_", " ") & " phase entry gate.");
+    notify(runner(runner_phase_idx to runner_phase_idx + basic_event_length - 1));
   end procedure entry_gate;
 
   procedure exit_gate(
-    signal runner : in runner_sync_t) is
+    signal runner : inout runner_sync_t) is
   begin
     if exit_is_locked(runner_state, get_phase(runner_state)) then
       trace(runner_trace_logger, "Halting on " & replace(runner_phase_t'image(get_phase(runner_state)), "_", " ") & " phase exit gate.");
       wait on runner until not exit_is_locked(runner_state, get_phase(runner_state)) for max_locked_time;
     end if;
+    set_gate_status(runner_state, false);
     trace(runner_trace_logger, "Passed " & replace(runner_phase_t'image(get_phase(runner_state)), "_", " ") & " phase exit gate.");
+    notify(runner(runner_phase_idx to runner_phase_idx + basic_event_length - 1));
   end procedure exit_gate;
 
   impure function active_python_runner(

@@ -449,7 +449,6 @@ begin
       wait until rising_edge(aclk);
 
       set_phase(runner_state, test_runner_cleanup);
-      notify(runner);
       entry_gate(runner);
 
       check_only_log(rule_logger, "Unconditional check failed for packet completion for the following streams: 0.", error);
