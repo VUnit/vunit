@@ -14,6 +14,8 @@ use work.axi_stream_pkg.all;
 use work.axi_stream_private_pkg.all;
 use work.sync_pkg.all;
 use work.string_ptr_pkg.all;
+use work.event_common_pkg.all;
+use work.event_pkg.all;
 
 library osvvm;
 use osvvm.RandomPkg.RandomPType;
@@ -38,9 +40,11 @@ end entity;
 
 architecture a of axi_stream_slave is
 
-  constant notify_request_msg      : msg_type_t := new_msg_type("notify request");
-  constant message_queue           : queue_t    := new_queue;
-  signal   notify_bus_process_done : std_logic  := '0';
+  constant notify_request_msg       : msg_type_t := new_msg_type("notify request");
+  constant message_queue            : queue_t    := new_queue;
+  constant bus_process_done_base_id : id_t       := get_id("vunit_lib:axi_stream_slave:bus_process_done");
+  constant bus_process_done_id      : id_t       := get_id(to_string(num_children(bus_process_done_base_id)), parent => bus_process_done_base_id);
+  signal bus_process_done           : event_t    := new_event(bus_process_done_id);
 
 begin
 
@@ -61,7 +65,7 @@ begin
     elsif msg_type = wait_until_idle_msg then
       notify_msg := new_msg(notify_request_msg);
       push(message_queue, notify_msg);
-      wait on notify_bus_process_done until is_empty(message_queue);
+      wait until is_active(bus_process_done) and is_empty(message_queue);
       handle_wait_until_idle(net, msg_type, request_msg);
     else
       unexpected_msg_type(msg_type);
@@ -146,9 +150,7 @@ begin
         delete(msg);
       end loop;
 
-      notify_bus_process_done <= '1';
-      wait until notify_bus_process_done = '1';
-      notify_bus_process_done <= '0';
+      notify(bus_process_done);
     end loop;
   end process;
 
