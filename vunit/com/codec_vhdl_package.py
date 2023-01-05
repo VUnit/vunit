@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Module containing the CodecVHDLPackage class.
@@ -20,9 +20,7 @@ class CodecVHDLPackage(VHDLPackage):
     in the package."""
 
     def __init__(self, identifier, enumeration_types, record_types, array_types):
-        super(CodecVHDLPackage, self).__init__(
-            identifier, enumeration_types, record_types, array_types
-        )
+        super().__init__(identifier, enumeration_types, record_types, array_types)
         self._template = None
 
     @classmethod
@@ -91,10 +89,7 @@ class CodecVHDLPackage(VHDLPackage):
                 type=all_msg_types_enumeration_type.identifier
             )
 
-        (
-            new_declarations,
-            new_definitions,
-        ) = self._generate_enumeration_codec_and_to_string_functions(
+        (new_declarations, new_definitions,) = self._generate_enumeration_codec_and_to_string_functions(
             all_msg_types_enumeration_type, msg_type_enumeration_types
         )
         declarations += new_declarations
@@ -151,18 +146,14 @@ class CodecVHDLPackage(VHDLPackage):
         msg_type_enumeration_types = []
         for record in self.record_types:
             if record.elements[0].identifier_list[0] == "msg_type":
-                msg_type_enumeration_types.append(
-                    record.elements[0].subtype_indication.code
-                )
+                msg_type_enumeration_types.append(record.elements[0].subtype_indication.code)
 
         msg_type_enumeration_literals = []
         for enum in self.enumeration_types:
             if enum.identifier in msg_type_enumeration_types:
                 for literal in enum.literals:
                     if literal in msg_type_enumeration_literals:
-                        raise RuntimeError(
-                            "Different msg_type enumerations may not have the same literals"
-                        )
+                        raise RuntimeError("Different msg_type enumerations may not have the same literals")
 
                     msg_type_enumeration_literals.append(literal)
 
@@ -184,9 +175,7 @@ class CodecVHDLPackage(VHDLPackage):
         definitions = ""
         enumeration_offset = 0
         for enum in self.enumeration_types + (
-            [all_msg_types_enumeration_type]
-            if all_msg_types_enumeration_type is not None
-            else []
+            [all_msg_types_enumeration_type] if all_msg_types_enumeration_type is not None else []
         ):
 
             if enum.identifier in msg_type_enumeration_types:
@@ -221,9 +210,7 @@ class CodecVHDLPackage(VHDLPackage):
         msg_type_record_types = self._get_records_with_an_initial_msg_type_element()
 
         for record in msg_type_record_types:
-            msg_type_values = enumeration_types.get(
-                record.elements[0].subtype_indication.type_mark
-            )
+            msg_type_values = enumeration_types.get(record.elements[0].subtype_indication.type_mark)
 
             if msg_type_values is None:
                 continue
@@ -235,31 +222,18 @@ class CodecVHDLPackage(VHDLPackage):
                 for element in record.elements:
                     for identifier in element.identifier_list:
                         if identifier != "msg_type":
-                            parameter_list.append(
-                                "    constant %s : %s"
-                                % (identifier, element.subtype_indication.code)
-                            )
-                            parameter_type_list.append(
-                                element.subtype_indication.type_mark
-                            )
-                            encoding_list.append("encode(%s)" % identifier)
+                            parameter_list.append(f"    constant {identifier!s} : {element.subtype_indication.code!s}")
+                            parameter_type_list.append(element.subtype_indication.type_mark)
+                            encoding_list.append(f"encode({identifier!s})")
                         else:
-                            encoding_list.append(
-                                "encode(%s'(%s))"
-                                % (element.subtype_indication.code, value)
-                            )
+                            encoding_list.append(f"encode({element.subtype_indication.code!s}'({value!s}))")
 
-                if parameter_list == []:
+                if not parameter_list:
                     parameter_part = ""
                     alias_signature = value + "[return string];"
                 else:
                     parameter_part = " (\n" + ";\n".join(parameter_list) + ")"
-                    alias_signature = (
-                        value
-                        + "["
-                        + ", ".join(parameter_type_list)
-                        + " return string];"
-                    )
+                    alias_signature = value + "[" + ", ".join(parameter_type_list) + " return string];"
 
                 encodings = " & ".join(encoding_list)
 
@@ -290,12 +264,8 @@ class CodecVHDLPackage(VHDLPackage):
             msg_type_type = record.elements[0].subtype_indication.code
             if msg_type_type not in msg_type_types:
                 msg_type_types.append(msg_type_type)
-                declarations += self._template.get_specific_msg_type_declaration.substitute(
-                    type=msg_type_type
-                )
-                definitions += self._template.get_specific_msg_type_definition.substitute(
-                    type=msg_type_type
-                )
+                declarations += self._template.get_specific_msg_type_declaration.substitute(type=msg_type_type)
+                definitions += self._template.get_specific_msg_type_definition.substitute(type=msg_type_type)
 
         return declarations, definitions
 

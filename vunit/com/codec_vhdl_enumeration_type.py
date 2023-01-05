@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Module containing the CodecVHDLEnumerationType class.
@@ -24,18 +24,12 @@ class CodecVHDLEnumerationType(VHDLEnumerationType):
         definitions = ""
 
         if len(self.literals) > 256:
-            raise NotImplementedError(
-                "Support for enums with more than 256 values are yet to be implemented"
-            )
+            raise NotImplementedError("Support for enums with more than 256 values are yet to be implemented")
 
         declarations += template.codec_declarations.substitute(type=self.identifier)
-        definitions += template.enumeration_codec_definitions.substitute(
-            type=self.identifier, offset=offset
-        )
+        definitions += template.enumeration_codec_definitions.substitute(type=self.identifier, offset=offset)
         declarations += template.to_string_declarations.substitute(type=self.identifier)
-        definitions += template.enumeration_to_string_definitions.substitute(
-            type=self.identifier
-        )
+        definitions += template.enumeration_to_string_definitions.substitute(type=self.identifier)
 
         return declarations, definitions
 

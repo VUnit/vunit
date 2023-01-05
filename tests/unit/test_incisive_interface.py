@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 # pylint: disable=too-many-public-methods, too-many-lines
 
@@ -31,23 +31,17 @@ class TestIncisiveInterface(unittest.TestCase):
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
-    def test_compile_project_vhdl_2008(
-        self, check_output, find_cds_root_irun, find_cds_root_virtuoso
-    ):
+    def test_compile_project_vhdl_2008(self, check_output, find_cds_root_irun, find_cds_root_virtuoso):
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
         project = Project()
         project.add_library("lib", "lib_path")
         write_file("file.vhd", "")
-        project.add_source_file(
-            "file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("2008")
-        )
+        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("2008"))
         simif.compile_project(project)
         args_file = str(Path(self.output_path) / "irun_compile_vhdl_file_lib.args")
-        check_output.assert_called_once_with(
-            [str(Path("prefix") / "irun"), "-f", args_file], env=simif.get_env()
-        )
+        check_output.assert_called_once_with([str(Path("prefix") / "irun"), "-f", args_file], env=simif.get_env())
         self.assertEqual(
             read_file(args_file).splitlines(),
             [
@@ -59,8 +53,7 @@ class TestIncisiveInterface(unittest.TestCase):
                 "-v200x -extv200x",
                 "-work work",
                 '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
-                '-log "%s"'
-                % str(Path(self.output_path) / "irun_compile_vhdl_file_lib.log"),
+                '-log "%s"' % str(Path(self.output_path) / "irun_compile_vhdl_file_lib.log"),
                 "-quiet",
                 '-nclibdirname "."',
                 "-makelib lib_path",
@@ -86,23 +79,17 @@ define work "%s/libraries/work"
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
-    def test_compile_project_vhdl_2002(
-        self, check_output, find_cds_root_irun, find_cds_root_virtuoso
-    ):
+    def test_compile_project_vhdl_2002(self, check_output, find_cds_root_irun, find_cds_root_virtuoso):
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
         project = Project()
         project.add_library("lib", "lib_path")
         write_file("file.vhd", "")
-        project.add_source_file(
-            "file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("2002")
-        )
+        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("2002"))
         simif.compile_project(project)
         args_file = str(Path(self.output_path) / "irun_compile_vhdl_file_lib.args")
-        check_output.assert_called_once_with(
-            [str(Path("prefix") / "irun"), "-f", args_file], env=simif.get_env()
-        )
+        check_output.assert_called_once_with([str(Path("prefix") / "irun"), "-f", args_file], env=simif.get_env())
         self.assertEqual(
             read_file(args_file).splitlines(),
             [
@@ -114,8 +101,7 @@ define work "%s/libraries/work"
                 "-v200x -extv200x",
                 "-work work",
                 '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
-                '-log "%s"'
-                % str(Path(self.output_path) / "irun_compile_vhdl_file_lib.log"),
+                '-log "%s"' % str(Path(self.output_path) / "irun_compile_vhdl_file_lib.log"),
                 "-quiet",
                 '-nclibdirname "."',
                 "-makelib lib_path",
@@ -127,23 +113,17 @@ define work "%s/libraries/work"
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
-    def test_compile_project_vhdl_93(
-        self, check_output, find_cds_root_irun, find_cds_root_virtuoso
-    ):
+    def test_compile_project_vhdl_93(self, check_output, find_cds_root_irun, find_cds_root_virtuoso):
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
         project = Project()
         project.add_library("lib", "lib_path")
         write_file("file.vhd", "")
-        project.add_source_file(
-            "file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("93")
-        )
+        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("93"))
         simif.compile_project(project)
         args_file = str(Path(self.output_path) / "irun_compile_vhdl_file_lib.args")
-        check_output.assert_called_once_with(
-            [str(Path("prefix") / "irun"), "-f", args_file], env=simif.get_env()
-        )
+        check_output.assert_called_once_with([str(Path("prefix") / "irun"), "-f", args_file], env=simif.get_env())
         self.assertEqual(
             read_file(args_file).splitlines(),
             [
@@ -155,8 +135,7 @@ define work "%s/libraries/work"
                 "-v93",
                 "-work work",
                 '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
-                '-log "%s"'
-                % str(Path(self.output_path) / "irun_compile_vhdl_file_lib.log"),
+                '-log "%s"' % str(Path(self.output_path) / "irun_compile_vhdl_file_lib.log"),
                 "-quiet",
                 '-nclibdirname "."',
                 "-makelib lib_path",
@@ -168,9 +147,7 @@ define work "%s/libraries/work"
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
-    def test_compile_project_vhdl_extra_flags(
-        self, check_output, find_cds_root_irun, find_cds_root_virtuoso
-    ):
+    def test_compile_project_vhdl_extra_flags(self, check_output, find_cds_root_irun, find_cds_root_virtuoso):
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
@@ -181,9 +158,7 @@ define work "%s/libraries/work"
         source_file.set_compile_option("incisive.irun_vhdl_flags", ["custom", "flags"])
         simif.compile_project(project)
         args_file = str(Path(self.output_path) / "irun_compile_vhdl_file_lib.args")
-        check_output.assert_called_once_with(
-            [str(Path("prefix") / "irun"), "-f", args_file], env=simif.get_env()
-        )
+        check_output.assert_called_once_with([str(Path("prefix") / "irun"), "-f", args_file], env=simif.get_env())
         self.assertEqual(
             read_file(args_file).splitlines(),
             [
@@ -195,8 +170,7 @@ define work "%s/libraries/work"
                 "-v200x -extv200x",
                 "-work work",
                 '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
-                '-log "%s"'
-                % str(Path(self.output_path) / "irun_compile_vhdl_file_lib.log"),
+                '-log "%s"' % str(Path(self.output_path) / "irun_compile_vhdl_file_lib.log"),
                 "-quiet",
                 "custom",
                 "flags",
@@ -210,23 +184,17 @@ define work "%s/libraries/work"
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
-    def test_compile_project_vhdl_hdlvar(
-        self, check_output, find_cds_root_irun, find_cds_root_virtuoso
-    ):
+    def test_compile_project_vhdl_hdlvar(self, check_output, find_cds_root_irun, find_cds_root_virtuoso):
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
-        simif = IncisiveInterface(
-            prefix="prefix", output_path=self.output_path, hdlvar="custom_hdlvar"
-        )
+        simif = IncisiveInterface(prefix="prefix", output_path=self.output_path, hdlvar="custom_hdlvar")
         project = Project()
         project.add_library("lib", "lib_path")
         write_file("file.vhd", "")
         project.add_source_file("file.vhd", "lib", file_type="vhdl")
         simif.compile_project(project)
         args_file = str(Path(self.output_path) / "irun_compile_vhdl_file_lib.args")
-        check_output.assert_called_once_with(
-            [str(Path("prefix") / "irun"), "-f", args_file], env=simif.get_env()
-        )
+        check_output.assert_called_once_with([str(Path("prefix") / "irun"), "-f", args_file], env=simif.get_env())
         self.assertEqual(
             read_file(args_file).splitlines(),
             [
@@ -239,8 +207,7 @@ define work "%s/libraries/work"
                 "-work work",
                 '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
                 '-hdlvar "custom_hdlvar"',
-                '-log "%s"'
-                % str(Path(self.output_path) / "irun_compile_vhdl_file_lib.log"),
+                '-log "%s"' % str(Path(self.output_path) / "irun_compile_vhdl_file_lib.log"),
                 "-quiet",
                 '-nclibdirname "."',
                 "-makelib lib_path",
@@ -252,9 +219,7 @@ define work "%s/libraries/work"
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
-    def test_compile_project_verilog(
-        self, check_output, find_cds_root_irun, find_cds_root_virtuoso
-    ):
+    def test_compile_project_verilog(self, check_output, find_cds_root_irun, find_cds_root_virtuoso):
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
@@ -264,9 +229,7 @@ define work "%s/libraries/work"
         project.add_source_file("file.v", "lib", file_type="verilog")
         simif.compile_project(project)
         args_file = str(Path(self.output_path) / "irun_compile_verilog_file_lib.args")
-        check_output.assert_called_once_with(
-            [str(Path("prefix") / "irun"), "-f", args_file], env=simif.get_env()
-        )
+        check_output.assert_called_once_with([str(Path("prefix") / "irun"), "-f", args_file], env=simif.get_env())
         self.assertEqual(
             read_file(args_file).splitlines(),
             [
@@ -278,8 +241,7 @@ define work "%s/libraries/work"
                 "-nowarn DLCVAR",
                 "-work work",
                 '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
-                '-log "%s"'
-                % str(Path(self.output_path) / "irun_compile_verilog_file_lib.log"),
+                '-log "%s"' % str(Path(self.output_path) / "irun_compile_verilog_file_lib.log"),
                 "-quiet",
                 '-incdir "cds_root_irun/tools/spectre/etc/ahdl/"',
                 '-nclibdirname "."',
@@ -292,9 +254,7 @@ define work "%s/libraries/work"
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
-    def test_compile_project_system_verilog(
-        self, check_output, find_cds_root_irun, find_cds_root_virtuoso
-    ):
+    def test_compile_project_system_verilog(self, check_output, find_cds_root_irun, find_cds_root_virtuoso):
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
@@ -304,9 +264,7 @@ define work "%s/libraries/work"
         project.add_source_file("file.sv", "lib", file_type="systemverilog")
         simif.compile_project(project)
         args_file = str(Path(self.output_path) / "irun_compile_verilog_file_lib.args")
-        check_output.assert_called_once_with(
-            [str(Path("prefix") / "irun"), "-f", args_file], env=simif.get_env()
-        )
+        check_output.assert_called_once_with([str(Path("prefix") / "irun"), "-f", args_file], env=simif.get_env())
         self.assertEqual(
             read_file(args_file).splitlines(),
             [
@@ -318,8 +276,7 @@ define work "%s/libraries/work"
                 "-nowarn DLCVAR",
                 "-work work",
                 '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
-                '-log "%s"'
-                % str(Path(self.output_path) / "irun_compile_verilog_file_lib.log"),
+                '-log "%s"' % str(Path(self.output_path) / "irun_compile_verilog_file_lib.log"),
                 "-quiet",
                 '-incdir "cds_root_irun/tools/spectre/etc/ahdl/"',
                 '-nclibdirname "."',
@@ -346,9 +303,7 @@ define work "%s/libraries/work"
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
-    def test_compile_project_verilog_extra_flags(
-        self, check_output, find_cds_root_irun, find_cds_root_virtuoso
-    ):
+    def test_compile_project_verilog_extra_flags(self, check_output, find_cds_root_irun, find_cds_root_virtuoso):
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
@@ -356,14 +311,10 @@ define work "%s/libraries/work"
         project.add_library("lib", "lib_path")
         write_file("file.v", "")
         source_file = project.add_source_file("file.v", "lib", file_type="verilog")
-        source_file.set_compile_option(
-            "incisive.irun_verilog_flags", ["custom", "flags"]
-        )
+        source_file.set_compile_option("incisive.irun_verilog_flags", ["custom", "flags"])
         simif.compile_project(project)
         args_file = str(Path(self.output_path) / "irun_compile_verilog_file_lib.args")
-        check_output.assert_called_once_with(
-            [str(Path("prefix") / "irun"), "-f", args_file], env=simif.get_env()
-        )
+        check_output.assert_called_once_with([str(Path("prefix") / "irun"), "-f", args_file], env=simif.get_env())
         self.assertEqual(
             read_file(args_file).splitlines(),
             [
@@ -377,8 +328,7 @@ define work "%s/libraries/work"
                 "custom",
                 "flags",
                 '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
-                '-log "%s"'
-                % str(Path(self.output_path) / "irun_compile_verilog_file_lib.log"),
+                '-log "%s"' % str(Path(self.output_path) / "irun_compile_verilog_file_lib.log"),
                 "-quiet",
                 '-incdir "cds_root_irun/tools/spectre/etc/ahdl/"',
                 '-nclibdirname "."',
@@ -391,23 +341,17 @@ define work "%s/libraries/work"
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
-    def test_compile_project_verilog_include(
-        self, check_output, find_cds_root_irun, find_cds_root_virtuoso
-    ):
+    def test_compile_project_verilog_include(self, check_output, find_cds_root_irun, find_cds_root_virtuoso):
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
         project = Project()
         project.add_library("lib", "lib_path")
         write_file("file.v", "")
-        project.add_source_file(
-            "file.v", "lib", file_type="verilog", include_dirs=["include"]
-        )
+        project.add_source_file("file.v", "lib", file_type="verilog", include_dirs=["include"])
         simif.compile_project(project)
         args_file = str(Path(self.output_path) / "irun_compile_verilog_file_lib.args")
-        check_output.assert_called_once_with(
-            [str(Path("prefix") / "irun"), "-f", args_file], env=simif.get_env()
-        )
+        check_output.assert_called_once_with([str(Path("prefix") / "irun"), "-f", args_file], env=simif.get_env())
         self.assertEqual(
             read_file(args_file).splitlines(),
             [
@@ -419,8 +363,7 @@ define work "%s/libraries/work"
                 "-nowarn DLCVAR",
                 "-work work",
                 '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
-                '-log "%s"'
-                % str(Path(self.output_path) / "irun_compile_verilog_file_lib.log"),
+                '-log "%s"' % str(Path(self.output_path) / "irun_compile_verilog_file_lib.log"),
                 "-quiet",
                 '-incdir "include"',
                 '-incdir "cds_root_irun/tools/spectre/etc/ahdl/"',
@@ -434,23 +377,17 @@ define work "%s/libraries/work"
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
-    def test_compile_project_verilog_define(
-        self, check_output, find_cds_root_irun, find_cds_root_virtuoso
-    ):
+    def test_compile_project_verilog_define(self, check_output, find_cds_root_irun, find_cds_root_virtuoso):
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
         project = Project()
         project.add_library("lib", "lib_path")
         write_file("file.v", "")
-        project.add_source_file(
-            "file.v", "lib", file_type="verilog", defines=dict(defname="defval")
-        )
+        project.add_source_file("file.v", "lib", file_type="verilog", defines=dict(defname="defval"))
         simif.compile_project(project)
         args_file = str(Path(self.output_path) / "irun_compile_verilog_file_lib.args")
-        check_output.assert_called_once_with(
-            [str(Path("prefix") / "irun"), "-f", args_file], env=simif.get_env()
-        )
+        check_output.assert_called_once_with([str(Path("prefix") / "irun"), "-f", args_file], env=simif.get_env())
         self.assertEqual(
             read_file(args_file).splitlines(),
             [
@@ -462,8 +399,7 @@ define work "%s/libraries/work"
                 "-nowarn DLCVAR",
                 "-work work",
                 '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
-                '-log "%s"'
-                % str(Path(self.output_path) / "irun_compile_verilog_file_lib.log"),
+                '-log "%s"' % str(Path(self.output_path) / "irun_compile_verilog_file_lib.log"),
                 "-quiet",
                 '-incdir "cds_root_irun/tools/spectre/etc/ahdl/"',
                 "-define defname=defval",
@@ -477,25 +413,17 @@ define work "%s/libraries/work"
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
-    def test_compile_project_verilog_hdlvar(
-        self, check_output, find_cds_root_irun, find_cds_root_virtuoso
-    ):
+    def test_compile_project_verilog_hdlvar(self, check_output, find_cds_root_irun, find_cds_root_virtuoso):
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
-        simif = IncisiveInterface(
-            prefix="prefix", output_path=self.output_path, hdlvar="custom_hdlvar"
-        )
+        simif = IncisiveInterface(prefix="prefix", output_path=self.output_path, hdlvar="custom_hdlvar")
         project = Project()
         project.add_library("lib", "lib_path")
         write_file("file.v", "")
-        project.add_source_file(
-            "file.v", "lib", file_type="verilog", defines=dict(defname="defval")
-        )
+        project.add_source_file("file.v", "lib", file_type="verilog", defines=dict(defname="defval"))
         simif.compile_project(project)
         args_file = str(Path(self.output_path) / "irun_compile_verilog_file_lib.args")
-        check_output.assert_called_once_with(
-            [str(Path("prefix") / "irun"), "-f", args_file], env=simif.get_env()
-        )
+        check_output.assert_called_once_with([str(Path("prefix") / "irun"), "-f", args_file], env=simif.get_env())
         self.assertEqual(
             read_file(args_file).splitlines(),
             [
@@ -508,8 +436,7 @@ define work "%s/libraries/work"
                 "-work work",
                 '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
                 '-hdlvar "custom_hdlvar"',
-                '-log "%s"'
-                % str(Path(self.output_path) / "irun_compile_verilog_file_lib.log"),
+                '-log "%s"' % str(Path(self.output_path) / "irun_compile_verilog_file_lib.log"),
                 "-quiet",
                 '-incdir "cds_root_irun/tools/spectre/etc/ahdl/"',
                 "-define defname=defval",
@@ -560,9 +487,7 @@ define work "%s/libraries/work"
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
     @mock.patch("vunit.sim_if.incisive.run_command", autospec=True, return_value=True)
-    def test_simulate_vhdl(
-        self, run_command, find_cds_root_irun, find_cds_root_virtuoso
-    ):
+    def test_simulate_vhdl(self, run_command, find_cds_root_irun, find_cds_root_virtuoso):
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
@@ -572,19 +497,13 @@ define work "%s/libraries/work"
         write_file("file.vhd", "")
         project.add_source_file("file.vhd", "lib", file_type="vhdl")
 
-        with mock.patch(
-            "vunit.sim_if.check_output", autospec=True, return_value=""
-        ) as dummy:
+        with mock.patch("vunit.sim_if.check_output", autospec=True, return_value="") as dummy:
             simif.compile_project(project)
 
         config = make_config()
         self.assertTrue(simif.simulate("suite_output_path", "test_suite_name", config))
-        elaborate_args_file = str(
-            Path("suite_output_path") / simif.name / "irun_elaborate.args"
-        )
-        simulate_args_file = str(
-            Path("suite_output_path") / simif.name / "irun_simulate.args"
-        )
+        elaborate_args_file = str(Path("suite_output_path") / simif.name / "irun_elaborate.args")
+        simulate_args_file = str(Path("suite_output_path") / simif.name / "irun_simulate.args")
         run_command.assert_has_calls(
             [
                 mock.call(
@@ -620,8 +539,7 @@ define work "%s/libraries/work"
                 "-work work",
                 '-nclibdirname "%s"' % str(Path(self.output_path) / "libraries"),
                 '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
-                '-log "%s"'
-                % str(Path("suite_output_path") / simif.name / "irun_elaborate.log"),
+                '-log "%s"' % str(Path("suite_output_path") / simif.name / "irun_elaborate.log"),
                 "-quiet",
                 '-reflib "lib_path"',
                 "-access +r",
@@ -645,8 +563,7 @@ define work "%s/libraries/work"
                 "-work work",
                 '-nclibdirname "%s"' % str(Path(self.output_path) / "libraries"),
                 '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
-                '-log "%s"'
-                % str(Path("suite_output_path") / simif.name / "irun_simulate.log"),
+                '-log "%s"' % str(Path("suite_output_path") / simif.name / "irun_simulate.log"),
                 "-quiet",
                 '-reflib "lib_path"',
                 "-access +r",
@@ -658,9 +575,7 @@ define work "%s/libraries/work"
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
     @mock.patch("vunit.sim_if.incisive.run_command", autospec=True, return_value=True)
-    def test_simulate_verilog(
-        self, run_command, find_cds_root_irun, find_cds_root_virtuoso
-    ):
+    def test_simulate_verilog(self, run_command, find_cds_root_irun, find_cds_root_virtuoso):
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
@@ -670,19 +585,13 @@ define work "%s/libraries/work"
         write_file("file.vhd", "")
         project.add_source_file("file.vhd", "lib", file_type="vhdl")
 
-        with mock.patch(
-            "vunit.sim_if.check_output", autospec=True, return_value=""
-        ) as dummy:
+        with mock.patch("vunit.sim_if.check_output", autospec=True, return_value="") as dummy:
             simif.compile_project(project)
 
         config = make_config(verilog=True)
         self.assertTrue(simif.simulate("suite_output_path", "test_suite_name", config))
-        elaborate_args_file = str(
-            Path("suite_output_path") / simif.name / "irun_elaborate.args"
-        )
-        simulate_args_file = str(
-            Path("suite_output_path") / simif.name / "irun_simulate.args"
-        )
+        elaborate_args_file = str(Path("suite_output_path") / simif.name / "irun_elaborate.args")
+        simulate_args_file = str(Path("suite_output_path") / simif.name / "irun_simulate.args")
         run_command.assert_has_calls(
             [
                 mock.call(
@@ -718,8 +627,7 @@ define work "%s/libraries/work"
                 "-work work",
                 '-nclibdirname "%s"' % str(Path(self.output_path) / "libraries"),
                 '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
-                '-log "%s"'
-                % str(Path("suite_output_path") / simif.name / "irun_elaborate.log"),
+                '-log "%s"' % str(Path("suite_output_path") / simif.name / "irun_elaborate.log"),
                 "-quiet",
                 '-reflib "lib_path"',
                 "-access +r",
@@ -743,8 +651,7 @@ define work "%s/libraries/work"
                 "-work work",
                 '-nclibdirname "%s"' % str(Path(self.output_path) / "libraries"),
                 '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
-                '-log "%s"'
-                % str(Path("suite_output_path") / simif.name / "irun_simulate.log"),
+                '-log "%s"' % str(Path("suite_output_path") / simif.name / "irun_simulate.log"),
                 "-quiet",
                 '-reflib "lib_path"',
                 "-access +r",
@@ -756,22 +663,14 @@ define work "%s/libraries/work"
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
     @mock.patch("vunit.sim_if.incisive.run_command", autospec=True, return_value=True)
-    def test_simulate_extra_flags(
-        self, run_command, find_cds_root_irun, find_cds_root_virtuoso
-    ):
+    def test_simulate_extra_flags(self, run_command, find_cds_root_irun, find_cds_root_virtuoso):
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
-        config = make_config(
-            sim_options={"incisive.irun_sim_flags": ["custom", "flags"]}
-        )
+        config = make_config(sim_options={"incisive.irun_sim_flags": ["custom", "flags"]})
         self.assertTrue(simif.simulate("suite_output_path", "test_suite_name", config))
-        elaborate_args_file = str(
-            Path("suite_output_path") / simif.name / "irun_elaborate.args"
-        )
-        simulate_args_file = str(
-            Path("suite_output_path") / simif.name / "irun_simulate.args"
-        )
+        elaborate_args_file = str(Path("suite_output_path") / simif.name / "irun_elaborate.args")
+        simulate_args_file = str(Path("suite_output_path") / simif.name / "irun_simulate.args")
         run_command.assert_has_calls(
             [
                 mock.call(
@@ -802,22 +701,14 @@ define work "%s/libraries/work"
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
     @mock.patch("vunit.sim_if.incisive.run_command", autospec=True, return_value=True)
-    def test_simulate_generics_and_parameters(
-        self, run_command, find_cds_root_irun, find_cds_root_virtuoso
-    ):
+    def test_simulate_generics_and_parameters(self, run_command, find_cds_root_irun, find_cds_root_virtuoso):
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
-        config = make_config(
-            verilog=True, generics={"genstr": "genval", "genint": 1, "genbool": True}
-        )
+        config = make_config(verilog=True, generics={"genstr": "genval", "genint": 1, "genbool": True})
         self.assertTrue(simif.simulate("suite_output_path", "test_suite_name", config))
-        elaborate_args_file = str(
-            Path("suite_output_path") / simif.name / "irun_elaborate.args"
-        )
-        simulate_args_file = str(
-            Path("suite_output_path") / simif.name / "irun_simulate.args"
-        )
+        elaborate_args_file = str(Path("suite_output_path") / simif.name / "irun_elaborate.args")
+        simulate_args_file = str(Path("suite_output_path") / simif.name / "irun_simulate.args")
         run_command.assert_has_calls(
             [
                 mock.call(
@@ -846,22 +737,14 @@ define work "%s/libraries/work"
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
     @mock.patch("vunit.sim_if.incisive.run_command", autospec=True, return_value=True)
-    def test_simulate_hdlvar(
-        self, run_command, find_cds_root_irun, find_cds_root_virtuoso
-    ):
+    def test_simulate_hdlvar(self, run_command, find_cds_root_irun, find_cds_root_virtuoso):
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
-        simif = IncisiveInterface(
-            prefix="prefix", output_path=self.output_path, hdlvar="custom_hdlvar"
-        )
+        simif = IncisiveInterface(prefix="prefix", output_path=self.output_path, hdlvar="custom_hdlvar")
         config = make_config()
         self.assertTrue(simif.simulate("suite_output_path", "test_suite_name", config))
-        elaborate_args_file = str(
-            Path("suite_output_path") / simif.name / "irun_elaborate.args"
-        )
-        simulate_args_file = str(
-            Path("suite_output_path") / simif.name / "irun_simulate.args"
-        )
+        elaborate_args_file = str(Path("suite_output_path") / simif.name / "irun_elaborate.args")
+        simulate_args_file = str(Path("suite_output_path") / simif.name / "irun_simulate.args")
         run_command.assert_has_calls(
             [
                 mock.call(
@@ -893,14 +776,8 @@ define work "%s/libraries/work"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
         config = make_config(verilog=True)
-        self.assertTrue(
-            simif.simulate(
-                "suite_output_path", "test_suite_name", config, elaborate_only=True
-            )
-        )
-        elaborate_args_file = str(
-            Path("suite_output_path") / simif.name / "irun_elaborate.args"
-        )
+        self.assertTrue(simif.simulate("suite_output_path", "test_suite_name", config, elaborate_only=True))
+        elaborate_args_file = str(Path("suite_output_path") / simif.name / "irun_elaborate.args")
         run_command.assert_has_calls(
             [
                 mock.call(
@@ -931,8 +808,7 @@ define work "%s/libraries/work"
                 "-work work",
                 '-nclibdirname "%s"' % str(Path(self.output_path) / "libraries"),
                 '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
-                '-log "%s"'
-                % str(Path("suite_output_path") / simif.name / "irun_elaborate.log"),
+                '-log "%s"' % str(Path("suite_output_path") / simif.name / "irun_elaborate.log"),
                 "-quiet",
                 "-access +r",
                 '-input "@run"',
@@ -943,17 +819,13 @@ define work "%s/libraries/work"
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
     @mock.patch("vunit.sim_if.incisive.run_command", autospec=True, return_value=False)
-    def test_elaborate_fail(
-        self, run_command, find_cds_root_irun, find_cds_root_virtuoso
-    ):
+    def test_elaborate_fail(self, run_command, find_cds_root_irun, find_cds_root_virtuoso):
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
         config = make_config()
         self.assertFalse(simif.simulate("suite_output_path", "test_suite_name", config))
-        elaborate_args_file = str(
-            Path("suite_output_path") / simif.name / "irun_elaborate.args"
-        )
+        elaborate_args_file = str(Path("suite_output_path") / simif.name / "irun_elaborate.args")
         run_command.assert_has_calls(
             [
                 mock.call(
@@ -970,23 +842,15 @@ define work "%s/libraries/work"
 
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
-    @mock.patch(
-        "vunit.sim_if.incisive.run_command", autospec=True, side_effect=[True, False]
-    )
-    def test_simulate_fail(
-        self, run_command, find_cds_root_irun, find_cds_root_virtuoso
-    ):
+    @mock.patch("vunit.sim_if.incisive.run_command", autospec=True, side_effect=[True, False])
+    def test_simulate_fail(self, run_command, find_cds_root_irun, find_cds_root_virtuoso):
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
         config = make_config()
         self.assertFalse(simif.simulate("suite_output_path", "test_suite_name", config))
-        elaborate_args_file = str(
-            Path("suite_output_path") / simif.name / "irun_elaborate.args"
-        )
-        simulate_args_file = str(
-            Path("suite_output_path") / simif.name / "irun_simulate.args"
-        )
+        elaborate_args_file = str(Path("suite_output_path") / simif.name / "irun_elaborate.args")
+        simulate_args_file = str(Path("suite_output_path") / simif.name / "irun_simulate.args")
         run_command.assert_has_calls(
             [
                 mock.call(
@@ -1009,9 +873,7 @@ define work "%s/libraries/work"
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
     @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
     @mock.patch("vunit.sim_if.incisive.run_command", autospec=True, return_value=True)
-    def test_simulate_gui(
-        self, run_command, find_cds_root_irun, find_cds_root_virtuoso
-    ):
+    def test_simulate_gui(self, run_command, find_cds_root_irun, find_cds_root_virtuoso):
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
 
@@ -1020,21 +882,13 @@ define work "%s/libraries/work"
         write_file("file.vhd", "")
         project.add_source_file("file.vhd", "lib", file_type="vhdl")
 
-        simif = IncisiveInterface(
-            prefix="prefix", output_path=self.output_path, gui=True
-        )
-        with mock.patch(
-            "vunit.sim_if.check_output", autospec=True, return_value=""
-        ) as dummy:
+        simif = IncisiveInterface(prefix="prefix", output_path=self.output_path, gui=True)
+        with mock.patch("vunit.sim_if.check_output", autospec=True, return_value="") as dummy:
             simif.compile_project(project)
         config = make_config()
         self.assertTrue(simif.simulate("suite_output_path", "test_suite_name", config))
-        elaborate_args_file = str(
-            Path("suite_output_path") / simif.name / "irun_elaborate.args"
-        )
-        simulate_args_file = str(
-            Path("suite_output_path") / simif.name / "irun_simulate.args"
-        )
+        elaborate_args_file = str(Path("suite_output_path") / simif.name / "irun_elaborate.args")
+        simulate_args_file = str(Path("suite_output_path") / simif.name / "irun_simulate.args")
         run_command.assert_has_calls(
             [
                 mock.call(
@@ -1069,8 +923,7 @@ define work "%s/libraries/work"
                 "-work work",
                 '-nclibdirname "%s"' % str(Path(self.output_path) / "libraries"),
                 '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
-                '-log "%s"'
-                % str(Path("suite_output_path") / simif.name / "irun_elaborate.log"),
+                '-log "%s"' % str(Path("suite_output_path") / simif.name / "irun_elaborate.log"),
                 "-quiet",
                 '-reflib "lib_path"',
                 "-access +rwc",
@@ -1094,8 +947,7 @@ define work "%s/libraries/work"
                 "-work work",
                 '-nclibdirname "%s"' % str(Path(self.output_path) / "libraries"),
                 '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
-                '-log "%s"'
-                % str(Path("suite_output_path") / simif.name / "irun_simulate.log"),
+                '-log "%s"' % str(Path("suite_output_path") / simif.name / "irun_simulate.log"),
                 "-quiet",
                 '-reflib "lib_path"',
                 "-access +rwc",

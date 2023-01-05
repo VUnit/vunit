@@ -5,7 +5,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 use work.logger_pkg.all;
 use work.runner_pkg.all;
@@ -93,6 +93,7 @@ package run_pkg is
     signal runner : inout runner_sync_t;
     constant phase : in runner_legal_phase_t;
     constant logger : in logger_t := runner_trace_logger;
+    constant path_offset : in natural := 0;
     constant line_num  : in natural := 0;
     constant file_name : in string := "");
 
@@ -100,6 +101,7 @@ package run_pkg is
     signal runner : inout runner_sync_t;
     constant phase : in runner_legal_phase_t;
     constant logger : in logger_t := runner_trace_logger;
+    constant path_offset : in natural := 0;
     constant line_num  : in natural := 0;
     constant file_name : in string := "");
 
@@ -107,6 +109,7 @@ package run_pkg is
     signal runner : inout runner_sync_t;
     constant phase : in runner_legal_phase_t;
     constant logger : in logger_t := runner_trace_logger;
+    constant path_offset : in natural := 0;
     constant line_num  : in natural := 0;
     constant file_name : in string := "");
 
@@ -114,6 +117,7 @@ package run_pkg is
     signal runner : inout runner_sync_t;
     constant phase : in runner_legal_phase_t;
     constant logger : in logger_t := runner_trace_logger;
+    constant path_offset : in natural := 0;
     constant line_num  : in natural := 0;
     constant file_name : in string := "");
 
@@ -121,6 +125,7 @@ package run_pkg is
     signal runner : in runner_sync_t;
     constant phase : in runner_legal_phase_t;
     constant logger : in logger_t := runner_trace_logger;
+    constant path_offset : in natural := 0;
     constant line_num  : in natural := 0;
     constant file_name : in string := "");
 

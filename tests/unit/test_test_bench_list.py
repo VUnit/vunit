@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 # pylint: disable=too-many-public-methods
 
@@ -53,19 +53,13 @@ class TestTestBenchList(unittest.TestCase):
         Issue #263
         """
         with mock.patch("vunit.test.bench_list.LOGGER", autospec=True) as logger:
-            design_unit = Entity(
-                "mul_tbl_scale", file_name=str(Path(tempdir) / "file.vhd")
-            )
+            design_unit = Entity("mul_tbl_scale", file_name=str(Path(tempdir) / "file.vhd"))
             self.assertFalse(tb_filter(design_unit))
             self.assertFalse(logger.warning.called)
 
     @with_tempdir
-    def test_tb_filter_warning_on_missing_runner_cfg_when_matching_tb_pattern(
-        self, tempdir
-    ):
-        design_unit = Module(
-            "tb_module_not_ok", file_name=str(Path(tempdir) / "file.vhd")
-        )
+    def test_tb_filter_warning_on_missing_runner_cfg_when_matching_tb_pattern(self, tempdir):
+        design_unit = Module("tb_module_not_ok", file_name=str(Path(tempdir) / "file.vhd"))
         design_unit.generic_names = []
 
         with mock.patch("vunit.test.bench_list.LOGGER", autospec=True) as logger:
@@ -87,9 +81,7 @@ class TestTestBenchList(unittest.TestCase):
 
     @with_tempdir
     def test_tb_filter_warning_on_runner_cfg_but_not_matching_tb_pattern(self, tempdir):
-        design_unit = Entity(
-            "entity_ok_but_warning", file_name=str(Path(tempdir) / "file.vhd")
-        )
+        design_unit = Entity("entity_ok_but_warning", file_name=str(Path(tempdir) / "file.vhd"))
         design_unit.generic_names = ["runner_cfg"]
 
         with mock.patch("vunit.test.bench_list.LOGGER", autospec=True) as logger:

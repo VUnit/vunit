@@ -11,28 +11,35 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
+
+    - uses: actions/checkout@v3
       with:
         submodules: recursive
-    - uses: actions/setup-python@v1
+        fetch-depth: 0
+
+    - uses: actions/setup-python@v4
       with:
-        python-version: 3.8
-    - name: install dependencies
+        python-version: '3.11'
+
+    - name: Install dependencies
       run: |
         pip install -U pip --progress-bar off
         pip install -U virtualenv tox --progress-bar off
-    - name: build docs
-      run: tox -e py38-docs -- --color
-    - uses: actions/upload-artifact@master
+
+    - name: Build docs
+      run: tox -e py311-docs -- --color
+
+    - uses: actions/upload-artifact@v3
       with:
         name: VUnit-site
-        path: .tox/py38-docs/tmp/docsbuild/
-    - name: 'publish site to gh-pages'
+        path: .tox/py311-docs/tmp/docsbuild/
+
+    - name: Publish site to gh-pages
       if: github.event_name != 'pull_request' && github.repository == 'VUnit/vunit'
       env:
         GH_DEPKEY: ${{ secrets.VUNIT_GITHUB_IO_DEPLOY_KEY }}
       run: |
-        cd .tox/py38-docs/tmp/docsbuild/
+        cd .tox/py311-docs/tmp/docsbuild/
         touch .nojekyll
 
         git init

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Functionality to represent and operate on VHDL and Verilog source files
@@ -68,7 +68,7 @@ class SourceFile(object):
         return hash(self.to_tuple())
 
     def __repr__(self):
-        return "SourceFile(%s, %s)" % (self.name, self.library.name)
+        return f"SourceFile({self.name!s}, {self.library.name!s})"
 
     def set_compile_option(self, name, value):
         """
@@ -140,9 +140,7 @@ class VerilogSourceFile(SourceFile):
         self.module_dependencies = []
         self.include_dirs = include_dirs if include_dirs is not None else []
         self.defines = defines.copy() if defines is not None else {}
-        self._content_hash = file_content_hash(
-            self.name, encoding=HDL_FILE_ENCODING, database=database
-        )
+        self._content_hash = file_content_hash(self.name, encoding=HDL_FILE_ENCODING, database=database)
 
         for path in self.include_dirs:
             self._content_hash = hash_string(self._content_hash + hash_string(path))
@@ -185,8 +183,8 @@ class VerilogSourceFile(SourceFile):
             for instance_name in design_file.instances:
                 self.module_dependencies.append(instance_name)
 
-        except KeyboardInterrupt:
-            raise KeyboardInterrupt
+        except KeyboardInterrupt as exk:
+            raise KeyboardInterrupt from exk
         except:  # pylint: disable=bare-except
             traceback.print_exc()
             LOGGER.error("Failed to parse %s", self.name)
@@ -222,17 +220,15 @@ class VHDLSourceFile(SourceFile):
 
             try:
                 design_file = vhdl_parser.parse(self.name)
-            except KeyboardInterrupt:
-                raise KeyboardInterrupt
+            except KeyboardInterrupt as exk:
+                raise KeyboardInterrupt from exk
             except:  # pylint: disable=bare-except
                 traceback.print_exc()
                 LOGGER.error("Failed to parse %s", self.name)
             else:
                 self._add_design_file(design_file)
 
-        self._content_hash = file_content_hash(
-            self.name, encoding=HDL_FILE_ENCODING, database=database
-        )
+        self._content_hash = file_content_hash(self.name, encoding=HDL_FILE_ENCODING, database=database)
 
     def get_vhdl_standard(self) -> VHDLStandard:
         """
@@ -291,9 +287,7 @@ class VHDLSourceFile(SourceFile):
             result.append(ref)
 
         for configuration in design_file.configurations:
-            result.append(
-                VHDLReference("entity", self.library.name, configuration.entity, "all")
-            )
+            result.append(VHDLReference("entity", self.library.name, configuration.entity, "all"))
 
         return result
 
@@ -324,16 +318,10 @@ class VHDLSourceFile(SourceFile):
             )
 
         for configuration in design_file.configurations:
-            result.append(
-                VHDLDesignUnit(configuration.identifier, self, "configuration")
-            )
+            result.append(VHDLDesignUnit(configuration.identifier, self, "configuration"))
 
         for body in design_file.package_bodies:
-            result.append(
-                VHDLDesignUnit(
-                    body.identifier, self, "package body", False, body.identifier
-                )
-            )
+            result.append(VHDLDesignUnit(body.identifier, self, "package body", False, body.identifier))
 
         return result
 
@@ -342,11 +330,7 @@ class VHDLSourceFile(SourceFile):
         """
         Compute hash of contents and compile options
         """
-        return hash_string(
-            self._content_hash
-            + self._compile_options_hash()
-            + hash_string(str(self._vhdl_standard))
-        )
+        return hash_string(self._content_hash + self._compile_options_hash() + hash_string(str(self._vhdl_standard)))
 
     def add_to_library(self, library):
         """
@@ -378,4 +362,4 @@ def file_type_of(file_name):
     if ext.lower() in SYSTEM_VERILOG_EXTENSIONS:
         return "systemverilog"
 
-    raise RuntimeError("Unknown file ending '%s' of %s" % (ext, file_name))
+    raise RuntimeError(f"Unknown file ending '{ext!s}' of {file_name!s}")

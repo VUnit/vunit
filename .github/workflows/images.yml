@@ -15,32 +15,34 @@ jobs:
   build:
     strategy:
       fail-fast: false
-      max-parallel: 2
       matrix:
         task: [
-          { tag: llvm,  pkg: llvm-7 },
+          { tag: llvm,  pkg: llvm-9 },
           { tag: mcode, pkg: mcode  },
         ]
     runs-on: ubuntu-latest
-    env:
-      DOCKER_REGISTRY: docker.pkg.github.com
     steps:
-    - uses: actions/checkout@v1
-    - name: build image
+
+    - uses: actions/checkout@v3
+
+    - name: Build image
       env:
         TAG: ${{ matrix.task.tag }}
         PKG: ${{ matrix.task.pkg }}
       run: |
         ./.github/images.sh
-    - name: docker login
-      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login -u vunit-gha --password-stdin "$DOCKER_REGISTRY"
-    - name: docker push
-      if: github.repository == 'VUnit/vunit'
+
+    - name: Login to ghcr.io
+      if: github.event_name != 'pull_request' && github.repository == 'VUnit/vunit'
+      uses: docker/login-action@v1
+      with:
+        registry: ghcr.io
+        username: gha
+        password: ${{ github.token }}
+
+    - name: Docker push
+      if: github.event_name != 'pull_request' && github.repository == 'VUnit/vunit'
       run: |
-        DIMG="vunit/dev:${{ matrix.task.tag }}"
-        GHIMG="${DOCKER_REGISTRY}/vunit/$DIMG"
-        docker tag "$DIMG" "$GHIMG"
-        docker push "$GHIMG"
-    - name: docker logout
-      run: docker logout "$DOCKER_REGISTRY"
-      if: always()
+        DIMG="vunit/dev/${{ matrix.task.tag }}"
+        docker tag "$DIMG" "ghcr.io/$DIMG"
+        docker push "ghcr.io/$DIMG"

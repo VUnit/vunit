@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Provides operating systems dependent functionality that can be easily
@@ -101,7 +101,7 @@ class Process(object):
         # Sending a signal to a process group will send it to all children
         # Hopefully this way no orphaned processes will be left behind
         if IS_WINDOWS_SYSTEM:  # Windows
-            self._process = subprocess.Popen(
+            self._process = subprocess.Popen(  # pylint: disable=consider-using-with
                 args,
                 bufsize=0,
                 cwd=cwd,
@@ -114,7 +114,7 @@ class Process(object):
                 creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
             )
         else:
-            self._process = subprocess.Popen(
+            self._process = subprocess.Popen(  # pylint: disable=consider-using-with
                 args,
                 bufsize=0,
                 cwd=cwd,
@@ -127,21 +127,19 @@ class Process(object):
                 preexec_fn=os.setpgrp,  # pylint: disable=no-member
             )
 
-        LOGGER.debug(
-            "Started process with pid=%i: '%s'", self._process.pid, (" ".join(args))
-        )
+        LOGGER.debug("Started process with pid=%i: '%s'", self._process.pid, (" ".join(args)))
 
         self._queue = InterruptableQueue()
         self._reader = AsynchronousFileReader(self._process.stdout, self._queue)
         self._reader.start()
 
     def write(self, *args, **kwargs):
-        """ Write to stdin """
+        """Write to stdin"""
         if not self._process.stdin.closed:
             self._process.stdin.write(*args, **kwargs)
 
     def writeline(self, line):
-        """ Write a line to stdin """
+        """Write a line to stdin"""
         if not self._process.stdin.closed:
             self._process.stdin.write(line + "\n")
             self._process.stdin.flush()
@@ -275,11 +273,9 @@ class AsynchronousFileReader(threading.Thread):
 
 
 def read_file(file_name, encoding="utf-8", newline=None):
-    """ To stub during testing """
+    """To stub during testing"""
     try:
-        with io.open(
-            file_name, "r", encoding=encoding, newline=newline
-        ) as file_to_read:
+        with io.open(file_name, "r", encoding=encoding, newline=newline) as file_to_read:
             data = file_to_read.read()
     except UnicodeDecodeError:
         LOGGER.warning(
@@ -287,16 +283,14 @@ def read_file(file_name, encoding="utf-8", newline=None):
             file_name,
             encoding,
         )
-        with io.open(
-            file_name, "r", encoding=encoding, errors="ignore", newline=newline
-        ) as file_to_read:
+        with io.open(file_name, "r", encoding=encoding, errors="ignore", newline=newline) as file_to_read:
             data = file_to_read.read()
 
     return data
 
 
 def write_file(file_name, contents, encoding="utf-8"):
-    """ To stub during testing """
+    """To stub during testing"""
 
     path = str(Path(file_name).parent)
     if path == "":
@@ -310,17 +304,17 @@ def write_file(file_name, contents, encoding="utf-8"):
 
 
 def file_exists(file_name):
-    """ To stub during testing """
+    """To stub during testing"""
     return Path(file_name).exists()
 
 
 def get_modification_time(file_name):
-    """ To stub during testing """
+    """To stub during testing"""
     return getmtime(file_name)
 
 
 def get_time():
-    """ To stub during testing """
+    """To stub during testing"""
     return time.time()
 
 

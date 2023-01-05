@@ -13,8 +13,8 @@
 .. |shieldTwitter| image:: https://img.shields.io/twitter/follow/VUnitFramework.svg?longCache=true&style=flat-square&color=1DA1F2&label=%40VUnitFramework&logo=twitter&logoColor=fff
 .. _shieldTwitter: https://www.twitter.com/VUnitFramework
 
-VUnit
-=====
+VUnit: a test framework for HDL
+===============================
 
 VUnit is an open source unit testing framework for VHDL/SystemVerilog
 released under the terms of Mozilla Public License, v. 2.0. It
@@ -23,16 +23,45 @@ testing of your HDL code. VUnit doesn't replace but rather complements
 traditional testing methodologies by supporting a *"test early and
 often"* approach through automation. :ref:`Read more <about>`
 
-.. image:: vunit_demo.gif
+.. image:: _static/vunit_demo.gif
 
 .. toctree::
    :hidden:
 
    blog/index
+
+.. toctree::
+   :caption: About
+   :hidden:
+
    about
    installing
-   documentation
    testimonials/testimonials
-   contributing
+
+.. toctree::
+   :caption: Documentation
+   :hidden:
+
+   user_guide
+   cli
+   py/ui
+   vhdl_libraries
+   examples
+
+.. toctree::
+   :caption: Continuous Integration
+   :hidden:
+
+   ci/intro
+   ci/script
+   ci/container
+   ci/manual
+   ci/usecases
+
+.. toctree::
+   :caption: Appendix
+   :hidden:
+
    release_notes
+   contributing
    genindex

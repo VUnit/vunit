@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Test the os-dependent functionality wrappers
@@ -34,10 +34,10 @@ class TestOSTools(TestCase):
         Create a file in the temporary directory with contents
         Returns the absolute path to the file.
         """
-        full_file_name = str((Path(self.tmp_dir) / file_name).resolve())
-        with open(full_file_name, "w") as outfile:
+        full_file_name = (Path(self.tmp_dir) / file_name).resolve()
+        with full_file_name.open("w") as outfile:
             outfile.write(contents)
-        return full_file_name
+        return str(full_file_name)
 
     def test_run_basic_subprocess(self):
         python_script = self.make_file(
@@ -65,9 +65,7 @@ exit(1)
         )
         process = Process([sys.executable, python_script])
         output = []
-        self.assertRaises(
-            Process.NonZeroExitCode, process.consume_output, output.append
-        )
+        self.assertRaises(Process.NonZeroExitCode, process.consume_output, output.append)
         self.assertEqual(output, ["error"])
 
     def test_parses_stderr(self):

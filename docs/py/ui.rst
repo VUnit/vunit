@@ -29,9 +29,9 @@ common for the entire test bench depending on the situation.  For test
 benches without test such as `tb_example` in the User Guide the
 configuration is common for the entire test bench. For test benches
 containing tests such as `tb_example_many` the configuration is done
-for each test case. If the ``run_all_in_same_sim`` attribute has been used
+for each test case. If the ``run_all_in_same_sim`` attribute has been used,
 configuration is performed at the test bench level even if there are
-individual test within since they must run in the same simulation.
+individual tests within since they must run in the same simulation.
 
 In a VUnit all test benches and test cases are created with an unnamed default
 configuration which is modified by different methods such as ``set_generic`` etc.
@@ -100,28 +100,47 @@ Pre and post simulation hooks
 There are two hooks to run user defined Python code.
 
 :pre_config: A ``pre_config`` is called before simulation of the test
-             case. The function may accept an ``output_path`` string
-             which is the filesystem path to the directory where test
-             outputs are stored. The function must return ``True`` or
-             the test will fail immediately.
+             case. The function accepts an optional string argument
+             ``output_path``, which is the filesystem path to the
+             directory where test outputs are stored, and an optional
+             string argument ``simulator_output_path`` which is the path
+             to the simulator working directory.
 
-             The use case is to automatically create input data files
-             that is read by the test case during simulation. The test
-             bench can access the test case unique ``output_path`` via
-             a :ref:`special generic/parameter <special_generics>`.
+             .. note::
+               ``simulator_output_path`` is shared by all test runs. The
+               user must take care that test runs do not read or write the
+               same files asynchronously. It is therefore recommended to use
+               ``output_path`` in favor of ``simulator_output_path``.
+
+             A ``pre_config`` must return ``True`` or the test will fail
+             immediately.
+
+             The use case for ``pre_config`` is to automatically create
+             input data files that are read by the test case during
+             simulation. The test bench can access the test case unique
+             ``output_path`` via a special generic or a using the
+             ``output_path`` function. See the
+             :doc:`run library user guide <../run/user_guide>`.
+
+             The use case for ``simulator_output_path`` is to support
+             code expecting input files to be located in the
+             simulator working directory.
 
 :post_check: A ``post_check`` is called after a passing simulation of
-             the test case. The function may accept an ``output_path``
-             string which is the filesystem path to the directory
-             where test outputs are stored. The function may accept an
-             ``output`` string which full standard output from the
-             test containing the simulator transcript. The function
-             must return ``True`` or the test will fail.
+             the test case. The function accepts an optional string argument
+             ``output_path``, which is the filesystem path to the
+             directory where test outputs are stored, and an optional
+             string argument ``output``  which is the full standard output from the
+             test containing the simulator transcript.
+
+             The function must return ``True`` or the test will fail.
 
              The use case is to automatically check output data files
-             that is written by the test case during simulation. The test
-             bench can access the test case unique ``output_path`` via
-             a :ref:`special generic/parameter <special_generics>`.
+             that are written by the test case during simulation. The
+             test bench can access the test case unique
+             ``output_path`` via a special generic or a using the
+             ``output_path`` function. See the
+             :doc:`run library user guide <../run/user_guide>`.
 
              .. note::
                 The ``post_check`` function is only called after a

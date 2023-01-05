@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Test of the general tokenizer
@@ -114,9 +114,7 @@ at filename1 line 3:
         )
 
     def test_describe_none_filename_location(self):
-        self.assertEqual(
-            describe_location(((None, (0, 0)), None)), "Unknown Python string"
-        )
+        self.assertEqual(describe_location(((None, (0, 0)), None)), "Unknown Python string")
 
 
 def _describe_location(*codes):
@@ -137,12 +135,8 @@ def _describe_location(*codes):
 
         location = ((filename, (start, end)), location)
 
-    with mock.patch(
-        "vunit.parsing.tokenizer.read_file", autospec=True
-    ) as mock_read_file:
-        with mock.patch(
-            "vunit.parsing.tokenizer.file_exists", autospec=True
-        ) as mock_file_exists:
+    with mock.patch("vunit.parsing.tokenizer.read_file", autospec=True) as mock_read_file:
+        with mock.patch("vunit.parsing.tokenizer.file_exists", autospec=True) as mock_file_exists:
 
             def file_exists_side_effect(filename):
                 return filename in contents

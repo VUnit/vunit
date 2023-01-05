@@ -1,7 +1,8 @@
 .. _cli:
 
 Command Line Interface
-======================
+######################
+
 A :class:`VUnit <vunit.ui.VUnit>` object can be created from command
 line arguments by using the :meth:`from_argv
 <vunit.ui.VUnit.from_argv>` method effectively creating a custom
@@ -13,14 +14,15 @@ specified by the command line arguments and exit the script. The added
 source files are automatically scanned for test cases.
 
 Usage
------
+=====
 
 .. argparse::
    :ref: vunit.vunit_cli._parser_for_documentation
    :prog: run.py
 
 Example Session
----------------
+===============
+
 The :vunit_example:`VHDL User Guide Example <vhdl/user_guide/>` can be run to produce the following output:
 
 .. code-block:: console
@@ -88,7 +90,8 @@ The :vunit_example:`VHDL User Guide Example <vhdl/user_guide/>` can be run to pr
    All passed!
 
 Opening a Test Case in Simulator GUI
-------------------------------------
+====================================
+
 Sometimes the textual error messages and logs are not enough to
 pinpoint the error and a test case needs to be opened in the GUI for
 visual debugging using single stepping, breakpoints and wave form
@@ -129,7 +132,8 @@ possible to perform ``run.py`` with the ``--compile`` flag in a
 separate terminal.
 
 Test Output Paths
------------------
+=================
+
 VUnit creates a separate output directory for each test to provide
 isolation. The test output paths are located under
 ``OUTPUT_PATH/test_output/``. The test names have been washed of any
@@ -149,6 +153,11 @@ and then a test name.
    When using the ``run_all_in_same_sim`` pragma all tests within the
    test bench share the same output folder named after the test bench.
 
+.. _environment_variables:
+
+Environment Variables
+=====================
+
 .. _simulator_selection:
 
 Simulator Selection
@@ -157,8 +166,9 @@ VUnit automatically detects which simulators are available on the
 ``PATH`` environment variable and by default selects the first one
 found. For people who have multiple simulators installed the
 ``VUNIT_SIMULATOR`` environment variable can be set to one of
-``activehdl``, ``rivierapro``, ``ghdl`` or ``modelsim`` to explicitly
-specify which simulator to use.
+``activehdl``, ``rivierapro``, ``ghdl`` or ``modelsim`` to specify
+which simulator to use. ``modelsim`` is used for both ModelSim and
+Questa as VUnit handles these simulators identically.
 
 In addition to VUnit scanning the ``PATH`` the simulator executable
 path can be explicitly configured by setting a
@@ -169,8 +179,8 @@ path can be explicitly configured by setting a
 
    VUNIT_GHDL_PATH=/opt/ghdl/bin
 
-Simulator Specific Environment Variables
-----------------------------------------
+Simulator Specific
+------------------
 
 - ``VUNIT_MODELSIM_INI`` By default VUnit copies the *modelsim.ini*
   file from the tool install folder as a starting point. Setting this
@@ -179,8 +189,8 @@ Simulator Specific Environment Variables
 
 .. _test_output_envs:
 
-Test Output Path Length Environment Variables
----------------------------------------------
+Test Output Path Length
+-----------------------
 - ``VUNIT_SHORT_TEST_OUTPUT_PATHS`` Unfortunately file system paths
   are still practically limited to 260 characters on Windows. VUnit
   tries to limit the length of the test output paths on Windows to
@@ -194,14 +204,23 @@ Test Output Path Length Environment Variables
   output path margin on Windows. By default the test output path is
   shortened to allow a 100 character margin.
 
-.. _continuous_integration:
+Language revision selection
+---------------------------
 
-.. include:: ci.rst
+The VHDL revision can be specified through the :ref:`python_interface`
+(see :class:`vunit.ui.VUnit`).
+Alternatively, environment variable ``VUNIT_VHDL_STANDARD`` can be set to
+``93``|``1993``, ``02``|``2002``, ``08``|``2008`` (default) or ``19``|``2019``.
+
+.. IMPORTANT::
+  Note that VHDL revision 2019 is unsupported by most vendors, and support of VHDL 2008 features is uneven.
+  Check the documentation of the simulator before using features requiring revisions equal or newer than 2008.
 
 .. _json_export:
 
 JSON Export
------------
+===========
+
 VUnit supports exporting project information through the ``--export-json`` command
 line argument. A JSON file is written containing the list of all files
 added to the project as well as a list of all tests. Each test has a

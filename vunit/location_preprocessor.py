@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Preprocessing of VHDL files to add file_name and line_num arguments to function calls
@@ -83,12 +83,8 @@ class LocationPreprocessor(object):
         """
         Remove a subprogram name from the list of known names to preprocess
         """
-        if (
-            subprogram
-            not in self._subprograms_without_arguments
-            + self._subprograms_with_arguments
-        ):
-            raise RuntimeError("Unable to remove unknown subprogram %s" % subprogram)
+        if subprogram not in self._subprograms_without_arguments + self._subprograms_with_arguments:
+            raise RuntimeError(f"Unable to remove unknown subprogram {subprogram!s}")
 
         if subprogram in self._subprograms_without_arguments:
             self._subprograms_without_arguments.remove(subprogram)
@@ -113,9 +109,7 @@ class LocationPreprocessor(object):
 
     _already_fixed_file_name_pattern = re.compile(r"file_name\s*=>", re.MULTILINE)
     _already_fixed_line_num_pattern = re.compile(r"line_num\s*=>", re.MULTILINE)
-    _subprogram_declaration_start_backwards_pattern = re.compile(
-        r"\s+(erudecorp|noitcnuf)"
-    )
+    _subprogram_declaration_start_backwards_pattern = re.compile(r"\s+(erudecorp|noitcnuf)", re.IGNORECASE)
     _assignment_pattern = re.compile(r"\s*(:=|<=)", re.MULTILINE)
 
     def run(self, code, file_name):
@@ -123,61 +117,36 @@ class LocationPreprocessor(object):
         Return preprocessed code given file_name of original file
         """
         potential_subprogram_call_with_arguments_pattern = re.compile(
-            r"[^a-zA-Z0-9_](?P<subprogram>"
-            + "|".join(self._subprograms_with_arguments)
-            + r")\s*(?P<args>\()",
+            r"[^a-zA-Z0-9_](?P<subprogram>" + "|".join(self._subprograms_with_arguments) + r")\s*(?P<args>\()",
             re.MULTILINE,
         )
 
         potential_subprogram_call_without_arguments_pattern = re.compile(
-            r"[^a-zA-Z0-9_](?P<subprogram>"
-            + "|".join(self._subprograms_without_arguments)
-            + r")\s*;",
+            r"[^a-zA-Z0-9_](?P<subprogram>" + "|".join(self._subprograms_without_arguments) + r")\s*;",
             re.MULTILINE,
         )
 
         matches = list(potential_subprogram_call_with_arguments_pattern.finditer(code))
         if self._subprograms_without_arguments:
-            matches += list(
-                potential_subprogram_call_without_arguments_pattern.finditer(code)
-            )
+            matches += list(potential_subprogram_call_without_arguments_pattern.finditer(code))
         matches.sort(key=lambda match: match.start("subprogram"), reverse=True)
 
         for match in matches:
-            if self._subprogram_declaration_start_backwards_pattern.match(
-                code[match.start() : 0 : -1]
-            ):
+            if self._subprogram_declaration_start_backwards_pattern.match(code[match.start() : 0 : -1]):
                 continue
             file_name_association = ', file_name => "' + file_name + '"'
-            line_num_association = ", line_num => " + str(
-                1 + code[: match.start("subprogram")].count("\n")
-            )
+            line_num_association = ", line_num => " + str(1 + code[: match.start("subprogram")].count("\n"))
             if "args" in match.groupdict():
-                closing_paranthesis_start = self._find_closing_parenthesis(
-                    code[match.start("args") :]
-                )
+                closing_paranthesis_start = self._find_closing_parenthesis(code[match.start("args") :])
 
-                if self._assignment_pattern.match(
-                    code[match.start("args") + closing_paranthesis_start + 1 :]
-                ):
+                if self._assignment_pattern.match(code[match.start("args") + closing_paranthesis_start + 1 :]):
                     continue
 
-                args = code[
-                    match.start("args") : match.start("args")
-                    + closing_paranthesis_start
-                ]
-                already_fixed_file_name = (
-                    self._already_fixed_file_name_pattern.search(args) is not None
-                )
-                already_fixed_line_num = (
-                    self._already_fixed_line_num_pattern.search(args) is not None
-                )
-                file_name_association = (
-                    file_name_association if not already_fixed_file_name else ""
-                )
-                line_num_association = (
-                    line_num_association if not already_fixed_line_num else ""
-                )
+                args = code[match.start("args") : match.start("args") + closing_paranthesis_start]
+                already_fixed_file_name = self._already_fixed_file_name_pattern.search(args) is not None
+                already_fixed_line_num = self._already_fixed_line_num_pattern.search(args) is not None
+                file_name_association = file_name_association if not already_fixed_file_name else ""
+                line_num_association = line_num_association if not already_fixed_line_num else ""
 
                 code = (
                     code[: match.start("args") + closing_paranthesis_start]

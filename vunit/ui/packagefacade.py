@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 UI class PackageFacade
@@ -23,9 +23,7 @@ class PackageFacade(object):
         self._package_name = package_name
         self._design_unit = design_unit
 
-    def generate_codecs(
-        self, codec_package_name=None, used_packages=None, output_file_name=None
-    ):
+    def generate_codecs(self, codec_package_name=None, used_packages=None, output_file_name=None):
         """
         Generates codecs for the datatypes in this Package
         """
@@ -37,8 +35,6 @@ class PackageFacade(object):
             file_extension = Path(self._design_unit.source_file.name).suffix
             output_file_name = codecs_path / (codec_package_name + file_extension)
 
-        codec_generator.generate_codecs(
-            self._design_unit, codec_package_name, used_packages, output_file_name
-        )
+        codec_generator.generate_codecs(self._design_unit, codec_package_name, used_packages, output_file_name)
 
         return self._parent.add_source_files(output_file_name, self._library_name)

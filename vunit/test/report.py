@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Provide test reporting functionality
@@ -86,14 +86,12 @@ class TestReport(object):
             assert False
 
         args = []
-        args.append("P=%i" % len(passed))
-        args.append("S=%i" % len(skipped))
-        args.append("F=%i" % len(failed))
-        args.append("T=%i" % total_tests)
+        args.append(f"P={len(passed):d}")
+        args.append(f"S={len(skipped):d}")
+        args.append(f"F={len(failed):d}")
+        args.append(f"T={total_tests:d}")
 
-        self._printer.write(
-            " (%s) %s (%.1f seconds)\n" % (" ".join(args), result.name, result.time)
-        )
+        self._printer.write(f" ({' '.join(args)!s}) {result.name!s} ({result.time:.1f} seconds)\n")
 
     def all_ok(self):
         """
@@ -122,35 +120,33 @@ class TestReport(object):
 
         prefix = "==== Summary "
         max_len = max(len(test.name) for test in all_tests)
-        self._printer.write(
-            "%s%s\n" % (prefix, "=" * (max(max_len - len(prefix) + 25, 0)))
-        )
+        self._printer.write(f"{prefix!s}{'=' * (max(max_len - len(prefix) + 25, 0))}\n")
         for test_result in all_tests:
             test_result.print_status(self._printer, padding=max_len)
 
-        self._printer.write("%s\n" % ("=" * (max(max_len + 25, 0))))
+        self._printer.write(("=" * (max(max_len + 25, 0))) + "\n")
         n_failed = len(failures)
         n_skipped = len(skipped)
         n_passed = len(passed)
         total = len(all_tests)
 
         self._printer.write("pass", fg="gi")
-        self._printer.write(" %i of %i\n" % (n_passed, total))
+        self._printer.write(f" {n_passed:d} of {total:d}\n")
 
         if n_skipped > 0:
             self._printer.write("skip", fg="rgi")
-            self._printer.write(" %i of %i\n" % (n_skipped, total))
+            self._printer.write(f" {n_skipped:d} of {total:d}\n")
 
         if n_failed > 0:
             self._printer.write("fail", fg="ri")
-            self._printer.write(" %i of %i\n" % (n_failed, total))
-        self._printer.write("%s\n" % ("=" * (max(max_len + 25, 0))))
+            self._printer.write(f" {n_failed:d} of {total:d}\n")
+        self._printer.write(("=" * (max(max_len + 25, 0))) + "\n")
 
         total_time = sum((result.time for result in self._test_results.values()))
-        self._printer.write("Total time was %.1f seconds\n" % total_time)
-        self._printer.write("Elapsed time was %.1f seconds\n" % self._real_total_time)
+        self._printer.write(f"Total time was {total_time:.1f} seconds\n")
+        self._printer.write(f"Elapsed time was {self._real_total_time:.1f} seconds\n")
 
-        self._printer.write("%s\n" % ("=" * (max(max_len + 25, 0))))
+        self._printer.write(("=" * (max(max_len + 25, 0))) + "\n")
 
         if n_failed > 0:
             self._printer.write("Some failed!", fg="ri")
@@ -163,8 +159,8 @@ class TestReport(object):
         assert len(all_tests) <= self._expected_num_tests
         if len(all_tests) < self._expected_num_tests:
             self._printer.write(
-                "WARNING: Test execution aborted after running %d out of %d tests"
-                % (len(all_tests), self._expected_num_tests),
+                f"WARNING: Test execution aborted after running "
+                f"{len(all_tests):d} out of {self._expected_num_tests:d} tests",
                 fg="rgi",
             )
             self._printer.write("\n")
@@ -223,7 +219,7 @@ class TestStatus(object):
         return isinstance(other, type(self)) and self.name == other.name
 
     def __repr__(self):
-        return "TestStatus(%r)" % self._name
+        return f"TestStatus({self._name!r})"
 
 
 PASSED = TestStatus("passed")
@@ -253,7 +249,7 @@ class TestResult(object):
         if file_exists and is_readable:
             return read_file(self._output_file_name)
 
-        return "Failed to read output file: %s" % self._output_file_name
+        return f"Failed to read output file: {self._output_file_name!s}"
 
     @property
     def passed(self):
@@ -283,9 +279,7 @@ class TestResult(object):
 
         my_padding = max(padding - len(self.name), 0)
 
-        printer.write(
-            "%s (%.1f seconds)\n" % (self.name + (" " * my_padding), self.time)
-        )
+        printer.write(f"{self.name + (' ' * my_padding)} ({self.time:.1f} seconds)\n")
 
     def to_xml(self, xunit_xml_format):
         """
@@ -298,7 +292,7 @@ class TestResult(object):
             test.attrib["name"] = match.group(2)
         else:
             test.attrib["name"] = self.name
-        test.attrib["time"] = "%.1f" % self.time
+        test.attrib["time"] = f"{self.time:.1f}"
 
         # By default the output is stored in system-out
         system_out = ElementTree.SubElement(test, "system-out")

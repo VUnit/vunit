@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Acceptance test of VUnit end to end functionality
@@ -89,27 +89,19 @@ class TestVunitArtificial(unittest.TestCase):
 
     @unittest.skipUnless(simulator_is("modelsim"), "Only modelsim supports verilog")
     def test_run_selected_tests_in_same_sim_test_bench_verilog(self):
-        self._test_run_selected_tests_in_same_sim_test_bench(
-            self.artificial_run_verilog
-        )
+        self._test_run_selected_tests_in_same_sim_test_bench(self.artificial_run_verilog)
 
     def _test_run_selected_tests_in_same_sim_test_bench(self, run_file):
         """
         Run selected "same_sim" test in isolation
         """
-        self.check(
-            run_file, exit_code=0, clean=True, args=["*same_sim_some_fail*Test 1*"]
-        )
+        self.check(run_file, exit_code=0, clean=True, args=["*same_sim_some_fail*Test 1*"])
         check_report(self.report_file, [("passed", "lib.tb_same_sim_some_fail.Test 1")])
 
-        self.check(
-            run_file, exit_code=1, clean=False, args=["*same_sim_some_fail*Test 2*"]
-        )
+        self.check(run_file, exit_code=1, clean=False, args=["*same_sim_some_fail*Test 2*"])
         check_report(self.report_file, [("failed", "lib.tb_same_sim_some_fail.Test 2")])
 
-        self.check(
-            run_file, exit_code=0, clean=False, args=["*same_sim_some_fail*Test 3*"]
-        )
+        self.check(run_file, exit_code=0, clean=False, args=["*same_sim_some_fail*Test 3*"])
         check_report(self.report_file, [("passed", "lib.tb_same_sim_some_fail.Test 3")])
 
         self.check(
@@ -141,11 +133,11 @@ class TestVunitArtificial(unittest.TestCase):
                 ("failed", "lib.tb_fail_on_fatal_and_early_finish.fatal1"),
                 ("failed", "lib.tb_fail_on_fatal_and_early_finish.finish0"),
                 ("failed", "lib.tb_fail_on_fatal_and_early_finish.finish1"),
-                ("passed", "lib.tb_with_parameter_config.Test 0"),
-                ("passed", "lib.tb_with_parameter_config.cfg.Test 1"),
-                ("passed", "lib.tb_with_parameter_config.Test 2"),
-                ("passed", "lib.tb_with_parameter_config.cfg.Test 3"),
-                ("passed", "lib.tb_with_parameter_config.cfg.Test 4"),
+                ("passed", "lib2.tb_with_parameter_config.Test 0"),
+                ("passed", "lib2.tb_with_parameter_config.cfg.Test 1"),
+                ("passed", "lib2.tb_with_parameter_config.Test 2"),
+                ("passed", "lib2.tb_with_parameter_config.cfg.Test 3"),
+                ("passed", "lib2.tb_with_parameter_config.cfg.Test 4"),
                 ("passed", "lib.tb_same_sim_all_pass.cfg.Test 1"),
                 ("passed", "lib.tb_same_sim_all_pass.cfg.Test 2"),
                 ("passed", "lib.tb_same_sim_all_pass.cfg.Test 3"),
@@ -181,9 +173,7 @@ class TestVunitArtificial(unittest.TestCase):
 
     def test_exit_0_flag(self):
         self.check(self.artificial_run_vhdl, exit_code=1, args=["lib.tb_fail.all"])
-        self.check(
-            self.artificial_run_vhdl, exit_code=0, args=["--exit-0", "lib.tb_fail.all"]
-        )
+        self.check(self.artificial_run_vhdl, exit_code=0, args=["--exit-0", "lib.tb_fail.all"])
 
 
 EXPECTED_REPORT = (
@@ -210,7 +200,7 @@ EXPECTED_REPORT = (
     ("passed", "lib.tb_with_checks.Test passing check"),
     ("failed", "lib.tb_with_checks.Test failing check"),
     ("failed", "lib.tb_with_checks.Test non-stopping failing check"),
-    ("passed", "lib.tb_set_generic.all"),
+    ("passed", "lib2.tb_set_generic.all"),
     ("passed", "lib.tb_with_generic_config.Test 0"),
     ("passed", "lib.tb_with_generic_config.cfg.Test 1"),
     ("passed", "lib.tb_with_generic_config.Test 2"),

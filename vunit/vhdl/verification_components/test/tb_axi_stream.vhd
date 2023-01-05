@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -353,7 +353,7 @@ begin
         user := x"45";
       end if;
       push_axi_stream(net, master_axi_stream, x"12", tlast => '1', tkeep => "1", tstrb => "1", tid => id, tdest => dest, tuser => user);
-      check_axi_stream(net, slave_axi_stream, x"12", '1', msg => "reduced checking axi stream");
+      check_axi_stream(net, slave_axi_stream, x"12", tlast => '1', msg => "reduced checking axi stream");
 
     elsif run("test failing check") then
       if id'length > 0 then
@@ -431,7 +431,43 @@ begin
                          tid => std_logic_vector(to_unsigned(42, id'length)),
                          tdest => std_logic_vector(to_unsigned(i+1, dest'length)),
                          tuser => std_logic_vector(to_unsigned(i*2, user'length)),
-                         msg  => "check blocking",
+                         msg  => "check non-blocking",
+                         blocking  => false);
+      end loop;
+
+      check_equal(now, timestamp, result(" setting up transaction stalled"));
+
+      wait_until_idle(net, as_sync(slave_axi_stream));
+      check_equal(now, timestamp + (12+1)*10 ns, " transaction time incorrect");
+
+    elsif run("test back-to-back passing reduced check") then
+      wait until rising_edge(aclk);
+      timestamp := now;
+
+      last := '0';
+      for i in 3 to 14 loop
+        if i = 14 then
+          last := '1';
+        end if;
+        push_axi_stream(net, master_axi_stream,
+                        tdata => std_logic_vector(to_unsigned(i, 8)),
+                        tlast => last,
+                        tkeep => "1",
+                        tstrb => "1",
+                        tid => std_logic_vector(to_unsigned(42, id'length)),
+                        tdest => std_logic_vector(to_unsigned(i+1, dest'length)),
+                        tuser => std_logic_vector(to_unsigned(i*2, user'length)));
+      end loop;
+
+      last := '0';
+      for i in 3 to 14 loop
+        if i = 14 then
+          last := '1';
+        end if;
+        check_axi_stream(net, slave_axi_stream,
+                         expected => std_logic_vector(to_unsigned(i, 8)),
+                         tlast => last,
+                         msg  => "check non-blocking",
                          blocking  => false);
       end loop;
 
@@ -467,10 +503,12 @@ begin
       check_equal(now, timestamp, result(" setting up transaction stalled"));
 
       wait until rising_edge(aclk);
+      wait for 1 ps;
       mocklogger := get_logger("check");
       mock(mocklogger);
 
       wait until rising_edge(aclk) and tvalid = '1';
+      wait for 1 ps;
 
       check_log(mocklogger, "TDATA mismatch, check non-blocking - Got 0000_0011 (3). Expected 0000_0110 (6).", error);
       check_log(mocklogger, "TKEEP mismatch, check non-blocking - Got 0 (0). Expected 1 (1).", error);
@@ -488,9 +526,9 @@ begin
 
       unmock(mocklogger);
 
-      check_equal(now, timestamp + 20 ns, " transaction time incorrect");
+      check_equal(now, timestamp + 20 ns + 1 ps, " transaction time incorrect");
 
-    elsif run("test random stall on master") or run("test random stall on slave") then
+    elsif run("test random stall on master") or run("test random pop stall on slave") then
       wait until rising_edge(aclk);
       for i in 0 to 100 loop
         pop_stream(net, slave_stream, reference);
@@ -520,6 +558,25 @@ begin
         check((axis_stall_stats.ready.min >= min_stall_cycles) and (axis_stall_stats.ready.max <= max_stall_cycles), "Checking that the minimal and maximal stall lenghts are in expected boundaries");
         check_equal(axis_stall_stats.valid.events, 0, "Checking that there are zero tvalid stall events");
       end if;
+
+    elsif run("test random check stall on slave") then
+      wait until rising_edge(aclk);
+      for i in 0 to 100 loop
+        check_axi_stream(net, slave_axi_stream, std_logic_vector(to_unsigned(i + 1, data'length)), blocking => false);
+      end loop;
+      for i in 0 to 100 loop
+        push_stream(net, master_stream, std_logic_vector(to_unsigned(i + 1, data'length)), true);
+      end loop;
+
+      wait_until_idle(net, master_sync);  -- wait until all transfers are done before checking them
+      wait_until_idle(net, slave_sync);
+
+      info("There have been " & to_string(axis_stall_stats.valid.events) & " tvalid stall events");
+      info("Min stall length was " & to_string(axis_stall_stats.valid.min));
+      info("Max stall length was " & to_string(axis_stall_stats.valid.max));
+      check((axis_stall_stats.ready.events < (g_stall_percentage_slave+10)) and (axis_stall_stats.ready.events > (g_stall_percentage_slave-10)), "Checking that the tready stall probability lies within reasonable boundaries");
+      check((axis_stall_stats.ready.min >= min_stall_cycles) and (axis_stall_stats.ready.max <= max_stall_cycles), "Checking that the minimal and maximal stall lenghts are in expected boundaries");
+      check_equal(axis_stall_stats.valid.events, 0, "Checking that there are zero tvalid stall events");
 
     end if;
     test_runner_cleanup(runner);

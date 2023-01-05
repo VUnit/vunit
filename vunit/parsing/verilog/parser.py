@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 # pylint: disable=unused-wildcard-import
 # pylint: disable=wildcard-import
@@ -69,10 +69,7 @@ class VerilogParser(object):
         if cached is not None:
             return cached
 
-        initial_defines = dict(
-            (key, Macro(key, self._tokenizer.tokenize(value)))
-            for key, value in defines.items()
-        )
+        initial_defines = dict((key, Macro(key, self._tokenizer.tokenize(value))) for key, value in defines.items())
         code = read_file(file_name, encoding=HDL_FILE_ENCODING)
         tokens = self._tokenizer.tokenize(code, file_name=file_name)
         included_files = []
@@ -83,9 +80,7 @@ class VerilogParser(object):
             included_files=included_files,
         )
 
-        included_files_for_design_file = [
-            name for _, name in included_files if name is not None
-        ]
+        included_files_for_design_file = [name for _, name in included_files if name is not None]
         result = VerilogDesignFile.parse(pp_tokens, included_files_for_design_file)
 
         if self._database is None:
@@ -99,7 +94,7 @@ class VerilogParser(object):
         """
         Returns the database key for parse results of file_name
         """
-        return ("CachedVerilogParser.parse(%s)" % str(Path(file_name).resolve)).encode()
+        return f"CachedVerilogParser.parse({str(Path(file_name).resolve)})".encode()
 
     def _store_result(self, file_name, result, included_files, defines):
         """
@@ -107,9 +102,7 @@ class VerilogParser(object):
         """
         new_included_files = []
         for short_name, full_name in included_files:
-            new_included_files.append(
-                (short_name, full_name, self._content_hash(full_name))
-            )
+            new_included_files.append((short_name, full_name, self._content_hash(full_name)))
 
         key = self._key(file_name)
         self._database[key] = (
@@ -145,9 +138,7 @@ class VerilogParser(object):
         if key not in self._database:
             return None
 
-        old_content_hash, old_included_files, old_defines, old_result = self._database[
-            key
-        ]
+        old_content_hash, old_included_files, old_defines, old_result = self._database[key]
         if old_defines != defines:
             return None
 
@@ -183,9 +174,7 @@ class VerilogDesignFile(object):
         self.modules = [] if modules is None else modules
         self.packages = [] if packages is None else packages
         self.imports = [] if imports is None else imports
-        self.package_references = (
-            [] if package_references is None else package_references
-        )
+        self.package_references = [] if package_references is None else package_references
         self.instances = [] if instances is None else instances
         self.included_files = [] if included_files is None else included_files
 
@@ -194,11 +183,7 @@ class VerilogDesignFile(object):
         """
         Parse verilog file
         """
-        tokens = [
-            token
-            for token in tokens
-            if token.kind not in (WHITESPACE, COMMENT, NEWLINE, MULTI_COMMENT)
-        ]
+        tokens = [token for token in tokens if token.kind not in (WHITESPACE, COMMENT, NEWLINE, MULTI_COMMENT)]
         return cls(
             modules=VerilogModule.find(tokens),
             packages=VerilogPackage.find(tokens),
@@ -226,13 +211,9 @@ class VerilogDesignFile(object):
                 if token.kind == IDENTIFIER:
                     results.append(token.value)
                 else:
-                    LocationException.warning(
-                        "import bad argument", token.location
-                    ).log(LOGGER)
+                    LocationException.warning("import bad argument", token.location).log(LOGGER)
             except EOFException:
-                LocationException.warning(
-                    "EOF reached when parsing import", location=import_token.location
-                ).log(LOGGER)
+                LocationException.warning("EOF reached when parsing import", location=import_token.location).log(LOGGER)
         return results
 
     @staticmethod

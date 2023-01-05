@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Test the test report functionality
@@ -200,12 +200,8 @@ Elapsed time was 3.0 seconds
         root = ElementTree.fromstring(report.to_junit_xml_str())
         self.assertEqual(root.tag, "testsuite")
         self.assertEqual(len(root.findall("*")), 2)
-        self.assert_has_test(
-            root, "passed_test0", time="1.0", status="passed", output=fail_output
-        )
-        self.assert_has_test(
-            root, "passed_test1", time="2.0", status="passed", output=fail_output
-        )
+        self.assert_has_test(root, "passed_test0", time="1.0", status="passed", output=fail_output)
+        self.assert_has_test(root, "passed_test1", time="2.0", status="passed", output=fail_output)
 
     def test_junit_report_with_some_failed_tests(self):
         report = self._report_with_some_failed_tests()
@@ -218,20 +214,12 @@ Elapsed time was 3.0 seconds
 
     def test_junit_report_with_some_failed_tests_bamboo_fmt(self):
         report = self._report_with_some_failed_tests()
-        root = ElementTree.fromstring(
-            report.to_junit_xml_str(xunit_xml_format="bamboo")
-        )
+        root = ElementTree.fromstring(report.to_junit_xml_str(xunit_xml_format="bamboo"))
         self.assertEqual(root.tag, "testsuite")
         self.assertEqual(len(root.findall("*")), 3)
-        self.assert_has_test(
-            root, "failed_test0", time="11.1", status="failed", fmt="bamboo"
-        )
-        self.assert_has_test(
-            root, "passed_test", time="2.0", status="passed", fmt="bamboo"
-        )
-        self.assert_has_test(
-            root, "failed_test1", time="3.0", status="failed", fmt="bamboo"
-        )
+        self.assert_has_test(root, "failed_test0", time="11.1", status="failed", fmt="bamboo")
+        self.assert_has_test(root, "passed_test", time="2.0", status="passed", fmt="bamboo")
+        self.assert_has_test(root, "failed_test1", time="3.0", status="failed", fmt="bamboo")
 
     def test_junit_report_with_some_skipped_tests(self):
         report = self._report_with_some_skipped_tests()
@@ -244,15 +232,9 @@ Elapsed time was 3.0 seconds
 
     def test_junit_report_with_testcase_classname(self):
         report = self._new_report()
-        report.add_result(
-            "test", PASSED, time=1.0, output_file_name=self.output_file_name
-        )
-        report.add_result(
-            "lib.entity", PASSED, time=1.0, output_file_name=self.output_file_name
-        )
-        report.add_result(
-            "lib.entity.test", PASSED, time=1.0, output_file_name=self.output_file_name
-        )
+        report.add_result("test", PASSED, time=1.0, output_file_name=self.output_file_name)
+        report.add_result("lib.entity", PASSED, time=1.0, output_file_name=self.output_file_name)
+        report.add_result("lib.entity.test", PASSED, time=1.0, output_file_name=self.output_file_name)
         report.add_result(
             "lib.entity.config.test",
             PASSED,
@@ -261,8 +243,7 @@ Elapsed time was 3.0 seconds
         )
         root = ElementTree.fromstring(report.to_junit_xml_str())
         names = set(
-            (elem.attrib.get("classname", None), elem.attrib.get("name", None))
-            for elem in root.findall("testcase")
+            (elem.attrib.get("classname", None), elem.attrib.get("name", None)) for elem in root.findall("testcase")
         )
         self.assertEqual(
             names,
@@ -280,9 +261,7 @@ Elapsed time was 3.0 seconds
         opath = Path(self.output_file_name).parent.parent
         test_path = opath / TEST_OUTPUT_PATH / "unit"
         output_file_name = test_path / Path(self.output_file_name).name
-        results = Results(
-            opath, None, self._report_with_all_passed_tests(output_file_name)
-        )
+        results = Results(opath, None, self._report_with_all_passed_tests(output_file_name))
         report = results.get_report()
         for _, test in report.tests.items():
             self.assertEqual(test.path.name, test.relpath)
@@ -308,58 +287,38 @@ Elapsed time was 3.0 seconds
         )
 
     def _report_with_all_passed_tests(self, output_file_name=None):
-        " @returns A report with all passed tests "
+        "@returns A report with all passed tests"
         if not output_file_name:
             output_file_name = self.output_file_name
         report = self._new_report()
-        report.add_result(
-            "passed_test0", PASSED, time=1.0, output_file_name=output_file_name
-        )
-        report.add_result(
-            "passed_test1", PASSED, time=2.0, output_file_name=output_file_name
-        )
+        report.add_result("passed_test0", PASSED, time=1.0, output_file_name=output_file_name)
+        report.add_result("passed_test1", PASSED, time=2.0, output_file_name=output_file_name)
         report.set_expected_num_tests(2)
         return report
 
     def _report_with_missing_tests(self):
-        " @returns A report with all passed tests "
+        "@returns A report with all passed tests"
         report = self._new_report()
-        report.add_result(
-            "passed_test0", PASSED, time=1.0, output_file_name=self.output_file_name
-        )
-        report.add_result(
-            "passed_test1", PASSED, time=2.0, output_file_name=self.output_file_name
-        )
+        report.add_result("passed_test0", PASSED, time=1.0, output_file_name=self.output_file_name)
+        report.add_result("passed_test1", PASSED, time=2.0, output_file_name=self.output_file_name)
         report.set_expected_num_tests(3)
         return report
 
     def _report_with_some_failed_tests(self):
-        " @returns A report with some failed tests "
+        "@returns A report with some failed tests"
         report = self._new_report()
-        report.add_result(
-            "failed_test0", FAILED, time=11.12, output_file_name=self.output_file_name
-        )
-        report.add_result(
-            "passed_test", PASSED, time=2.0, output_file_name=self.output_file_name
-        )
-        report.add_result(
-            "failed_test1", FAILED, time=3.0, output_file_name=self.output_file_name
-        )
+        report.add_result("failed_test0", FAILED, time=11.12, output_file_name=self.output_file_name)
+        report.add_result("passed_test", PASSED, time=2.0, output_file_name=self.output_file_name)
+        report.add_result("failed_test1", FAILED, time=3.0, output_file_name=self.output_file_name)
         report.set_expected_num_tests(3)
         return report
 
     def _report_with_some_skipped_tests(self):
-        " @returns A report with some skipped tests "
+        "@returns A report with some skipped tests"
         report = self._new_report()
-        report.add_result(
-            "passed_test", PASSED, time=1.0, output_file_name=self.output_file_name
-        )
-        report.add_result(
-            "skipped_test", SKIPPED, time=0.0, output_file_name=self.output_file_name
-        )
-        report.add_result(
-            "failed_test", FAILED, time=3.0, output_file_name=self.output_file_name
-        )
+        report.add_result("passed_test", PASSED, time=1.0, output_file_name=self.output_file_name)
+        report.add_result("skipped_test", SKIPPED, time=0.0, output_file_name=self.output_file_name)
+        report.add_result("failed_test", FAILED, time=3.0, output_file_name=self.output_file_name)
         report.set_expected_num_tests(3)
         return report
 

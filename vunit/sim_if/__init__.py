@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Simulator interface(s)
@@ -134,18 +134,12 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
             return None
 
         all_paths = [
-            [
-                str(Path(executables).parent.resolve())
-                for executables in cls.find_executable(name)
-            ]
+            [str(Path(executables).parent.resolve()) for executables in cls.find_executable(name)]
             for name in executables
         ]
 
         for path0 in all_paths[0]:
-            if all(
-                [path0 in paths for paths in all_paths]
-                + [constraint(path0) for constraint in constraints]
-            ):
+            if all([path0 in paths for paths in all_paths] + [constraint(path0) for constraint in constraints]):
                 return path0
         return None
 
@@ -183,9 +177,7 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         """
         return False
 
-    def merge_coverage(  # pylint: disable=unused-argument, no-self-use
-        self, file_name, args
-    ):
+    def merge_coverage(self, file_name, args):  # pylint: disable=unused-argument
         """
         Hook for simulator interface to creating coverage reports
         """
@@ -209,9 +201,7 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         """
         self.add_simulator_specific(project)
         self.setup_library_mapping(project)
-        self.compile_source_files(
-            project, printer, continue_on_error, target_files=target_files
-        )
+        self.compile_source_files(project, printer, continue_on_error, target_files=target_files)
 
     def simulate(self, output_path, test_suite_name, config, elaborate_only):
         """
@@ -233,7 +223,7 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
             command = None
             printer.write("failed", fg="ri")
             printer.write("\n")
-            printer.write("File type not supported by %s simulator\n" % (self.name))
+            printer.write(f"File type not supported by {self.name!s} simulator\n")
 
             return False
 
@@ -246,11 +236,9 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         except subprocess.CalledProcessError as err:
             printer.write("failed", fg="ri")
             printer.write("\n")
-            printer.write(
-                "=== Command used: ===\n%s\n" % (subprocess.list2cmdline(command))
-            )
+            printer.write(f"=== Command used: ===\n{subprocess.list2cmdline(command)!s}\n")
             printer.write("\n")
-            printer.write("=== Command output: ===\n%s\n" % err.output)
+            printer.write(f"=== Command output: ===\n{err.output!s}\n")
 
             return False
 
@@ -271,9 +259,7 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         failures = []
 
         if target_files is None:
-            source_files = project.get_files_in_compile_order(
-                dependency_graph=dependency_graph
-            )
+            source_files = project.get_files_in_compile_order(dependency_graph=dependency_graph)
         else:
             source_files = project.get_minimal_file_set_in_compile_order(target_files)
 
@@ -282,20 +268,13 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         max_library_name = 0
         max_source_file_name = 0
         if source_files:
-            max_library_name = max(
-                len(source_file.library.name) for source_file in source_files
-            )
-            max_source_file_name = max(
-                len(simplify_path(source_file.name)) for source_file in source_files
-            )
+            max_library_name = max(len(source_file.library.name) for source_file in source_files)
+            max_source_file_name = max(len(simplify_path(source_file.name)) for source_file in source_files)
 
         for source_file in source_files:
             printer.write(
-                "Compiling into %s %s "
-                % (
-                    (source_file.library.name + ":").ljust(max_library_name + 1),
-                    simplify_path(source_file.name).ljust(max_source_file_name),
-                )
+                f"Compiling into {(source_file.library.name + ':').ljust(max_library_name + 1)!s} "
+                f"{simplify_path(source_file.name).ljust(max_source_file_name)!s} "
             )
             sys.stdout.flush()
 
@@ -307,9 +286,7 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
             if self._compile_source_file(source_file, printer):
                 project.update(source_file)
             else:
-                source_files_to_skip.update(
-                    dependency_graph.get_dependent([source_file])
-                )
+                source_files_to_skip.update(dependency_graph.get_dependent([source_file]))
                 failures.append(source_file)
 
                 if not continue_on_error:
@@ -324,9 +301,7 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         else:
             printer.write("Re-compile not needed\n")
 
-    def compile_source_file_command(  # pylint: disable=unused-argument
-        self, source_file
-    ):
+    def compile_source_file_command(self, source_file):  # pylint: disable=unused-argument
         raise NotImplementedError
 
     @staticmethod
@@ -341,7 +316,10 @@ def isfile(file_name):
     Case insensitive Path.is_file()
     """
     fpath = Path(file_name)
-    if not fpath.is_file():
+    try:
+        if not fpath.is_file():
+            return False
+    except PermissionError:
         return False
 
     return str(fpath.name) in listdir(str(fpath.parent))
@@ -381,7 +359,7 @@ class BooleanOption(Option):
 
     def validate(self, value):
         if value not in (True, False):
-            raise ValueError("Option %r must be a boolean. Got %r" % (self.name, value))
+            raise ValueError(f"Option {self.name!r} must be a boolean. Got {value!r}")
 
 
 class StringOption(Option):
@@ -391,7 +369,7 @@ class StringOption(Option):
 
     def validate(self, value):
         if not is_string_not_iterable(value):
-            raise ValueError("Option %r must be a string. Got %r" % (self.name, value))
+            raise ValueError(f"Option {self.name!r} must be a string. Got {value!r}")
 
 
 class ListOfStringOption(Option):
@@ -401,9 +379,7 @@ class ListOfStringOption(Option):
 
     def validate(self, value):
         def fail():
-            raise ValueError(
-                "Option %r must be a list of strings. Got %r" % (self.name, value)
-            )
+            raise ValueError(f"Option {self.name!r} must be a list of strings. Got {value!r}")
 
         if is_string_not_iterable(value):
             fail()
@@ -428,10 +404,7 @@ class VHDLAssertLevelOption(Option):
 
     def validate(self, value):
         if value not in self._legal_values:
-            raise ValueError(
-                "Option %r must be one of %s. Got %r"
-                % (self.name, self._legal_values, value)
-            )
+            raise ValueError(f"Option {self.name!r} must be one of {self._legal_values!s}. Got {value!r}")
 
 
 def is_string_not_iterable(value):

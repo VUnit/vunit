@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Test the GHDL interface
@@ -41,9 +41,7 @@ class TestGHDLInterface(unittest.TestCase):
 
         executables["gtkwave"] = []
         GHDLInterface(prefix="prefix", output_path="")
-        self.assertRaises(
-            RuntimeError, GHDLInterface, prefix="prefix", output_path="", gui=True
-        )
+        self.assertRaises(RuntimeError, GHDLInterface, prefix="prefix", output_path="", gui=True)
 
     @mock.patch("subprocess.check_output", autospec=True)
     def test_parses_llvm_backend(self, check_output):
@@ -105,18 +103,14 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         check_output.return_value = version
         self.assertRaises(AssertionError, GHDLInterface.determine_backend, "prefix")
 
-    @mock.patch(
-        "vunit.sim_if.check_output", autospec=True, return_value=""
-    )  # pylint: disable=no-self-use
+    @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")  # pylint: disable=no-self-use
     def test_compile_project_2008(self, check_output):
         simif = GHDLInterface(prefix="prefix", output_path="")
         write_file("file.vhd", "")
 
         project = Project()
         project.add_library("lib", "lib_path")
-        project.add_source_file(
-            "file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("2008")
-        )
+        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("2008"))
         simif.compile_project(project)
         check_output.assert_called_once_with(
             [
@@ -131,18 +125,14 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
             env=simif.get_env(),
         )
 
-    @mock.patch(
-        "vunit.sim_if.check_output", autospec=True, return_value=""
-    )  # pylint: disable=no-self-use
+    @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")  # pylint: disable=no-self-use
     def test_compile_project_2002(self, check_output):
         simif = GHDLInterface(prefix="prefix", output_path="")
         write_file("file.vhd", "")
 
         project = Project()
         project.add_library("lib", "lib_path")
-        project.add_source_file(
-            "file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("2002")
-        )
+        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("2002"))
         simif.compile_project(project)
         check_output.assert_called_once_with(
             [
@@ -157,18 +147,14 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
             env=simif.get_env(),
         )
 
-    @mock.patch(
-        "vunit.sim_if.check_output", autospec=True, return_value=""
-    )  # pylint: disable=no-self-use
+    @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")  # pylint: disable=no-self-use
     def test_compile_project_93(self, check_output):
         simif = GHDLInterface(prefix="prefix", output_path="")
         write_file("file.vhd", "")
 
         project = Project()
         project.add_library("lib", "lib_path")
-        project.add_source_file(
-            "file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("93")
-        )
+        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("93"))
         simif.compile_project(project)
         check_output.assert_called_once_with(
             [
@@ -183,9 +169,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
             env=simif.get_env(),
         )
 
-    @mock.patch(
-        "vunit.sim_if.check_output", autospec=True, return_value=""
-    )  # pylint: disable=no-self-use
+    @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")  # pylint: disable=no-self-use
     def test_compile_project_extra_flags(self, check_output):
         simif = GHDLInterface(prefix="prefix", output_path="")
         write_file("file.vhd", "")
@@ -212,9 +196,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
 
     def test_elaborate_e_project(self):
         design_unit = Entity("tb_entity", file_name=str(Path("tempdir") / "file.vhd"))
-        design_unit.original_file_name = str(
-            Path("tempdir") / "other_path" / "original_file.vhd"
-        )
+        design_unit.original_file_name = str(Path("tempdir") / "other_path" / "original_file.vhd")
         design_unit.generic_names = ["runner_cfg", "tb_path"]
 
         config = Configuration("name", design_unit, sim_options={"ghdl.elab_e": True})
@@ -222,9 +204,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         simif = GHDLInterface(prefix="prefix", output_path="")
         simif._vhdl_standard = VHDL.standard("2008")  # pylint: disable=protected-access
         simif._project = Project()  # pylint: disable=protected-access
-        simif._project.add_library(  # pylint: disable=protected-access
-            "lib", "lib_path"
-        )
+        simif._project.add_library("lib", "lib_path")  # pylint: disable=protected-access
 
         self.assertEqual(
             simif._get_command(  # pylint: disable=protected-access

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Test the ActiveHDL interface
@@ -48,14 +48,12 @@ class TestActiveHDLInterface(unittest.TestCase):
 
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     @mock.patch("vunit.sim_if.activehdl.Process", autospec=True)
-    def test_compile_project_vhdl_2008(self, process, check_output):
+    def _test_compile_project_vhdl(self, standard, process, check_output):
         simif = ActiveHDLInterface(prefix="prefix", output_path=self.output_path)
         project = Project()
         project.add_library("lib", "lib_path")
         write_file("file.vhd", "")
-        project.add_source_file(
-            "file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("2008")
-        )
+        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard(standard))
         simif.compile_project(project)
         process.assert_any_call(
             [str(Path("prefix") / "vlib"), "lib", "lib_path"],
@@ -73,7 +71,7 @@ class TestActiveHDLInterface(unittest.TestCase):
                 "-quiet",
                 "-j",
                 self.output_path,
-                "-2008",
+                f"-{standard}",
                 "-work",
                 "lib",
                 "file.vhd",
@@ -81,75 +79,17 @@ class TestActiveHDLInterface(unittest.TestCase):
             env=simif.get_env(),
         )
 
-    @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
-    @mock.patch("vunit.sim_if.activehdl.Process", autospec=True)
-    def test_compile_project_vhdl_2002(self, process, check_output):
-        simif = ActiveHDLInterface(prefix="prefix", output_path=self.output_path)
-        project = Project()
-        project.add_library("lib", "lib_path")
-        write_file("file.vhd", "")
-        project.add_source_file(
-            "file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("2002")
-        )
-        simif.compile_project(project)
-        process.assert_any_call(
-            [str(Path("prefix") / "vlib"), "lib", "lib_path"],
-            cwd=self.output_path,
-            env=simif.get_env(),
-        )
-        process.assert_called_with(
-            [str(Path("prefix") / "vmap"), "lib", "lib_path"],
-            cwd=self.output_path,
-            env=simif.get_env(),
-        )
-        check_output.assert_called_once_with(
-            [
-                str(Path("prefix") / "vcom"),
-                "-quiet",
-                "-j",
-                self.output_path,
-                "-2002",
-                "-work",
-                "lib",
-                "file.vhd",
-            ],
-            env=simif.get_env(),
-        )
+    def test_compile_project_vhdl_2019(self):
+        self._test_compile_project_vhdl("2019")
 
-    @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
-    @mock.patch("vunit.sim_if.activehdl.Process", autospec=True)
-    def test_compile_project_vhdl_93(self, process, check_output):
-        simif = ActiveHDLInterface(prefix="prefix", output_path=self.output_path)
-        project = Project()
-        project.add_library("lib", "lib_path")
-        write_file("file.vhd", "")
-        project.add_source_file(
-            "file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("93")
-        )
-        simif.compile_project(project)
-        process.assert_any_call(
-            [str(Path("prefix") / "vlib"), "lib", "lib_path"],
-            cwd=self.output_path,
-            env=simif.get_env(),
-        )
-        process.assert_called_with(
-            [str(Path("prefix") / "vmap"), "lib", "lib_path"],
-            cwd=self.output_path,
-            env=simif.get_env(),
-        )
-        check_output.assert_called_once_with(
-            [
-                str(Path("prefix") / "vcom"),
-                "-quiet",
-                "-j",
-                self.output_path,
-                "-93",
-                "-work",
-                "lib",
-                "file.vhd",
-            ],
-            env=simif.get_env(),
-        )
+    def test_compile_project_vhdl_2008(self):
+        self._test_compile_project_vhdl("2008")
+
+    def test_compile_project_vhdl_2002(self):
+        self._test_compile_project_vhdl("2002")
+
+    def test_compile_project_vhdl_93(self):
+        self._test_compile_project_vhdl("93")
 
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     @mock.patch("vunit.sim_if.activehdl.Process", autospec=True)
@@ -303,9 +243,7 @@ class TestActiveHDLInterface(unittest.TestCase):
         project = Project()
         project.add_library("lib", "lib_path")
         write_file("file.v", "")
-        project.add_source_file(
-            "file.v", "lib", file_type="verilog", include_dirs=["include"]
-        )
+        project.add_source_file("file.v", "lib", file_type="verilog", include_dirs=["include"])
         simif.compile_project(project)
         process.assert_any_call(
             [str(Path("prefix") / "vlib"), "lib", "lib_path"],
@@ -341,9 +279,7 @@ class TestActiveHDLInterface(unittest.TestCase):
         project = Project()
         project.add_library("lib", "lib_path")
         write_file("file.v", "")
-        project.add_source_file(
-            "file.v", "lib", file_type="verilog", defines={"defname": "defval"}
-        )
+        project.add_source_file("file.v", "lib", file_type="verilog", defines={"defname": "defval"})
         simif.compile_project(project)
         process.assert_any_call(
             [str(Path("prefix") / "vlib"), "lib", "lib_path"],
@@ -372,18 +308,14 @@ class TestActiveHDLInterface(unittest.TestCase):
         )
 
     @mock.patch("vunit.sim_if.activehdl.ActiveHDLInterface.find_prefix")
-    @mock.patch(
-        "vunit.sim_if.activehdl.Process", new=MockProcessVersionWithPackageGenerics
-    )
+    @mock.patch("vunit.sim_if.activehdl.Process", new=MockProcessVersionWithPackageGenerics)
     def test_supports_vhdl_package_generics_true(self, find_prefix):
         find_prefix.return_value = ""
         simif = ActiveHDLInterface(prefix="prefix", output_path=self.output_path)
         self.assertTrue(simif.supports_vhdl_package_generics())
 
     @mock.patch("vunit.sim_if.activehdl.ActiveHDLInterface.find_prefix")
-    @mock.patch(
-        "vunit.sim_if.activehdl.Process", new=MockProcessVersionWithoutPackageGenerics
-    )
+    @mock.patch("vunit.sim_if.activehdl.Process", new=MockProcessVersionWithoutPackageGenerics)
     def test_supports_vhdl_package_generics_false(self, find_prefix):
         find_prefix.return_value = ""
         simif = ActiveHDLInterface(prefix="prefix", output_path=self.output_path)
@@ -407,9 +339,7 @@ class TestVersionConsumer(unittest.TestCase):
     Test the VersionConsumer class
     """
 
-    def _assert_version_correct(
-        self, version_line, expected_major, expected_minor, expected_minor_letter
-    ):
+    def _assert_version_correct(self, version_line, expected_major, expected_minor, expected_minor_letter):
         """
         Assertion function used by tests in this class
         """
@@ -452,189 +382,90 @@ class TestVersion(unittest.TestCase):
 
     def test_lt(self):
         # Test with letters
-        self.assertTrue(
-            TestVersion.low_version_letter < TestVersion.high_version_letter
-        )
-        self.assertFalse(
-            TestVersion.high_version_letter < TestVersion.low_version_letter
-        )
+        self.assertTrue(TestVersion.low_version_letter < TestVersion.high_version_letter)
+        self.assertFalse(TestVersion.high_version_letter < TestVersion.low_version_letter)
         # Test without letters
-        self.assertTrue(
-            TestVersion.low_version_no_letter < TestVersion.high_version_no_letter
-        )
-        self.assertFalse(
-            TestVersion.high_version_no_letter < TestVersion.low_version_no_letter
-        )
+        self.assertTrue(TestVersion.low_version_no_letter < TestVersion.high_version_no_letter)
+        self.assertFalse(TestVersion.high_version_no_letter < TestVersion.low_version_no_letter)
         # Both
-        self.assertTrue(
-            TestVersion.low_version_letter < TestVersion.high_version_no_letter
-        )
-        self.assertFalse(
-            TestVersion.high_version_letter < TestVersion.low_version_no_letter
-        )
+        self.assertTrue(TestVersion.low_version_letter < TestVersion.high_version_no_letter)
+        self.assertFalse(TestVersion.high_version_letter < TestVersion.low_version_no_letter)
 
     def test_le(self):
         # Test equal
         # Test with letters
-        self.assertTrue(
-            TestVersion.high_version_letter <= TestVersion.high_version_letter
-        )
-        self.assertFalse(
-            TestVersion.high_version_letter <= TestVersion.low_version_letter
-        )
+        self.assertTrue(TestVersion.high_version_letter <= TestVersion.high_version_letter)
+        self.assertFalse(TestVersion.high_version_letter <= TestVersion.low_version_letter)
         # Test without letters
-        self.assertTrue(
-            TestVersion.high_version_no_letter <= TestVersion.high_version_no_letter
-        )
-        self.assertFalse(
-            TestVersion.high_version_no_letter <= TestVersion.low_version_no_letter
-        )
+        self.assertTrue(TestVersion.high_version_no_letter <= TestVersion.high_version_no_letter)
+        self.assertFalse(TestVersion.high_version_no_letter <= TestVersion.low_version_no_letter)
         # Both
-        self.assertTrue(
-            TestVersion.high_version_letter <= TestVersion.high_version_no_letter
-        )
-        self.assertFalse(
-            TestVersion.high_version_letter <= TestVersion.low_version_no_letter
-        )
+        self.assertTrue(TestVersion.high_version_letter <= TestVersion.high_version_no_letter)
+        self.assertFalse(TestVersion.high_version_letter <= TestVersion.low_version_no_letter)
 
         # Test less than
         # Test with letters
-        self.assertTrue(
-            TestVersion.low_version_letter <= TestVersion.high_version_letter
-        )
-        self.assertFalse(
-            TestVersion.high_version_letter <= TestVersion.low_version_letter
-        )
+        self.assertTrue(TestVersion.low_version_letter <= TestVersion.high_version_letter)
+        self.assertFalse(TestVersion.high_version_letter <= TestVersion.low_version_letter)
         # Test without letters
-        self.assertTrue(
-            TestVersion.low_version_no_letter <= TestVersion.high_version_no_letter
-        )
-        self.assertFalse(
-            TestVersion.high_version_no_letter <= TestVersion.low_version_no_letter
-        )
+        self.assertTrue(TestVersion.low_version_no_letter <= TestVersion.high_version_no_letter)
+        self.assertFalse(TestVersion.high_version_no_letter <= TestVersion.low_version_no_letter)
         # Both
-        self.assertTrue(
-            TestVersion.low_version_letter <= TestVersion.high_version_no_letter
-        )
-        self.assertFalse(
-            TestVersion.high_version_letter <= TestVersion.low_version_no_letter
-        )
+        self.assertTrue(TestVersion.low_version_letter <= TestVersion.high_version_no_letter)
+        self.assertFalse(TestVersion.high_version_letter <= TestVersion.low_version_no_letter)
 
     def test_gt(self):
         # Test with letters
-        self.assertTrue(
-            TestVersion.high_version_letter > TestVersion.low_version_letter
-        )
-        self.assertFalse(
-            TestVersion.low_version_letter > TestVersion.high_version_letter
-        )
+        self.assertTrue(TestVersion.high_version_letter > TestVersion.low_version_letter)
+        self.assertFalse(TestVersion.low_version_letter > TestVersion.high_version_letter)
         # Test without letters
-        self.assertTrue(
-            TestVersion.high_version_no_letter > TestVersion.low_version_no_letter
-        )
-        self.assertFalse(
-            TestVersion.low_version_no_letter > TestVersion.high_version_no_letter
-        )
+        self.assertTrue(TestVersion.high_version_no_letter > TestVersion.low_version_no_letter)
+        self.assertFalse(TestVersion.low_version_no_letter > TestVersion.high_version_no_letter)
         # Both
-        self.assertTrue(
-            TestVersion.high_version_letter > TestVersion.low_version_no_letter
-        )
-        self.assertFalse(
-            TestVersion.low_version_letter > TestVersion.high_version_no_letter
-        )
+        self.assertTrue(TestVersion.high_version_letter > TestVersion.low_version_no_letter)
+        self.assertFalse(TestVersion.low_version_letter > TestVersion.high_version_no_letter)
 
     def test_ge(self):
         # Test equal
         # Test with letters
-        self.assertTrue(
-            TestVersion.high_version_letter >= TestVersion.high_version_letter
-        )
-        self.assertFalse(
-            TestVersion.low_version_letter >= TestVersion.high_version_letter
-        )
+        self.assertTrue(TestVersion.high_version_letter >= TestVersion.high_version_letter)
+        self.assertFalse(TestVersion.low_version_letter >= TestVersion.high_version_letter)
         # Test without letters
-        self.assertTrue(
-            TestVersion.high_version_no_letter >= TestVersion.high_version_no_letter
-        )
-        self.assertFalse(
-            TestVersion.low_version_no_letter >= TestVersion.high_version_no_letter
-        )
+        self.assertTrue(TestVersion.high_version_no_letter >= TestVersion.high_version_no_letter)
+        self.assertFalse(TestVersion.low_version_no_letter >= TestVersion.high_version_no_letter)
         # Both
-        self.assertTrue(
-            TestVersion.high_version_letter_for_mixed
-            >= TestVersion.high_version_no_letter
-        )
-        self.assertFalse(
-            TestVersion.low_version_letter >= TestVersion.high_version_no_letter
-        )
+        self.assertTrue(TestVersion.high_version_letter_for_mixed >= TestVersion.high_version_no_letter)
+        self.assertFalse(TestVersion.low_version_letter >= TestVersion.high_version_no_letter)
 
         # Test greater than
         # Test with letters
-        self.assertTrue(
-            TestVersion.high_version_letter >= TestVersion.low_version_letter
-        )
-        self.assertFalse(
-            TestVersion.low_version_letter >= TestVersion.high_version_letter
-        )
+        self.assertTrue(TestVersion.high_version_letter >= TestVersion.low_version_letter)
+        self.assertFalse(TestVersion.low_version_letter >= TestVersion.high_version_letter)
         # Test without letters
-        self.assertTrue(
-            TestVersion.high_version_no_letter >= TestVersion.low_version_no_letter
-        )
-        self.assertFalse(
-            TestVersion.low_version_no_letter >= TestVersion.high_version_no_letter
-        )
+        self.assertTrue(TestVersion.high_version_no_letter >= TestVersion.low_version_no_letter)
+        self.assertFalse(TestVersion.low_version_no_letter >= TestVersion.high_version_no_letter)
         # Both
-        self.assertTrue(
-            TestVersion.high_version_letter >= TestVersion.low_version_no_letter
-        )
-        self.assertFalse(
-            TestVersion.low_version_letter >= TestVersion.high_version_no_letter
-        )
+        self.assertTrue(TestVersion.high_version_letter >= TestVersion.low_version_no_letter)
+        self.assertFalse(TestVersion.low_version_letter >= TestVersion.high_version_no_letter)
 
     def test_eq(self):
         # Test with letters
-        self.assertTrue(
-            TestVersion.high_version_letter == TestVersion.high_version_letter
-        )
-        self.assertFalse(
-            TestVersion.high_version_letter == TestVersion.low_version_letter
-        )
+        self.assertTrue(TestVersion.high_version_letter == TestVersion.high_version_letter)
+        self.assertFalse(TestVersion.high_version_letter == TestVersion.low_version_letter)
         # Test without letters
-        self.assertTrue(
-            TestVersion.high_version_no_letter == TestVersion.high_version_no_letter
-        )
-        self.assertFalse(
-            TestVersion.high_version_no_letter == TestVersion.low_version_no_letter
-        )
+        self.assertTrue(TestVersion.high_version_no_letter == TestVersion.high_version_no_letter)
+        self.assertFalse(TestVersion.high_version_no_letter == TestVersion.low_version_no_letter)
         # Both
-        self.assertTrue(
-            TestVersion.high_version_letter_for_mixed
-            == TestVersion.high_version_no_letter
-        )
-        self.assertFalse(
-            TestVersion.high_version_letter == TestVersion.low_version_no_letter
-        )
+        self.assertTrue(TestVersion.high_version_letter_for_mixed == TestVersion.high_version_no_letter)
+        self.assertFalse(TestVersion.high_version_letter == TestVersion.low_version_no_letter)
 
     def test_ne(self):
         # Test with letters
-        self.assertTrue(
-            TestVersion.high_version_letter != TestVersion.low_version_letter
-        )
-        self.assertFalse(
-            TestVersion.high_version_letter != TestVersion.high_version_letter
-        )
+        self.assertTrue(TestVersion.high_version_letter != TestVersion.low_version_letter)
+        self.assertFalse(TestVersion.high_version_letter != TestVersion.high_version_letter)
         # Test without letters
-        self.assertTrue(
-            TestVersion.high_version_no_letter != TestVersion.low_version_no_letter
-        )
-        self.assertFalse(
-            TestVersion.high_version_no_letter != TestVersion.high_version_no_letter
-        )
+        self.assertTrue(TestVersion.high_version_no_letter != TestVersion.low_version_no_letter)
+        self.assertFalse(TestVersion.high_version_no_letter != TestVersion.high_version_no_letter)
         # Both
-        self.assertTrue(
-            TestVersion.high_version_letter != TestVersion.low_version_no_letter
-        )
-        self.assertFalse(
-            TestVersion.high_version_letter_for_mixed
-            != TestVersion.high_version_no_letter
-        )
+        self.assertTrue(TestVersion.high_version_letter != TestVersion.low_version_no_letter)
+        self.assertFalse(TestVersion.high_version_letter_for_mixed != TestVersion.high_version_no_letter)

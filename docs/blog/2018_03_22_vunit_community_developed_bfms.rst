@@ -5,13 +5,12 @@
 VUnit Community Developed BFMs
 ==============================
 
+.. NOTE:: This article was originally posted on `LinkedIn <https://www.linkedin.com/pulse/vunit-community-developed-bfms-lars-asplund>`__
+   where you may find some comments on its contents.
+
 .. figure:: img/vunit_wishbone.png
    :alt: VUnit Community Developed BFMs
    :align: center
-
-This article was originally posted on `LinkedIn
-<https://www.linkedin.com/pulse/vunit-community-developed-bfms-lars-asplund>`__
-where you may find some comments on its contents.
 
 One month ago we released VUnit 3.0 which was a release focused on our
 BFM support. Our previous BFM building blocks were extended and

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Test the DependencyGraph
@@ -26,9 +26,7 @@ class TestDependencyGraph(unittest.TestCase):
         graph = DependencyGraph()
         self._add_nodes_and_dependencies(graph, nodes, [])
         result = graph.toposort()
-        self.assertEqual(
-            result.sort(), nodes.sort(), "Should return the node list in any order"
-        )
+        self.assertEqual(result.sort(), nodes.sort(), "Should return the node list in any order")
 
     def test_should_sort_in_topological_order_when_there_are_dependencies(self):
         nodes = ["a", "b", "c", "d", "e", "f"]

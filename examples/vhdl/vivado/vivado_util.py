@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 import sys
 from pathlib import Path
@@ -36,15 +36,12 @@ def compile_standard_libraries(vunit_obj, output_path):
     """
     Compile Xilinx standard libraries using Vivado TCL command
     """
-    done_token = str(Path(output_path) / "all_done.txt")
+    done_token = Path(output_path) / "all_done.txt"
 
     simulator_class = SIMULATOR_FACTORY.select_simulator()
 
-    if not Path(done_token).exists():
-        print(
-            "Compiling standard libraries into %s ..."
-            % str(Path(output_path).resolve())
-        )
+    if not done_token.exists():
+        print("Compiling standard libraries into %s ..." % str(Path(output_path).resolve()))
         simname = simulator_class.name
 
         # Vivado calls rivierapro for riviera
@@ -61,17 +58,14 @@ def compile_standard_libraries(vunit_obj, output_path):
         )
 
     else:
-        print(
-            "Standard libraries already exists in %s, skipping"
-            % str(Path(output_path).resolve())
-        )
+        print("Standard libraries already exists in %s, skipping" % str(Path(output_path).resolve()))
 
     for library_name in ["unisim", "unimacro", "unifast", "secureip", "xpm"]:
         path = str(Path(output_path) / library_name)
         if Path(path).exists():
             vunit_obj.add_external_library(library_name, path)
 
-    with open(done_token, "w") as fptr:
+    with done_token.open("w") as fptr:
         fptr.write("done")
 
 
@@ -88,13 +82,8 @@ def add_project_ip(vunit_obj, project_file, output_path, vivado_path=None, clean
     compile_order_file = str(Path(output_path) / "compile_order.txt")
 
     if clean or not Path(compile_order_file).exists():
-        create_compile_order_file(
-            project_file, compile_order_file, vivado_path=vivado_path
-        )
+        create_compile_order_file(project_file, compile_order_file, vivado_path=vivado_path)
     else:
-        print(
-            "Vivado project Compile order already exists, re-using: %s"
-            % str(Path(compile_order_file).resolve())
-        )
+        print("Vivado project Compile order already exists, re-using: %s" % str(Path(compile_order_file).resolve()))
 
     return add_from_compile_order_file(vunit_obj, compile_order_file)

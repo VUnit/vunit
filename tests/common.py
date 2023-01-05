@@ -2,12 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Common functions re-used between test cases
 """
 
+from pathlib import Path
 from xml.etree import ElementTree
 import contextlib
 import functools
@@ -41,9 +42,7 @@ def check_report(report_file, tests=None):
 
     for status, name in tests:
         if report[name] != status:
-            raise AssertionError(
-                "Wrong status of %s got %s expected %s" % (name, report[name], status)
-            )
+            raise AssertionError("Wrong status of %s got %s expected %s" % (name, report[name], status))
 
     num_tests = int(root.attrib["tests"])
     assert num_tests == len(tests)
@@ -87,20 +86,18 @@ def set_env(**environ):
 
 
 @contextlib.contextmanager
-def create_tempdir(path=None):
+def create_tempdir(path: Path = None):
     """
     Create a temporary directory that is removed after the unit test
     """
 
     if path is None:
-        path = os.path.join(
-            os.path.dirname(__file__), "tempdir_%i" % random.randint(0, 2 ** 64 - 1)
-        )
+        path = Path(__file__).parent / ("tempdir_%i" % random.randint(0, 2**64 - 1))
 
-    if os.path.exists(path):
+    if path.exists():
         shutil.rmtree(path)
 
-    os.makedirs(path)
+    os.makedirs(str(path))
 
     try:
         yield path
@@ -122,19 +119,14 @@ def with_tempdir(func):
         Wrapper funciton that maintains temporary directory around nested
         function
         """
-        path_name = os.path.join(
-            os.path.dirname(__file__), func.__module__ + "." + func.__name__
-        )
-
+        path_name = Path(__file__).parent / (func.__module__ + "." + func.__name__)
         with create_tempdir(path_name) as path:
             return func(*args, tempdir=path, **kwargs)
 
     return new_function
 
 
-def get_vhdl_test_bench(
-    test_bench_name, tests=None, same_sim=False, test_attributes=None
-):
+def get_vhdl_test_bench(test_bench_name, tests=None, same_sim=False, test_attributes=None):
     """
     Create a valid VUnit test bench
 
@@ -194,13 +186,11 @@ end architecture;
     return contents
 
 
-def create_vhdl_test_bench_file(
-    test_bench_name, file_name, tests=None, same_sim=False, test_attributes=None
-):
+def create_vhdl_test_bench_file(test_bench_name, file_name, tests=None, same_sim=False, test_attributes=None):
     """
     Create a valid VUnit test bench and writes it to file_name
     """
-    with open(file_name, "wb") as fptr:
+    with Path(file_name).open("wb") as fptr:
         fptr.write(
             get_vhdl_test_bench(
                 test_bench_name=test_bench_name,

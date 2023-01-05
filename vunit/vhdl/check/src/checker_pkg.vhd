@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 use work.log_levels_pkg.all;
 use work.logger_pkg.all;
@@ -30,17 +30,19 @@ package checker_pkg is
   procedure passing_check(checker : checker_t);
 
   procedure passing_check(
-    checker   : checker_t;
-    msg       : string;
-    line_num  : natural := 0;
-    file_name : string  := "");
+    checker     : checker_t;
+    msg         : string;
+    path_offset : natural := 0;
+    line_num    : natural := 0;
+    file_name   : string  := "");
 
   procedure failing_check(
-    checker   : checker_t;
-    msg       : string;
-    level     : log_level_t := null_log_level;
-    line_num  : natural                := 0;
-    file_name : string                 := "");
+    checker     : checker_t;
+    msg         : string;
+    level       : log_level_t := null_log_level;
+    path_offset : natural := 0;
+    line_num    : natural                := 0;
+    file_name   : string                 := "");
 
   type checker_stat_t is record
     n_checks : natural;

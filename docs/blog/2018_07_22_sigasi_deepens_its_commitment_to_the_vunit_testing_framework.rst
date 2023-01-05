@@ -5,13 +5,12 @@
 Sigasi Deepens Its Commitment to the VUnit Testing Framework
 ============================================================
 
+.. NOTE:: This article was originally posted on `LinkedIn <https://www.linkedin.com/pulse/sigasi-deepens-its-commitment-vunit-testing-framework-lars-asplund>`__
+   where you may find some comments on its contents.
+
 .. figure:: img/sigasi_deep.png
    :alt: Sigasi Deepens Its Commitment to the VUnit Testing Framework
    :align: center
-
-This article was originally posted on `LinkedIn
-<https://www.linkedin.com/pulse/sigasi-deepens-its-commitment-vunit-testing-framework-lars-asplund>`__
-where you may find some comments on its contents.
 
 Sigasi started to support the VUnit testing framework when their
 Sigasi Studio IDE became VUnit-aware in the 3.6 release. That release

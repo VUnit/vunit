@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Perform necessary modifications to VUnit VHDL code to support
@@ -11,6 +11,7 @@ Cadence Incisive
 
 import os
 import re
+from pathlib import Path
 
 
 def fix_file(file_name):
@@ -23,7 +24,7 @@ def tee_to_double_writeline(file_name):
     Convert TEE calls to double writeline calls
     """
 
-    with open(file_name, "r") as fptr:
+    with Path(file_name).open("r", encoding="iso-8859-1") as fptr:
         text = fptr.read()
 
     text = re.sub(
@@ -36,7 +37,7 @@ def tee_to_double_writeline(file_name):
         flags=re.MULTILINE,
     )
 
-    with open(file_name, "w") as fptr:
+    with Path(file_name).open("w", encoding="iso-8859-1") as fptr:
         fptr.write(text)
 
 
@@ -45,7 +46,7 @@ def replace_context_with_use_clauses(file_name):
     Replace VUnit contexts with use clauses
     """
 
-    with open(file_name, "r") as fptr:
+    with Path(file_name).open("r", encoding="iso-8859-1") as fptr:
         text = fptr.read()
 
     text = text.replace(
@@ -97,7 +98,7 @@ use vunit_lib.com_common_pkg.all;
 """,
     )
 
-    with open(file_name, "w") as fptr:
+    with Path(file_name).open("w", encoding="iso-8859-1") as fptr:
         fptr.write(text)
 
 

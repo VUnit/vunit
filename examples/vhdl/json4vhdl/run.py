@@ -1,8 +1,10 @@
+#!/usr/bin/env python3
+
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 JSON-for-VHDL
@@ -35,8 +37,6 @@ TB = LIB.get_test_benches()[0]
 TB.get_tests("stringified*")[0].set_generic("tb_cfg", JSON_STR)
 TB.get_tests("b16encoded stringified*")[0].set_generic("tb_cfg", b16encode(JSON_STR))
 TB.get_tests("JSON file*")[0].set_generic("tb_cfg", JSON_FILE)
-TB.get_tests("b16encoded JSON file*")[0].set_generic(
-    "tb_cfg", b16encode(str(TEST_PATH / JSON_FILE))
-)
+TB.get_tests("b16encoded JSON file*")[0].set_generic("tb_cfg", b16encode(str(TEST_PATH / JSON_FILE)))
 
 VU.main()

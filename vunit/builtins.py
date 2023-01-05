@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Functions to add builtin VHDL code to a project for compilation
@@ -11,8 +11,13 @@ Functions to add builtin VHDL code to a project for compilation
 from pathlib import Path
 from glob import glob
 from warnings import warn
+import logging
+
 from vunit.vhdl_standard import VHDL, VHDLStandard
 from vunit.ui.common import get_checked_file_names_from_globs
+
+
+LOGGER = logging.getLogger(__name__)
 
 VHDL_PATH = (Path(__file__).parent / "vhdl").resolve()
 VERILOG_PATH = (Path(__file__).parent / "verilog").resolve()
@@ -31,7 +36,7 @@ class Builtins(object):
         self._builtins_adder = BuiltinsAdder()
 
         def add(name, deps=tuple()):
-            self._builtins_adder.add_type(name, getattr(self, "_add_%s" % name), deps)
+            self._builtins_adder.add_type(name, getattr(self, f"_add_{name!s}"), deps)
 
         add("array_util")
         add("com")
@@ -47,10 +52,7 @@ class Builtins(object):
         """
         Add files with naming convention to indicate which standard is supported
         """
-        supports_context = (
-            self._simulator_class.supports_vhdl_contexts()
-            and self._vhdl_standard.supports_context
-        )
+        supports_context = self._simulator_class.supports_vhdl_contexts() and self._vhdl_standard.supports_context
 
         for file_name in get_checked_file_names_from_globs(pattern, allow_empty):
             base_file_name = Path(file_name).name
@@ -60,6 +62,8 @@ class Builtins(object):
                 standard_name = str(standard)
                 if standard_name + "p" in base_file_name:
                     standards.update(standard.and_later)
+                elif standard_name + "m" in base_file_name:
+                    standards.update(standard.and_earlier)
                 elif standard_name in base_file_name:
                     standards.add(standard)
 
@@ -85,17 +89,8 @@ class Builtins(object):
 
         for key in ["string", "integer_vector"]:
             self._add_files(
-                pattern=str(
-                    VHDL_PATH
-                    / "data_types"
-                    / "src"
-                    / "api"
-                    / ("external_%s_pkg.vhd" % key)
-                )
-                if external is None
-                or key not in external
-                or not external[key]
-                or external[key] is True
+                pattern=str(VHDL_PATH / "data_types" / "src" / "api" / f"external_{key!s}_pkg.vhd")
+                if external is None or key not in external or not external[key] or external[key] is True
                 else external[key],
                 allow_empty=False,
             )
@@ -108,8 +103,7 @@ class Builtins(object):
             raise RuntimeError("Array util only supports vhdl 2008 and later")
 
         arr_deprecation_note = (
-            "'array_t' is deprecated and it will removed in future releases;"
-            "use 'integer_array_t' instead"
+            "'array_t' is deprecated and it will removed in future releases; use 'integer_array_t' instead"
         )
         warn(arr_deprecation_note, Warning)
 
@@ -129,9 +123,7 @@ class Builtins(object):
         Add com library
         """
         if not self._vhdl_standard >= VHDL.STD_2008:
-            raise RuntimeError(
-                "Communication package only supports vhdl 2008 and later"
-            )
+            raise RuntimeError("Communication package only supports vhdl 2008 and later")
 
         self._add_files(VHDL_PATH / "com" / "src" / "*.vhd")
 
@@ -140,26 +132,32 @@ class Builtins(object):
         Add verification component library
         """
         if not self._vhdl_standard >= VHDL.STD_2008:
-            raise RuntimeError(
-                "Verification component library only supports vhdl 2008 and later"
-            )
+            raise RuntimeError("Verification component library only supports vhdl 2008 and later")
         self._add_files(VHDL_PATH / "verification_components" / "src" / "*.vhd")
+
+    def _add_library_if_not_exist(self, library_name, message):
+        """
+        Check if a library name exists in the project. If not, add it and return a handle.
+        """
+        if library_name.lower() in [
+            library.lower() for library in self._vunit_obj._project._libraries  # pylint: disable=protected-access
+        ]:
+            LOGGER.warning(message)
+            return None
+        return self._vunit_obj.add_library(library_name)
 
     def _add_osvvm(self):
         """
         Add osvvm library
         """
-        library_name = "osvvm"
-
-        try:
-            library = self._vunit_obj.library(library_name)
-        except KeyError:
-            library = self._vunit_obj.add_library(library_name)
+        library = self._add_library_if_not_exist(
+            "osvvm", "Library 'OSVVM' previously defined. Skipping addition of builtin OSVVM (2022.04)."
+        )
+        if library is None:
+            return
 
         simulator_coverage_api = self._simulator_class.get_osvvm_coverage_api()
-        supports_vhdl_package_generics = (
-            self._simulator_class.supports_vhdl_package_generics()
-        )
+        supports_vhdl_package_generics = self._simulator_class.supports_vhdl_package_generics()
 
         if not osvvm_is_installed():
             raise RuntimeError(
@@ -173,16 +171,12 @@ in your VUnit Git repository? You have to do this first if installing using setu
 
         for file_name in glob(str(VHDL_PATH / "osvvm" / "*.vhd")):
             bname = Path(file_name).name
-            if (
-                bname == "AlertLogPkg_body_BVUL.vhd"
-                or (
-                    (simulator_coverage_api != "rivierapro")
-                    and (bname == "VendorCovApiPkg_Aldec.vhd")
-                )
-                or (
-                    (simulator_coverage_api == "rivierapro")
-                    and (bname == "VendorCovApiPkg.vhd")
-                )
+
+            if (bname == "AlertLogPkg_body_BVUL.vhd") or ("2019" in bname):
+                continue
+
+            if ((simulator_coverage_api != "rivierapro") and (bname == "VendorCovApiPkg_Aldec.vhd")) or (
+                (simulator_coverage_api == "rivierapro") and (bname == "VendorCovApiPkg.vhd")
             ):
                 continue
 
@@ -196,18 +190,26 @@ in your VUnit Git repository? You have to do this first if installing using setu
             ):
                 continue
 
+            if supports_vhdl_package_generics and (
+                bname
+                in [
+                    "ScoreboardPkg_int_c.vhd",
+                    "ScoreboardPkg_slv_c.vhd",
+                ]
+            ):
+                continue
+
             library.add_source_files(file_name, preprocessors=[])
 
     def _add_json4vhdl(self):
         """
         Add JSON-for-VHDL library
         """
-        library_name = "JSON"
-
-        try:
-            library = self._vunit_obj.library(library_name)
-        except KeyError:
-            library = self._vunit_obj.add_library(library_name)
+        library = self._add_library_if_not_exist(
+            "JSON", "Library 'JSON' previously defined. Skipping addition of builtin JSON-for-VHDL (95e848b8)."
+        )
+        if library is None:
+            return
 
         library.add_source_files(VHDL_PATH / "JSON-for-VHDL" / "src" / "*.vhdl")
 
@@ -222,10 +224,15 @@ in your VUnit Git repository? You have to do this first if installing using setu
         Add vunit VHDL builtin libraries
 
         :param external: struct to provide bridges for the external VHDL API.
-                         {
-                             'string': ['path/to/custom/file'],
-                             'integer': ['path/to/custom/file']
-                         }.
+
+        :example:
+
+        .. code-block:: python
+
+            Builtins.add_vhdl_builtins(external={
+                'string': ['path/to/custom/file'],
+                'integer': ['path/to/custom/file']
+            })
         """
         self._add_data_types(external=external)
         self._add_files(VHDL_PATH / "*.vhd")
@@ -293,7 +300,7 @@ class BuiltinsAdder(object):
         old_args = self._already_added[name]
         if args != old_args:
             raise RuntimeError(
-                "Optional builtin %r added with arguments %r has already been added with arguments %r"
-                % (name, args, old_args)
+                f"Optional builtin {name!r} added with arguments {args!r} "
+                f"has already been added with arguments {old_args!r}"
             )
         return True

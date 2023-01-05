@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -117,6 +117,18 @@ package axi_stream_pkg is
     p_protocol_checker : axi_stream_protocol_checker_t;
   end record;
 
+  constant null_axi_stream_master : axi_stream_master_t := (
+    p_actor            => null_actor,
+    p_data_length      => 0,
+    p_id_length        => 0,
+    p_dest_length      => 0,
+    p_user_length      => 0,
+    p_stall_config     => null_stall_config,
+    p_logger           => null_logger,
+    p_monitor          => null_axi_stream_monitor,
+    p_protocol_checker => null_axi_stream_protocol_checker
+    );
+
   type axi_stream_slave_t is record
     p_actor            : actor_t;
     p_data_length      : natural;
@@ -128,6 +140,18 @@ package axi_stream_pkg is
     p_monitor          : axi_stream_monitor_t;
     p_protocol_checker : axi_stream_protocol_checker_t;
   end record;
+
+  constant null_axi_stream_slave : axi_stream_slave_t := (
+    p_actor            => null_actor,
+    p_data_length      => 0,
+    p_id_length        => 0,
+    p_dest_length      => 0,
+    p_user_length      => 0,
+    p_stall_config     => null_stall_config,
+    p_logger           => null_logger,
+    p_monitor          => null_axi_stream_monitor,
+    p_protocol_checker => null_axi_stream_protocol_checker
+    );
 
   constant axi_stream_logger  : logger_t  := get_logger("vunit_lib:axi_stream_pkg");
   constant axi_stream_checker : checker_t := new_checker(axi_stream_logger);
@@ -706,12 +730,6 @@ package body axi_stream_pkg is
     variable got_tdest : std_logic_vector(dest_length(axi_stream)-1 downto 0);
     variable got_tuser : std_logic_vector(user_length(axi_stream)-1 downto 0);
     variable check_msg : msg_t := new_msg(check_axi_stream_msg);
-    variable normalized_data : std_logic_vector(data_length(axi_stream)-1 downto 0) := (others => '0');
-    variable normalized_keep : std_logic_vector(data_length(axi_stream)/8-1 downto 0) := (others => '0');
-    variable normalized_strb : std_logic_vector(data_length(axi_stream)/8-1 downto 0) := (others => '0');
-    variable normalized_id   : std_logic_vector(id_length(axi_stream)-1 downto 0) := (others => '0');
-    variable normalized_dest : std_logic_vector(dest_length(axi_stream)-1 downto 0) := (others => '0');
-    variable normalized_user : std_logic_vector(user_length(axi_stream)-1 downto 0) := (others => '0');
   begin
     if blocking then
       pop_axi_stream(net, axi_stream, got_tdata, got_tlast, got_tkeep, got_tstrb, got_tid, got_tdest, got_tuser);
@@ -734,27 +752,13 @@ package body axi_stream_pkg is
       end if;
     else
       push_string(check_msg, msg);
-      if normalized_data'length > 0 then
-        normalized_data(expected'length-1 downto 0) := expected;
-        push_std_ulogic_vector(check_msg, normalized_data);
-        normalized_keep(tkeep'length-1 downto 0) := tkeep;
-        push_std_ulogic_vector(check_msg, normalized_keep);
-        normalized_strb(tstrb'length-1 downto 0) := tstrb;
-        push_std_ulogic_vector(check_msg, normalized_strb);
-      end if;
+      push_std_ulogic_vector(check_msg, expected);
+      push_std_ulogic_vector(check_msg, tkeep);
+      push_std_ulogic_vector(check_msg, tstrb);
       push_std_ulogic(check_msg, tlast);
-      if normalized_id'length > 0 then
-        normalized_id(tid'length-1 downto 0) := tid;
-        push_std_ulogic_vector(check_msg, normalized_id);
-      end if;
-      if normalized_dest'length > 0 then
-        normalized_dest(tdest'length-1 downto 0) := tdest;
-        push_std_ulogic_vector(check_msg, normalized_dest);
-      end if;
-      if normalized_user'length > 0 then
-        normalized_user(tuser'length-1 downto 0) := tuser;
-        push_std_ulogic_vector(check_msg, normalized_user);
-      end if;
+      push_std_ulogic_vector(check_msg, tid);
+      push_std_ulogic_vector(check_msg, tdest);
+      push_std_ulogic_vector(check_msg, tuser);
       send(net, axi_stream.p_actor, check_msg);
     end if;
   end procedure;

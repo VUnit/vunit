@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 -- Author Slawomir Siluk slaweksiluk@gazeta.pl
 -- Wishbome Master BFM for pipelined block transfers
 
@@ -91,10 +91,9 @@ begin
           -- TODO why sel is not passed in msg for reading (present for writing)?
           --sel <= pop_std_ulogic_vector(request_msg);
         end if;
+        push(acknowledge_queue, request_msg);
         wait until rising_edge(clk) and stall = '0';
         stb <= '0';
-
-        push(acknowledge_queue, request_msg);
 
       elsif msg_type = wait_until_idle_msg then
         if cycle then

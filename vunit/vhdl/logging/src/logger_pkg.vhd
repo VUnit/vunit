@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 use work.log_levels_pkg.all;
 use work.log_handler_pkg.all;
@@ -28,54 +28,64 @@ package logger_pkg is
   -------------------------------------
   procedure trace(logger : logger_t;
                   msg : string;
+                  path_offset : natural := 0;
                   line_num : natural := 0;
                   file_name : string := "");
 
   procedure debug(logger : logger_t;
                   msg : string;
+                  path_offset : natural := 0;
                   line_num : natural := 0;
                   file_name : string := "");
 
   procedure pass(logger : logger_t;
                  msg : string;
+                 path_offset : natural := 0;
                  line_num : natural := 0;
                  file_name : string := "");
 
   procedure info(logger : logger_t;
                  msg : string;
+                 path_offset : natural := 0;
                  line_num : natural := 0;
                  file_name : string := "");
 
   procedure warning(logger : logger_t;
                     msg : string;
+                    path_offset : natural := 0;
                     line_num : natural := 0;
                     file_name : string := "");
 
   procedure error(logger : logger_t;
                   msg : string;
+                  path_offset : natural := 0;
                   line_num : natural := 0;
                   file_name : string := "");
 
   procedure failure(logger : logger_t;
                     msg : string;
+                    path_offset : natural := 0;
                     line_num : natural := 0;
                     file_name : string := "");
 
   procedure warning_if(logger : logger_t;
                        condition : boolean;
                        msg : string;
+                       path_offset : natural := 0;
                        line_num : natural := 0;
                        file_name : string := "");
 
   procedure error_if(logger : logger_t;
                      condition : boolean;
                      msg : string;
+                     path_offset : natural := 0;
                      line_num : natural := 0;
                      file_name : string := "");
 
   procedure failure_if(logger : logger_t;
                        condition : boolean;
                        msg : string;
+                       path_offset : natural := 0;
                        line_num : natural := 0;
                        file_name : string := "");
 
@@ -87,45 +97,55 @@ package logger_pkg is
   impure function default_logger return logger_t;
 
   procedure trace(msg : string;
+                  path_offset : natural := 0;
                   line_num : natural := 0;
                   file_name : string := "");
 
   procedure debug(msg : string;
+                  path_offset : natural := 0;
                   line_num : natural := 0;
                   file_name : string := "");
 
   procedure pass(msg : string;
+                 path_offset : natural := 0;
                  line_num : natural := 0;
                  file_name : string := "");
 
   procedure info(msg : string;
+                 path_offset : natural := 0;
                  line_num : natural := 0;
                  file_name : string := "");
 
   procedure warning(msg : string;
+                    path_offset : natural := 0;
                     line_num : natural := 0;
                     file_name : string := "");
 
   procedure error(msg : string;
+                  path_offset : natural := 0;
                   line_num : natural := 0;
                   file_name : string := "");
 
   procedure failure(msg : string;
+                    path_offset : natural := 0;
                     line_num : natural := 0;
                     file_name : string := "");
 
   procedure warning_if(condition : boolean;
                        msg : string;
+                       path_offset : natural := 0;
                        line_num : natural := 0;
                        file_name : string := "");
 
   procedure error_if(condition : boolean;
                      msg : string;
+                     path_offset : natural := 0;
                      line_num : natural := 0;
                      file_name : string := "");
 
   procedure failure_if(condition : boolean;
                        msg : string;
+                       path_offset : natural := 0;
                        line_num : natural := 0;
                        file_name : string := "");
 
@@ -133,11 +153,13 @@ package logger_pkg is
   procedure log(logger : logger_t;
                 msg : string;
                 log_level : log_level_t := info;
+                path_offset : natural := 0;
                 line_num : natural := 0;
                 file_name : string := "");
 
   procedure log(msg : string;
                 log_level : log_level_t := info;
+                path_offset : natural := 0;
                 line_num : natural := 0;
                 file_name : string := "");
 

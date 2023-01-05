@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 UI class Results
@@ -39,9 +39,7 @@ class Results(object):
         :returns: A :class:`Report` object
         """
         report = Report(self._output_path)
-        for (
-            test
-        ) in self._report._test_results_in_order():  # pylint: disable=protected-access
+        for test in self._report._test_results_in_order():  # pylint: disable=protected-access
             obj = test.to_dict()
             report.tests.update(
                 {
@@ -94,9 +92,7 @@ class TestResult(object):
        vu.main(post_run=post_func)
     """
 
-    def __init__(
-        self, test_output_path: Union[str, Path], status, time, path: Union[str, Path]
-    ):
+    def __init__(self, test_output_path: Union[str, Path], status, time, path: Union[str, Path]):
         self._test_output_path = Path(test_output_path)
         self.status = status
         self.time = time
@@ -108,8 +104,4 @@ class TestResult(object):
         If the path is a subdir to the default TEST_OUTPUT_PATH, return the subdir only
         """
         base = self.path.name
-        return str(
-            base
-            if (self._test_output_path / base).resolve() == self.path.resolve()
-            else self.path
-        )
+        return str(base if (self._test_output_path / base).resolve() == self.path.resolve() else self.path)

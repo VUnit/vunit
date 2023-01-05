@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 # pylint: disable=too-many-public-methods
 # pylint: disable=unused-wildcard-import
@@ -64,23 +64,17 @@ class TestVerilogPreprocessor(TestCase):
     def test_preprocess_define_with_one_arg(self):
         result = self.preprocess("`define foo(arg)arg 123")
         result.assert_has_tokens("")
-        result.assert_has_defines(
-            {"foo": Macro("foo", tokenize("arg 123"), args=("arg",))}
-        )
+        result.assert_has_defines({"foo": Macro("foo", tokenize("arg 123"), args=("arg",))})
 
     def test_preprocess_define_with_one_arg_ignores_initial_space(self):
         result = self.preprocess("`define foo(arg) arg 123")
         result.assert_has_tokens("")
-        result.assert_has_defines(
-            {"foo": Macro("foo", tokenize("arg 123"), args=("arg",))}
-        )
+        result.assert_has_defines({"foo": Macro("foo", tokenize("arg 123"), args=("arg",))})
 
     def test_preprocess_define_with_multiple_args(self):
         result = self.preprocess("`define foo( arg1, arg2)arg1 arg2")
         result.assert_has_tokens("")
-        result.assert_has_defines(
-            {"foo": Macro("foo", tokenize("arg1 arg2"), args=("arg1", "arg2"))}
-        )
+        result.assert_has_defines({"foo": Macro("foo", tokenize("arg1 arg2"), args=("arg1", "arg2"))})
 
     def test_preprocess_define_with_default_values(self):
         result = self.preprocess("`define foo(arg1, arg2=default)arg1 arg2")
@@ -146,18 +140,14 @@ class TestVerilogPreprocessor(TestCase):
 
     def test_preprocess_include_directive(self):
         self.write_file("include.svh", "hello hey")
-        result = self.preprocess(
-            '`include "include.svh"', include_paths=[self.output_path]
-        )
+        result = self.preprocess('`include "include.svh"', include_paths=[self.output_path])
         result.assert_has_tokens("hello hey")
         result.assert_included_files([str(Path(self.output_path) / "include.svh")])
 
     def test_detects_circular_includes(self):
         self.write_file("include1.svh", '`include "include2.svh"')
         self.write_file("include2.svh", '`include "include1.svh"')
-        result = self.preprocess(
-            '`include "include1.svh"', include_paths=[self.output_path]
-        )
+        result = self.preprocess('`include "include1.svh"', include_paths=[self.output_path])
         result.logger.error.assert_called_once_with(
             "Circular `include of include2.svh detected\n%s",
             "from fn.v line 1:\n"
@@ -176,9 +166,7 @@ class TestVerilogPreprocessor(TestCase):
 
     def test_detects_circular_include_of_self(self):
         self.write_file("include.svh", '`include "include.svh"')
-        result = self.preprocess(
-            '`include "include.svh"', include_paths=[self.output_path]
-        )
+        result = self.preprocess('`include "include.svh"', include_paths=[self.output_path])
         result.logger.error.assert_called_once_with(
             "Circular `include of include.svh detected\n%s",
             "from fn.v line 1:\n"
@@ -194,9 +182,7 @@ class TestVerilogPreprocessor(TestCase):
 
     def test_does_not_detect_non_circular_includes(self):
         self.write_file("include3.svh", "keep")
-        self.write_file(
-            "include1.svh", '`include "include3.svh"\n`include "include2.svh"'
-        )
+        self.write_file("include1.svh", '`include "include3.svh"\n`include "include2.svh"')
         self.write_file("include2.svh", '`include "include3.svh"')
         result = self.preprocess(
             '`include "include1.svh"\n`include "include2.svh"',
@@ -413,9 +399,7 @@ outer_after
 `endif
 keep"""
         )
-        result.assert_has_tokens(
-            "outer_before\n" "inner_else\n" "inner_elsif\n" "outer_after\n" "keep"
-        )
+        result.assert_has_tokens("outer_before\n" "inner_else\n" "inner_elsif\n" "outer_after\n" "keep")
 
     def test_preprocess_broken_define(self):
         result = self.preprocess("`define")
@@ -587,14 +571,10 @@ keep"""
         result = self.preprocess("`foo")
         result.assert_has_tokens("")
         # Debug since there are many custon `names in tools
-        result.logger.debug.assert_called_once_with(
-            "Verilog undefined name\n%s", "at fn.v line 1:\n" "`foo\n" "~~~~"
-        )
+        result.logger.debug.assert_called_once_with("Verilog undefined name\n%s", "at fn.v line 1:\n" "`foo\n" "~~~~")
 
     def test_preprocess_include_directive_missing_file(self):
-        result = self.preprocess(
-            '`include "missing.svh"', include_paths=[self.output_path]
-        )
+        result = self.preprocess('`include "missing.svh"', include_paths=[self.output_path])
         result.assert_has_tokens("")
         result.assert_included_files([])
         # Is debug message since there are so many builtin includes in tools
@@ -614,9 +594,7 @@ keep"""
 
     def test_preprocess_include_directive_bad_argument(self):
         self.write_file("include.svh", "hello hey")
-        result = self.preprocess(
-            '`include foo "include.svh"', include_paths=[self.output_path]
-        )
+        result = self.preprocess('`include foo "include.svh"', include_paths=[self.output_path])
         result.assert_has_tokens(' "include.svh"')
         result.assert_included_files([])
         result.logger.warning.assert_called_once_with(
@@ -670,9 +648,7 @@ keep""",
 
     def test_preprocess_error_in_include_file(self):
         self.write_file("include.svh", "`include foo")
-        result = self.preprocess(
-            '\n\n`include "include.svh"', include_paths=[self.output_path]
-        )
+        result = self.preprocess('\n\n`include "include.svh"', include_paths=[self.output_path])
         result.assert_has_tokens("\n\n")
         result.assert_included_files([str(Path(self.output_path) / "include.svh")])
         result.logger.warning.assert_called_once_with(
@@ -845,12 +821,8 @@ keep_end"""
         tokens = tokenizer.tokenize(code, file_name=file_name)
         defines = {}
         included_files = []
-        with mock.patch(
-            "vunit.parsing.verilog.preprocess.LOGGER", autospec=True
-        ) as logger:
-            tokens = preprocessor.preprocess(
-                tokens, defines, include_paths, included_files
-            )
+        with mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True) as logger:
+            tokens = preprocessor.preprocess(tokens, defines, include_paths, included_files)
         return PreprocessResult(
             self,
             tokens,
@@ -929,9 +901,7 @@ class PreprocessResult(object):
                 define.defaults[key] = strip_loc(value)
 
         for key in self.defines:
-            self.test.assertEqual(
-                macro_strip_loc(self.defines[key]), macro_strip_loc(defines[key])
-            )
+            self.test.assertEqual(macro_strip_loc(self.defines[key]), macro_strip_loc(defines[key]))
 
     def assert_no_log(self):
         """

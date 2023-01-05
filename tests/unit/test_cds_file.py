@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Test handling of Cadence Incisive .cds files
@@ -98,9 +98,7 @@ define foo "bar"
         """
         Check that the CDSFile object writes the 'contents to the file
         """
-        with mock.patch(
-            "vunit.sim_if.cds_file.write_file", autospec=True
-        ) as write_file:
+        with mock.patch("vunit.sim_if.cds_file.write_file", autospec=True) as write_file:
             cds.write("filename")
             self.assertEqual(len(write_file.mock_calls), 1)
             args = write_file.mock_calls[0][1]

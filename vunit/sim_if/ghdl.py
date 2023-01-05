@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Interface for GHDL simulator
@@ -60,9 +60,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
             default=None,
             help="Save .vcd or .ghw to open in gtkwave",
         )
-        group.add_argument(
-            "--gtkwave-args", default="", help="Arguments to pass to gtkwave"
-        )
+        group.add_argument("--gtkwave-args", default="", help="Arguments to pass to gtkwave")
 
     @classmethod
     def from_args(cls, args, output_path, **kwargs):
@@ -100,9 +98,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         self._project = None
 
         if gui and (not self.find_executable("gtkwave")):
-            raise RuntimeError(
-                "Cannot find the gtkwave executable in the PATH environment variable. GUI not possible"
-            )
+            raise RuntimeError("Cannot find the gtkwave executable in the PATH environment variable. GUI not possible")
 
         self._gui = gui
         self._gtkwave_fmt = "ghw" if gui and gtkwave_fmt is None else gtkwave_fmt
@@ -111,7 +107,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         self._vhdl_standard = None
         self._coverage_test_dirs = set()
 
-    def has_valid_exit_code(self):
+    def has_valid_exit_code(self):  # pylint: disable=arguments-differ
         """
         Return if the simulation should fail with nonzero exit codes
         """
@@ -122,9 +118,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         """
         Get the output of 'ghdl --version'
         """
-        return subprocess.check_output(
-            [str(Path(prefix) / cls.executable), "--version"]
-        ).decode()
+        return subprocess.check_output([str(Path(prefix) / cls.executable), "--version"]).decode()
 
     @classmethod
     def determine_backend(cls, prefix):
@@ -143,13 +137,11 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
                 return backend
 
         LOGGER.error("Could not detect known LLVM backend by parsing 'ghdl --version'")
-        print("Expected to find one of %r" % mapping.keys())
+        print(f"Expected to find one of {mapping.keys()!r}")
         print("== Output of 'ghdl --version'" + ("=" * 60))
         print(output)
         print("=============================" + ("=" * 60))
-        raise AssertionError(
-            "No known GHDL back-end could be detected from running 'ghdl --version'"
-        )
+        raise AssertionError("No known GHDL back-end could be detected from running 'ghdl --version'")
 
     @classmethod
     def determine_version(cls, prefix):
@@ -162,6 +154,13 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
                 cls._get_version_output(prefix),
             ).group(1)
         )
+
+    @classmethod
+    def supports_vhdl_package_generics(cls):
+        """
+        Returns True when this simulator supports VHDL package generics
+        """
+        return True
 
     @classmethod
     def supports_vhpi(cls):
@@ -203,10 +202,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         if not vhdl_standards:
             self._vhdl_standard = VHDL.STD_2008
         elif len(vhdl_standards) != 1:
-            raise RuntimeError(
-                "GHDL cannot handle mixed VHDL standards, found %r"
-                % list(vhdl_standards)
-            )
+            raise RuntimeError(f"GHDL cannot handle mixed VHDL standards, found {list(vhdl_standards)!r}")
         else:
             self._vhdl_standard = list(vhdl_standards)[0]
 
@@ -234,7 +230,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         if vhdl_standard == VHDL.STD_1993:
             return "93"
 
-        raise ValueError("Invalid VHDL standard %s" % vhdl_standard)
+        raise ValueError(f"Invalid VHDL standard {vhdl_standard!s}")
 
     def compile_vhdl_file_command(self, source_file):
         """
@@ -243,21 +239,18 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         cmd = [
             str(Path(self._prefix) / self.executable),
             "-a",
-            "--workdir=%s" % source_file.library.directory,
-            "--work=%s" % source_file.library.name,
-            "--std=%s" % self._std_str(source_file.get_vhdl_standard()),
+            f"--workdir={source_file.library.directory!s}",
+            f"--work={source_file.library.name!s}",
+            f"--std={self._std_str(source_file.get_vhdl_standard())!s}",
         ]
         for library in self._project.get_libraries():
-            cmd += ["-P%s" % library.directory]
+            cmd += [f"-P{library.directory!s}"]
 
         a_flags = source_file.compile_options.get("ghdl.a_flags", [])
         flags = source_file.compile_options.get("ghdl.flags", [])
         if flags != []:
             warn(
-                (
-                    "'ghdl.flags' is deprecated and it will be removed in future releases; "
-                    "use 'ghdl.a_flags' instead"
-                ),
+                ("'ghdl.flags' is deprecated and it will be removed in future releases; use 'ghdl.a_flags' instead"),
                 Warning,
             )
             a_flags += flags
@@ -272,30 +265,20 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         cmd += [source_file.name]
         return cmd
 
-    def _get_command(  # pylint: disable=too-many-branches
-        self, config, output_path, elaborate_only, ghdl_e, wave_file
-    ):
+    def _get_command(self, config, output_path, elaborate_only, ghdl_e, wave_file):  # pylint: disable=too-many-branches
         """
         Return GHDL simulation command
         """
         cmd = [str(Path(self._prefix) / self.executable)]
 
-        if ghdl_e:
-            cmd += ["-e"]
-        else:
-            cmd += ["--elab-run"]
+        cmd += ["-e"] if ghdl_e else ["--elab-run"]
 
-        cmd += ["--std=%s" % self._std_str(self._vhdl_standard)]
-        cmd += ["--work=%s" % config.library_name]
-        cmd += [
-            "--workdir=%s" % self._project.get_library(config.library_name).directory
-        ]
-        cmd += ["-P%s" % lib.directory for lib in self._project.get_libraries()]
+        cmd += [f"--std={self._std_str(self._vhdl_standard)!s}"]
+        cmd += [f"--work={config.library_name!s}"]
+        cmd += [f"--workdir={self._project.get_library(config.library_name).directory!s}"]
+        cmd += [f"-P{lib.directory!s}" for lib in self._project.get_libraries()]
 
-        bin_path = str(
-            Path(output_path)
-            / ("%s-%s" % (config.entity_name, config.architecture_name))
-        )
+        bin_path = str(Path(output_path) / f"{config.entity_name!s}-{config.architecture_name!s}")
         if self._has_output_flag():
             cmd += ["-o", bin_path]
         cmd += config.sim_options.get("ghdl.elab_flags", [])
@@ -306,16 +289,16 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
 
         sim = config.sim_options.get("ghdl.sim_flags", [])
         for name, value in config.generics.items():
-            sim += ["-g%s=%s" % (name, value)]
-        sim += ["--assert-level=%s" % config.vhdl_assert_stop_level]
+            sim += [f"-g{name!s}={value!s}"]
+        sim += [f"--assert-level={config.vhdl_assert_stop_level!s}"]
         if config.sim_options.get("disable_ieee_warnings", False):
             sim += ["--ieee-asserts=disable"]
 
         if wave_file:
             if self._gtkwave_fmt == "ghw":
-                sim += ["--wave=%s" % wave_file]
+                sim += [f"--wave={wave_file!s}"]
             elif self._gtkwave_fmt == "vcd":
-                sim += ["--vcd=%s" % wave_file]
+                sim += [f"--vcd={wave_file!s}"]
 
         if not ghdl_e:
             cmd += sim
@@ -326,13 +309,10 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
                 makedirs(output_path, mode=0o777)
             except OSError:
                 pass
-            with (Path(output_path) / "args.json").open("w") as fname:
+            with (Path(output_path) / "args.json").open("w", encoding="utf-8") as fname:
                 dump(
                     {
-                        "bin": str(
-                            Path(output_path)
-                            / ("%s-%s" % (config.entity_name, config.architecture_name))
-                        ),
+                        "bin": str(Path(output_path) / f"{config.entity_name!s}-{config.architecture_name!s}"),
                         "build": cmd[1:],
                         "sim": sim,
                     },
@@ -341,9 +321,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
 
         return cmd
 
-    def simulate(  # pylint: disable=too-many-locals
-        self, output_path, test_suite_name, config, elaborate_only
-    ):
+    def simulate(self, output_path, test_suite_name, config, elaborate_only):  # pylint: disable=too-many-locals
         """
         Simulate with entity as top level using generics
         """
@@ -356,15 +334,13 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         ghdl_e = elaborate_only and config.sim_options.get("ghdl.elab_e", False)
 
         if self._gtkwave_fmt is not None:
-            data_file_name = str(Path(script_path) / ("wave.%s" % self._gtkwave_fmt))
+            data_file_name = str(Path(script_path) / f"wave.{self._gtkwave_fmt!s}")
             if Path(data_file_name).exists():
                 remove(data_file_name)
         else:
             data_file_name = None
 
-        cmd = self._get_command(
-            config, script_path, elaborate_only, ghdl_e, data_file_name
-        )
+        cmd = self._get_command(config, script_path, elaborate_only, ghdl_e, data_file_name)
 
         status = True
 
@@ -386,9 +362,9 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
 
             init_file = config.sim_options.get(self.name + ".gtkwave_script.gui", None)
             if init_file is not None:
-                cmd += ["--script", "{}".format(str(Path(init_file).resolve()))]
+                cmd += ["--script", str(Path(init_file).resolve())]
 
-            stdout.write("%s\n" % " ".join(cmd))
+            stdout.write(" ".join(cmd) + "\n")
             subprocess.call(cmd)
 
         return status

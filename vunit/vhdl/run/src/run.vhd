@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 use work.logger_pkg.all;
 use work.log_levels_pkg.all;
@@ -41,10 +41,6 @@ package body run_pkg is
 
     if has_active_python_runner(runner_state) then
       core_pkg.setup(output_path(runner_cfg) & "vunit_results");
-    end if;
-
-
-    if has_active_python_runner(runner_state) then
       hide(runner_trace_logger, display_handler, info);
     end if;
 
@@ -78,7 +74,7 @@ package body run_pkg is
 
     set_run_all(runner_state, strip(test_case_candidates(0).all) = "__all__");
     if get_run_all(runner_state) then
-      set_num_of_test_cases(runner_state, unknown_num_of_test_cases_c);
+      set_num_of_test_cases(runner_state, unknown_num_of_test_cases);
     else
       set_num_of_test_cases(runner_state, 0);
       for i in 1 to test_case_candidates'length loop
@@ -369,11 +365,12 @@ package body run_pkg is
     signal runner : inout runner_sync_t;
     constant phase : in runner_legal_phase_t;
     constant logger : in logger_t := runner_trace_logger;
+    constant path_offset : in natural := 0;
     constant line_num  : in natural := 0;
     constant file_name : in string := "") is
   begin
     lock_entry(runner_state, phase);
-    log(logger, "Locked " & replace(runner_phase_t'image(phase), "_", " ") & " phase entry gate.", trace, line_num, file_name);
+    log(logger, "Locked " & replace(runner_phase_t'image(phase), "_", " ") & " phase entry gate.", trace, path_offset + 1, line_num, file_name);
     notify(runner);
   end;
 
@@ -381,11 +378,12 @@ package body run_pkg is
     signal runner : inout runner_sync_t;
     constant phase : in runner_legal_phase_t;
     constant logger : in logger_t := runner_trace_logger;
+    constant path_offset : in natural := 0;
     constant line_num  : in natural := 0;
     constant file_name : in string := "") is
   begin
     unlock_entry(runner_state, phase);
-    log(logger, "Unlocked " & replace(runner_phase_t'image(phase), "_", " ") & " phase entry gate.", trace, line_num, file_name);
+    log(logger, "Unlocked " & replace(runner_phase_t'image(phase), "_", " ") & " phase entry gate.", trace, path_offset + 1, line_num, file_name);
     notify(runner);
   end;
 
@@ -393,11 +391,12 @@ package body run_pkg is
     signal runner : inout runner_sync_t;
     constant phase : in runner_legal_phase_t;
     constant logger : in logger_t := runner_trace_logger;
+    constant path_offset : in natural := 0;
     constant line_num  : in natural := 0;
     constant file_name : in string := "") is
   begin
     lock_exit(runner_state, phase);
-    log(logger, "Locked " & replace(runner_phase_t'image(phase), "_", " ") & " phase exit gate.", trace, line_num, file_name);
+    log(logger, "Locked " & replace(runner_phase_t'image(phase), "_", " ") & " phase exit gate.", trace, path_offset + 1, line_num, file_name);
     notify(runner);
   end;
 
@@ -405,11 +404,12 @@ package body run_pkg is
     signal runner : inout runner_sync_t;
     constant phase : in runner_legal_phase_t;
     constant logger : in logger_t := runner_trace_logger;
+    constant path_offset : in natural := 0;
     constant line_num  : in natural := 0;
     constant file_name : in string := "") is
   begin
     unlock_exit(runner_state, phase);
-    log(logger, "Unlocked " & replace(runner_phase_t'image(phase), "_", " ") & " phase exit gate.", trace, line_num, file_name);
+    log(logger, "Unlocked " & replace(runner_phase_t'image(phase), "_", " ") & " phase exit gate.", trace, path_offset + 1, line_num, file_name);
     notify(runner);
   end;
 
@@ -417,13 +417,14 @@ package body run_pkg is
     signal runner : in runner_sync_t;
     constant phase : in runner_legal_phase_t;
     constant logger : in logger_t := runner_trace_logger;
+    constant path_offset : in natural := 0;
     constant line_num  : in natural := 0;
     constant file_name : in string := "") is
   begin
     if get_phase(runner_state) /= phase then
-      log(logger, "Waiting for phase = " & replace(runner_phase_t'image(phase), "_", " ") & ".", trace, line_num, file_name);
+      log(logger, "Waiting for phase = " & replace(runner_phase_t'image(phase), "_", " ") & ".", trace, path_offset + 1, line_num, file_name);
       wait on runner until get_phase(runner_state) = phase;
-      log(logger, "Waking up. Phase is " & replace(runner_phase_t'image(phase), "_", " ") & ".", trace, line_num, file_name);
+      log(logger, "Waking up. Phase is " & replace(runner_phase_t'image(phase), "_", " ") & ".", trace, path_offset + 1, line_num, file_name);
     end if;
   end;
 

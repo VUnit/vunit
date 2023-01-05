@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Contains type defining VHDL standards and operations on them
@@ -28,7 +28,7 @@ class VHDLStandard(object):
                     self._standard = standard
                     break
             else:
-                raise ValueError("Unknown standard '%s'" % standard_name)
+                raise ValueError(f"Unknown standard '{standard_name!s}'")
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
@@ -36,9 +36,7 @@ class VHDLStandard(object):
         return False
 
     def __lt__(self, other):
-        return int(self._standard) < int(
-            other._standard  # pylint: disable=protected-access
-        )
+        return int(self._standard) < int(other._standard)  # pylint: disable=protected-access
 
     def __str__(self):
         if self == VHDL.STD_1993:
@@ -47,7 +45,7 @@ class VHDLStandard(object):
         return self._standard
 
     def __repr__(self):
-        return "VHDLStandard(%r)" % self._standard
+        return f"VHDLStandard({self._standard!r})"
 
     def __hash__(self):
         return hash(self._standard)
@@ -62,6 +60,13 @@ class VHDLStandard(object):
         Return a set including this standard and all later standards
         """
         return {standard for standard in VHDL.STANDARDS if standard >= self}
+
+    @property
+    def and_earlier(self):
+        """
+        Return a set including this standard and all earlier standards
+        """
+        return {standard for standard in VHDL.STANDARDS if standard <= self}
 
 
 class VHDL(object):

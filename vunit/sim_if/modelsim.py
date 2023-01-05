@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Interface towards Mentor Graphics ModelSim
@@ -11,7 +11,6 @@ Interface towards Mentor Graphics ModelSim
 from pathlib import Path
 import os
 import logging
-import io
 from configparser import RawConfigParser
 from ..exceptions import CompileError
 from ..ostools import Process, file_exists
@@ -22,9 +21,7 @@ from .vsim_simulator_mixin import VsimSimulatorMixin, fix_path
 LOGGER = logging.getLogger(__name__)
 
 
-class ModelSimInterface(
-    VsimSimulatorMixin, SimulatorInterface
-):  # pylint: disable=too-many-instance-attributes
+class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disable=too-many-instance-attributes
     """
     Mentor Graphics ModelSim interface
 
@@ -109,11 +106,9 @@ class ModelSimInterface(
         if not file_exists(parent):
             os.makedirs(parent)
 
-        original_modelsim_ini = os.environ.get(
-            "VUNIT_MODELSIM_INI", str(Path(self._prefix).parent / "modelsim.ini")
-        )
-        with open(original_modelsim_ini, "rb") as fread:
-            with open(self._sim_cfg_file_name, "wb") as fwrite:
+        original_modelsim_ini = os.environ.get("VUNIT_MODELSIM_INI", str(Path(self._prefix).parent / "modelsim.ini"))
+        with Path(original_modelsim_ini).open("rb") as fread:
+            with Path(self._sim_cfg_file_name).open("wb") as fwrite:
                 fwrite.write(fread.read())
 
     def add_simulator_specific(self, project):
@@ -154,9 +149,9 @@ class ModelSimInterface(
         Convert standard to format of Modelsim command line flag
         """
         if vhdl_standard <= VHDL.STD_2008:
-            return "-%s" % vhdl_standard
+            return f"-{vhdl_standard!s}"
 
-        raise ValueError("Invalid VHDL standard %s" % vhdl_standard)
+        raise ValueError(f"Invalid VHDL standard {vhdl_standard!s}")
 
     def compile_vhdl_file_command(self, source_file):
         """
@@ -196,9 +191,9 @@ class ModelSimInterface(
         for library in self._libraries:
             args += ["-L", library.name]
         for include_dir in source_file.include_dirs:
-            args += ["+incdir+%s" % include_dir]
+            args += [f"+incdir+{include_dir!s}"]
         for key, value in source_file.defines.items():
-            args += ["+define+%s=%s" % (key, value)]
+            args += [f"+define+{key!s}={value!s}"]
         return args
 
     def create_library(self, library_name, path, mapped_libraries=None):
@@ -213,9 +208,7 @@ class ModelSimInterface(
             os.makedirs(apath)
 
         if not file_exists(path):
-            proc = Process(
-                [str(Path(self._prefix) / "vlib"), "-unix", path], env=self.get_env()
-            )
+            proc = Process([str(Path(self._prefix) / "vlib"), "-unix", path], env=self.get_env())
             proc.consume_output(callback=None)
 
         if library_name in mapped_libraries and mapped_libraries[library_name] == path:
@@ -242,25 +235,23 @@ class ModelSimInterface(
 
         set_generic_str = " ".join(
             (
-                "-g/%s/%s=%s" % (config.entity_name, name, encode_generic_value(value))
+                f"-g/{config.entity_name!s}/{name!s}={encode_generic_value(value)!s}"
                 for name, value in config.generics.items()
             )
         )
-        pli_str = " ".join(
-            "-pli {%s}" % fix_path(name) for name in config.sim_options.get("pli", [])
-        )
+        pli_str = " ".join(f"-pli {{{fix_path(name)!s}}}" for name in config.sim_options.get("pli", []))
 
         if config.architecture_name is None:
             architecture_suffix = ""
         else:
-            architecture_suffix = "(%s)" % config.architecture_name
+            architecture_suffix = f"({config.architecture_name!s})"
 
         if config.sim_options.get("enable_coverage", False):
             coverage_file = str(Path(output_path) / "coverage.ucdb")
             self._coverage_files.add(coverage_file)
             coverage_save_cmd = (
-                "coverage save -onexit -testname {%s} -assert -directive -cvg -codeAll {%s}"
-                % (test_suite_name, fix_path(coverage_file))
+                f"coverage save -onexit -testname {{{test_suite_name!s}}} -assert -directive "
+                f"-cvg -codeAll {{{fix_path(coverage_file)!s}}}"
             )
             coverage_args = "-coverage"
         else:
@@ -268,7 +259,7 @@ class ModelSimInterface(
             coverage_args = ""
 
         vsim_flags = [
-            "-wlf {%s}" % fix_path(str(Path(output_path) / "vsim.wlf")),
+            f"-wlf {{{fix_path(str(Path(output_path) / 'vsim.wlf'))!s}}}",
             "-quiet",
             "-t ps",
             # for correct handling of verilog fatal/finish
@@ -283,7 +274,7 @@ class ModelSimInterface(
         # There is a known bug in modelsim that prevents the -modelsimini flag from accepting
         # a space in the path even with escaping, see issue #36
         if " " not in self._sim_cfg_file_name:
-            vsim_flags.insert(0, "-modelsimini %s" % fix_path(self._sim_cfg_file_name))
+            vsim_flags.insert(0, f"-modelsimini {fix_path(self._sim_cfg_file_name)!s}")
 
         for library in self._libraries:
             vsim_flags += ["-L", library.name]
@@ -321,12 +312,8 @@ proc vunit_load {{{{vsim_extra_args ""}}}} {{
 """.format(
             coverage_save_cmd=coverage_save_cmd,
             vsim_flags=" ".join(vsim_flags),
-            break_on_assert=vhdl_assert_stop_level_mapping[
-                config.vhdl_assert_stop_level
-            ],
-            no_warnings=1
-            if config.sim_options.get("disable_ieee_warnings", False)
-            else 0,
+            break_on_assert=vhdl_assert_stop_level_mapping[config.vhdl_assert_stop_level],
+            no_warnings=1 if config.sim_options.get("disable_ieee_warnings", False) else 0,
         )
 
         return tcl
@@ -375,9 +362,7 @@ proc _vunit_sim_restart {} {
         vsim_extra_args = config.sim_options.get("modelsim.vsim_flags", vsim_extra_args)
 
         if self._gui:
-            vsim_extra_args = config.sim_options.get(
-                "modelsim.vsim_flags.gui", vsim_extra_args
-            )
+            vsim_extra_args = config.sim_options.get("modelsim.vsim_flags.gui", vsim_extra_args)
 
         return " ".join(vsim_extra_args)
 
@@ -393,20 +378,15 @@ proc _vunit_sim_restart {} {
             args = []
 
         coverage_files = str(Path(self._output_path) / "coverage_files.txt")
-        vcover_cmd = (
-            [str(Path(self._prefix) / "vcover"), "merge", "-inputs"]
-            + [coverage_files]
-            + args
-            + [file_name]
-        )
-        with open(coverage_files, "w") as fptr:
+        vcover_cmd = [str(Path(self._prefix) / "vcover"), "merge", "-inputs"] + [coverage_files] + args + [file_name]
+        with Path(coverage_files).open("w", encoding="utf-8") as fptr:
             for coverage_file in self._coverage_files:
                 if file_exists(coverage_file):
                     fptr.write(str(coverage_file) + "\n")
                 else:
                     LOGGER.warning("Missing coverage file: %s", coverage_file)
 
-        print("Merging coverage files into %s..." % file_name)
+        print(f"Merging coverage files into {file_name!s}...")
         vcover_merge_process = Process(vcover_cmd, env=self.get_env())
         vcover_merge_process.consume_output()
         print("Done merging coverage files")
@@ -430,9 +410,9 @@ def encode_generic_value(value):
     """
     s_value = str(value)
     if " " in s_value:
-        return '{"%s"}' % s_value
+        return f'{{"{s_value!s}"}}'
     if "," in s_value:
-        return '"%s"' % s_value
+        return f'"{s_value!s}"'
     return s_value
 
 
@@ -442,7 +422,7 @@ def parse_modelsimini(file_name):
     :returns: A RawConfigParser object
     """
     cfg = RawConfigParser()
-    with io.open(file_name, "r", encoding="utf-8") as fptr:
+    with Path(file_name).open("r", encoding="utf-8") as fptr:
         cfg.read_file(fptr)
     return cfg
 
@@ -451,5 +431,5 @@ def write_modelsimini(cfg, file_name):
     """
     Writes a modelsim.ini file
     """
-    with io.open(file_name, "w", encoding="utf-8") as optr:
+    with Path(file_name).open("w", encoding="utf-8") as optr:
         cfg.write(optr)

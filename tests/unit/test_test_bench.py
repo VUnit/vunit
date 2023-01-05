@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 # pylint: disable=too-many-public-methods, too-many-lines
 
@@ -47,16 +47,12 @@ class TestTestBench(unittest.TestCase):
     @staticmethod
     @with_tempdir
     def test_no_architecture_at_creation(tempdir):
-        design_unit = Entity(
-            "tb_entity", file_name=str(Path(tempdir) / "file.vhd"), no_arch=True
-        )
+        design_unit = Entity("tb_entity", file_name=str(Path(tempdir) / "file.vhd"), no_arch=True)
         TestBench(design_unit)
 
     @with_tempdir
     def test_no_architecture_gives_runtime_error(self, tempdir):
-        design_unit = Entity(
-            "tb_entity", file_name=str(Path(tempdir) / "file.vhd"), no_arch=True
-        )
+        design_unit = Entity("tb_entity", file_name=str(Path(tempdir) / "file.vhd"), no_arch=True)
         test_bench = TestBench(design_unit)
         try:
             self.create_tests(test_bench)
@@ -84,9 +80,7 @@ class TestTestBench(unittest.TestCase):
     def test_multiple_architectures_are_not_allowed_for_test_bench(self, tempdir):
         design_unit = Entity("tb_entity", file_name=str(Path(tempdir) / "file.vhd"))
         design_unit.generic_names = ["runner_cfg"]
-        design_unit.add_architecture(
-            "arch2", file_name=str(Path(tempdir) / "arch2.vhd")
-        )
+        design_unit.add_architecture("arch2", file_name=str(Path(tempdir) / "arch2.vhd"))
         try:
             TestBench(design_unit)
         except RuntimeError as exc:
@@ -179,9 +173,7 @@ if my_protected_variable.run("Test 10")
 
     @with_tempdir
     def test_creates_tests_when_adding_architecture_late(self, tempdir):
-        design_unit = Entity(
-            "tb_entity", file_name=str(Path(tempdir) / "file.vhd"), no_arch=True
-        )
+        design_unit = Entity("tb_entity", file_name=str(Path(tempdir) / "file.vhd"), no_arch=True)
         design_unit.generic_names = ["runner_cfg"]
         test_bench = TestBench(design_unit)
 
@@ -232,15 +224,11 @@ if run("Test_2")
 
     @with_tempdir
     def test_scan_tests_from_file_location_unix(self, tempdir):
-        self._test_scan_tests_from_file_location(
-            tempdir, 'foo \n bar \n if run("Test_1")'
-        )
+        self._test_scan_tests_from_file_location(tempdir, 'foo \n bar \n if run("Test_1")')
 
     @with_tempdir
     def test_scan_tests_from_file_location_dos(self, tempdir):
-        self._test_scan_tests_from_file_location(
-            tempdir, 'foo \r\n bar \r\n if run("Test_1")'
-        )
+        self._test_scan_tests_from_file_location(tempdir, 'foo \r\n bar \r\n if run("Test_1")')
 
     @with_tempdir
     def test_scan_tests_from_missing_file(self, tempdir):
@@ -283,9 +271,7 @@ if run("Test_2")
         design_unit.generic_names = ["runner_cfg"]
         test_bench = TestBench(design_unit)
         tests = self.create_tests(test_bench)
-        self.assert_has_tests(
-            tests, [("lib.tb_entity", ("lib.tb_entity.Test_1", "lib.tb_entity.Test_2"))]
-        )
+        self.assert_has_tests(tests, [("lib.tb_entity", ("lib.tb_entity.Test_1", "lib.tb_entity.Test_2"))])
 
     @with_tempdir
     def test_add_config(self, tempdir):
@@ -295,12 +281,8 @@ if run("Test_2")
 
         test_bench.set_generic("global_value", "global value")
 
-        test_bench.add_config(
-            name="value=1", generics=dict(value=1, global_value="local value")
-        )
-        test_bench.add_config(
-            name="value=2", generics=dict(value=2), attributes={".foo": "bar"}
-        )
+        test_bench.add_config(name="value=1", generics=dict(value=1, global_value="local value"))
+        test_bench.add_config(name="value=2", generics=dict(value=2), attributes={".foo": "bar"})
 
         self.assertRaises(
             AttributeException,
@@ -321,9 +303,7 @@ if run("Test_2")
             get_config_of(tests, "lib.tb_entity.value=2").generics,
             {"value": 2, "global_value": "global value"},
         )
-        self.assertEqual(
-            get_config_of(tests, "lib.tb_entity.value=2").attributes, {".foo": "bar"}
-        )
+        self.assertEqual(get_config_of(tests, "lib.tb_entity.value=2").attributes, {".foo": "bar"})
 
     @with_tempdir
     def test_test_case_add_config(self, tempdir):
@@ -341,9 +321,7 @@ if run("test 2")
         test_bench.set_sim_option("disable_ieee_warnings", True)
 
         test_case = test_bench.get_test_case("test 2")
-        test_case.add_config(
-            name="c1", generics=dict(value=1, global_value="local value")
-        )
+        test_case.add_config(name="c1", generics=dict(value=1, global_value="local value"))
         test_case.add_config(
             name="c2",
             generics=dict(value=2),
@@ -373,18 +351,12 @@ if run("test 2")
         config_c2_test2 = get_config_of(tests, "lib.tb_entity.c2.test 2")
         self.assertEqual(config_test1.generics, {"global_value": "global value"})
         self.assertEqual(config_c1_test2.attributes, {})
-        self.assertEqual(
-            config_c1_test2.generics, {"value": 1, "global_value": "local value"}
-        )
+        self.assertEqual(config_c1_test2.generics, {"value": 1, "global_value": "local value"})
         self.assertEqual(config_c2_test2.attributes, {".foo": "bar"})
-        self.assertEqual(
-            config_c2_test2.generics, {"value": 2, "global_value": "global value"}
-        )
+        self.assertEqual(config_c2_test2.generics, {"value": 2, "global_value": "global value"})
 
     @with_tempdir
-    def test_runtime_error_on_configuration_of_individual_test_with_same_sim(
-        self, tempdir
-    ):
+    def test_runtime_error_on_configuration_of_individual_test_with_same_sim(self, tempdir):
         design_unit = Entity(
             "tb_entity",
             file_name=str(Path(tempdir) / "file.vhd"),
@@ -426,9 +398,7 @@ if run("Test 2")
                 )
             ],
         )
-        self.assertEqual(
-            get_config_of(tests, "lib.tb_entity.cfg").generics, {"name": "value"}
-        )
+        self.assertEqual(get_config_of(tests, "lib.tb_entity.cfg").generics, {"name": "value"})
 
     @with_tempdir
     def test_global_user_attributes_not_supported_yet(self, tempdir):
@@ -448,8 +418,7 @@ if run("Test 2")
         except RuntimeError as exc:
             self.assertEqual(
                 str(exc),
-                "File global attributes are not yet supported: .attr0 in %s line 1"
-                % str(Path(tempdir) / "file.vhd"),
+                "File global attributes are not yet supported: .attr0 in %s line 1" % str(Path(tempdir) / "file.vhd"),
             )
         else:
             assert False, "RuntimeError not raised"
@@ -483,9 +452,7 @@ if run("Test 2")
         file_name = str(Path(tempdir) / "file.vhd")
 
         for same_sim in [True, False]:
-            contents = get_vhdl_test_bench(
-                "tb_entity", tests=["Test 1", "Test 2"], same_sim=same_sim
-            )
+            contents = get_vhdl_test_bench("tb_entity", tests=["Test 1", "Test 2"], same_sim=same_sim)
 
             design_unit = Entity("tb_entity", file_name=file_name, contents=contents)
             design_unit.generic_names = ["runner_cfg", "name"]
@@ -498,11 +465,7 @@ if run("Test 2")
                 self.assertEqual(len(test_suites), 2)
 
             self.assertEqual(
-                set(
-                    item
-                    for test_suite in test_suites
-                    for item in test_suite.test_information.items()
-                ),
+                set(item for test_suite in test_suites for item in test_suite.test_information.items()),
                 set(
                     [
                         (
@@ -526,9 +489,7 @@ if run("Test 2")
 
     def test_remove_verilog_comments(self):
         self.assertEqual(_remove_verilog_comments("a\n// foo \nb"), "a\n       \nb")
-        self.assertEqual(
-            _remove_verilog_comments("a\n/* foo\n \n */ \nb"), "a\n      \n \n    \nb"
-        )
+        self.assertEqual(_remove_verilog_comments("a\n/* foo\n \n */ \nb"), "a\n      \n \n    \nb")
 
     def test_get_line_offsets(self):
         self.assertEqual(_get_line_offsets(""), [])
@@ -684,22 +645,19 @@ if run("Test_2")
         msg = error_calls[0][0][0] % error_calls[0][0][1:]
         self.assertEqual(
             msg,
-            'Duplicate test "Test_3" in %s line 5 previously defined on line 3'
-            % file_name,
+            'Duplicate test "Test_3" in %s line 5 previously defined on line 3' % file_name,
         )
 
         msg = error_calls[1][0][0] % error_calls[1][0][1:]
         self.assertEqual(
             msg,
-            'Duplicate test "Test_3" in %s line 6 previously defined on line 3'
-            % file_name,
+            'Duplicate test "Test_3" in %s line 6 previously defined on line 3' % file_name,
         )
 
         msg = error_calls[2][0][0] % error_calls[2][0][1:]
         self.assertEqual(
             msg,
-            'Duplicate test "Test_2" in %s line 7 previously defined on line 4'
-            % file_name,
+            'Duplicate test "Test_2" in %s line 7 previously defined on line 4' % file_name,
         )
 
     def test_find_attributes(self):
@@ -736,9 +694,7 @@ if run("Test_2")
             attributes,
             [
                 Attribute(".foo", None, _code_file_location(code, ".foo", "file.vhd")),
-                Attribute(
-                    ".foo-bar", None, _code_file_location(code, ".foo-bar", "file.vhd")
-                ),
+                Attribute(".foo-bar", None, _code_file_location(code, ".foo-bar", "file.vhd")),
             ],
         )
 

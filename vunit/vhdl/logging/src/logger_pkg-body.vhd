@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 use work.string_ptr_pkg.all;
 use work.integer_vector_ptr_pkg.all;
@@ -12,6 +12,7 @@ use std.textio.all;
 use work.string_ops.all;
 use work.print_pkg.print;
 use work.ansi_pkg.all;
+use work.location_pkg.all;
 
 package body logger_pkg is
   constant root_logger_id : natural := 0;
@@ -889,6 +890,7 @@ package body logger_pkg is
   procedure log(logger : logger_t;
                 msg : string;
                 log_level : log_level_t := info;
+                path_offset : natural := 0;
                 line_num : natural := 0;
                 file_name : string := "") is
 
@@ -896,6 +898,7 @@ package body logger_pkg is
     constant t_now : time := now;
     constant sequence_number : natural := get_log_count;
     variable state : natural;
+    variable location : location_t := get_location(path_offset + 1, line_num, file_name);
   begin
     if logger = null_logger then
       core_failure("Attempt to log to uninitialized logger");
@@ -905,7 +908,7 @@ package body logger_pkg is
     state := get_state(logger, log_level);
 
     if state = mocked_state then
-      mock_log(logger, msg, log_level, t_now, line_num, file_name);
+      mock_log(logger, msg, log_level, t_now, location.line_num, location.file_name.all);
     else
       if state = enabled_state then
         for i in 0 to num_log_handlers(logger) - 1 loop
@@ -913,7 +916,7 @@ package body logger_pkg is
           if is_visible(logger, log_handler, log_level) then
             log_to_handler(log_handler, get_full_name(logger), msg, log_level,
                            t_now, sequence_number,
-                           line_num, file_name);
+                           location.line_num, location.file_name.all);
           end if;
         end loop;
 
@@ -927,90 +930,100 @@ package body logger_pkg is
 
   procedure debug(logger : logger_t;
                   msg : string;
+                  path_offset : natural := 0;
                   line_num : natural := 0;
                   file_name : string := "") is
   begin
-    log(logger, msg, debug, line_num, file_name);
+    log(logger, msg, debug, path_offset + 1, line_num, file_name);
   end procedure;
 
   procedure pass(logger : logger_t;
                  msg : string;
+                 path_offset : natural := 0;
                  line_num : natural := 0;
                  file_name : string := "") is
   begin
-    log(logger, msg, pass, line_num, file_name);
+    log(logger, msg, pass, path_offset + 1, line_num, file_name);
   end procedure;
 
   procedure trace(logger : logger_t;
                   msg : string;
+                  path_offset : natural := 0;
                   line_num : natural := 0;
                   file_name : string := "") is
   begin
-    log(logger, msg, trace, line_num, file_name);
+    log(logger, msg, trace, path_offset + 1, line_num, file_name);
   end procedure;
 
   procedure info(logger : logger_t;
                  msg : string;
+                 path_offset : natural := 0;
                  line_num : natural := 0;
                  file_name : string := "") is
   begin
-    log(logger, msg, info, line_num, file_name);
+    log(logger, msg, info, path_offset + 1, line_num, file_name);
   end procedure;
 
   procedure warning(logger : logger_t;
                     msg : string;
+                    path_offset : natural := 0;
                     line_num : natural := 0;
                     file_name : string := "") is
   begin
-    log(logger, msg, warning, line_num, file_name);
+    log(logger, msg, warning, path_offset + 1, line_num, file_name);
   end procedure;
 
   procedure error(logger : logger_t;
                   msg : string;
+                  path_offset : natural := 0;
                   line_num : natural := 0;
                   file_name : string := "") is
   begin
-    log(logger, msg, error, line_num, file_name);
+    log(logger, msg, error, path_offset + 1, line_num, file_name);
   end procedure;
 
   procedure failure(logger : logger_t;
                     msg : string;
+                    path_offset : natural := 0;
                     line_num : natural := 0;
                     file_name : string := "") is
   begin
-    log(logger, msg, failure, line_num, file_name);
+    log(logger, msg, failure, path_offset + 1, line_num, file_name);
   end procedure;
 
   procedure warning_if(logger : logger_t;
                        condition : boolean;
                        msg : string;
+                       path_offset : natural := 0;
                        line_num : natural := 0;
                        file_name : string := "") is
   begin
     if condition then
-      warning(logger, msg, line_num => line_num, file_name => file_name);
+      warning(logger, msg, path_offset + 1, line_num => line_num, file_name => file_name);
     end if;
   end;
 
   procedure error_if(logger : logger_t;
                      condition : boolean;
                      msg : string;
+                     path_offset : natural := 0;
                      line_num : natural := 0;
                      file_name : string := "") is
   begin
     if condition then
-      error(logger, msg, line_num => line_num, file_name => file_name);
+      error(logger, msg, path_offset + 1, line_num => line_num, file_name => file_name);
     end if;
   end;
 
   procedure failure_if(logger : logger_t;
                        condition : boolean;
                        msg : string;
+                       path_offset : natural := 0;
                        line_num : natural := 0;
                        file_name : string := "") is
   begin
     if condition then
-      failure(logger, msg, line_num => line_num, file_name => file_name);
+      failure(logger, msg, path_offset + 1, line_num => line_num, file_name => file_name);
     end if;
   end;
 
@@ -1047,88 +1060,99 @@ package body logger_pkg is
 
   procedure log(msg : string;
                 log_level : log_level_t := info;
+                path_offset : natural := 0;
                 line_num : natural := 0;
                 file_name : string := "") is
   begin
-    log(default_logger, msg, log_level, line_num, file_name);
+    log(default_logger, msg, log_level, path_offset + 1, line_num, file_name);
   end;
 
   procedure debug(msg : string;
+                  path_offset : natural := 0;
                   line_num : natural := 0;
                   file_name : string := "") is
   begin
-    debug(default_logger, msg, line_num, file_name);
+    debug(default_logger, msg, path_offset + 1, line_num, file_name);
   end procedure;
 
   procedure pass(msg : string;
+                 path_offset : natural := 0;
                  line_num : natural := 0;
                  file_name : string := "") is
   begin
-    pass(default_logger, msg, line_num, file_name);
+    pass(default_logger, msg, path_offset + 1, line_num, file_name);
   end procedure;
 
   procedure trace(msg : string;
+                  path_offset : natural := 0;
                   line_num : natural := 0;
                   file_name : string := "") is
   begin
-    trace(default_logger, msg, line_num, file_name);
+    trace(default_logger, msg, path_offset + 1, line_num, file_name);
   end procedure;
 
   procedure info(msg : string;
+                 path_offset : natural := 0;
                  line_num : natural := 0;
                  file_name : string := "") is
   begin
-    info(default_logger, msg, line_num, file_name);
+    info(default_logger, msg, path_offset + 1, line_num, file_name);
   end procedure;
 
   procedure warning(msg : string;
+                    path_offset : natural := 0;
                     line_num : natural := 0;
                     file_name : string := "") is
   begin
-    warning(default_logger, msg, line_num, file_name);
+    warning(default_logger, msg, path_offset + 1, line_num, file_name);
   end procedure;
 
   procedure error(msg : string;
+                  path_offset : natural := 0;
                   line_num : natural := 0;
                   file_name : string := "") is
   begin
-    error(default_logger, msg, line_num, file_name);
+    error(default_logger, msg, path_offset + 1, line_num, file_name);
   end procedure;
 
   procedure failure(msg : string;
+                    path_offset : natural := 0;
                     line_num : natural := 0;
                     file_name : string := "") is
   begin
-    failure(default_logger, msg, line_num, file_name);
+    failure(default_logger, msg, path_offset + 1, line_num, file_name);
   end procedure;
 
   procedure warning_if(condition : boolean;
                        msg : string;
+                       path_offset : natural := 0;
                        line_num : natural := 0;
                        file_name : string := "") is
   begin
     if condition then
-      warning(msg, line_num => line_num, file_name => file_name);
+      warning(msg, path_offset + 1, line_num => line_num, file_name => file_name);
     end if;
   end;
 
   procedure error_if(condition : boolean;
                      msg : string;
+                     path_offset : natural := 0;
                      line_num : natural := 0;
                      file_name : string := "") is
   begin
     if condition then
-      error(msg, line_num => line_num, file_name => file_name);
+      error(msg, path_offset + 1, line_num => line_num, file_name => file_name);
     end if;
   end;
 
   procedure failure_if(condition : boolean;
                        msg : string;
+                       path_offset : natural := 0;
                        line_num : natural := 0;
                        file_name : string := "") is
   begin
     if condition then
-      failure(msg, line_num => line_num, file_name => file_name);
+      failure(msg, path_offset + 1, line_num => line_num, file_name => file_name);
     end if;
   end;
 

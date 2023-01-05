@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 use work.log_levels_pkg.all;
 use work.logger_pkg.all;
@@ -101,7 +101,7 @@ package body log_deprecated_pkg is
         end if;
       end function;
 
-      impure function get_logger_display_handler return log_handler_t is
+      impure function get_logger_display_handler(logger : logger_t) return log_handler_t is
       begin
         for idx in 0 to num_log_handlers(logger) - 1 loop
           if get_file_name(get_log_handler(logger, idx)) = stdout_file_name then
@@ -112,7 +112,7 @@ package body log_deprecated_pkg is
         return null_log_handler;
       end function;
 
-      impure function get_logger_file_handler return log_handler_t is
+      impure function get_logger_file_handler(logger : logger_t) return log_handler_t is
       begin
         for idx in 0 to num_log_handlers(logger) - 1 loop
           if get_file_name(get_log_handler(logger, idx)) /= stdout_file_name then
@@ -123,14 +123,14 @@ package body log_deprecated_pkg is
         return null_log_handler;
       end function;
     begin
-      logger_display_handler := get_logger_display_handler;
+      logger_display_handler := get_logger_display_handler(logger);
       if new_logger or (logger_display_handler = null_log_handler) then
         logger_display_handler := new_log_handler(stdout_file_name, real_format(display_format), true);
       else
         init_log_handler(logger_display_handler, real_format(display_format), stdout_file_name, true);
       end if;
 
-      logger_file_handler := get_logger_file_handler;
+      logger_file_handler := get_logger_file_handler(logger);
       if new_logger or (logger_file_handler = null_log_handler) then
         logger_file_handler := new_log_handler(file_name, real_format(file_format), false);
       else
@@ -195,7 +195,7 @@ package body log_deprecated_pkg is
                     file_name : string := "") is
   begin
     warning("Mapping deprecated procedure verbose to trace");
-    trace(logger, msg, line_num, file_name);
+    trace(logger, msg, 1, line_num, file_name);
   end procedure;
 
   procedure verbose(msg : string;

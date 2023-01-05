@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 
 package body checker_pkg is
@@ -85,10 +85,11 @@ package body checker_pkg is
   end;
 
   procedure passing_check(
-    checker   : checker_t;
-    msg       : string;
-    line_num  : natural := 0;
-    file_name : string  := "") is
+    checker     : checker_t;
+    msg         : string;
+    path_offset : natural := 0;
+    line_num    : natural := 0;
+    file_name   : string  := "") is
     constant logger : logger_t := get_logger(checker);
   begin
     -- pragma translate_off
@@ -96,7 +97,7 @@ package body checker_pkg is
     set(checker.p_data, stat_passed_idx, get(checker.p_data, stat_passed_idx) + 1);
 
     if is_visible(logger, pass) then
-      log(logger, msg, pass, line_num, file_name);
+      log(logger, msg, pass, path_offset + 1, line_num, file_name);
     else
       log(logger, "", pass); -- invisible log
     end if;
@@ -105,20 +106,21 @@ package body checker_pkg is
   end;
 
   procedure failing_check(
-    checker   : checker_t;
-    msg       : string;
-    level     : log_level_t := null_log_level;
-    line_num  : natural                := 0;
-    file_name : string                 := "") is
+    checker     : checker_t;
+    msg         : string;
+    level       : log_level_t := null_log_level;
+    path_offset : natural := 0;
+    line_num    : natural                := 0;
+    file_name   : string                 := "") is
   begin
     -- pragma translate_off
     set(checker.p_data, stat_checks_idx, get(checker.p_data, stat_checks_idx) + 1);
     set(checker.p_data, stat_failed_idx, get(checker.p_data, stat_failed_idx) + 1);
 
     if level = null_log_level then
-      log(get_logger(checker), msg, get_default_log_level(checker), line_num, file_name);
+      log(get_logger(checker), msg, get_default_log_level(checker), path_offset + 1, line_num, file_name);
     else
-      log(get_logger(checker), msg, level, line_num, file_name);
+      log(get_logger(checker), msg, level, path_offset + 1, line_num, file_name);
     end if;
   -- pragma translate_on
   end;

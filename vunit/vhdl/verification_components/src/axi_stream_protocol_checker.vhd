@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -107,6 +107,7 @@ begin
           result("for performance - tready active " & to_string(n_clock_cycles) &
           " clock cycles after tvalid. Expected <= " & to_string(protocol_checker.p_max_waits) & " clock cycles."),
           level => warning);
+    n_clock_cycles := 0;
   end process;
 
   -- AXI4STREAM_ERRM_TDATA_X A value of X on TDATA is not permitted when TVALID

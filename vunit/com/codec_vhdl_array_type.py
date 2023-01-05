@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Module containing the CodecVHDLArrayType class.
@@ -28,27 +28,17 @@ class CodecVHDLArrayType(VHDLArrayType):
             and self.range2.attribute is None
             and self.range2.range_type is None
         )
-        is_constrained = (
-            self.range1.range_type is None and self.range2.range_type is None
-        )
+        is_constrained = self.range1.range_type is None and self.range2.range_type is None
 
         declarations += template.codec_declarations.substitute(type=self.identifier)
         declarations += template.to_string_declarations.substitute(type=self.identifier)
         if is_constrained:
             if has_one_dimension:
-                definitions += template.constrained_1d_array_definition.substitute(
-                    type=self.identifier
-                )
-                definitions += template.constrained_1d_array_to_string_definition.substitute(
-                    type=self.identifier
-                )
+                definitions += template.constrained_1d_array_definition.substitute(type=self.identifier)
+                definitions += template.constrained_1d_array_to_string_definition.substitute(type=self.identifier)
             else:
-                definitions += template.constrained_2d_array_definition.substitute(
-                    type=self.identifier
-                )
-                definitions += template.constrained_2d_array_to_string_definition.substitute(
-                    type=self.identifier
-                )
+                definitions += template.constrained_2d_array_definition.substitute(type=self.identifier)
+                definitions += template.constrained_2d_array_to_string_definition.substitute(type=self.identifier)
         else:
             if has_one_dimension:
                 init_value = ""

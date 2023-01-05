@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Functionality to compute a dependency graph
@@ -33,8 +33,8 @@ class DependencyGraph(Generic[T]):
         """
         sorted_nodes: List[T] = []
         self._visit(
-            sorted(self._nodes),
-            dict((key, sorted(values)) for key, values in self._forward.items()),
+            sorted(self._nodes),  # type: ignore
+            dict((key, sorted(values)) for key, values in self._forward.items()),  # type: ignore
             sorted_nodes.append,
         )
         sorted_nodes = list(reversed(sorted_nodes))
@@ -135,4 +135,4 @@ class CircularDependencyException(Exception):
         self.path = path
 
     def __repr__(self):
-        return "CircularDependencyException(%r)" % self.path
+        return f"CircularDependencyException({self.path!r})"

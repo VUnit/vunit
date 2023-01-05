@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 A general tokenizer
@@ -12,7 +12,8 @@ import collections
 import re
 from vunit.ostools import read_file, file_exists, simplify_path
 
-TokenType = collections.namedtuple("Token", ["kind", "value", "location"])
+
+TokenType = collections.namedtuple("TokenType", ["kind", "value", "location"])
 
 
 def Token(kind, value="", location=None):  # pylint: disable=invalid-name
@@ -59,13 +60,11 @@ class Tokenizer(object):
 
     def finalize(self):
         self._regex = re.compile(
-            "|".join("(?P<%s>%s)" % spec for spec in self._regexs),
+            "|".join(f"(?P<{spec[0]!s}>{spec[1]!s})" for spec in self._regexs),
             re.VERBOSE | re.MULTILINE,
         )
 
-    def tokenize(
-        self, code, file_name=None, previous_location=None, create_locations=False
-    ):
+    def tokenize(self, code, file_name=None, previous_location=None, create_locations=False):
         """
         Tokenize the code
         """
@@ -160,13 +159,8 @@ class TokenStream(object):
         """
         token = self.pop()
         if token.kind not in kinds:
-            if len(kinds) == 1:
-                expected = str(kinds[0])
-            else:
-                expected = "any of [%s]" % ", ".join(str(kind) for kind in kinds)
-            raise LocationException.error(
-                "Expected %s got %s" % (expected, token.kind), token.location
-            )
+            expected = str(kinds[0]) if len(kinds) == 1 else f"any of [{', '.join(str(kind) for kind in kinds)}]"
+            raise LocationException.error(f"Expected {expected!s} got {token.kind!s}", token.location)
         return token
 
     def slice(self, start, end):
@@ -191,7 +185,7 @@ def describe_location(location, first=True):
         return retval
 
     if not file_exists(file_name):
-        retval += "Unknown location in %s" % file_name
+        retval += f"Unknown location in {file_name!s}"
         return retval
 
     contents = read_file(file_name)
@@ -206,15 +200,9 @@ def describe_location(location, first=True):
         lstart = count
         lend = lstart + len(line)
         if lstart <= start <= lend:
-            retval += "%s %s line %i:\n" % (
-                prefix,
-                simplify_path(file_name),
-                lineno + 1,
-            )
+            retval += f"{prefix!s} {simplify_path(file_name)!s} line {lineno + 1:d}:\n"
             retval += line + "\n"
-            retval += (" " * (start - lstart)) + (
-                "~" * (min(lend - 1, end) - start + 1)
-            )
+            retval += (" " * (start - lstart)) + ("~" * (min(lend - 1, end) - start + 1))
             return retval
 
         count = lend + 1

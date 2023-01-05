@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Contains different kinds of test suites
@@ -19,7 +19,7 @@ class IndependentSimTestCase(object):
     """
 
     def __init__(self, test, config, simulator_if, elaborate_only=False):
-        self._name = "%s.%s" % (config.library_name, config.design_unit_name)
+        self._name = f"{config.library_name!s}.{config.design_unit_name!s}"
 
         if not config.is_default:
             self._name += "." + config.name
@@ -79,7 +79,7 @@ class SameSimTestSuite(object):
     """
 
     def __init__(self, tests, config, simulator_if, elaborate_only=False):
-        self._name = "%s.%s" % (config.library_name, config.design_unit_name)
+        self._name = f"{config.library_name!s}.{config.design_unit_name!s}"
 
         if not config.is_default:
             self._name += "." + config.name
@@ -129,9 +129,7 @@ class SameSimTestSuite(object):
             for test in self._tests
             if test_filter(
                 name=_full_name(self.name, test.name),
-                attribute_names=_merge_attributes(
-                    test.attribute_names, self._configuration.attributes
-                ),
+                attribute_names=_merge_attributes(test.attribute_names, self._configuration.attributes),
             )
         ]
         self._run.set_test_cases([test.name for test in self._tests])
@@ -142,10 +140,7 @@ class SameSimTestSuite(object):
         Run the test suite using output_path
         """
         results = self._run.run(*args, **kwargs)
-        results = {
-            _full_name(self._name, test_name): result
-            for test_name, result in results.items()
-        }
+        results = {_full_name(self._name, test_name): result for test_name, result in results.items()}
         return results
 
 
@@ -154,9 +149,7 @@ class TestRun(object):
     A single simulation run yielding the results for one or several test cases
     """
 
-    def __init__(
-        self, simulator_if, config, elaborate_only, test_suite_name, test_cases
-    ):
+    def __init__(self, simulator_if, config, elaborate_only, test_suite_name, test_cases):
         self._simulator_if = simulator_if
         self._config = config
         self._elaborate_only = elaborate_only
@@ -176,9 +169,7 @@ class TestRun(object):
         for name in self._test_cases:
             results[name] = FAILED
 
-        if not self._config.call_pre_config(
-            output_path, self._simulator_if.output_path
-        ):
+        if not self._config.call_pre_config(output_path, self._simulator_if.output_path):
             return results
 
         # Ensure result file exists
@@ -215,10 +206,7 @@ class TestRun(object):
         if self._simulator_if.has_valid_exit_code() and not sim_ok:
             return (
                 True,
-                dict(
-                    (name, FAILED) if results[name] is PASSED else (name, results[name])
-                    for name in results
-                ),
+                dict((name, FAILED) if results[name] is PASSED else (name, results[name]) for name in results),
             )
 
         return False, results
@@ -230,17 +218,12 @@ class TestRun(object):
 
         config = self._config.copy()
 
-        if (
-            "output_path" in config.generic_names
-            and "output_path" not in config.generics
-        ):
-            config.generics["output_path"] = "%s/" % output_path.replace("\\", "/")
+        if "output_path" in config.generic_names and "output_path" not in config.generics:
+            config.generics["output_path"] = str(output_path.replace("\\", "/")) + "/"
 
         runner_cfg = {
             "enabled_test_cases": ",".join(
-                encode_test_case(test_case)
-                for test_case in self._test_cases
-                if test_case is not None
+                encode_test_case(test_case) for test_case in self._test_cases if test_case is not None
             ),
             "use_color": self._simulator_if.use_color,
             "output path": output_path.replace("\\", "/") + "/",
@@ -258,7 +241,7 @@ class TestRun(object):
             elaborate_only=self._elaborate_only,
         )
 
-    def _read_test_results(self, file_name):
+    def _read_test_results(self, file_name):  # pylint: disable=too-many-branches
         """
         Read test results from vunit_results file
         """
@@ -278,7 +261,8 @@ class TestRun(object):
 
             if line.startswith("test_start:"):
                 test_name = line[len("test_start:") :]
-                test_starts.append(test_name)
+                if test_name not in test_starts:
+                    test_starts.append(test_name)
 
             elif line.startswith("test_suite_done"):
                 test_suite_done = True
@@ -301,7 +285,7 @@ class TestRun(object):
 
         for test_name in results:
             if test_name not in self._test_cases:
-                raise RuntimeError("Got unknown test case %s" % test_name)
+                raise RuntimeError(f"Got unknown test case {test_name!s}")
 
         return results
 
@@ -329,7 +313,7 @@ def encode_dict(dictionary):
     encoded = []
     for key in sorted(dictionary.keys()):
         value = dictionary[key]
-        encoded.append("%s : %s" % (escape(key), escape(encode_dict_value(value))))
+        encoded.append(f"{escape(key)!s} : {escape(encode_dict_value(value))!s}")
     return ",".join(encoded)
 
 

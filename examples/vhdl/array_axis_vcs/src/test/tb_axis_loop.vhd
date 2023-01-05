@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 -- This testbench is a Minimum Working Example (MWE) of VUnit's resources to read/write CSV files and to verify
 -- AXI4-Stream components. A CSV file that contains comma separated integers is read from `data_path & csv_i`, and it is
@@ -10,6 +10,8 @@
 -- either directly or (preferredly) through a FIFO, thus composing a loopback. Therefore, as data is pushed to the
 -- AXI4-Stream Slave interface, the output is read from the AXI4-Stream Master interface and it is saved to
 -- `data_path & csv_o`.
+-- AXI Stream VC's optional 'stall' feature is used for generating random stalls in the interfaces. In this example,
+-- a 5% of probability to stall for a duration of 1 to 10 cycles is defined.
 
 library ieee;
 context ieee.ieee_std_context;
@@ -36,8 +38,14 @@ architecture tb of tb_axis_loop is
 
   -- AXI4Stream Verification Components
 
-  constant master_axi_stream : axi_stream_master_t := new_axi_stream_master(data_length => data_width);
-  constant slave_axi_stream  : axi_stream_slave_t  := new_axi_stream_slave(data_length => data_width);
+  constant master_axi_stream : axi_stream_master_t := new_axi_stream_master(
+    data_length => data_width,
+    stall_config => new_stall_config(0.05, 1, 10)
+  );
+  constant slave_axi_stream  : axi_stream_slave_t  := new_axi_stream_slave(
+    data_length => data_width,
+    stall_config => new_stall_config(0.05, 1, 10)
+  );
 
   -- tb signals and variables
 
@@ -52,13 +60,6 @@ begin
   rstn <= not rst;
 
   main: process
-    procedure run_test is begin
-      info("Init test");
-      wait until rising_edge(clk); start <= true;
-      wait until rising_edge(clk); start <= false;
-      wait until (done and saved and rising_edge(clk));
-      info("Test done");
-    end procedure;
   begin
     test_runner_setup(runner, runner_cfg);
     while test_suite loop
@@ -66,7 +67,13 @@ begin
         rst <= '1';
         wait for 15*clk_period;
         rst <= '0';
-        run_test;
+        info("Init test");
+        wait until rising_edge(clk);
+        start <= true;
+        wait until rising_edge(clk);
+        start <= false;
+        wait until (done and saved and rising_edge(clk));
+        info("Test done");
       end if;
     end loop;
     test_runner_cleanup(runner);

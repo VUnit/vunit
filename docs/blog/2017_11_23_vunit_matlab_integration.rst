@@ -5,13 +5,12 @@
 VUnit Matlab Integration
 ========================
 
+.. NOTE:: This article was originally posted on `LinkedIn <https://www.linkedin.com/pulse/vunit-matlab-integration-lars-asplund/>`__
+   where you may find some comments on its contents.
+
 .. figure:: img/vunit_matlab.jpg
    :alt: VUnit Matlab Integration
    :align: center
-
-This article was originally posted on `LinkedIn
-<https://www.linkedin.com/pulse/vunit-matlab-integration-lars-asplund/>`__
-where you may find some comments on its contents.
 
 Recently I got a question from an ASIC team if it is possible to
 integrate their VUnit simulations with Matlab. I've been getting this
@@ -80,7 +79,7 @@ In this case I have a one-dimensional array (a vector) created by
 
   data_set := new_1d;
 
-The created vecor is empty by default and grows dynamically with every new sample I append.
+The created vector is empty by default and grows dynamically with every new sample I append.
 
 .. code-block:: vhdl
 
@@ -314,4 +313,3 @@ still a number of flaws with this solution. For example
   hardcoded.
 
 It seems that I will have to revisit this post. Until then...
-

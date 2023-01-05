@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Functionality to handle lists of test suites and filtering of them
@@ -33,9 +33,7 @@ class TestList(object):
         """
         Keep only testcases matching any pattern
         """
-        self._test_suites = [
-            test for test in self._test_suites if test.keep_matches(test_filter)
-        ]
+        self._test_suites = [test for test in self._test_suites if test.keep_matches(test_filter)]
 
     @property
     def num_tests(self):

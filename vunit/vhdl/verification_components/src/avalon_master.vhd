@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 -- Author Slawomir Siluk slaweksiluk@gazeta.pl
 -- Avalon Memory Mapped Master BFM
 -- TODO:
@@ -50,7 +50,6 @@ architecture a of avalon_master is
   constant acknowledge_queue : queue_t := new_queue;
   constant burst_acknowledge_queue : queue_t := new_queue;
   constant burstlen_queue : queue_t := new_queue;
-  signal burst_read_flag : boolean := false;
 begin
 
   main : process
@@ -78,9 +77,9 @@ begin
           address <= pop_std_ulogic_vector(request_msg);
           byteenable(byteenable'range) <= (others => '1');
           read <= '1';
+          push(acknowledge_queue, request_msg);
           wait until rising_edge(clk) and waitrequest = '0';
           read <= '0';
-          push(acknowledge_queue, request_msg);
 
         elsif msg_type = bus_burst_read_msg then
           while rnd.Uniform(0.0, 1.0) > read_high_probability loop
@@ -92,9 +91,9 @@ begin
           burstcount <= std_logic_vector(to_unsigned(burst, burstcount'length));
           byteenable(byteenable'range) <= (others => '1');
           read <= '1';
+          push(burst_acknowledge_queue, request_msg);
           wait until rising_edge(clk) and waitrequest = '0';
           read <= '0';
-          push(burst_acknowledge_queue, request_msg);
           push(burstlen_queue, burst);
 
         elsif msg_type = bus_write_msg then
@@ -128,7 +127,7 @@ begin
           end loop;
 
         elsif msg_type = wait_until_idle_msg then
-          wait until not burst_read_flag and is_empty(burst_acknowledge_queue) and rising_edge(clk);
+          wait until is_empty(burst_acknowledge_queue) and rising_edge(clk);
           handle_wait_until_idle(net, msg_type, request_msg);
 
         else
@@ -166,8 +165,6 @@ begin
     variable burst : positive;
   begin
     wait until readdatavalid = '1' and not is_empty(burst_acknowledge_queue) and rising_edge(clk);
-    burst_read_flag <= true;
-    request_msg := pop(burst_acknowledge_queue);
     burst := pop(burstlen_queue);
     reply_msg := new_msg(sender => avmm_burst_rd_actor);
     push_integer(reply_msg, burst);
@@ -177,9 +174,9 @@ begin
       check_true(readdatavalid = '1', "avalon master burst readdatavalid timeout");
       push_std_ulogic_vector(reply_msg, readdata);
     end loop;
+    request_msg := pop(burst_acknowledge_queue);
     reply(net, request_msg, reply_msg);
     delete(request_msg);
-    burst_read_flag <= false;
   end process;
 
 end architecture;

@@ -5,13 +5,12 @@
 VUnit 3.0 Color Logging
 =======================
 
+.. NOTE:: This article was originally posted on `LinkedIn <https://www.linkedin.com/pulse/vunit-color-logging-lars-asplund>`__
+   where you may find some comments on its contents.
+
 .. figure:: img/color_logging.jpg
    :alt: VUnit 3.0 Color Logging
    :align: center
-
-This article was originally posted on `LinkedIn
-<https://www.linkedin.com/pulse/vunit-color-logging-lars-asplund>`__
-where you may find some comments on its contents.
 
 VUnit 3.0, our next major release, is around the corner and with it
 comes a number of updates and additions. This first preview post will
@@ -44,7 +43,7 @@ how logging is handled in different parts of the system.
 
 The difference is not in how you make these calls but in
 scoreboard_logger itself. Prior to VUnit 3.0 loggers were protected
-types which comes with a number restrictions preventing them to be
+types which comes with a number of restrictions preventing them to be
 used freely. These restrictions are addressed by the upcoming
 VHDL-2017 standard but rather than waiting for that standard to be
 adopted by the simulator vendors, something that usually takes a few

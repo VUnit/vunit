@@ -4,15 +4,15 @@
 set -e
 
 docker build \
-  --build-arg IMAGE="python:3-slim-buster" \
-  --build-arg LLVM_VER=7 \
-  --build-arg GNAT_VER=8 \
+  --build-arg IMAGE="python:3-slim-bullseye" \
+  --build-arg LLVM_VER=9 \
+  --build-arg GNAT_VER=9 \
   --target vunit \
-  -t "vunit/dev:${TAG}" \
+  -t "vunit/dev/${TAG}" \
   - <<-EOF
-$(curl -fsSL https://raw.githubusercontent.com/ghdl/docker/master/dockerfiles/run_debian)
+$(curl -fsSL https://raw.githubusercontent.com/ghdl/docker/master/run_debian.dockerfile)
 
 FROM $TAG AS vunit
-COPY --from=ghdl/pkg:buster-$PKG / /
+COPY --from=ghdl/pkg:bullseye-$PKG / /
 RUN pip install -U tox colorama coverage --progress-bar off
 EOF

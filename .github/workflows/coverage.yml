@@ -9,29 +9,25 @@ jobs:
 
   coverage:
     runs-on: ubuntu-latest
-    env:
-      DOCKER_REGISTRY: docker.pkg.github.com
-      IMAGE: docker.pkg.github.com/vunit/vunit/dev:llvm
     steps:
-    - uses: actions/checkout@v1
-    - run: git submodule update --init --recursive
-    - uses: actions/setup-python@v1
+
+    - uses: actions/checkout@v3
       with:
-        python-version: 3.7
-    - name: Docker login
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        echo "$GITHUB_TOKEN" | docker login -u vunit-gha --password-stdin "$DOCKER_REGISTRY"
-        docker pull $IMAGE
-        docker logout "$DOCKER_REGISTRY"
+        submodules: recursive
+
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
     - name: Run coverage
       run: |
         ./.github/run.sh tox -e coverage
         ./.github/run.sh coverage html --directory=htmlcov
+
     - name: Report coverage
       run: ./.github/run.sh coverage report -m --skip-covered
-    - uses: actions/upload-artifact@master
+
+    - uses: actions/upload-artifact@v3
       with:
         name: VUnit_coverage
         path: htmlcov

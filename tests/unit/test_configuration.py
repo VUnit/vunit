@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 # pylint: disable=too-many-public-methods
 
@@ -43,9 +43,7 @@ class TestConfiguration(unittest.TestCase):
 
     def test_error_on_setting_illegal_value_sim_option(self):
         with _create_config() as config:
-            self.assertRaises(
-                ValueError, config.set_sim_option, "vhdl_assert_stop_level", "illegal"
-            )
+            self.assertRaises(ValueError, config.set_sim_option, "vhdl_assert_stop_level", "illegal")
 
     def test_sim_option_is_not_mutated(self):
         with _create_config() as config:
@@ -60,18 +58,12 @@ class TestConfiguration(unittest.TestCase):
 
     @with_tempdir
     def test_adds_tb_path_generic(self, tempdir):
-        design_unit_tb_path = Entity(
-            "tb_entity_without_tb_path", file_name=str(Path(tempdir) / "file.vhd")
-        )
+        design_unit_tb_path = Entity("tb_entity_without_tb_path", file_name=str(Path(tempdir) / "file.vhd"))
         tb_path = str(Path(tempdir) / "other_path")
-        design_unit_tb_path.original_file_name = str(
-            Path(tb_path) / "original_file.vhd"
-        )
+        design_unit_tb_path.original_file_name = str(Path(tb_path) / "original_file.vhd")
         design_unit_tb_path.generic_names = ["runner_cfg", "tb_path"]
         config_tb_path = Configuration("name", design_unit_tb_path)
-        self.assertEqual(
-            config_tb_path.generics["tb_path"], (tb_path + "/").replace("\\", "/")
-        )
+        self.assertEqual(config_tb_path.generics["tb_path"], (tb_path + "/").replace("\\", "/"))
 
     def test_constructor_adds_no_attributes(self):
         with _create_config() as config:
@@ -96,9 +88,7 @@ class TestConfiguration(unittest.TestCase):
             return False
 
         self.assertEqual(
-            self._call_post_check(
-                post_check, output_path="output_path", read_output=None
-            ),
+            self._call_post_check(post_check, output_path="output_path", read_output=None),
             False,
         )
 
@@ -107,9 +97,7 @@ class TestConfiguration(unittest.TestCase):
             return True
 
         self.assertEqual(
-            self._call_post_check(
-                post_check, output_path="output_path", read_output=None
-            ),
+            self._call_post_check(post_check, output_path="output_path", read_output=None),
             True,
         )
 
@@ -118,9 +106,7 @@ class TestConfiguration(unittest.TestCase):
             pass
 
         self.assertEqual(
-            self._call_post_check(
-                post_check, output_path="output_path", read_output=None
-            ),
+            self._call_post_check(post_check, output_path="output_path", read_output=None),
             False,
         )
 
@@ -187,9 +173,7 @@ class TestConfiguration(unittest.TestCase):
         )
 
     def test_call_pre_config_none(self):
-        self.assertEqual(
-            self._call_pre_config(None, "output_path", "simulator_output_path"), True
-        )
+        self.assertEqual(self._call_pre_config(None, "output_path", "simulator_output_path"), True)
 
     def test_call_pre_config_false(self):
         def pre_config():

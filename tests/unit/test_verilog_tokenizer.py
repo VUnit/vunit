@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 # pylint: disable=unused-wildcard-import
 # pylint: disable=wildcard-import
@@ -162,6 +162,4 @@ there"''',
 
             return tokens
 
-        self.assertEqual(
-            preprocess(list(self.tokenizer.tokenize(code, "fn.v"))), tokens
-        )
+        self.assertEqual(preprocess(list(self.tokenizer.tokenize(code, "fn.v"))), tokens)

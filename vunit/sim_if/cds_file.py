@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Handles Cadence Incisive .cds files
@@ -19,9 +19,7 @@ class CDSFile(dict):
     Only cares about 'define' but other lines are kept intact
     """
 
-    _re_define = re.compile(
-        r'\s*define\s+([a-zA-Z0-9_]+)\s+"?(.*?)"?(#|$)', re.IGNORECASE
-    )
+    _re_define = re.compile(r'\s*define\s+([a-zA-Z0-9_]+)\s+"?(.*?)"?(#|$)', re.IGNORECASE)
 
     @classmethod
     def parse(cls, file_name):
@@ -52,10 +50,6 @@ class CDSFile(dict):
         Write cds file to file named 'file_name'
         """
         contents = (
-            "\n".join(
-                self._other_lines
-                + ['define %s "%s"' % item for item in sorted(self.items())]
-            )
-            + "\n"
+            "\n".join(self._other_lines + [f'define {item[0]!s} "{item[1]!s}"' for item in sorted(self.items())]) + "\n"
         )
         write_file(file_name, contents)

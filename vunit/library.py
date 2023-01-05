@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Functionality to represent and operate on a HDL code library
@@ -21,9 +21,7 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
     Represents a VHDL library
     """
 
-    def __init__(
-        self, name: str, directory: str, vhdl_standard: VHDLStandard, is_external=False
-    ):
+    def __init__(self, name: str, directory: str, vhdl_standard: VHDLStandard, is_external=False):
         self.name = name
         self.directory = directory
 
@@ -57,9 +55,7 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
         if source_file.name in self._source_files:
             old_source_file = self._source_files[source_file.name]
             if old_source_file.content_hash != source_file.content_hash:
-                raise RuntimeError(
-                    "%s already added to library %s" % (source_file.name, self.name)
-                )
+                raise RuntimeError(f"{source_file.name!s} already added to library {self.name!s}")
 
             LOGGER.info(
                 "Ignoring duplicate file %s added to library %s due to identical contents",
@@ -106,9 +102,7 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
         and give warning
         """
         if design_unit.name in dictionary:
-            self._warning_on_duplication(
-                design_unit, dictionary[design_unit.name].source_file.name
-            )
+            self._warning_on_duplication(design_unit, dictionary[design_unit.name].source_file.name)
 
     def add_vhdl_design_units(self, design_units):
         """
@@ -132,33 +126,22 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
                     if design_unit.primary_design_unit not in self._architectures:
                         self._architectures[design_unit.primary_design_unit] = {}
 
-                    if (
-                        design_unit.name
-                        in self._architectures[design_unit.primary_design_unit]
-                    ):
+                    if design_unit.name in self._architectures[design_unit.primary_design_unit]:
                         self._warning_on_duplication(
                             design_unit,
-                            self._architectures[design_unit.primary_design_unit][
-                                design_unit.name
-                            ].source_file.name,
+                            self._architectures[design_unit.primary_design_unit][design_unit.name].source_file.name,
                         )
 
-                    self._architectures[design_unit.primary_design_unit][
-                        design_unit.name
-                    ] = design_unit
+                    self._architectures[design_unit.primary_design_unit][design_unit.name] = design_unit
 
                     if design_unit.primary_design_unit in self._entities:
-                        self._entities[
-                            design_unit.primary_design_unit
-                        ].add_architecture(design_unit)
+                        self._entities[design_unit.primary_design_unit].add_architecture(design_unit)
 
                 if design_unit.unit_type == "package body":
                     if design_unit.primary_design_unit in self._package_bodies:
                         self._warning_on_duplication(
                             design_unit,
-                            self._package_bodies[
-                                design_unit.primary_design_unit
-                            ].source_file.name,
+                            self._package_bodies[design_unit.primary_design_unit].source_file.name,
                         )
                     self._package_bodies[design_unit.primary_design_unit] = design_unit
 
@@ -169,9 +152,7 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
         for design_unit in design_units:
             if design_unit.unit_type == "module":
                 if design_unit.name in self.modules:
-                    self._warning_on_duplication(
-                        design_unit, self.modules[design_unit.name].source_file.name
-                    )
+                    self._warning_on_duplication(design_unit, self.modules[design_unit.name].source_file.name)
                 self.modules[design_unit.name] = design_unit
             elif design_unit.unit_type == "package":
                 if design_unit.name in self.verilog_packages:

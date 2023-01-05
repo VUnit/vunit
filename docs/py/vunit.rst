@@ -2,8 +2,13 @@ vunit.ui
 ========
 
 .. autoclass:: vunit.ui.VUnit()
-   :exclude-members: add_preprocessor,
-      add_builtins
+   :exclude-members: add_preprocessor
+
+LibraryList
+-----------
+
+.. autoclass:: vunit.ui.library.LibraryList()
+   :exclude-members: package
 
 Library
 -------

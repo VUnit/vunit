@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 UI classes SourceFile and SourceFileList
@@ -143,12 +143,8 @@ class SourceFile(object):
            my_file.add_dependency_on(other_files)
         """
         if isinstance(source_file, SourceFile):
-            private_source_file = (
-                source_file._source_file  # pylint: disable=protected-access
-            )
-            self._project.add_manual_dependency(
-                self._source_file, depends_on=private_source_file
-            )
+            private_source_file = source_file._source_file  # pylint: disable=protected-access
+            self._project.add_manual_dependency(self._source_file, depends_on=private_source_file)
         elif hasattr(source_file, "__iter__"):
             for element in source_file:
                 self.add_dependency_on(element)

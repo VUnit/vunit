@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Test the check preprocessor
@@ -204,7 +204,10 @@ check_relation(a ?>= b, context_msg => %s);""" % (
 
 
 def make_context_msg(left, relation, right):
-    return (
-        '"Expected %s %s %s. Left is " & to_string(%s) & ". Right is " & to_string(%s) & "."'
-        % (left.replace('"', '""'), relation, right.replace('"', '""'), left, right)
+    return '"Expected %s %s %s. Left is " & to_string(%s) & ". Right is " & to_string(%s) & "."' % (
+        left.replace('"', '""'),
+        relation,
+        right.replace('"', '""'),
+        left,
+        right,
     )

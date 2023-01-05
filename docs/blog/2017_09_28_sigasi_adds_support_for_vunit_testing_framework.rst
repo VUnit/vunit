@@ -5,13 +5,12 @@
 Sigasi Adds Support for VUnit Testing Framework
 ===============================================
 
+.. NOTE:: This article was originally posted on `LinkedIn <https://www.linkedin.com/pulse/sigasi-adds-support-vunit-lars-asplund>`__
+   where you may find some comments on its contents.
+
 .. figure:: img/vunit_sigasistudio.jpg
    :alt: Sigasi Support
    :align: center
-
-This article was originally posted on `LinkedIn
-<https://www.linkedin.com/pulse/sigasi-adds-support-vunit-lars-asplund>`__
-where you may find some comments on its contents.
 
 `VUnit <http://vunit.github.io/index.html>`__ was born out of
 frustration over the lack of an efficient test framework. The

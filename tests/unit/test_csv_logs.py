@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Test csv log functionality
@@ -32,9 +32,7 @@ class TestCsvLogs(unittest.TestCase):
             """
             Make log
             """
-            with NamedTemporaryFile(
-                "w+", delete=False, dir=directory, suffix=".csv"
-            ) as file_obj:
+            with NamedTemporaryFile("w+", delete=False, dir=directory, suffix=".csv") as file_obj:
                 file_obj.write(contents)
                 self._log_files.append(file_obj.name)
 
@@ -136,9 +134,7 @@ class TestCsvLogs(unittest.TestCase):
         self.assertEqual(result, expected_result)
 
     def test_should_sort_several_csv_files_with_non_default_fields(self):
-        csvlogs = CsvLogs(
-            self._few_fields_files, ["#", "Time", "Level", "Source", "Message"]
-        )
+        csvlogs = CsvLogs(self._few_fields_files, ["#", "Time", "Level", "Source", "Message"])
 
         result = self._write_to_file_and_read_back_result(csvlogs)
         expected_result = """#,Time,Level,Source,Message

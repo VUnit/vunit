@@ -100,7 +100,7 @@ before ``test_runner_cleanup`` is considered a failure.
 
 Simulation stop is controlled via a stop count mechanism. The stop count mechanism works in the following way:
 
-- Stop count may be ether set or not set for a specific logger and log level.
+- Stop count may be either set or not set for a specific logger and log level.
 - When a log is made to a logger it is checked if there is a stop count set.
 
   - If set it is decremented and reaching zero means simulation stops.
@@ -145,7 +145,7 @@ which will result in the following output.
 
     INFO: Hello world
 
-There default ``verbose`` format which adds more details to the
+The default ``verbose`` format which adds more details to the
 output looks like this:
 
 .. code-block:: console
@@ -267,7 +267,7 @@ state.  The ``unmock`` call also checks that all recorded log messages
 have been checked by a corresponding ``check_log`` or
 ``check_only_log`` procedure.
 
-It is possible to mock several logger or log levels simultaneously.
+It is possible to mock several loggers or log levels simultaneously.
 All mocked log messages are written to the same global mock queue.
 The number of log messages in this queue is returned by the
 ``mock_queue_length`` function.
@@ -300,19 +300,31 @@ counted to get statistics on disabled log messages.
     disable(get_logger("memory_ip:timing_check"), warning);
 
 
-Log Location Preprocessing
---------------------------
+Log Location
+------------
 
-The optional VUnit location preprocessor can be used to add file name
-and line number location information to all log calls. This
-functionality is enabled from the ``run.py`` file like this:
+For simulators supporting VHDL-2019 VUnit adds file name
+and line number location information to all log entries. Currently
+only Riviera-PRO and Active-HDL supports VHDL-2019 and they restrict the feature
+to **debug compiled files**. You can compile all files or just the ones
+using logging. For example,
+
+.. code-block:: python
+
+    testbenches = lib.get_source_files("*tb*")
+    testbenches.set_compile_option("rivierapro.vcom_flags", ["-dbg"])
+
+
+For earlier VHDL standards there is an optional location preprocessor that can
+be used to serve the same purpose. The preprocessor is enabled from
+the ``run.py`` file like this:
 
 .. code-block:: python
 
     ui = VUnit.from_argv()
     ui.enable_location_preprocessing()
 
-and will change the output to something like this.
+Regardless of method the location information is appended to the end of the log entry:
 
 .. code-block:: console
 
@@ -322,8 +334,25 @@ and will change the output to something like this.
 If you've placed your log call(s) in a convenience procedure you most
 likely want the location of the calls to that procedure to be in the
 output and not the location of the log call in the definition of the
-convenience procedure. You can do that by adding the ``line_num`` and
-``file_name`` parameters to the **end** of the parameter list for that
+convenience procedure. For VHDL-2019 you can use the ``path_offset``
+parameter to specify a number of steps earlier in the call stack. For
+example,
+
+.. code-block:: vhdl
+
+    procedure my_convenience_procedure(
+      <my parameters>) is
+    begin
+      <some code>
+      info("Some message", path_offset => 1);
+      <some code>
+    end procedure my_convenience_procedure;
+
+When ``path_offset`` is set to 1 the location of the caller to
+``my_convenience_procedure`` will be used in the log output.
+
+With earlier VHDL standard you can add the ``line_num`` and
+``file_name`` parameters to the **end** of the parameter list for the
 convenience procedure
 
 .. code-block:: vhdl
