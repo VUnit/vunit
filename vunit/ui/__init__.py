@@ -710,61 +710,6 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
                 preprocessor.remove_subprogram(subprogram)
         self._location_preprocessor = preprocessor
 
-    def add_waves_by_depth(self, depth: int):
-        """
-        Adds all signals in all entities down to the specified depth. By
-        calling this method, it will create a TCL script that adds all
-        signals in all entities and group each entities signals by the
-        path name. Then, it will call `set_sim_option()` with the
-        correct GUI flags.
-
-        :param depth: Hierarchy depth to group and add all signals for \
-            each entity
-
-        :example:
-
-        .. code-block:: python
-
-           prj.add_waves_by_depth(depth=3)
-
-        Which would, for example, add waveforms to the waveform viewer
-        like so:
-        tb/*
-        tb/uut/*
-        tb/uut/ent1/*
-        tb/uut/ent2/*
-
-        .. note::
-           Only affects test benches added *before* the option is set.
-        """
-        parent_path = Path(__file__).parent.parent.resolve()
-        simulator = self._simulator_class.name
-        output_path = str(Path(self._output_path) / simulator / "waves.tcl")
-        tcl_sources = {
-            "activehdl": "aldec_if.tcl",
-            "ghdl": "gtkwave_if.tcl",
-            "modelsim": "modelsim_if.tcl",
-            "rivierapro": "aldec_if.tcl",
-        }
-        # error check selected simulator and create path for TCL files
-        # and simulator option
-        if simulator in tcl_sources:
-            tcl_src_path = str(parent_path / "sim_if" / "tcl" / tcl_sources[simulator])
-            sim_opt = f"{simulator}" + (
-                ".gtkwave_script.gui" if simulator == "ghdl" else ".init_file.gui"
-            )
-        else:
-            raise ValueError(f"Selected simulator ({simulator}) is not yet supported!")
-        # generate TCL commands and write to file
-        path = tcl_src_path.replace("\\", "/")  # \ in f-string error
-        tcl_commands = [f"source {path}", f"addWavesByDepth {depth}"]
-        with Path(output_path).open("w") as fptr:
-            for cmd in tcl_commands:
-                fptr.write(cmd + "\n")
-        fptr.close()
-        # call set_sim_option with option and GUI waves file
-        self.set_sim_option(sim_opt, output_path)
-
     def enable_check_preprocessing(self):
         """
         Inserts error context information into VUnit check_relation calls
