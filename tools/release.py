@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Create and validates new tagged release commits
@@ -70,7 +70,7 @@ def make_release_commit(version):
     """
     Add release notes and make the release commit
     """
-    run(["git", "add", str(release_note_file_name(version))])
+    run(["git", "add", str(release_note_file_name())])
     run(["git", "add", str(ABOUT_PY)])
     run(["git", "commit", "-m", f"Release {version!s}"])
     run(["git", "tag", f"v{version!s}", "-a", "-m", f"release {version!s}"])
@@ -129,7 +129,7 @@ def set_version(version):
     assert get_local_version() == version
 
 
-def release_note_file_name(version) -> Path:
+def release_note_file_name() -> Path:
     return REPO_ROOT / "docs" / "release_notes.rst"
 
 

@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Command line utility to build documentation/website
@@ -50,8 +50,10 @@ def update_release_notes(version):
     else:
         # Produce draft version and write to file
         draft_file = DROOT / "_release_notes_draft.rst"
-        with open(draft_file, "w") as f:
-            check_call(shlex.split(f"towncrier build --version UNRELEASED --draft"), stdout=f)
+        with open(draft_file, "w", encoding="utf-8") as fptr:
+            check_call(
+                shlex.split("towncrier build --version UNRELEASED --draft"), stdout=fptr
+            )
 
 
 def main(version=None):
@@ -83,7 +85,8 @@ def main(version=None):
             sys.executable,
             "-m",
             "sphinx"
-        ] + ([] if len(sys.argv) < 2 or version else sys.argv[2:]) + (["-t", "release_notes_draft"] if version is None else []) + [
+        ] + ([] if len(sys.argv) < 2 or version else sys.argv[2:])
+        + (["-t", "release_notes_draft"] if version is None else []) + [
             "-TEWanb",
             "html",
             str(Path(__file__).parent.parent / "docs"),
