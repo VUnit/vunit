@@ -16,7 +16,7 @@ template = "docs/changelog.d/template.rst.j2"
 issue_format = ":vunit_issue:`{issue}`"
 directory = "docs/changelog.d/"
 title_format = ":vunit_commit:`{version} <v{version}>` - {project_date}"
-underlines = ["-", "^"]
+underlines = ["-", "~"]
 
     [[tool.towncrier.section]]
     path = ""

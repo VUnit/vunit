@@ -28,7 +28,7 @@ with advance notice in the **Deprecations** section of releases.
 -------------------------------------------
 
 
-`Download from PyPI <https://pypi.python.org/pypi/vunit_hdl/5.0.0/>`_ | `Commits since this release <https://github.com/VUnit/vunit/compare/v5.0.0...master>`_
+`Download from PyPI <https://pypi.python.org/pypi/vunit_hdl/5.0.0/>`__ | `Commits since this release <https://github.com/VUnit/vunit/compare/v5.0.0...master>`__
 
 Breaking Changes
 ^^^^^^^^^^^^^^^^
