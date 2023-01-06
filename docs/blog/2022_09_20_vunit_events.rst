@@ -81,13 +81,13 @@ latter hides the details of VHDL events and is a more powerful solution. While t
 ``std_logic`` ``clk`` changing from ``X`` to ``1``, or even worse from ``H`` to ``1``, the latter correctly does not.
 
 Another synchronization mechanism that is often confused with the VUnit style of events is the binary semaphore.
-The main difference is that an event occurs at a **point in time**, and a process waiting for an event will block until
-the **next** event occurs. Binary semaphores, on the other hand, have a binary state that can be stable for a
-**period of time**. If a process starts waiting for an already active semaphore, it will not block, but instead it will
-move the semaphore to its inactive state and then proceed. Since there is no need for something to change in order for
-the "waiting" process to continue, it is not possible to use a pure VHDL wait statement to implement a semaphore.
-Instead, we must first check the state, and if the state is inactive, we can use an event mechanism to wait for an
-event indicating a change to the active semaphore state.
+The main difference is that an event occurs at a **point in time**, and a process starting to wait for an event will
+block until the **next** event occurs. Binary semaphores, on the other hand, have a binary state. One of the states,
+often denoted with the integer 1 and representing the availablity of some resource, allow a process to proceed
+immediately regardless of whether the state was active when the process started waiting. There is no need for something
+to happen, an event, in order for the process to proceed. A semaphore checks its state first and only if the value is 0
+there is a need to wait for the event indicating that the state has been set to 1. After a process has been allowed to
+proceed, it will set the semaphore value to 0 to prevent other processes from claiming the resource.
 
 Events can be used not only to build semaphores, but also to create other, more complex synchronization mechanisms.
 VUnit message passing is an example of such a mechanism that is based on events.
