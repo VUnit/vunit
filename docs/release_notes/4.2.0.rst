@@ -1,5 +1,0 @@
-- Add ``-m/--minimal`` flag to only compile what is necessary for selected tests.
-- Fix axi_stream VC for 0-length tid/tdest/tuser.
-- Fix work reference for non-lower case library names. :vunit_issue:`556`
-- Add ``init_files.before_run`` hook to RivieraPRO and ModelSim.
-- Do not add extra quotes when invoking a gtkwave subprocess. :vunit_issue:`563`

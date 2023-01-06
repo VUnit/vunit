@@ -1,2 +1,0 @@
-- Adds support for Verilog preprocessor ifdef/ifndef/elsif/else/endif
-- Fixes regression in modelsim persistent mode. Makes many short tests faster.

@@ -1,3 +1,0 @@
-- Adds ``.all`` suffix to test benches with no test to better align with XUnit architecture.
-  - Enables better hierarchical JUnit XML report view in Jenkins.
-- Fixes :vunit_issue:`129`.

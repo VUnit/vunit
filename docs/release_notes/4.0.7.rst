@@ -1,1 +1,0 @@
-- Fix a problem parsing generics with string containing semi colon. :vunit_issue:`409`

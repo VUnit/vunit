@@ -1,3 +1,0 @@
-- Adds vunit_restart and vunit_compile TCL commands for both ModelSim and RivieraPro
-- Also support persistent simulator to save startup overhead for RivieraPro.
-- Changes --new-vsim into -u/--unique-sim which also works for riviera

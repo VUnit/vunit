@@ -1,9 +1,0 @@
-- Fix broken ``vhdl_standard`` setting in some situations. :vunit_issue:`594`
-- Add 'external modes' (VHPIDIRECT) to ``string_ptr`` and ``integer_vector_ptr``; add ``byte_vector_prt`` too. :vunit_issue:`507` :vunit_issue:`476`
-- Add report data to ``Results`` object/class. :vunit_issue:`586`
-- Use a Python formatter: `psf/black <https://github.com/psf/black>`_. :vunit_issue:`554`
-- Refactor ``vunit/ui``, ``vunit/sim_if``, ``vunit/test`` and ``tests``. :vunit_issue:`572` :vunit_issue:`582`
-- Deprecate ``array_pkg``. It will be removed in future releases. Use :ref:`integer_array_pkg` instead. :vunit_issue:`593`
-- Python 3.4 reached End-of-life in 2019-03-18 and it is no longer tested. Support is expected to break in future releases.
-- Add support for Python 3.8.
-- Deprecate Python 2.7. This is the last release supporting Python 2 and Python 3. Upcoming releases will be for Python 3 only.

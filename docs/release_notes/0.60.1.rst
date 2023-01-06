@@ -1,1 +1,0 @@
-- Avoids crash with errors in Verilog defines from Python string in run.py

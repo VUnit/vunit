@@ -1,5 +1,0 @@
-- Fix vivado submodule missing from release. :vunit_issue:`415`
-- Add support for checking AXI response in axi_lite_master
-- Fix bug with coverage flag not working with unique-sim in rivierapro
-- Support for Avalon-MM burst transfers
-- Unsure LICENSE_QUEUE environment variable is in effect for RivieraPRO

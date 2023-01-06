@@ -1,2 +1,0 @@
-- Added support for pass acknowledge messages for check subprograms.
-- Made design unit duplication a warning instead of runtime error again.

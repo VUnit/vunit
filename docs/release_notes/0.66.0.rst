@@ -1,2 +1,0 @@
-- Fixed :vunit_issue:`109`, :vunit_issue:`141`, :vunit_issue:`153`, :vunit_issue:`155`.
-- Fixed relative path for multiple drives on windows.

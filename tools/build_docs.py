@@ -4,18 +4,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Command line utility to build documentation/website
 """
 
-from subprocess import check_call
-from pathlib import Path
 import sys
-from sys import argv
+
+from pathlib import Path
+from subprocess import check_call
 from shutil import copyfile
-from create_release_notes import create_release_notes
 
 
 DROOT = Path(__file__).parent.parent / 'docs'
@@ -36,11 +35,38 @@ def get_theme(path: Path, url: str):
         check_call(tar_cmd)
 
 
-def main():
+def update_release_notes(version):
+    """Gather newsfragments and add them to the release notes.
+
+    Args:
+        version (str):
+            Version to set the section to for all newsfragments. When none, the
+            newsfragments will be linked in an "unreleased" draft section of the release
+            notes. When this is set, newsfragments will be added to the release notes
+            and the now old newsfragments will be staged for removal.
+
+            .. important::
+                Only set the version during a release, otherwise files will be
+                forcefully removed and staged for commit. For testing changes, set this
+                to ``None``.
+    """
+    towncrier_config = Path(__file__).parent.parent / "pyproject.toml"
+    args = [f"--config {towncrier_config}"]
+    if version:
+        print(f"Adding newsfragment enteries to release notes for release {version}")
+        args += [f"--version {version}", "--yes"]
+    else:
+        print(f"Adding draft newsfragment enteries to release notes")
+        args += ["--version UNRELEASED", "--draft"]
+    print(args)
+    check_call(["towncrier", "build"] + args)
+
+
+def main(version=None):
     """
     Build documentation/website
     """
-    create_release_notes()
+    update_release_notes(version)
     copyfile(str(DROOT / '..' / 'LICENSE.rst'), str(DROOT / 'license.rst'))
     get_theme(
         DROOT,
@@ -51,11 +77,11 @@ def main():
             sys.executable,
             "-m",
             "sphinx"
-        ] + ([] if len(argv) < 2 else argv[2:]) + [
+        ] + ([] if len(sys.argv) < 2 else sys.argv[2:]) + [
             "-TEWanb",
             "html",
             Path(__file__).parent.parent / "docs",
-            argv[1],
+            sys.argv[1],
         ]
     )
 

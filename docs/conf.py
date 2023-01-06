@@ -20,6 +20,7 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.todo",
     "sphinxarg.ext",  # Automatic argparse command line argument documentation
+    "sphinxcontrib.towncrier.ext",
     "exec",
 ]
 
@@ -45,7 +46,10 @@ release = ""
 
 language = "en"
 
-exclude_patterns = ["release_notes/*.*"]
+exclude_patterns = [
+    "release_notes/*.*",
+    "changelog.d/**",  # towncrier manages changelog
+]
 
 pygments_style = "sphinx"
 
@@ -88,6 +92,11 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3.8/", None),
     "pytest": ("https://docs.pytest.org/en/latest/", None),
 }
+
+# -- Towncrier draft ------------------------------------------------------
+towncrier_draft_autoversion_mode = 'draft'
+towncrier_draft_include_empty = True
+towncrier_draft_working_directory = ROOT
 
 # -- ExtLinks -------------------------------------------------------------
 

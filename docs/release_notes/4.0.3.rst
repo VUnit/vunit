@@ -1,1 +1,0 @@
-- Fix ``set_timeout`` for large values in ModelSim. :vunit_issue:`405`

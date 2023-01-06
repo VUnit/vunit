@@ -15,7 +15,7 @@ filename = "docs/release_notes.rst"
 template = "docs/changelog.d/template.rst.j2"
 issue_format = ":vunit_issue:`{issue}`"
 directory = "docs/changelog.d/"
-title_format = "{version} ({project_date})"
+title_format = ":vunit_commit:`{version} <v{version}>` - {project_date}"
 underlines = ["-", "^"]
 
     [[tool.towncrier.section]]
@@ -69,6 +69,8 @@ deps=
     docs: docutils
     docs: sphinx
     docs: sphinx-argparse
+    docs: sphinxcontrib-towncrier
+    docs: towncrier
 
 setenv=
     acceptance-activehdl:  VUNIT_SIMULATOR=activehdl

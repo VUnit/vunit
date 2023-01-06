@@ -1,1 +1,0 @@
-- SystemVerilog: Allow MACRO argument within ({[]}). :vunit_issue:`300`.

@@ -1,3 +1,0 @@
-- Hashing test output_path to protect against special characters and long paths on Windows.
-- Added ``.vo`` as recognized Verilog file ending.
-- Enable setting vhdl_standard per file.

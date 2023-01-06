@@ -1,4 +1,0 @@
-- Ignore test cases in SystemVerilog comments.
-- Make integer_array_t metadata get-functions public.
-- dictionary: add default value option to get function.
-- Improve get_implementation_subset :vunit_issue:`286`.

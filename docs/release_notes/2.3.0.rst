@@ -1,8 +1,0 @@
-- Fix commas in Modelsim generics :vunit_issue:`284`.
-- Fix problem with vsim_extra_args between entity and architecture in riviera and activehdl.
-- Update Verilog preprocessor to read using latin-1 encoding. :vunit_issue:`285`.
-- Improve compile printouts :vunit_issue:`283`.
-- Add -q/--quiet flag. :vunit_issue:`283`.
-- Add printout of output file location. :vunit_issue:`283`.
-- Dropped support and testing of Python 3.3 (might still work anyway).
-- Fix of Modelsim `--coverage` argument :vunit_issue:`288`.

@@ -19,6 +19,8 @@ from pathlib import Path
 import subprocess
 from shutil import which
 
+import build_docs
+
 
 def main():
     """
@@ -33,6 +35,7 @@ def main():
         print(f"Attempting to create new release {version!s}")
         set_version(version)
         validate_new_release(version, pre_tag=True)
+        build_docs.main(version=version)
         make_release_commit(version)
 
         new_version = f"{major:d}.{minor:d}.{patch + 1:d}rc0"
@@ -75,7 +78,7 @@ def make_release_commit(version):
 
 def make_next_pre_release_commit(version):
     """
-    Add release notes and make the release commit
+    Add pre-release version and commit.
     """
     run(["git", "add", str(ABOUT_PY)])
     run(["git", "commit", "-m", f"Start of next release candidate {version!s}"])
@@ -85,16 +88,6 @@ def validate_new_release(version, pre_tag):
     """
     Check that a new release is valid or exit
     """
-
-    release_note = release_note_file_name(version)
-    if not release_note.exists():
-        print(f"Not releasing version {version!s} since release note {release_note!s} does not exist")
-        sys.exit(1)
-
-    with release_note.open("r") as fptr:
-        if not fptr.read():
-            print(f"Not releasing version {version!s} since release note {release_note!s} is empty")
-            sys.exit(1)
 
     if pre_tag and check_tag(version):
         print(f"Not creating new release {version!s} since tag v{version!s} already exist")
@@ -137,7 +130,7 @@ def set_version(version):
 
 
 def release_note_file_name(version) -> Path:
-    return REPO_ROOT / "docs" / "release_notes" / (version + ".rst")
+    return REPO_ROOT / "docs" / "release_notes.rst"
 
 
 def get_local_version():

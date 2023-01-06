@@ -1,4 +1,0 @@
-- Add SystemVerilog support for test benches without test cases. :vunit_issue:`328`
-- Graceful recovery and error message from failed VHDL parsing.
-- Stripping clean from re-compile command.
-- Add `JSON-for-VHDL <https://github.com/Paebbels/JSON-for-VHDL>`_ as a submodule.
