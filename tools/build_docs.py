@@ -42,13 +42,16 @@ def update_release_notes(version):
 
     Args:
         version (str):
-            Version to set the section to for all newsfragments. Newsfragments will be
-            added to the release notes and the now old newsfragments will be staged for
-            removal.
+            Version to set the section to for all newsfragments.
     """
     print(f"Adding newsfragment enteries to release notes for release {version}")
-    #check_call(shlex.split(f"towncrier build --version {version} --yes"))
-    check_call(shlex.split(f"towncrier build --version {version} --keep"))
+    if version:
+        check_call(shlex.split(f"towncrier build --version {version} --yes"))
+    else:
+        # Produce draft version and write to file
+        draft_file = DROOT / "_release_notes_draft.rst"
+        with open(draft_file, "w") as f:
+            check_call(shlex.split(f"towncrier build --version UNRELEASED --draft"), stdout=f)
 
 
 def main(version=None):
@@ -66,21 +69,21 @@ def main(version=None):
                 to ``None`` so that the documentation shows unreleased changes but does
                 not trigger removal of newsfragments in the source tree.
     """
-    if version:
-        update_release_notes(version)
+    update_release_notes(version)
     copyfile(str(DROOT / '..' / 'LICENSE.rst'), str(DROOT / 'license.rst'))
     get_theme(
         DROOT,
         "https://codeload.github.com/buildthedocs/sphinx.theme/tar.gz/v1"
     )
-    # version is set for a release, so in that case this is not being called by tox so
-    # we do not pass args
+    # Version is set for a release, so in that case this is not being called by tox so
+    # we do not pass args. When not building for release, set release_notes_draft to
+    # include the draft in the docs.
     check_call(
         [
             sys.executable,
             "-m",
             "sphinx"
-        ] + ([] if len(sys.argv) < 2 or version else sys.argv[2:]) + [
+        ] + ([] if len(sys.argv) < 2 or version else sys.argv[2:]) + (["-t", "release_notes_draft"] if version is None else []) + [
             "-TEWanb",
             "html",
             str(Path(__file__).parent.parent / "docs"),

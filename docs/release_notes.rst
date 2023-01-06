@@ -11,14 +11,18 @@ with advance notice in the **Deprecations** section of releases.
 
 .. NOTE:: For installation instructions, read :ref:`this <installing>`.
 
-.. towncrier-draft-entries:: UNRELEASED
-
 ..
    Do *NOT* add changelog entries here! This file is managed by towncrier. You *may*
    edit previous change logs for corrections, typos, etc.
 
    To add a new entry, please reference https://vunit.github.io/contributing.html for
    instructions.
+
+.. only:: release_notes_draft
+
+    .. The 'release_notes_draft' tag is included by 'tox -e *-docs', but not on RTD.
+
+    .. include:: _release_notes_draft.rst
 
 .. _latest_release:
 
@@ -31,14 +35,14 @@ with advance notice in the **Deprecations** section of releases.
 `Download from PyPI <https://pypi.python.org/pypi/vunit_hdl/5.0.0/>`__ | `Commits since this release <https://github.com/VUnit/vunit/compare/v5.0.0...master>`__
 
 Breaking Changes
-^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~
 
 - Testing link to PR works
   :vunit_issue:`885`
 
 
 Bug Fixes
-^^^^^^^^^
+~~~~~~~~~
 
 - Bug fix issue
   :vunit_issue:`1`
@@ -47,7 +51,7 @@ Bug Fixes
 
 
 Changes
-^^^^^^^
+~~~~~~~
 
 - Some change with a lot of information
 
@@ -59,14 +63,14 @@ Changes
 
 
 Deprecations
-^^^^^^^^^^^^
+~~~~~~~~~~~~
 
 - A feature is deprecated
   :vunit_issue:`3`
 
 
 Miscellaneous
-^^^^^^^^^^^^^
+~~~~~~~~~~~~~
 
 - Another misc thing
   :vunit_issue:`4`

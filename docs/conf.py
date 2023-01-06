@@ -20,7 +20,6 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.todo",
     "sphinxarg.ext",  # Automatic argparse command line argument documentation
-    "sphinxcontrib.towncrier.ext",
     "exec",
 ]
 
@@ -89,11 +88,6 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3.8/", None),
     "pytest": ("https://docs.pytest.org/en/latest/", None),
 }
-
-# -- Towncrier draft ------------------------------------------------------
-towncrier_draft_autoversion_mode = "draft"
-towncrier_draft_include_empty = True
-towncrier_draft_working_directory = ROOT.parent
 
 # -- ExtLinks -------------------------------------------------------------
 
