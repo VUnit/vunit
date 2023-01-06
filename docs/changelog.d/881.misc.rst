@@ -1,2 +1,2 @@
-Changed to Towncrier to manage changelog and added sections to aid in finding relevant
-changes.
+Improved release notes by adding sections to to aid in finding relevant information
+about releases and updated contributing guide with instructions.
