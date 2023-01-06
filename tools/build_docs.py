@@ -10,6 +10,7 @@
 Command line utility to build documentation/website
 """
 
+import shlex
 import sys
 
 from pathlib import Path
@@ -45,7 +46,7 @@ def update_release_notes(version):
             removal.
     """
     print(f"Adding newsfragment enteries to release notes for release {version}")
-    check_call(["towncrier", "build", f"--version {version}", "--yes"])
+    check_call(shlex.split("towncrier build --version {version} --yes"))
 
 
 def main(version=None):
