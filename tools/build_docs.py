@@ -18,7 +18,8 @@ from subprocess import check_call
 from shutil import copyfile
 
 
-DROOT = Path(__file__).parent.parent / 'docs'
+REPO_ROOT = Path(__file__).parent.parent
+DROOT = REPO_ROOT / 'docs'
 
 
 def get_theme(path: Path, url: str):
@@ -46,7 +47,8 @@ def update_release_notes(version):
             removal.
     """
     print(f"Adding newsfragment enteries to release notes for release {version}")
-    check_call(shlex.split("towncrier build --version {version} --yes"))
+    #check_call(shlex.split(f"towncrier build --version {version} --yes"))
+    check_call(shlex.split(f"towncrier build --version {version} --keep"))
 
 
 def main(version=None):
@@ -71,16 +73,18 @@ def main(version=None):
         DROOT,
         "https://codeload.github.com/buildthedocs/sphinx.theme/tar.gz/v1"
     )
+    # version is set for a release, so in that case this is not being called by tox so
+    # we do not pass args
     check_call(
         [
             sys.executable,
             "-m",
             "sphinx"
-        ] + ([] if len(sys.argv) < 2 else sys.argv[2:]) + [
+        ] + ([] if len(sys.argv) < 2 or version else sys.argv[2:]) + [
             "-TEWanb",
             "html",
-            Path(__file__).parent.parent / "docs",
-            sys.argv[1],
+            str(Path(__file__).parent.parent / "docs"),
+            str(REPO_ROOT / "release" / "docs") if version else sys.argv[1],
         ]
     )
 
