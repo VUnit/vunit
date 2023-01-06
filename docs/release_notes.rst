@@ -24,57 +24,6 @@ with advance notice in the **Deprecations** section of releases.
 
 .. towncrier release notes start
 
-:vunit_commit:`{version} <v{version}>` - 2023-01-06
----------------------------------------------------
-
-
-`Download from PyPI <https://pypi.python.org/pypi/vunit_hdl//>`_ | `Commits since this release <https://github.com/VUnit/vunit/compare/v...master>`_
-
-Breaking Changes
-^^^^^^^^^^^^^^^^
-
-- Testing link to PR works
-  :vunit_issue:`885`
-
-
-Bug Fixes
-^^^^^^^^^
-
-- Bug fix issue
-  :vunit_issue:`1`
-- Another bug fix issue
-  :vunit_issue:`2`
-
-
-Changes
-^^^^^^^
-
-- Some change with a lot of information
-
-  - foo
-  - bar
-
-  links work :vunit_file:`some vunit file <docs>`
-  :vunit_issue:`3`
-
-
-Deprecations
-^^^^^^^^^^^^
-
-- A feature is deprecated
-  :vunit_issue:`3`
-
-
-Miscellaneous
-^^^^^^^^^^^^^
-
-- Another misc thing
-  :vunit_issue:`4`
-- Improved release notes by adding sections to to aid in finding relevant information
-  about releases and updated contributing guide with instructions.
-  :vunit_issue:`881`
-
-
 :vunit_commit:`4.6.0 <v4.6.0>` - 2021-10-25
 -------------------------------------------
 
