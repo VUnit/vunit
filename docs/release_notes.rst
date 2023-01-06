@@ -1,7 +1,7 @@
 
 .. _release_notes:
 
-Release notes
+Release Notes
 =============
 
 Versions follow `Semantic Versioning <https://semver.org/>`_ (``<major>.<minor>.<patch>``).
@@ -17,8 +17,8 @@ with advance notice in the **Deprecations** section of releases.
    Do *NOT* add changelog entries here! This file is managed by towncrier. You *may*
    edit previous change logs for corrections, typos, etc.
 
-   To add a new entry, please reference https://vunit.github.io/contributing.html
-   and note that the news folder is named changelog.d
+   To add a new entry, please reference https://vunit.github.io/contributing.html for
+   instructions.
 
 .. _latest_release:
 

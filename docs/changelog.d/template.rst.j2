@@ -2,9 +2,10 @@
 
 {% set underline = underlines[0] %}{% if section %}{{section}}
 {{ underline * section|length }}{% set underline = underlines[1] %}
-`Download from PyPI <https://pypi.python.org/pypi/vunit_hdl/{{version}}/>`_ | `Commits since this release <https://github.com/VUnit/vunit/compare/v{{version}}...master>`__
 
 {% endif %}
+
+`Download from PyPI <https://pypi.python.org/pypi/vunit_hdl/{{version}}/>`_ | `Commits since this release <https://github.com/VUnit/vunit/compare/v{{version}}...master>`_
 
 {% if sections[section] %}
 {% for category, val in definitions.items() if category in sections[section]%}
@@ -34,4 +35,3 @@ No significant changes.
 
 {% endif %}
 {% endfor %}
-----
