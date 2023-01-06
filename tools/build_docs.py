@@ -40,33 +40,31 @@ def update_release_notes(version):
 
     Args:
         version (str):
-            Version to set the section to for all newsfragments. When none, the
-            newsfragments will be linked in an "unreleased" draft section of the release
-            notes. When this is set, newsfragments will be added to the release notes
-            and the now old newsfragments will be staged for removal.
+            Version to set the section to for all newsfragments. Newsfragments will be
+            added to the release notes and the now old newsfragments will be staged for
+            removal.
+    """
+    print(f"Adding newsfragment enteries to release notes for release {version}")
+    check_call(["towncrier", "build", f"--version {version}", "--yes"])
+
+
+def main(version=None):
+    """Build documentation/website.
+
+    Args:
+        version (str):
+            Version to set the section to for all newsfragments. Newsfragments will be
+            added to the release notes and the now old newsfragments will be staged for
+            removal.
 
             .. important::
                 Only set the version during a release, otherwise files will be
                 forcefully removed and staged for commit. For testing changes, set this
-                to ``None``.
+                to ``None`` so that the documentation shows unreleased changes but does
+                not trigger removal of newsfragments in the source tree.
     """
-    towncrier_config = Path(__file__).parent.parent / "pyproject.toml"
-    args = [f"--config {towncrier_config}"]
     if version:
-        print(f"Adding newsfragment enteries to release notes for release {version}")
-        args += [f"--version {version}", "--yes"]
-    else:
-        print(f"Adding draft newsfragment enteries to release notes")
-        args += ["--version UNRELEASED", "--draft"]
-    print(args)
-    check_call(["towncrier", "build"] + args)
-
-
-def main(version=None):
-    """
-    Build documentation/website
-    """
-    update_release_notes(version)
+        update_release_notes(version)
     copyfile(str(DROOT / '..' / 'LICENSE.rst'), str(DROOT / 'license.rst'))
     get_theme(
         DROOT,

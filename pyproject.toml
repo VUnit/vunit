@@ -69,7 +69,7 @@ deps=
     docs: docutils
     docs: sphinx
     docs: sphinx-argparse
-    docs: sphinxcontrib-towncrier
+    docs: sphinxcontrib-towncrier>=0.3.1a3
     docs: towncrier
 
 setenv=

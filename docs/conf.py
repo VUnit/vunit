@@ -46,10 +46,7 @@ release = ""
 
 language = "en"
 
-exclude_patterns = [
-    "release_notes/*.*",
-    "changelog.d/**",  # towncrier manages changelog
-]
+exclude_patterns = ["changelog.d/**"]  # towncrier manages changelog
 
 pygments_style = "sphinx"
 
@@ -96,7 +93,7 @@ intersphinx_mapping = {
 # -- Towncrier draft ------------------------------------------------------
 towncrier_draft_autoversion_mode = 'draft'
 towncrier_draft_include_empty = True
-towncrier_draft_working_directory = ROOT
+towncrier_draft_working_directory = ROOT.parent
 
 # -- ExtLinks -------------------------------------------------------------
 

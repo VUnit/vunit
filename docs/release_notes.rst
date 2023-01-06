@@ -24,8 +24,8 @@ with advance notice in the **Deprecations** section of releases.
 
 .. towncrier release notes start
 
-:vunit_commit:`4.6.0 <v4.6.0>` - 2021-10-25 (latest)
-----------------------------------------------------
+:vunit_commit:`4.6.0 <v4.6.0>` - 2021-10-25
+-------------------------------------------
 
 
 `Download from PyPI <https://pypi.python.org/pypi/vunit_hdl/4.6.0/>`__ | `Commits since previous release <https://github.com/VUnit/vunit/compare/v4.5.0...v4.6.0>`__
