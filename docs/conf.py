@@ -91,7 +91,7 @@ intersphinx_mapping = {
 }
 
 # -- Towncrier draft ------------------------------------------------------
-towncrier_draft_autoversion_mode = 'draft'
+towncrier_draft_autoversion_mode = "draft"
 towncrier_draft_include_empty = True
 towncrier_draft_working_directory = ROOT.parent
 
