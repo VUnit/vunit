@@ -12,7 +12,7 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
 
         <span class="c1"># Regular expression finding wait statements on the form</span>
-        <span class="c1"># wait [on sensitivity_lsit] [until condition] [for timeout];</span>
+        <span class="c1"># wait [on sensitivity_list] [until condition] [for timeout];</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_wait_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
             <span class="sa">r</span><span class="s2">&quot;wait(\s+on\s+(?P&lt;sensitivity_list&gt;.*?))?(\s+until\s+(?P&lt;condition&gt;.*?))?(\s+for\s+(?P&lt;timeout&gt;.*?))?;&quot;</span><span class="p">,</span>
             <span class="n">re</span><span class="o">.</span><span class="n">MULTILINE</span> <span class="o">|</span> <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span> <span class="o">|</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">,</span>
