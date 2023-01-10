@@ -205,6 +205,15 @@ def extract_snippets():
             snippet,
         )
 
+    for snippet in [
+        "core_dump",
+    ]:
+        highlight_code(
+            root / "incrementer.vhd",
+            root / ".." / ".." / "img" / "vunit_events" / f"{snippet}.html",
+            snippet,
+        )
+
 
 def post_run(log_registry):
     def _post_run(results):
@@ -217,42 +226,46 @@ extract_snippets()
 
 tb_event = lib.test_bench("tb_event")
 
-for test_runner_variant, dut_checker_variant, inject_dut_bug in [
-    (1, 1, False),
-    (2, 2, False),
-    (2, 2, True),
-    (2, 3, True),
-    (2, 4, True),
-    (2, 5, True),
-    (2, 6, True),
-    (3, 7, False),
-    (4, 7, False),
+for test_runner_variant, dut_checker_variant, inject_dut_bug, core_dump_on_vunit_error in [
+    (1, 1, False, False),
+    (2, 2, False, False),
+    (2, 2, True, False),
+    (2, 3, True, False),
+    (2, 4, True, False),
+    (2, 5, True, False),
+    (2, 6, True, False),
+    (3, 7, False, False),
+    (4, 7, False, False),
+    (4, 7, False, True),
 ]:
-    if (test_runner_variant, dut_checker_variant, inject_dut_bug) == (2, 2, False):
+    if (test_runner_variant, dut_checker_variant, inject_dut_bug, core_dump_on_vunit_error) == (2, 2, False, False):
         html_path = root / ".." / ".." / "img" / "vunit_events" / "is_active_msg.html"
-    elif (test_runner_variant, dut_checker_variant, inject_dut_bug) == (2, 2, True):
+    elif (test_runner_variant, dut_checker_variant, inject_dut_bug, core_dump_on_vunit_error) == (2, 2, True, False):
         html_path = root / ".." / ".." / "img" / "vunit_events" / "timeout_due_to_bug.html"
-    elif (test_runner_variant, dut_checker_variant, inject_dut_bug) == (2, 3, True):
+    elif (test_runner_variant, dut_checker_variant, inject_dut_bug, core_dump_on_vunit_error) == (2, 3, True, False):
         html_path = root / ".." / ".." / "img" / "vunit_events" / "log_after_log_active.html"
-    elif (test_runner_variant, dut_checker_variant, inject_dut_bug) == (2, 4, True):
+    elif (test_runner_variant, dut_checker_variant, inject_dut_bug, core_dump_on_vunit_error) == (2, 4, True, False):
         html_path = root / ".." / ".." / "img" / "vunit_events" / "log_with_dut_checker_logger.html"
-    elif (test_runner_variant, dut_checker_variant, inject_dut_bug) == (2, 5, True):
+    elif (test_runner_variant, dut_checker_variant, inject_dut_bug, core_dump_on_vunit_error) == (2, 5, True, False):
         html_path = root / ".." / ".." / "img" / "vunit_events" / "log_with_custom_message.html"
-    elif (test_runner_variant, dut_checker_variant, inject_dut_bug) == (2, 6, True):
+    elif (test_runner_variant, dut_checker_variant, inject_dut_bug, core_dump_on_vunit_error) == (2, 6, True, False):
         html_path = root / ".." / ".." / "img" / "vunit_events" / "log_with_decorated_message.html"
-    elif (test_runner_variant, dut_checker_variant, inject_dut_bug) == (3, 7, False):
+    elif (test_runner_variant, dut_checker_variant, inject_dut_bug, core_dump_on_vunit_error) == (3, 7, False, False):
         html_path = root / ".." / ".." / "img" / "vunit_events" / "log_for_check_latency.html"
-    elif (test_runner_variant, dut_checker_variant, inject_dut_bug) == (4, 7, False):
+    elif (test_runner_variant, dut_checker_variant, inject_dut_bug, core_dump_on_vunit_error) == (4, 7, False, False):
         html_path = root / ".." / ".." / "img" / "vunit_events" / "log_for_check_latency_with_vunit_error.html"
+    elif (test_runner_variant, dut_checker_variant, inject_dut_bug, core_dump_on_vunit_error) == (4, 7, False, True):
+        html_path = root / ".." / ".." / "img" / "vunit_events" / "log_with_core_dump.html"
     else:
         html_path = None
 
     tb_event.add_config(
-        f"{test_runner_variant}+{dut_checker_variant}{'+bug' if inject_dut_bug else ''}",
+        f"{test_runner_variant}+{dut_checker_variant}{'+bug' if inject_dut_bug else ''}{'+core_dump' if core_dump_on_vunit_error else ''}",
         generics=dict(
             test_runner_variant=test_runner_variant,
             dut_checker_variant=dut_checker_variant,
             inject_dut_bug=inject_dut_bug,
+            core_dump_on_vunit_error=core_dump_on_vunit_error,
         ),
         pre_config=prepare_test(html_path, log_registry),
     )

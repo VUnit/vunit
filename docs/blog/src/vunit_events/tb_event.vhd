@@ -27,7 +27,8 @@ entity tb_event is
     runner_cfg : string;
     test_runner_variant : positive;
     dut_checker_variant : positive;
-    inject_dut_bug : boolean := false
+    inject_dut_bug : boolean := false;
+    core_dump_on_vunit_error : boolean := false
   );
 end entity;
 
@@ -260,6 +261,7 @@ begin
         if data_set_idx = 0 then
           wait for max_latency;
           read_register(status_reg_addr, status);
+          wait until rising_edge(clk);
           notify_if_fail(check_equal(status(n_samples_field), n_samples, result("for #processed samples")), vunit_error);
         end if;
         -- end_snippet notify_if_fail
@@ -432,7 +434,8 @@ begin
 
   incrementer_inst : entity work.incrementer
     generic map(
-      delay => 10)
+      delay => 10,
+      core_dump_on_vunit_error => core_dump_on_vunit_error)
     port map(
       clk => clk,
       input_tdata => input_tdata,
