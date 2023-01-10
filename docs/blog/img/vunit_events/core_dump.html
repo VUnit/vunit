@@ -1,0 +1,11 @@
+<div class="highlight"><pre><span></span><span class="c1">-- pragma translate_off</span><span class="w"></span>
+<span class="n">core_dump</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">process</span><span class="w"></span>
+<span class="w">  </span><span class="k">constant</span><span class="w"> </span><span class="n">logger</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">logger_t</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">get_logger</span><span class="p">(</span><span class="s">&quot;incrementer:core_dump&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="k">begin</span><span class="w"></span>
+<span class="w">  </span><span class="k">wait</span><span class="w"> </span><span class="k">until</span><span class="w"> </span><span class="n">is_active</span><span class="p">(</span><span class="n">vunit_error</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">  </span><span class="n">info</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Control state is &quot;</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">control_state_t</span><span class="na">&#39;image</span><span class="p">(</span><span class="n">control_state</span><span class="p">));</span><span class="w"></span>
+<span class="w">  </span><span class="n">info</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Data processing state is &quot;</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">data_processing_state_t</span><span class="na">&#39;image</span><span class="p">(</span><span class="n">data_processing_state</span><span class="p">));</span><span class="w"></span>
+<span class="k">end</span><span class="w"> </span><span class="k">process</span><span class="p">;</span><span class="w"></span>
+<span class="c1">-- pragma translate_on</span><span class="w"></span>
+</pre></div>

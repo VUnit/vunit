@@ -8,9 +8,10 @@ VUnit Events
 What You Will Learn
 -------------------
 
-* A better way to synchronize different parts of your testbench.
-* A way of preventing testbenches to end prematurely, before all parts are done verifying the DUT output.
-* A way to spot where the testbench is stuck on timeout or other errors.
+1. An improved method for synchronizing various components of your testbench.
+2. Techniques to ensure your testbench does not terminate prematurely, before the DUT has been fully verified.
+3. Ways to quickly identify where the testbench is stuck on timeout or other errors.
+4. A method for generating a system "core dump" for easier debugging when errors are detected.
 
 Introduction
 ------------
@@ -339,12 +340,37 @@ The preprocessor is added to the project using the :meth:`~vunit.ui.VUnit.add_pr
    Create a preprocessor that wraps check procedures in a ``notify_if_fail`` call such that all detected errors
    triggers the ``vunit_error`` event.
 
+In this example, we were fortunate in that the error occurred during a wait statement that was directly related to the
+issue at hand, making it easy to locate the bug. However, this is not always the case. To fully understand the issue, it is often necessary to examine the internal signal state. One way to address this is to continuously log a large number of signals at every clock edge. However, this approach quickly leads to unwieldy and difficult-to-manage logs. A more effective solution is to
+
+1. Continuously log a smaller, targeted set of interesting signals and events that can provide insights into what led
+   up to the error.
+2. At the time of an error, log a much larger set of signals to obtain detailed information about the state of the
+   system.
+
+The larger set of signals is provided by one or several "core dump" processes that are triggered by ``vunit_error``.
+For example, in our code example, the DUT has a data processing pipeline and a control block that manage register reads
+and writes. Both of these blocks have states that are interesting for debugging. A core dump of these states might look
+like this:
+
+.. raw:: html
+      :file: img/vunit_events/core_dump.html
+
+In this case the core dump process was encapsulated in the RTL code and pragmas were used to exclude it from synthesis.
+An alternative, if supported by your simulator, is to add the process to the testbench and then use external names to
+access the DUT-internal state signals.
+
+The updated log now shows that both blocks are idle when the error occurs. This also confirms that there is no latency issue, as there are no pending data being processed.
+
+.. raw:: html
+      :file: img/vunit_events/log_with_core_dump.html
+
 Close, but No Cigar
 -------------------
 
-So far VUnit events helped us synchronize processes, reveal blocking wait statements to aid debugging, and prevent
-premature termination of a simulation. However, using events to create a barrier for premature terminations is a
-solution with several problems:
+So far VUnit events helped us synchronize processes, perform core dumps and reveal blocking wait statements to aid
+debugging, and prevent premature termination of a simulation. However, using events to create a barrier for premature
+terminations is a solution with several problems:
 
 1. It doesn't scale well. For every process that has to complete we need a new event.
 2. There is a race condition. If a process completes before the test runner process starts waiting for the completion
