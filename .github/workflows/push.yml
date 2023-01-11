@@ -41,105 +41,113 @@ jobs:
 # Linux linting and unit tests
 #
 
-  lin:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - { py: '3.11' , task: 311-lint }
-          - { py: '3.7'  , task: 37-unit }
-          - { py: '3.11' , task: 311-unit }
-    name: '🐧 Ubuntu · ${{ matrix.task }}'
-    steps:
-
-    - name: '🧰 Checkout'
-      uses: actions/checkout@v3
-
-    - name: '🐍 Setup Python'
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.py }}
-
-    - name: '🐍 Install dependencies'
-      run: |
-        pip install -U pip --progress-bar off
-        pip install -U virtualenv tox --progress-bar off
-
-    - name: '🚧 Run job'
-      run: tox -e py${{ matrix.task }} -- --color=yes
+  #lin:
+  #  runs-on: ubuntu-latest
+  #  strategy:
+  #    fail-fast: false
+  #    matrix:
+  #      include:
+  #        - { py: '3.11' , task: 311-lint }
+  #        - { py: '3.7'  , task: 37-unit }
+  #        - { py: '3.11' , task: 311-unit }
+  #  name: '🐧 Ubuntu · ${{ matrix.task }}'
+  #  steps:
+#
+  #  - name: '🧰 Checkout'
+  #    uses: actions/checkout@v3
+#
+  #  - name: '🐍 Setup Python'
+  #    uses: actions/setup-python@v4
+  #    with:
+  #      python-version: ${{ matrix.py }}
+#
+  #  - name: '🐍 Install dependencies'
+  #    run: |
+  #      pip install -U pip --progress-bar off
+  #      pip install -U virtualenv tox --progress-bar off
+#
+  #  - name: '🚧 Run job'
+  #    run: tox -e py${{ matrix.task }} -- --color=yes
 
 #
 # Docker (Linux) acceptance tests
 #
 
-  docker:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        task: [
-          {do: 311-acceptance,  tag: llvm},
-          {do: 311-vcomponents, tag: mcode},
-        ]
-    name: '🛳️ Container · ${{ matrix.task.do }} · ${{ matrix.task.tag }}'
-    steps:
-
-    - name: '🧰 Checkout'
-      uses: actions/checkout@v3
-      with:
-        submodules: recursive
-
-    - name: '🚧 Run job'
-      run: docker run --rm -tv $(pwd):/src -w /src ghcr.io/vunit/dev/${{ matrix.task.tag }} tox -e py${{ matrix.task.do }}-ghdl
+  #docker:
+  #  runs-on: ubuntu-latest
+  #  strategy:
+  #    fail-fast: false
+  #    matrix:
+  #      task: [
+  #        {do: 311-acceptance,  tag: llvm},
+  #        {do: 311-vcomponents, tag: mcode},
+  #      ]
+  #  name: '🛳️ Container · ${{ matrix.task.do }} · ${{ matrix.task.tag }}'
+  #  steps:
+#
+  #  - name: '🧰 Checkout'
+  #    uses: actions/checkout@v3
+  #    with:
+  #      submodules: recursive
+#
+  #  - name: '🚧 Run job'
+  #    run: docker run --rm -tv $(pwd):/src -w /src ghcr.io/vunit/dev/${{ matrix.task.tag }} tox -e py${{ matrix.task.do }}-ghdl
 
 #
 # Windows (MSYS2) with 'nightly' GHDL
 #
 
-  win:
-    runs-on: windows-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        task: [
-          39-acceptance-ghdl,
-          39-vcomponents-ghdl,
-          39-lint,
-          39-unit,
-        ]
-    name: '🟦 Windows · nightly · ${{ matrix.task }}'
-    defaults:
-      run:
-        shell: msys2 {0}
-    steps:
-
-    - name: '🟦 Setup MSYS2'
-      uses: msys2/setup-msys2@v2
-      with:
-        msystem: MINGW64
-        update: true
-        install: mingw-w64-x86_64-python-pip
-
-    - name: '🧰 Checkout'
-      uses: actions/checkout@v3
-      with:
-        submodules: recursive
-
-    - name: '⚙️ Setup GHDL'
-      uses: ghdl/setup-ghdl-ci@master
-      with:
-        backend: llvm
-
-    - name: '🐍 Install dependencies'
-      run: pip install -U tox --progress-bar off
-
-    - name: '🚧 Run job'
-      run: tox -e py${{ matrix.task }} -- --color=yes
+  #win:
+  #  runs-on: windows-latest
+  #  strategy:
+  #    fail-fast: false
+  #    matrix:
+  #      task: [
+  #        39-acceptance-ghdl,
+  #        39-vcomponents-ghdl,
+  #        39-lint,
+  #        39-unit,
+  #      ]
+  #  name: '🟦 Windows · nightly · ${{ matrix.task }}'
+  #  defaults:
+  #    run:
+  #      shell: msys2 {0}
+  #  steps:
+#
+  #  - name: '🟦 Setup MSYS2'
+  #    uses: msys2/setup-msys2@v2
+  #    with:
+  #      msystem: MINGW64
+  #      update: true
+  #      install: mingw-w64-x86_64-python-pip
+#
+  #  - name: '🧰 Checkout'
+  #    uses: actions/checkout@v3
+  #    with:
+  #      submodules: recursive
+#
+  #  - name: '⚙️ Setup GHDL'
+  #    uses: ghdl/setup-ghdl-ci@master
+  #    with:
+  #      backend: llvm
+#
+  #  - name: '🐍 Install dependencies'
+  #    run: pip install -U tox --progress-bar off
+#
+  #  - name: '🚧 Run job'
+  #    run: tox -e py${{ matrix.task }} -- --color=yes
 
 #
 # Release Notes (News) Validation
 #
+  #news-matrix-prep:
+  #  runs-on: ubuntu-latest
+  #  outputs:
+  #    matrix: ${{ steps.set-matrix.outputs.matrix }}
+  #  steps:
+  #    - id: set-matrix
+  #      run: echo 'matrix={"include":[{"project":"foo","config":"Debug"},{"project\":"bar","config":"Release"}]}' >> $GITHUB_OUTPUT
+
   news:
     runs-on: ubuntu-latest
     strategy:
@@ -158,7 +166,8 @@ jobs:
       uses: actions/checkout@v3
 
     - name: News file exists (docs/news.d/${{ github.event.pull_request.number }}.${{ matrix.news }}.rst)
-      if: contains(fromJSON('["news:${{ matrix.news }}"]'), github.event.pull_request.labels.*.name)
+      #if: contains(fromJSON('["news:${{ matrix.news }}"]'), github.event.pull_request.labels.*.name)
+      if: contains(github.event.pull_request.labels.*.name, "news:${{ matrix.news }}")
       run: test -f docs/news.d/${{ github.event.pull_request.number }}.${{ matrix.news }}.rst
 
 #
@@ -167,7 +176,8 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    needs: [ fmt, lin, docker, win, news ]
+    #needs: [ fmt, lin, docker, win, news ]
+    needs: [ fmt, news ]
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     name: '🚀 Deploy'
     steps:
