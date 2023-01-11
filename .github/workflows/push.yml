@@ -151,7 +151,7 @@ jobs:
         - change
         - deprecation
         - misc
-    name: '📰 Validate News · $ {{ matrix.news }}'
+    name: '📰 Validate News · ${{ matrix.news }}'
     steps:
 
     - name: '🧰 Checkout'
