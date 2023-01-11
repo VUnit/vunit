@@ -142,7 +142,6 @@ jobs:
 #
   news:
     runs-on: ubuntu-latest
-    name: '📰 validate news'
     strategy:
       fail-fast: false
       matrix:
@@ -152,14 +151,15 @@ jobs:
         - change
         - deprecation
         - misc
+    name: '📰 Validate News · $ {{ matrix.news }}'
     steps:
 
     - name: '🧰 Checkout'
       uses: actions/checkout@v3
 
-    - name: News file for news:${{ matrix.news }} label
+    - name: News file exists (docs/changelog.d/${{ github.event.issue.id }}.${{ matrix.news }}.rst)
       if: contains(fromJSON('["news:${{ matrix.news }}"]'), github.event.issue.labels.*.name)
-      run: test -f docs/changelog.d/${{ github.event.issue.id }}.{{ matrix.news }}.rst; echo News file for this label does not exist!
+      run: test -f docs/changelog.d/${{ github.event.issue.id }}.${{ matrix.news }}.rst; echo News file for this label does not exist!
 
 #
 # Deploy to PyPI
