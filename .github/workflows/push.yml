@@ -143,7 +143,7 @@ jobs:
   news:
     runs-on: ubuntu-latest
     name: '📰 validate news'
-    if: github.event_name == "pull_request"
+    #if: github.event_name == "pull_request"
     steps:
 
     - name: '🧰 Checkout'
