@@ -143,25 +143,29 @@ jobs:
   news:
     runs-on: ubuntu-latest
     name: '📰 validate news'
-    #if: github.event_name == "pull_request"
     steps:
 
     - name: '🧰 Checkout'
       uses: actions/checkout@v3
 
-    - if: contains(fromJSON('["news:breaking"]'), github.event.issue.labels.*.name)
+    - name: News file for news:breaking label
+      if: contains(fromJSON('["news:breaking"]'), github.event.issue.labels.*.name)
       run: test -f docs/changelog.d/${{github.event.issue.id}}.breaking.rst; echo News file for this label does not exist!
 
-    - if: contains(fromJSON('["news:bugfix"]'), github.event.issue.labels.*.name)
+    - name: News file for news:bugfix label
+      if: contains(fromJSON('["news:bugfix"]'), github.event.issue.labels.*.name)
       run: test -f docs/changelog.d/${{github.event.issue.id}}.bugfix.rst; echo News file for this label does not exist!
 
-    - if: contains(fromJSON('["news:change"]'), github.event.issue.labels.*.name)
+    - name: News file for news:change label
+      if: contains(fromJSON('["news:change"]'), github.event.issue.labels.*.name)
       run: test -f docs/changelog.d/${{github.event.issue.id}}.change.rst; echo News file for this label does not exist!
 
-    - if: contains(fromJSON('["news:deprecation"]'), github.event.issue.labels.*.name)
+    - name: News file for news:deprecation label
+      if: contains(fromJSON('["news:deprecation"]'), github.event.issue.labels.*.name)
       run: test -f docs/changelog.d/${{github.event.issue.id}}.deprecation.rst; echo News file for this label does not exist!
 
-    - if: contains(fromJSON('["news:misc"]'), github.event.issue.labels.*.name)
+    - name: News file for news:misc label
+      if: contains(fromJSON('["news:misc"]'), github.event.issue.labels.*.name)
       run: test -f docs/changelog.d/${{github.event.issue.id}}.misc.rst; echo News file for this label does not exist!
 
 #
