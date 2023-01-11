@@ -152,14 +152,14 @@ jobs:
         - deprecation
         - misc
     name: '📰 Validate News · ${{ matrix.news }}'
+    #if: contains(fromJSON('["news:${{ matrix.news }}"]'), github.event.issue.labels.*.name)
     steps:
 
     - name: '🧰 Checkout'
       uses: actions/checkout@v3
 
-    - name: News file exists (docs/changelog.d/${{ github.event.issue.id }}.${{ matrix.news }}.rst)
-      if: contains(fromJSON('["news:${{ matrix.news }}"]'), github.event.issue.labels.*.name)
-      run: test -f docs/changelog.d/${{ github.event.issue.id }}.${{ matrix.news }}.rst; echo News file for this label does not exist!
+    - name: News file exists (docs/changelog.d/${{ github.event.issue.number }}.${{ matrix.news }}.rst)
+      run: test -f docs/changelog.d/${{ github.event.issue.number }}.${{ matrix.news }}.rst; echo News file for this label does not exist!
 
 #
 # Deploy to PyPI
