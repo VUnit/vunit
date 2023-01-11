@@ -167,7 +167,7 @@ jobs:
 
     - name: News file exists (docs/news.d/${{ github.event.pull_request.number }}.${{ matrix.news }}.rst)
       #if: contains(fromJSON('["news:${{ matrix.news }}"]'), github.event.pull_request.labels.*.name)
-      if: contains(github.event.pull_request.labels.*.name, "news:${{ matrix.news }}")
+      if: contains(github.event.pull_request.labels.*.name, 'news:${{ matrix.news }}')
       run: test -f docs/news.d/${{ github.event.pull_request.number }}.${{ matrix.news }}.rst
 
 #
