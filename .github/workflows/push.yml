@@ -143,6 +143,7 @@ jobs:
   news:
     runs-on: ubuntu-latest
     name: '📰 validate news'
+    if: contains(fromJSON('["news:breaking", "news:bugfix", "news:change", "news:deprecation", "news:misc"]'), github.event.issue.labels.*.name)
     steps:
 
     - name: '🧰 Checkout'
