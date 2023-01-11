@@ -12,9 +12,9 @@ line-length = 120
 package = "vunit"
 package_dir = "vunit"
 filename = "docs/release_notes.rst"
-template = "docs/changelog.d/template.rst.j2"
+template = "docs/news.d/template.rst.j2"
 issue_format = ":vunit_issue:`{issue}`"
-directory = "docs/changelog.d/"
+directory = "docs/news.d/"
 title_format = ":vunit_commit:`{version} <v{version}>` - {project_date}"
 underlines = ["-", "~"]
 

@@ -227,8 +227,8 @@ Furthermore, since OSVVM is tagged periodically, bumping from tag to tag is stro
 Release Notes Instructions
 --------------------------
 
-The :vunit_file:`release notes directory <docs/changelog.d>` contains "newsfragments"
-which are short (`reST formatted
+The :vunit_file:`release notes directory <docs/news.d>` contains "newsfragments" which
+are short (`reST formatted
 <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_) files that
 contain information for users.
 
@@ -253,5 +253,5 @@ better to stick to a single paragraph to keep it concise.
 The Tox ``*-docs`` environment will construct a draft, "unreleased" section in the
 generated HTML page to make it easier to debug and fix syntax issues with the
 newsfragments. During a release, towncrier will add the latest
-:vunit_file:`newsfragments <docs/changelog.d>` to the :ref:`release_notes` and then
-remove the newsfragments from version control.
+:vunit_file:`newsfragments <docs/news.d>` to the :ref:`release_notes` and then remove
+the newsfragments from version control.

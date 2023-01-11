@@ -45,7 +45,7 @@ release = ""
 
 language = "en"
 
-exclude_patterns = ["changelog.d/**"]  # towncrier manages changelog
+exclude_patterns = ["news.d/**"]  # towncrier manages changelog
 
 pygments_style = "sphinx"
 
