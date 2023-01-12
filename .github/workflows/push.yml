@@ -147,9 +147,6 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - name: '🧰 Checkout'
-        uses: actions/checkout@v3
-
       - id: set-matrix
         run: |
           set -e
@@ -181,7 +178,7 @@ jobs:
       run: |
         fname="$(echo ${{ github.event.pull_request.number }}.${{ matrix.news }}.rst | sed 's,news:,,g')"
         news_file="docs/news.d/$fname"
-        echo "News file that must exist for the tag '${{ matrix.news }}': '$news_file'"
+        echo "News file that must exist for the label '${{ matrix.news }}': '$news_file'"
         test -f $news_file
 
 #
