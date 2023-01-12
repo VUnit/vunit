@@ -166,17 +166,18 @@ jobs:
           ]
           EOF
 
-          eval "pr_labels=( $(jq ' . | @sh ' json | sed 's,\\',,g') )"
-          news_labels=()
-          for label in ${pr_labels[*]} ; do
-            if [[ "$label" =~ ^news:.*$ ]]; then
-              news_labels+=($label)
-            fi
-          done
+          #eval "pr_labels=( $(jq ' . | @sh ' json | sed 's,\\',,g') )"
+          #news_labels=()
+          #for label in ${pr_labels[*]} ; do
+          #  if [[ "$label" =~ ^news:.*$ ]]; then
+          #    news_labels+=($label)
+          #  fi
+          #done
+          eval "news_labels=( $(jq '.[] | select(test(\"news:\"))' json) )"
 
           news_json=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${news_labels[@]}")
-          echo "Found PR labels: ${pr_labels[*]}"
-          echo "Setting matrix to labels: ${news_labels[*]}"
+          #echo "Found PR labels: ${pr_labels[@]}"
+          echo "Setting matrix to labels: ${news_labels[@]}"
           echo "Matrix labels JSON: $news_json"
           echo "matrix=$news_json" >> GITHUB_OUTPUT
 
