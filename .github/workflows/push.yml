@@ -154,7 +154,7 @@ jobs:
         #run: echo 'matrix={"include":[{"project":"foo","config":"Debug"},{"project\":"bar","config":"Release"}]}' >> $GITHUB_OUTPUT
         run: |
           cat <<EOF > json
-          ${{ toJSON(github.event.pull_request.labels.*.name) }}
+          ${{ fromJSON(github.event.pull_request.labels.*.name) }}
           EOF
 
           eval "pr_labels=( $(jq -r ' .[]. | @sh ' json) )"
