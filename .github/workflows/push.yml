@@ -178,13 +178,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.news-matrix-prep.outputs.matrix) }}
-      #matrix:
-      #  news:
-      #  - breaking
-      #  - bugfix
-      #  - change
-      #  - deprecation
-      #  - misc
     name: '📰 Validate News · ${{ matrix.news }}'
     steps:
 
@@ -200,7 +193,7 @@ jobs:
         fname="$(echo ${{ github.event.pull_request.number }}.${{ matrix.news }}.rst | sed 's,news:,,g')"
         news_file="docs/news.d/$fname"
         echo "News file that must exist for the tag '${{ matrix.news }}': '$news_file'"
-        test -f news_file
+        test -f $news_file
 
 #
 # Deploy to PyPI
