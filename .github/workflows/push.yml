@@ -150,7 +150,7 @@ jobs:
       - id: set-matrix
         #run: echo 'matrix={"include":[{"project":"foo","config":"Debug"},{"project\":"bar","config":"Release"}]}' >> $GITHUB_OUTPUT
         run: |
-          echo "${{ fromJSON(github.event.pull_request.labels.*.name) }}" >> json
+          echo ${{ fromJSON(github.event.pull_request.labels.*.name) }} >> json
           eval "pr_labels=( $(jq -r ' .[]. | @sh ' json) )"
           news_labels=()
           for label in ${pr_labels[*]}
