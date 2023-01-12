@@ -174,9 +174,11 @@ jobs:
               news_labels+=($label)
             fi
           done
-          echo "Found PR labels: $pr_labels"
-          echo "Setting matrix to labels: $news_labels"
+
           news_json=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${news_labels[@]}")
+          echo "Found PR labels: ${pr_labels[*]}"
+          echo "Setting matrix to labels: ${news_labels[*]}"
+          echo "Matrix labels JSON: $news_json"
           echo "matrix=$news_json" >> GITHUB_OUTPUT
 
   news:
