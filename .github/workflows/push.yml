@@ -160,7 +160,7 @@ jobs:
           ["news:misc", "news:change"]
           EOF
 
-          eval "pr_labels=( $(jq -r ' .[] | @sh ' json) )"
+          eval "pr_labels=( $(jq -r ' .[].* | @sh ' json) )"
           news_labels=()
           for label in ${pr_labels[*]}
           do
