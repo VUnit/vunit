@@ -153,7 +153,7 @@ jobs:
       - id: set-matrix
         #run: echo 'matrix={"include":[{"project":"foo","config":"Debug"},{"project\":"bar","config":"Release"}]}' >> $GITHUB_OUTPUT
         run: |
-          set -x
+          set -e
 
           #cat <<EOF > json
           #${{ toJSON(github.event.pull_request.labels.*.name) }}
@@ -161,7 +161,8 @@ jobs:
           cat <<EOF > json
           [
             "news:misc",
-            "news:change"
+            "news:change",
+            "label"
           ]
           EOF
 
@@ -169,12 +170,12 @@ jobs:
           news_labels=()
           for label in ${pr_labels[*]}
           do
-            if [[ "$label" =~ ^news:.* ]]; then
+            if [[ "$label" =~ ^news:.*$ ]]; then
               news_labels+=($label)
             fi
           done
           echo "Found PR labels: $pr_labels"
-          echo "Setting matrix to labels: $labels"
+          echo "Setting matrix to labels: $news_labels"
           news_json=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${news_labels[@]}")
           echo "matrix=$news_json" >> GITHUB_OUTPUT
 
