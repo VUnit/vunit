@@ -170,7 +170,7 @@ jobs:
 
           echo "Setting matrix to labels: ${news_labels[@]}"
           echo "Matrix labels JSON: $news_labels_json"
-          echo "matrix={\"news\":$(echo news_labels_json)}" >> $GITHUB_OUTPUT
+          echo "matrix={\"news\":$(echo $news_labels_json)}" >> $GITHUB_OUTPUT
 
   news:
     runs-on: ubuntu-latest
