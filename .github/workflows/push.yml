@@ -166,7 +166,7 @@ jobs:
           ]
           EOF
 
-          eval "pr_labels=( $(jq ' . | @sh ' json | sed 's,\',,g') )"
+          eval "pr_labels=( $(jq ' . | @sh ' json | sed 's,\\',,g') )"
           news_labels=()
           for label in ${pr_labels[*]} ; do
             if [[ "$label" =~ ^news:.*$ ]]; then
