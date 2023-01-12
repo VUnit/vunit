@@ -147,13 +147,11 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - name: '🧰 Checkout'
-        uses: actions/checkout@v3
-
       - id: set-matrix
         #run: echo 'matrix={"include":[{"project":"foo","config":"Debug"},{"project\":"bar","config":"Release"}]}' >> $GITHUB_OUTPUT
         run: |
-          pr_labels=${{ github.event.pull_request.labels.*.name }}
+          echo "${{ fromJSON(github.event.pull_request.labels.*.name) }}" >> json
+          eval "pr_labels=( $(jq -r ' .[]. | @sh ' json) )"
           news_labels=()
           for label in ${pr_labels[*]}
           do
