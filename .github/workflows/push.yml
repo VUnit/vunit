@@ -173,7 +173,7 @@ jobs:
           #    news_labels+=($label)
           #  fi
           #done
-          eval "news_labels=( $(jq '.[] | select(test(\"news:\"))' json) )"
+          eval "news_labels=( $(jq '.[] | select(test("news:"))' json) )"
 
           news_json=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${news_labels[@]}")
           #echo "Found PR labels: ${pr_labels[@]}"
