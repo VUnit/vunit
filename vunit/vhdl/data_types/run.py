@@ -12,6 +12,7 @@ ROOT = Path(__file__).parent
 
 VU = VUnit.from_argv()
 LIB = VU.library("vunit_lib")
+LIB.add_source_files(ROOT / ".." / "logging" / "test" / "test_support_pkg.vhd")
 for fname in glob(str(ROOT / "test" / "*.vhd")):
     if Path(fname).name.endswith("2008p.vhd") and VU.vhdl_standard not in [
         "2008",
