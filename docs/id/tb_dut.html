@@ -1,0 +1,30 @@
+<div class="highlight"><pre><span></span><span class="k">architecture</span><span class="w"> </span><span class="nc">vunit_style</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nc">tb_dut</span><span class="w"> </span><span class="k">is</span><span class="w"></span>
+<span class="w">  </span><span class="c1">-- Declarations</span><span class="w"></span>
+<span class="k">begin</span><span class="w"></span>
+<span class="w">  </span><span class="n">stimuli</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">process</span><span class="w"></span>
+<span class="w">  </span><span class="k">begin</span><span class="w"></span>
+<span class="w">    </span><span class="p">...</span><span class="w"></span>
+<span class="w">  </span><span class="k">end</span><span class="w"> </span><span class="k">process</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">  </span><span class="n">my_dut</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">entity</span><span class="w"> </span><span class="nc">work</span><span class="p">.</span><span class="n">dut</span><span class="w"></span>
+<span class="w">    </span><span class="k">port</span><span class="w"> </span><span class="k">map</span><span class="p">(</span><span class="w"></span>
+<span class="w">      </span><span class="p">...</span><span class="w"></span>
+<span class="w">    </span><span class="p">);</span><span class="w"></span>
+
+<span class="w">  </span><span class="n">vc_x</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">entity</span><span class="w"> </span><span class="nc">work</span><span class="p">.</span><span class="n">verification_component_x</span><span class="w"></span>
+<span class="w">    </span><span class="k">generic</span><span class="w"> </span><span class="k">map</span><span class="p">(</span><span class="w"></span>
+<span class="w">      </span><span class="n">name</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">vc_x</span><span class="na">&#39;path_name</span><span class="w"></span>
+<span class="w">    </span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="k">port</span><span class="w"> </span><span class="k">map</span><span class="p">(</span><span class="w"></span>
+<span class="w">      </span><span class="p">...</span><span class="w"></span>
+<span class="w">    </span><span class="p">);</span><span class="w"></span>
+
+<span class="w">  </span><span class="n">vc_y</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">entity</span><span class="w"> </span><span class="nc">work</span><span class="p">.</span><span class="n">verification_component_y</span><span class="w"></span>
+<span class="w">    </span><span class="k">generic</span><span class="w"> </span><span class="k">map</span><span class="p">(</span><span class="w"></span>
+<span class="w">      </span><span class="n">name</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">vc_y</span><span class="na">&#39;path_name</span><span class="w"></span>
+<span class="w">    </span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="k">port</span><span class="w"> </span><span class="k">map</span><span class="p">(</span><span class="w"></span>
+<span class="w">      </span><span class="p">...</span><span class="w"></span>
+<span class="w">    </span><span class="p">);</span><span class="w"></span>
+<span class="k">end</span><span class="w"> </span><span class="k">architecture</span><span class="p">;</span><span class="w"></span>
+</pre></div>

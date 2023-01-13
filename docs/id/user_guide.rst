@@ -8,239 +8,166 @@ Identity Package
 Introduction
 ************
 
-The VUnit identity package (``id_pkg``) provides a way of creating a hierarchical
-structure of named objects in a testbench. It enhances the capabilities provided by VHDL's
-``simple_name``, ``instance_path_name`` and ``path_name`` attributes and removes some
-limitations of name attributes and string-based names in general.
+The VUnit identity package (``id_pkg``) enables the creation of a hierarchical organization of named objects within a testbench. It expands upon the functionality provided by VHDL's ``simple_name``, ``instance_name`` and ``path_name`` attributes and eliminates some of the limitations associated with string-based naming conventions.
 
 ***********************************************
 Limitations of Name Strings and Name Attributes
 ***********************************************
 
-When giving names to a testbench object, for example a verification component (VC), we can use
-one of the VHDL name attributes. In the example below we have a testbench with two
-VCs, each with a name generic. Each VC verifies an interface on the device under test (DUT)
-and when it reaches full test coverage it produces a log message containing its name
-and a confirmation of the successful verification.
+When naming a testbench object, such as a verification component (VC), we can utilize one of the VHDL name attributes. In the example below, we have a testbench with two VCs, X and Y, each with a ``name`` generic that we assign the ``path_name`` of the VC entity instantiation.
 
-We use the ``path_name`` attribute of the VC entity instantiation label to give
-``name`` a value but it should be noted that at the time of writing not all simulators support
-using ``path_name`` of the instantiation itself when defining the instantiation.
+ .. raw:: html
+    :file: tb_dut.html
 
-.. code-block:: vhdl
+.. note::
+  A limitation with using name attributes is that, at the time of writing, not all simulators support assigning the
+  ``name`` generic a value that references the label of the instantiation itself.
 
-   architecture testbench of tb_dut is
-   begin
-     stimuli: process
-      ...
+The VCs use the ``name`` generic to tag log messages. A basic message, without using VUnit logging functionality, could appear as follows:
 
-     my_dut : entity work.dut
-       port map(
-         ...
-       );
+.. raw:: html
+    :file: tb_dut_log.html
 
-     interface_1_checker : entity work.verification_component_1
-       generic map(
-         name => interface_1_checker'path_name
-       );
-       port map(
-         ...
-       );
+In this case, the name produced by the ``path_name`` attribute, ``:tb_dut:vc_x:``,
+reflects the logical structure of the testbench and clearly identifies the producer. However, ``path_name`` is limited
+to code structure and knows nothing about the logical structure of the testbench. These are not necessarilty the same.
+For example, if we want to reorganize our testbench by moving some declarations in the architecture declarative part to
+a more local location, we can do this by adding a block statement around the VC instantiations.
 
-     interface_2_checker : entity work.verification_component_2
-       generic map(
-         name => interface_2_checker'path_name
-       );
-       port map(
-         ...
-       );
-   end architecture;
+.. raw:: html
+    :file: local_declarations.html
 
-A log message might look like this:
+We haven't changed the logical structure, ``vc_x`` is still part of ``tb_dut`` and should be
+presented as such. However, the code structure has been changed and so has the naming:
 
-.. code-block:: Bash
+.. raw:: html
+    :file: tb_dut_local_declarations_log.html
 
-   Full test coverage reached for :tb_dut:interface_1_checker:. No errors found.
+To avoid this problem, as well as the problem of limited simulator support, we could opt to abandon the name attributes and instead use manually crafted name strings. Manually crafting name strings also provides more flexibility as the name is no longer limited by the rules for identifier naming. For example, we could name the VC ``:tb_dut:verification component X:`` if preferred.
 
-The name produced by the ``path_name`` attribute, ``:tb_dut:interface_1_checker:``,
-reflects the logical structure of the testbench and gives a clear indication of who is the
-producer. However, ``path_name`` knows nothing about logical structure, it only knows about
-code structure and that is not necessarily the same. Imagine we want to clean-up our
-testbench by moving some of the declarations in the architecture declarative part to a
-place more local to where they are used. We can do this by adding a block statement,
-for example
+Whether using a name attribute or providing the name explicitly, the concept of hierarchy is determined by a naming
+convention and not by the ``string`` type itself. By using a dedicated type, we can create a more explicit concept and
+also enable more advanced functionality.
 
-.. code-block:: vhdl
+***************
+Identity Basics
+***************
 
-   local_declarations : block is
-     -- Local declarations of signals, constants etc
-   begin
-     interface_1_checker : entity work.verification_component_1
-       generic map(
-         name => interface_1_checker'path_name
-       );
-       port map(
-         ...
-       );
+To overcome the issues discussed in the preceding section, ``id_pkg`` provides an ``id_t`` type, which is compatible with VHDL name attributes in the sense that we can create an identity from such an attribute:
 
-     interface_2_checker : entity work.verification_component_2
-       generic map(
-         name => interface_2_checker'path_name
-       );
-       port map(
-         ...
-       );
-     end block;
+.. raw:: html
+    :file: id_from_attribute.html
 
-By doing this we change the code structure and the naming along with that.
+Or from a string if the logical structure doesn't match the code structure:
 
-.. code-block:: console
+.. raw:: html
+    :file: id_from_string.html
 
-   Full test coverage reached for :tb_dut:local_declarations:interface_1_checker:. No errors found.
+We can also omit the leading and trailing colons for brevity:
 
-In order to avoid breaking the logical structure we need to avoid the name attributes and
-use explicit strings instead:
+.. raw:: html
+    :file: id_from_string_wo_colon.html
 
-.. code-block:: vhdl
+The identity returned when calling ``get_id`` represents the last component in the hierarchical path. Calling ``name
+(vc_x_id)`` will return the name of that component and ``full_name(vc_x_id)`` returns the full path. However,
+identities are created for each component in the path, and the parent identity can be obtained by invoking the
+``get_parent`` function:
 
-   interface_1_checker : entity work.verification_component_1
-    generic map(
-      name => ":tb_dut:interface_1_checker:"
-    );
-    port map(
-      ...
-    );
+.. raw:: html
+    :file: id_naming.html
 
-Another beniefit of not using the name attributes is that the name is no longer limited
-by the rules of identifier naming. We can call the VC ``:tb_dut:1st interface checker:``
-should we want to.
+.. raw:: html
+    :file: id_naming_log.html
 
-Regardless if we use a name attribute or provide the name explicitly, the notion of
-hierarchy is determined by a naming convention and not by the ``string`` type itself.
-This creates an uncertainty for the VC designer. Can they be sure that a ``name``
-containing colons is an expression of hierarchy? If not, the VC cannot build any
-functionality that is based on traversing the name hierarchy.
+Calling the function ``get_id`` only creates identities for the components that are missing in the path provided
+to the function. For example, invoking ``get_id`` with ``vc_y'path_name`` will not create
+a new identity for ``tb_dut`` since that identity already exists after our previous invokation:
 
-Even if that convention is followed there are limitations to what we can do since only
-the ancestry is included in the name string and we cannot use it to traverse the full name
-space.
+.. raw:: html
+    :file: second_id_from_string.html
 
-****************
-Using Identities
-****************
+Another way to add identities is to use ``get_id`` with a parent ID parameter. For example, to create the identity for
+``vc_y``, we can use the following equivalent code:
 
-To overcome the problems outlined in the previous section ``id_pkg`` provides an ``id_t``
-type. ``id_t`` is compatible with VHDL name attributes in the sense that we can create
-an identity from a name attribute.
+.. raw:: html
+    :file: id_from_parent.html
 
-.. code-block:: vhdl
+To gain a better understanding of the identities that have been generated by previous ``get_id`` calls, we can utilize
+the ``get_tree`` function to view the identity tree with a given identity as its root. For example,
 
-   vc_1_id := get_id(interface_1_checker'path_name);
-
-or from a string if our logical structure doesn't match the code structure
-
-.. code-block:: vhdl
-
-   vc_1_id := get_id(":tb_dut:interface_1_checker:");
-
-We can also omit the leading and trailing colons for simplicity
-
-.. code-block:: vhdl
-
-   vc_1_id := get_id("tb_dut:interface_1_checker");
-
-The identity returned when calling ``get_id`` represents the last component. Calling ``name(vc_1_id)``
-will return the string ``"interface_1_checker"`` and calling ``full_name(vc_1_id)`` returns
-``"tb_dut:interface_1_checker"``. However, all identities are created and we can get the parent
-(``tb_dut``) identity by calling the ``get_parent`` function:
-
-.. code-block:: vhdl
-
-   parent_id := get_parent(vc_id);
-
-Calling ``get_id`` only creates the identities missing in the tree of identities formed by previous calls
-to the function. For example, calling ``get_id`` with the path for ``interface_2_checker`` will not create
-a new identity for ``tb_dut`` since that part of the ``interface_2_checker`` path already exists:
-
-.. code-block:: vhdl
-
-   vc_2_id := get_id("tb_dut:interface_2_checker");
-
-Another way to add identities is to use ``get_child`` with a parent id parameter.
-The following is an equivalent way of creating the identity for ``interface_2_checker``:
-
-.. code-block:: vhdl
-
-   vc_2_id := get_id("interface_2_checker", parent => parent_id);
-
-To visualize what has been created by previous ``get_id`` calls we can use ``get_tree`` to see the subtree of
-identities rooted in a given identity. For example,
-
-.. code-block:: vhdl
-
-  report "This is the tb_dut subtree:" & get_tree(parent_id);
+.. raw:: html
+    :file: get_tree.html
 
 will output:
 
-.. code-block:: bash
+.. raw:: html
+    :file: get_tree_log.html
 
-  This is the tb_dut subtree:
-  tb_dut
-  +---interface_1_checker
-  \---interface_2_checker
+The ``get_tree`` function returns a string starting with a linefeed character (LF) to align the root line of the tree
+with its other elements. To omit this initial LF character, set the optional parameter ``initial_lf`` to false.
 
-The string returned by ``get_tree`` starts with a linefeed character (LF) to make sure that root line of the
-tree is aligned with the rest. We can omit this intial LF character by setting the optional parameter
-``initial_lf`` false.
+We can also call ``get_tree()`` without any parameters to view the full identity tree. This provides a comprehensive
+overview of all the identities created in user code, by third-party IPs, and in VUnit itself. An example of the output
+is provided below:
 
-We can also call ``get_tree`` without any parameters to see the full identity tree. This is a good way
-of getting an overview of all identities created in user code, by third party IPs, and in VUnit itself.
-The output of such a call is exemplified below:
-
-.. code-block:: bash
-
-  (root)
-  +---default
-  +---vunit_lib
-  |   \---dictionary
-  +---check
-  +---runner
-  \---tb_dut
-      +---interface_1_checker
-      \---interface_2_checker
+.. raw:: html
+    :file: full_tree_log.html
 
 At the root of the tree is a symbol ``(root)`` which represents the predefined ``root_id``. ``root_id`` has no name
 but is given a symbol in the tree representation for clarity. The lack of name means that we cannot create a new
 identity with no name as that is already taken.
 
-In general we can determine if an identity is taken by calling ``has_id`` with the full name of the identity
-or a partial name relative to a parent identity. For example, calling ``has_id("")`` would always return ``true``.
-In this case ``has_id("tb_dut:interface_1_checker")`` and ``has_id("interface_1_checker", parent => get_id("tb_dut")``
-would also return ``true`` but ``has_id("interface_1_checker")`` would return ``false``.
+We can easily check if an identity is taken by calling the ``has_id`` function with either the full name of the
+identity or a partial name relative to its parent identity. For example:
 
-The ``get_tree`` function works by traversing the entire identity tree to collect the name of each identity.
-We can write our own functionality based on traversing the tree by using the ``get_parent`` function described
-earlier and the ``num_children`` and ``get_child`` functions. ``num_children`` returns the number of children
-identities a given identity has. For example, ``num_children(get_id("tb_dut"))`` returns 2.
-Each of the children identities can then be retrieved by calling ``get_child`` with an index in the range
-[0, number of children - 1]. For example, ``get_child(get_id("tb_dut"), 1)`` will return the identity for
-``interface_2_checker``.
+.. raw:: html
+    :file: has_id_log.html
 
-******************
-Sharing Identities
-******************
+**********************
+Structuring Identities
+**********************
 
-All identifers have a primary owner but the same identity can also be used by others acting on behalf
-of the primary owner. In the previous examples we had a VC being the primary owner of the identity
-named ``tb_dut:interface_1_checker``. That VC can have a :ref:`logger <logging_library>` and an
-:ref:`actor <com_user_guide>` to provide logging and communication services. These two objects would
-be created from the ``tb_dut:interface_1_checker`` identity and act on behalf of the associated VC.
+The identity package does not place any limitations on what we use identities for. However, there are a few
+recommendations:
 
+1. All identifers should have a primary owner, the object that the identity is associated with. For instance, in our
+   prior examples the identity was associated with a verification component.
+2. An identity can be used by objects other than its owner, provided that these objects are acting on the owner's
+   behalf. For example, a verification component can create a logger from its identity. The logger logs messages on behalf of the verification component and can share its identity.
+3. Use parent-child relationsships when the parent object is composed of child objects. For example, a bus protocol
+   checker can be a standalone VC that monitors transactions on a bus to ensure that they are compliant with the
+   protocol. As a standalone VC, it can have an identity such as ``protocol_checker``. However, if the protocol checker is built into a bus initiator VC, capable of initiating read and write transactions, then a more descriptive identity such as ``bus_initiator:protocol_checker`` is more appropriate.
+4. If your object is an entity, it should have an identity generic. The entity itself cannot determine which functional
+   hierarchy it belongs to, so this must be specified externally. The generic should have ``null_id`` as the default value. If no value is assigned, the entity is free to choose its own identity.
 
+***************************
+Searching the Identity Tree
+***************************
 
+The ``get_tree`` function collects identity names by traversing the full tree. We can also create our own custom
+tree-traversing functionality by leveraging the ``get_parent``, ``num_children`` and ``get_child`` functions. The
+``num_children`` function returns the number of children identities a given identity possesses and we can retrieve each
+of these children identities by calling ``get_child`` with an index in the range [0, number of children - 1]. For
+example:
 
+.. raw:: html
+    :file: traversing_log.html
 
+To further illustrate these functions we can examine how ``vc_x`` handles the situation when its ``id`` generic
+hasn't been assinged any value and defaults to ``null_id``. Rather than simply taking a fix identity name which would be
+shared by all instances, or an ``instance_name`` which may or may not yield a good representation, it creates another
+logical structure based on the format <company name>:<VC name>:<instance number>. The instance number is calculated
+by searching the company identity space for other existing instances of ``vc_x``. If n instances are found, the new
+instance is assigned number n + 1.
 
+.. raw:: html
+    :file: null_id.html
 
+With only one ``vc_x``, the instance will be designated as number 1.
 
+.. raw:: html
+    :file: null_id_log.html
 
+In this example we were able to search for other instances of ``vc_x`` by searching the identity namespace. Had there
+not been a naming convention for the ``vc_x`` instances, it would not have been possible. However, not all resources
+have such a convention. For instance, if a VC wants to use the closest existing logger among its ancestors, there is no naming convention to rely on. In such cases, ``get_logger`` is of no use as this procedure will only create a new logger if it doesn't already exist. Fortunately, there is another function, ``has_logger``, which can be used to query if there is a logger for an existing identity. All in all, it is generally recommended that any resource which utilizes identities should also provide methods for determining the existence of such a resource for a given identity.
