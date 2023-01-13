@@ -35,7 +35,7 @@ jobs:
         path: .tox/py311-docs/tmp/docsbuild/
 
     - name: Publish site to gh-pages
-      if: github.event_name != 'pull_request' && github.repository == 'VUnit/vunit'
+      if: github.event_name != 'pull_request' && github.repository == 'VUnit/vunit' && github.ref_name == 'master'
       env:
         GH_DEPKEY: ${{ secrets.VUNIT_GITHUB_IO_DEPLOY_KEY }}
       run: |
