@@ -22,7 +22,7 @@ print(__doc__)
 from pathlib import Path
 from shutil import copy
 from vunit import VUnit
-from tools.blog_support import highlight_code, highlight_log
+from tools.doc_support import highlight_code, highlight_log
 
 root = Path(__file__).parent
 
