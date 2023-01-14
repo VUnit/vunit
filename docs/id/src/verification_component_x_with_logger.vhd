@@ -23,21 +23,14 @@ architecture a of verification_component_x_with_logger is
 begin
 process
     variable acme_corp_id, vc_x_id, my_id : id_t;
-    variable num_vc_x : natural;
     variable logger : logger_t;
     variable data, addr : std_logic_vector(31 downto 0);
   begin
     -- start_snippet null_id
     if id = null_id then
       acme_corp_id := get_id("Acme Corporation");
-      num_vc_x := 0;
-      for child_idx in 0 to num_children(acme_corp_id) - 1 loop
-        if name(get_child(acme_corp_id, child_idx)) = "vc_x" then
-          num_vc_x := num_vc_x + 1;
-        end if;
-      end loop;
       vc_x_id := get_id("vc_x", parent => acme_corp_id);
-      my_id := get_id(to_string(num_vc_x + 1), parent => vc_x_id);
+      my_id := get_id(to_string(num_children(vc_x_id) + 1), parent => vc_x_id);
       logger := get_logger(my_id);
     else
       logger := get_logger(id);
