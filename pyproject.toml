@@ -24,10 +24,12 @@ deps=
     lint: pycodestyle
     lint: pylint
     lint: mypy
+    lint: Pygments
     coverage: coverage
     coverage: pycodestyle
     coverage: pylint
     coverage: mypy
+    coverage: Pygments
     docs: docutils
     docs: sphinx
     docs: sphinx-argparse
