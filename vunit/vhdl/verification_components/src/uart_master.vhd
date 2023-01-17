@@ -40,7 +40,7 @@ begin
     begin
       debug("Sending " & to_string(data));
       send_bit(not uart.p_idle_state);
-      for i in 0 to data'length-1 loop
+      for i in data'length-1 downto 0 loop
         send_bit(data(i));
       end loop;
       send_bit(uart.p_idle_state);
