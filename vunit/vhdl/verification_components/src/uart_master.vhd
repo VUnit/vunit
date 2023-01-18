@@ -28,7 +28,8 @@ begin
   main : process
     procedure uart_send(data : std_logic_vector;
                         signal tx : out std_logic;
-                        baud_rate  : integer) is
+                        baud_rate  : integer;
+                        swap_bit_order : boolean) is
       constant time_per_bit : time := (10**9 / baud_rate) * 1 ns;
 
       procedure send_bit(value : std_logic) is
@@ -40,14 +41,21 @@ begin
     begin
       debug("Sending " & to_string(data));
       send_bit(not uart.p_idle_state);
-      for i in data'length-1 downto 0 loop
-        send_bit(data(i));
-      end loop;
+      if not swap_bit_order then
+        for i in 0 to data'length-1 loop
+          send_bit(data(i));
+        end loop;
+      else
+        for i in data'length-1 downto 0 loop
+          send_bit(data(i));
+        end loop;
+      end if;
       send_bit(uart.p_idle_state);
     end procedure;
 
     variable msg : msg_t;
     variable baud_rate : natural := uart.p_baud_rate;
+    variable swap_bit_order : boolean := uart.p_swap_bit_order;
     variable msg_type : msg_type_t;
   begin
     receive(net, uart.p_actor, msg);
@@ -56,7 +64,7 @@ begin
     handle_sync_message(net, msg_type, msg);
 
     if msg_type = stream_push_msg then
-      uart_send(pop_std_ulogic_vector(msg), tx, baud_rate);
+      uart_send(pop_std_ulogic_vector(msg), tx, baud_rate, swap_bit_order);
     elsif msg_type = uart_set_baud_rate_msg then
       baud_rate := pop(msg);
     else
