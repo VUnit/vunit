@@ -35,15 +35,6 @@ package check_pkg is
   type edge_t is (rising_edge, falling_edge, both_edges);
   type trigger_event_t is (first_pipe, first_no_pipe, penultimate);
 
-  type check_result_t  is record
-    is_pass : boolean;
-    checker : checker_t;
-    msg : string_ptr_t;
-    level : log_level_t;
-    line_num    : natural;
-    file_name   : string_ptr_t;
-  end record;
-
   procedure log(check_result : check_result_t);
 
   procedure notify_if_fail(check_result : check_result_t; signal event : inout any_event_t);
@@ -137,6 +128,17 @@ package check_pkg is
     constant line_num    : in natural     := 0;
     constant file_name   : in string      := "")
     return boolean;
+
+  impure function check(
+    constant checker     : in checker_t;
+    constant expr        : in boolean;
+    constant msg         : in string      := check_result_tag & ".";
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t;
+
 
   -----------------------------------------------------------------------------
   -- check_passed
@@ -232,6 +234,15 @@ package check_pkg is
     constant file_name   : in string      := "")
     return boolean;
 
+  impure function check_true(
+    constant expr        : in boolean;
+    constant msg         : in string      := check_result_tag & ".";
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t;
+
   procedure check_true(
     signal clock               : in std_logic;
     signal en                  : in std_logic;
@@ -252,6 +263,16 @@ package check_pkg is
     constant line_num    : in natural     := 0;
     constant file_name   : in string      := "")
     return boolean;
+
+  impure function check_true(
+    constant checker     : in checker_t;
+    constant expr        : in boolean;
+    constant msg         : in string      := check_result_tag & ".";
+    constant level       : in log_level_t := null_log_level;
+    constant path_offset : in natural     := 0;
+    constant line_num    : in natural     := 0;
+    constant file_name   : in string      := "")
+    return check_result_t;
 
   -----------------------------------------------------------------------------
   -- check_false

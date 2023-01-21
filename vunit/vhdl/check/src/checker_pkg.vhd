@@ -9,12 +9,29 @@
 use work.log_levels_pkg.all;
 use work.logger_pkg.all;
 use work.integer_vector_ptr_pkg.all;
+use work.string_ptr_pkg.all;
+use work.location_pkg.all;
+use work.string_ops.all;
+use work.string_ptr_pool_pkg.all;
 
 package checker_pkg is
   type checker_t is record
     p_data : integer_vector_ptr_t;
   end record;
   constant null_checker : checker_t := (p_data => null_ptr);
+
+  subtype unhandled_check_id_t is integer range -1 to integer'high;
+  constant null_unhandled_check_id : unhandled_check_id_t := -1;
+
+  type check_result_t  is record
+    p_is_pass : boolean;
+    p_checker : checker_t;
+    p_msg : string_ptr_t;
+    p_level : log_level_t;
+    p_unhandled_check_id : unhandled_check_id_t;
+    p_line_num : natural;
+    p_file_name : string_ptr_t;
+  end record;
 
   impure function new_checker(logger_name : string;
                               default_log_level : log_level_t := error) return checker_t;
@@ -44,6 +61,28 @@ package checker_pkg is
     line_num    : natural                := 0;
     file_name   : string                 := "");
 
+  procedure update_checker_stat(
+      checker : checker_t;
+      is_pass : boolean
+    );
+
+  procedure log_passing_check(checker : checker_t);
+
+  procedure log_passing_check(
+    checker     : checker_t;
+    msg         : string;
+    path_offset : natural := 0;
+    line_num    : natural := 0;
+    file_name   : string  := "");
+
+  procedure log_failing_check(
+    checker     : checker_t;
+    msg         : string;
+    level       : log_level_t := null_log_level;
+    path_offset : natural := 0;
+    line_num    : natural := 0;
+    file_name   : string := "");
+
   type checker_stat_t is record
     n_checks : natural;
     n_failed : natural;
@@ -67,4 +106,27 @@ package checker_pkg is
   procedure get_checker_stat(checker       :     checker_t;
                              variable stat : out checker_stat_t);
 
+  -- Private
+  impure function p_has_unhandled_checks return boolean;
+  impure function p_register_unhandled_check(checker : checker_t) return unhandled_check_id_t;
+  procedure p_handle(check_result : check_result_t);
+  impure function p_build_result(
+    constant checker : in checker_t;
+    constant is_pass : in boolean;
+    constant msg : in string;
+    constant pass_check_result : in string;
+    constant fail_check_result : in string;
+    constant level : in log_level_t;
+    constant path_offset : in natural;
+    constant line_num : in natural;
+    constant file_name : in string)
+  return check_result_t;
+
+  procedure p_recycle_check_result(check_result : check_result_t);
+
+  function p_std_msg(
+    constant check_result : string;
+    constant msg : string;
+    constant ctx : string)
+  return string;
 end package;
