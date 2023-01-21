@@ -17,6 +17,7 @@ use work.core_pkg;
 use std.textio.all;
 use work.event_common_pkg.all;
 use work.event_private_pkg.all;
+use work.checker_pkg.all;
 
 package body run_pkg is
   procedure test_runner_setup(
@@ -99,6 +100,12 @@ package body run_pkg is
     entry_gate(runner);
     notify(runner(runner_cleanup_idx to runner_cleanup_idx + basic_event_length - 1));
     failure_if(runner_trace_logger, external_failure, "External failure.");
+
+    if p_has_unhandled_checks then
+      core_pkg.core_failure("Unhandled checks.");
+      return;
+    end if;
+
     exit_gate(runner);
     set_phase(runner_state, test_runner_exit);
     notify(runner(runner_phase_idx to runner_phase_idx + basic_event_length - 1));

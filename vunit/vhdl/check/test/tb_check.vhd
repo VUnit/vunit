@@ -18,8 +18,11 @@ use vunit_lib.check_pkg.all;
 use vunit_lib.run_types_pkg.all;
 use vunit_lib.run_pkg.all;
 use vunit_lib.runner_pkg.all;
+use vunit_lib.string_ptr_pkg.all;
+use vunit_lib.core_pkg.all;
 use work.test_support.all;
 use ieee.numeric_std.all;
+
 entity tb_check is
   generic (
     use_check_not_check_true : boolean := true;
@@ -62,6 +65,7 @@ begin
 
   check_runner : process
     variable passed : boolean;
+    variable check_result, check_result2 : check_result_t;
     variable stat : checker_stat_t;
     constant default_level : log_level_t := error;
 
@@ -176,6 +180,28 @@ begin
       end if;
     end;
 
+    impure function internal_check(
+      constant expr      : in boolean;
+      constant msg       : in string := result("."))
+      return check_result_t is
+    begin
+      if use_check_not_check_true then
+        return check(expr, msg);
+      else
+        return check_true(expr, msg);
+      end if;
+    end;
+
+    impure function internal_check(checker : checker_t; expr : boolean; msg : string := result("."))
+      return check_result_t is
+    begin
+      if use_check_not_check_true then
+        return check(checker, expr, msg);
+      else
+        return check_true(checker, expr, msg);
+      end if;
+    end;
+
   begin
     test_runner_setup(runner, runner_cfg);
 
@@ -187,7 +213,10 @@ begin
         assert_true(passed, "Should return pass = true on passing check");
         passed := internal_check(true);
         assert_true(passed, "Should return pass = true on passing check");
-        verify_passed_checks(stat, 3);
+        check_result := internal_check(true);
+        assert_true(check_result.p_is_pass, "Should return check_result.is_pass = true on passing check");
+        assert_true(check_result.p_checker = default_checker);
+        verify_passed_checks(stat, 4);
 
         get_checker_stat(check_checker, stat);
         internal_check(check_checker, true);
@@ -195,21 +224,37 @@ begin
         assert_true(passed, "Should return pass = true on passing check");
         passed := internal_check(check_checker, true);
         assert_true(passed, "Should return pass = true on passing check");
-        verify_passed_checks(check_checker, stat, 3);
+        check_result := internal_check(check_checker, true);
+        assert_true(check_result.p_is_pass, "Should return check_result.is_pass = true on passing check");
+        assert_true(check_result.p_checker = check_checker);
+        verify_passed_checks(check_checker, stat, 4);
 
       elsif run("Test pass message") then
         mock(check_logger);
         internal_check(true);
         check_only_log(check_logger, prefix & "passed.", pass);
+        check_result := internal_check(true);
+        assert_true(to_string(check_result.p_msg) = prefix & "passed.", "Got : " & to_string(check_result.p_msg));
+        assert_true(check_result.p_level = pass);
 
         internal_check(true, "");
         check_only_log(check_logger, "", pass);
+        check_result := internal_check(true, "");
+        assert_true(to_string(check_result.p_msg) = "");
+        assert_true(check_result.p_level = pass);
 
         internal_check(true, "Checking my data.");
         check_only_log(check_logger, "Checking my data.", pass);
+        check_result := internal_check(true, "Checking my data.");
+        assert_true(to_string(check_result.p_msg) = "Checking my data.");
+        assert_true(check_result.p_level = pass);
 
         internal_check(true, result("for my data."));
         check_only_log(check_logger, prefix & "passed for my data.", pass);
+        check_result := internal_check(true, result("for my data."));
+        assert_true(to_string(check_result.p_msg) = prefix & "passed for my data.");
+        assert_true(check_result.p_level = pass);
+
         unmock(check_logger);
 
       elsif run("Test should fail on false inputs to sequential checks") then
@@ -217,36 +262,93 @@ begin
         mock(check_logger);
         internal_check(false);
         check_only_log(check_logger, prefix & "failed.", default_level);
+        check_result := internal_check(false);
+        assert_true(not check_result.p_is_pass);
+        assert_true(check_result.p_checker = default_checker);
+        assert_true(to_string(check_result.p_msg) = prefix & "failed.");
+        assert_true(check_result.p_level = default_level);
+        p_handle(check_result);
 
         internal_check(false, "");
         check_only_log(check_logger, "", default_level);
+        check_result := internal_check(false, "");
+        assert_true(not check_result.p_is_pass);
+        assert_true(check_result.p_checker = default_checker);
+        assert_true(to_string(check_result.p_msg) = "");
+        assert_true(check_result.p_level = default_level);
+        p_handle(check_result);
 
         internal_check(passed, false, "Checking my data.");
         assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(check_logger, "Checking my data.", default_level);
+        check_result := internal_check(false, "Checking my data.");
+        assert_true(not check_result.p_is_pass);
+        assert_true(check_result.p_checker = default_checker);
+        assert_true(to_string(check_result.p_msg) = "Checking my data.");
+        assert_true(check_result.p_level = default_level);
+        p_handle(check_result);
 
         passed := internal_check(false, result("for my data."));
         assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(check_logger, prefix & "failed for my data.", default_level);
+        check_result := internal_check(false, result("for my data."));
+        assert_true(not check_result.p_is_pass);
+        assert_true(check_result.p_checker = default_checker);
+        assert_true(to_string(check_result.p_msg) = prefix & "failed for my data.");
+        assert_true(check_result.p_level = default_level);
+        p_handle(check_result);
+
         unmock(check_logger);
-        verify_failed_checks(stat, 4);
+        verify_failed_checks(stat, 8);
         reset_checker_stat;
 
         get_checker_stat(check_checker, stat);
         mock(get_logger(check_checker));
         internal_check(check_checker, false);
         check_only_log(get_logger(check_checker), prefix & "failed.", default_level);
+        check_result := internal_check(check_checker, false);
+        assert_true(not check_result.p_is_pass);
+        assert_true(check_result.p_checker = check_checker);
+        assert_true(to_string(check_result.p_msg) = prefix & "failed.");
+        assert_true(check_result.p_level = default_level);
+        p_handle(check_result);
 
-        internal_check(check_checker, passed, false, result("for my data."));
+        internal_check(check_checker, passed, false, "Checking my data.");
         assert_true(not passed, "Should return pass = false on failing check");
-        check_only_log(get_logger(check_checker), prefix & "failed for my data.", default_level);
+        check_only_log(get_logger(check_checker), "Checking my data.", default_level);
+        check_result := internal_check(check_checker, false, "Checking my data.");
+        assert_true(not check_result.p_is_pass);
+        assert_true(check_result.p_checker = check_checker);
+        assert_true(to_string(check_result.p_msg) = "Checking my data.");
+        assert_true(check_result.p_level = default_level);
+        p_handle(check_result);
 
         passed := internal_check(check_checker, false, result("for my data."));
         assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(get_logger(check_checker), prefix & "failed for my data.", default_level);
+        check_result := internal_check(check_checker, false, result("for my data."));
+        assert_true(not check_result.p_is_pass);
+        assert_true(check_result.p_checker = check_checker);
+        assert_true(to_string(check_result.p_msg) = prefix & "failed for my data.");
+        assert_true(check_result.p_level = default_level);
+        p_handle(check_result);
+
         unmock(get_logger(check_checker));
-        verify_failed_checks(check_checker, stat, 3);
+        verify_failed_checks(check_checker, stat, 6);
         reset_checker_stat(check_checker);
+
+      elsif run("Test that unhandled pass result passes") then
+        check_result := internal_check(true);
+        assert_true(not p_has_unhandled_checks);
+
+      elsif run("Test that unhandled failed result fails") then
+        check_result := internal_check(check_checker, false);
+        assert_true(p_has_unhandled_checks);
+        mock_core_failure;
+        test_runner_cleanup(runner);
+        check_core_failure("Unhandled checks.");
+        unmock_core_failure;
+        p_handle(check_result);
 
       elsif run("Test should be possible to use concurrently") then
         test_concurrent_check(clk, check_in_1, default_checker);
