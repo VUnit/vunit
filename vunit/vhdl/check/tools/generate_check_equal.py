@@ -138,7 +138,7 @@ impl_template = """  procedure check_equal(
       if is_pass_visible(checker) then
         passing_check(
           checker,
-          std_msg(
+          p_std_msg(
             "Equality check passed", msg,
             "Got " & $got_str & "."),
           path_offset + 1, line_num, file_name);
@@ -149,7 +149,7 @@ impl_template = """  procedure check_equal(
       pass := false;
       failing_check(
         checker,
-        std_msg(
+        p_std_msg(
           "Equality check failed", msg,
           "Got " & $got_str & ". " &
           "Expected " & $expected_str & "."),
@@ -220,24 +220,19 @@ impl_template = """  procedure check_equal(
     constant file_name   : in string      := "")
     return check_result_t is
     variable check_result : check_result_t;
-    variable location : location_t := get_location(path_offset + 1, line_num, file_name);
   begin
     -- pragma translate_off
-    check_result.is_pass := got = expected;
-    check_result.checker := checker;
-    check_result.level := level;
-    check_result.line_num := location.line_num;
-    check_result.file_name := new_string_ptr(location.file_name.all);
-
-    if (got = expected) then
-      if is_pass_visible(checker) then
-        check_result.msg := new_string_ptr(std_msg("Equality check passed", msg, "Got " & $got_str & "."));
-      else
-        check_result.msg := null_string_ptr;
-      end if;
-    else
-      check_result.msg := new_string_ptr(std_msg("Equality check failed", msg, "Got " & $got_str & ". " & "Expected " & $expected_str & "."));
-    end if;
+    check_result := p_build_result(
+      checker => checker,
+      is_pass => got = expected,
+      msg => msg,
+      pass_check_result => "Check passed",
+      fail_check_result => "Check failed",
+      level => level,
+      path_offset => path_offset + 1,
+      line_num => line_num,
+      file_name => file_name
+    );
     -- pragma translate_on
 
     return check_result;
@@ -260,6 +255,28 @@ impl_template = """  procedure check_equal(
 
 
 """
+# if run("Test should pass on true inputs to sequential checks") then
+# get_checker_stat(stat);
+# internal_check(true);
+# internal_check(passed, true);
+# assert_true(passed, "Should return pass = true on passing check");
+# passed := internal_check(true);
+# assert_true(passed, "Should return pass = true on passing check");
+# check_result := internal_check(true);
+# assert_true(check_result.p_is_pass, "Should return check_result.is_pass = true on passing check");
+# assert_true(check_result.p_checker = default_checker);
+# verify_passed_checks(stat, 4);
+#
+# get_checker_stat(check_checker, stat);
+# internal_check(check_checker, true);
+# internal_check(check_checker, passed, true);
+# assert_true(passed, "Should return pass = true on passing check");
+# passed := internal_check(check_checker, true);
+# assert_true(passed, "Should return pass = true on passing check");
+# check_result := internal_check(check_checker, true);
+# assert_true(check_result.p_is_pass, "Should return check_result.is_pass = true on passing check");
+# assert_true(check_result.p_checker = check_checker);
+# verify_passed_checks(check_checker, stat, 4);
 
 test_template = """\
 
@@ -270,9 +287,12 @@ test_template = """\
         assert_true(passed, "Should return pass = true on passing check");
         passed := check_equal($left_pass, $right_pass);
         assert_true(passed, "Should return pass = true on passing check");
+        check_result := check_equal($left_pass, $right_pass);
+        assert_true(check_result.p_is_pass, "Should return check_result.p_is_pass = true on passing check");
+        assert_true(check_result.p_checker = default_checker);
         check_equal($left_min, $right_min);
         check_equal($left_max, $right_max);
-        verify_passed_checks(stat, 5);
+        verify_passed_checks(stat, 6);
 
         get_checker_stat(my_checker, stat);
         check_equal(my_checker, $left_pass, $right_pass);
@@ -345,6 +365,7 @@ test_template = """\
         verify_passed_checks(my_checker, stat, 0);
         verify_failed_checks(my_checker, stat, 3);
         reset_checker_stat(my_checker);
+
 """
 
 combinations = [
@@ -697,6 +718,7 @@ begin
     variable my_checker : checker_t := new_checker("my_checker");
     variable my_logger : logger_t := get_logger(my_checker);
     variable passed : boolean;
+    variable check_result : check_result_t;
     constant default_level : log_level_t := error;
 
   begin

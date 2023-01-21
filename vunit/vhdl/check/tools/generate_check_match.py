@@ -119,7 +119,7 @@ impl_template = """  procedure check_match(
       if is_pass_visible(checker) then
         passing_check(
           checker,
-          std_msg(
+          p_std_msg(
             "Match check passed", msg,
             "Got " & $got_str & ". " &
             "Expected " & $expected_str & "."),
@@ -131,7 +131,7 @@ impl_template = """  procedure check_match(
       pass := false;
       failing_check(
         checker,
-        std_msg(
+        p_std_msg(
           "Match check failed", msg,
           "Got " & $got_str & ". " &
           "Expected " & $expected_str & "."),
