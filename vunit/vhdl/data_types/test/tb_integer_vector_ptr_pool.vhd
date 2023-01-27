@@ -21,7 +21,7 @@ architecture a of tb_integer_vector_ptr_pool is
 begin
   main : process
     variable pool : integer_vector_ptr_pool_t;
-    variable ptr, old_ptr : integer_vector_ptr_t;
+    variable ptr, old_ptr, first_ptr : integer_vector_ptr_t;
   begin
     test_runner_setup(runner, runner_cfg);
 
@@ -49,6 +49,22 @@ begin
       recycle(pool, ptr);
       ptr := new_integer_vector_ptr(pool, 2);
       assert ptr = old_ptr report "Was recycled";
+
+    elsif run("Test recycling beyond initial pool size") then
+      pool := new_integer_vector_ptr_pool;
+      first_ptr := new_integer_vector_ptr(pool, 2);
+      for i in first_ptr.ref + 1 to first_ptr.ref + 1 + 2 ** 16 loop
+        ptr := new_integer_vector_ptr(pool, 2);
+        assert ptr.ref = i;
+      end loop;
+      for i in first_ptr.ref + 1 to first_ptr.ref + 1 + 2 ** 16 loop
+        ptr.ref := i;
+        recycle(pool, ptr);
+      end loop;
+      for i in first_ptr.ref + 1 + 2 ** 16 downto first_ptr.ref + 1 loop
+        ptr := new_integer_vector_ptr(pool, 2);
+        assert ptr.ref = i;
+      end loop;
     end if;
 
     test_runner_cleanup(runner);

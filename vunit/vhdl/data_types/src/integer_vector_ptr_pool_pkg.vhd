@@ -12,9 +12,13 @@ use work.queue_pkg.all;
 
 package integer_vector_ptr_pool_pkg is
   type integer_vector_ptr_pool_t is record
-    ptrs : queue_t;
+    p_data : integer_vector_ptr_t;
   end record;
-  constant null_integer_vector_ptr_pool : integer_vector_ptr_pool_t := (others => null_queue);
+  constant pool_idx : natural := 0;
+  constant length_idx : natural := 1;
+  constant max_length_idx : natural := 2;
+
+  constant null_integer_vector_ptr_pool : integer_vector_ptr_pool_t := (p_data => null_integer_vector_ptr);
 
   impure function new_integer_vector_ptr_pool
   return integer_vector_ptr_pool_t;
@@ -31,9 +35,18 @@ package integer_vector_ptr_pool_pkg is
 end package;
 
 package body integer_vector_ptr_pool_pkg is
+  constant pool_size_increment : positive := 2 ** 16;
+
   impure function new_integer_vector_ptr_pool
-  return integer_vector_ptr_pool_t is begin
-    return (ptrs => new_queue);
+  return integer_vector_ptr_pool_t is
+    variable pool : integer_vector_ptr_pool_t;
+  begin
+    pool.p_data := new_integer_vector_ptr(3);
+    set(pool.p_data, pool_idx, to_integer(new_integer_vector_ptr(pool_size_increment)));
+    set(pool.p_data, length_idx, 0);
+    set(pool.p_data, max_length_idx, pool_size_increment);
+
+    return pool;
   end;
 
   impure function new_integer_vector_ptr (
@@ -41,10 +54,12 @@ package body integer_vector_ptr_pool_pkg is
     min_length : natural := 0
   ) return integer_vector_ptr_t is
     variable ptr : integer_vector_ptr_t;
+    constant len : natural := get(pool.p_data, length_idx);
   begin
-    if length(pool.ptrs) > 0 then
+    if len > 0 then
       -- Reuse
-      ptr := pop_integer_vector_ptr_ref(pool.ptrs);
+      ptr.ref := get(to_integer_vector_ptr(get(pool.p_data, pool_idx)), len - 1);
+      set(pool.p_data, length_idx, len - 1);
       if length(ptr) < min_length then
         reallocate(ptr, min_length);
       end if;
@@ -58,11 +73,21 @@ package body integer_vector_ptr_pool_pkg is
   procedure recycle (
     pool         : integer_vector_ptr_pool_t;
     variable ptr : inout integer_vector_ptr_t
-  ) is begin
+  ) is
+    constant len : natural := get(pool.p_data, length_idx);
+    constant max_len : natural := get(pool.p_data, max_length_idx);
+  begin
     if ptr = null_ptr then
       return;
     end if;
-    push_integer_vector_ptr_ref(pool.ptrs, ptr);
+
+    if len = max_len then
+      resize(to_integer_vector_ptr(get(pool.p_data, pool_idx)), max_len + pool_size_increment);
+      set(pool.p_data, max_length_idx, max_len + pool_size_increment);
+    end if;
+
+    set(to_integer_vector_ptr(get(pool.p_data, pool_idx)), len, ptr.ref);
+    set(pool.p_data, length_idx, len + 1);
     ptr := null_ptr;
   end;
 
