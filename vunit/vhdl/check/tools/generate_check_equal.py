@@ -226,8 +226,10 @@ impl_template = """  procedure check_equal(
       checker => checker,
       is_pass => got = expected,
       msg => msg,
-      pass_check_result => "Check passed",
-      fail_check_result => "Check failed",
+      std_pass_msg => "Equality check passed",
+      std_fail_msg => "Equality check failed",
+      std_pass_ctx => "Got " & $got_str & ".",
+      std_fail_ctx => "Got " & $got_str & ". Expected " & $expected_str & ".",
       level => level,
       path_offset => path_offset + 1,
       line_num => line_num,
@@ -255,28 +257,6 @@ impl_template = """  procedure check_equal(
 
 
 """
-# if run("Test should pass on true inputs to sequential checks") then
-# get_checker_stat(stat);
-# internal_check(true);
-# internal_check(passed, true);
-# assert_true(passed, "Should return pass = true on passing check");
-# passed := internal_check(true);
-# assert_true(passed, "Should return pass = true on passing check");
-# check_result := internal_check(true);
-# assert_true(check_result.p_is_pass, "Should return check_result.is_pass = true on passing check");
-# assert_true(check_result.p_checker = default_checker);
-# verify_passed_checks(stat, 4);
-#
-# get_checker_stat(check_checker, stat);
-# internal_check(check_checker, true);
-# internal_check(check_checker, passed, true);
-# assert_true(passed, "Should return pass = true on passing check");
-# passed := internal_check(check_checker, true);
-# assert_true(passed, "Should return pass = true on passing check");
-# check_result := internal_check(check_checker, true);
-# assert_true(check_result.p_is_pass, "Should return check_result.is_pass = true on passing check");
-# assert_true(check_result.p_checker = check_checker);
-# verify_passed_checks(check_checker, stat, 4);
 
 test_template = """\
 
@@ -300,21 +280,39 @@ test_template = """\
         assert_true(passed, "Should return pass = true on passing check");
         passed := check_equal(my_checker, $left_pass, $right_pass);
         assert_true(passed, "Should return pass = true on passing check");
-        verify_passed_checks(my_checker, stat, 3);
+        check_result := check_equal(my_checker, $left_pass, $right_pass);
+        assert_true(check_result.p_is_pass, "Should return check_result.p_is_pass = true on passing check");
+        assert_true(check_result.p_checker = my_checker);
+        verify_passed_checks(my_checker, stat, 4);
 
       elsif run("Test pass message on $left_type equal $right_type") then
         mock(check_logger);
         check_equal($left_pass, $right_pass);
         check_only_log(check_logger, "Equality check passed - Got $left_pass_str.", pass);
+        check_result := check_equal($left_pass, $right_pass);
+        assert_true(
+          to_string(check_result.p_msg) = "Equality check passed - Got $left_pass_str.",
+          "Got: " & to_string(check_result.p_msg)
+        );
+        assert_true(check_result.p_level = pass);
 
         check_equal($left_pass, $right_pass, "");
         check_only_log(check_logger, "Got $left_pass_str.", pass);
+        check_result := check_equal($left_pass, $right_pass, "");
+        assert_true(to_string(check_result.p_msg) = "Got $left_pass_str.");
+        assert_true(check_result.p_level = pass);
 
         check_equal($left_pass, $right_pass, "Checking my data");
         check_only_log(check_logger, "Checking my data - Got $left_pass_str.", pass);
+        check_result := check_equal($left_pass, $right_pass, "Checking my data");
+        assert_true(to_string(check_result.p_msg) = "Checking my data - Got $left_pass_str.");
+        assert_true(check_result.p_level = pass);
 
         check_equal($left_pass, $right_pass, result("for my data"));
         check_only_log(check_logger, "Equality check passed for my data - Got $left_pass_str.", pass);
+        check_result := check_equal($left_pass, $right_pass, result("for my data"));
+        assert_true(to_string(check_result.p_msg) = "Equality check passed for my data - Got $left_pass_str.");
+        assert_true(check_result.p_level = pass);
         unmock(check_logger);
 
       elsif run("Test should fail on $left_type not equal $right_type") then
@@ -323,16 +321,40 @@ test_template = """\
         check_equal($left_pass, $right_fail);
         check_only_log(check_logger, "Equality check failed - Got $left_pass_str. Expected $fail_str.",
                        default_level);
+        check_result := check_equal($left_pass, $right_fail);
+        assert_true(not check_result.p_is_pass);
+        assert_true(check_result.p_checker = default_checker);
+        assert_true(to_string(check_result.p_msg) = "Equality check failed - Got $left_pass_str. Expected $fail_str.");
+        assert_true(check_result.p_level = default_level);
+        p_handle(check_result);
 
         check_equal($left_pass, $right_fail, "");
         check_only_log(check_logger, "Got $left_pass_str. Expected $fail_str.", default_level);
+        check_result := check_equal($left_pass, $right_fail, "");
+        assert_true(not check_result.p_is_pass);
+        assert_true(check_result.p_checker = default_checker);
+        assert_true(to_string(check_result.p_msg) = "Got $left_pass_str. Expected $fail_str.");
+        assert_true(check_result.p_level = default_level);
+        p_handle(check_result);
 
         check_equal($left_pass, $right_fail, "Checking my data");
         check_only_log(check_logger, "Checking my data - Got $left_pass_str. Expected $fail_str.", default_level);
+        check_result := check_equal($left_pass, $right_fail, "Checking my data");
+        assert_true(not check_result.p_is_pass);
+        assert_true(check_result.p_checker = default_checker);
+        assert_true(to_string(check_result.p_msg) = "Checking my data - Got $left_pass_str. Expected $fail_str.");
+        assert_true(check_result.p_level = default_level);
+        p_handle(check_result);
 
         check_equal($left_pass, $right_fail, result("for my data"));
         check_only_log(check_logger, "Equality check failed for my data - Got $left_pass_str. Expected $fail_str.",
                        default_level);
+        check_result := check_equal($left_pass, $right_fail, result("for my data"));
+        assert_true(not check_result.p_is_pass);
+        assert_true(check_result.p_checker = default_checker);
+        assert_true(to_string(check_result.p_msg) = "Equality check failed for my data - Got $left_pass_str. Expected $fail_str.");
+        assert_true(check_result.p_level = default_level);
+        p_handle(check_result);
 
         check_equal(passed, $left_pass, $right_fail);
         assert_true(not passed, "Should return pass = false on failing check");
@@ -345,13 +367,19 @@ test_template = """\
                        default_level);
         unmock(check_logger);
         verify_passed_checks(stat, 0);
-        verify_failed_checks(stat, 6);
+        verify_failed_checks(stat, 10);
         reset_checker_stat;
 
         get_checker_stat(my_checker, stat);
         mock(my_logger);
         check_equal(my_checker, $left_pass, $right_fail);
         check_only_log(my_logger, "Equality check failed - Got $left_pass_str. Expected $fail_str.", default_level);
+        check_result := check_equal(my_checker, $left_pass, $right_fail);
+        assert_true(not check_result.p_is_pass);
+        assert_true(check_result.p_checker = my_checker);
+        assert_true(to_string(check_result.p_msg) = "Equality check failed - Got $left_pass_str. Expected $fail_str.");
+        assert_true(check_result.p_level = default_level);
+        p_handle(check_result);
 
         check_equal(my_checker, passed, $left_pass, $right_fail);
         assert_true(not passed, "Should return pass = false on failing check");
@@ -363,8 +391,21 @@ test_template = """\
 
         unmock(my_logger);
         verify_passed_checks(my_checker, stat, 0);
-        verify_failed_checks(my_checker, stat, 3);
+        verify_failed_checks(my_checker, stat, 4);
         reset_checker_stat(my_checker);
+
+      elsif run("Test that unhandled pass result for $left_type equal $right_type passes") then
+        check_result := check_equal($left_pass, $right_pass);
+        assert_true(not p_has_unhandled_checks);
+
+      elsif run("Test that unhandled failed result for $left_type equal $right_type fails") then
+        check_result := check_equal(my_checker, $left_pass, $right_fail);
+        assert_true(p_has_unhandled_checks);
+        mock_core_failure;
+        test_runner_cleanup(runner);
+        check_core_failure("Unhandled checks.");
+        unmock_core_failure;
+        p_handle(check_result);
 
 """
 
@@ -701,6 +742,8 @@ use vunit_lib.checker_pkg.all;
 use vunit_lib.check_pkg.all;
 use vunit_lib.run_types_pkg.all;
 use vunit_lib.run_pkg.all;
+use vunit_lib.string_ptr_pkg.all;
+use vunit_lib.core_pkg.all;
 use work.test_support.all;
 
 use vunit_lib.log_levels_pkg.all;
