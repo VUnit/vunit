@@ -115,8 +115,10 @@ package body checker_pkg is
     constant checker      : in checker_t;
     constant is_pass      : in boolean;
     constant msg     : in string;
-    constant pass_check_result : in string;
-    constant fail_check_result : in string;
+    constant std_pass_msg : in string;
+    constant std_fail_msg : in string;
+    constant std_pass_ctx : in string;
+    constant std_fail_ctx : in string;
     constant level        : in log_level_t;
     constant path_offset  : in natural;
     constant line_num     : in natural;
@@ -141,13 +143,13 @@ package body checker_pkg is
     if is_pass then
       check_result.p_unhandled_check_id := null_unhandled_check_id;
       if is_pass_visible(checker) then
-        check_result.p_msg := new_string_ptr(p_std_msg(pass_check_result, msg, ""));
+        check_result.p_msg := new_string_ptr(p_std_msg(std_pass_msg, msg, std_pass_ctx));
       else
         check_result.p_msg := null_string_ptr;
       end if;
     else
       check_result.p_unhandled_check_id := p_register_unhandled_check(checker);
-      check_result.p_msg := new_string_ptr(string_pool, p_std_msg(fail_check_result, msg, ""));
+      check_result.p_msg := new_string_ptr(string_pool, p_std_msg(std_fail_msg, msg, std_fail_ctx));
     end if;
 
     return check_result;

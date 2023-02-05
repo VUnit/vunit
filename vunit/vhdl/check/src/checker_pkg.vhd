@@ -114,8 +114,10 @@ package checker_pkg is
     constant checker : in checker_t;
     constant is_pass : in boolean;
     constant msg : in string;
-    constant pass_check_result : in string;
-    constant fail_check_result : in string;
+    constant std_pass_msg : in string;
+    constant std_fail_msg : in string;
+    constant std_pass_ctx : in string;
+    constant std_fail_ctx : in string;
     constant level : in log_level_t;
     constant path_offset : in natural;
     constant line_num : in natural;
