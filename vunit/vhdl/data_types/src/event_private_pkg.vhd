@@ -17,7 +17,7 @@ package event_private_pkg is
   constant basic_event_length : positive := 5;
   subtype basic_event_t is any_event_t(0 to basic_event_length - 1);
 
-  -- All basic events have a predefined type..
+  -- All basic events have a predefined type.
   type basic_event_type_t is (runner_timeout_event, com_net_event, runner_phase_event, runner_timeout_update_event, vunit_error_event, runner_cleanup_event);
 
   -- Create a new basic event.
