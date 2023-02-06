@@ -45,22 +45,22 @@ package event_pkg is
   impure function name(signal event : any_event_t) return string;
   impure function full_name(signal event : any_event_t) return string;
 
-  -- Return true if event is active in current delta cycle, false otherwise. If true it will
-  -- also produce a message. The function supports message decoration and will add
-  -- "Event <name of event> activated" before the custom message.
+  -- Log a message if event is active in current delta cycle but always returns false.
+  -- The function supports message decoration and will add "Event <name of event> activated"
+  -- before the custom message.
   --
-  -- is_active_msg is typically used in wait statements to handle and report exceptions to the
+  -- log_active is typically used in wait statements to report exceptions to the
   -- expected program flow. For example,
   --
-  -- wait until some_test_condition or is_active_msg(test_runner_watchdog_timeout, decorate("while waiting for some test condition");
+  -- wait until some_test_condition or log_active(test_runner_watchdog_timeout, decorate("while waiting for some test condition");
   --
-  -- is_active_msg supports log location which means that if VHDL-2019 is used, or if location preprocessing is enabled, the following
+  -- log_active supports log location which means that if VHDL-2019 is used, or if location preprocessing is enabled, the following
   -- is usually sufficient for debugging:
   --
-  -- wait until some_test_condition or is_active_msg(test_runner_watchdog_timeout)
+  -- wait until some_test_condition or log_active(test_runner_watchdog_timeout)
   --
   -- The caller can also provide a custom logger.
-  impure function is_active_msg(
+  impure function log_active(
     signal event : any_event_t;
     constant msg : in string := decorate_tag;
     constant log_level : in log_level_t := info;
@@ -70,7 +70,8 @@ package event_pkg is
     constant file_name : in string := ""
   ) return boolean;
 
-  impure function log_active(
+  -- Produce a message just like log_active but return true if the event is active.
+  impure function is_active_msg(
     signal event : any_event_t;
     constant msg : in string := decorate_tag;
     constant log_level : in log_level_t := info;

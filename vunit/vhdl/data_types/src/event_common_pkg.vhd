@@ -15,10 +15,10 @@ use work.types_pkg.all;
 package event_common_pkg is
   subtype any_event_t is std_logic_vector;
 
-  -- Notify all event observers by activating the event for one delta cycle.
+  -- Notify all event observers by activating the event(s) for one delta cycle.
   -- An n_delta_cycles number of delta cycles are added after activating the
-  -- event before the returning from the procedures. The default value is
-  -- such that any process waiting for/blocking on the event can perform actions
+  -- event(s) before the returning from the procedures. The default value is
+  -- such that any process waiting for/blocking on the event(s) can perform actions
   -- that will complete before any actions performed by the caller of notify,
   -- after returning from the notify call. This is under the assumption that the
   -- unblocked process performs its actions immediately without any additional
