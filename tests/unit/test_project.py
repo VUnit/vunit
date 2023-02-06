@@ -1855,7 +1855,6 @@ end architecture;
             self.assertEqual(source_file.get_vhdl_standard(), std)
 
     def test_add_source_file_has_no_parse_vhdl(self):
-
         for no_parse in (True, False):
             project = Project()
             file_name = "file.vhd"
@@ -1873,7 +1872,6 @@ end architecture;
             self.assertEqual(len(source_file.design_units), int(not no_parse))
 
     def test_add_source_file_has_no_parse_verilog(self):
-
         for no_parse in (True, False):
             project = Project()
             file_name = "file.v"

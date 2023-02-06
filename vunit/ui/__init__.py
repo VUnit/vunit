@@ -843,10 +843,10 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         files = []
         for source_file in file_objects:
             files.append(
-                dict(
-                    file_name=str(Path(source_file.name).resolve()),
-                    library_name=source_file.library.name,
-                )
+                {
+                    "file_name": str(Path(source_file.name).resolve()),
+                    "library_name": source_file.library.name,
+                }
             )
 
         tests = []
@@ -864,25 +864,25 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
                 attributes.update(config.attributes)
 
                 tests.append(
-                    dict(
-                        name=name,
-                        location=dict(
-                            file_name=str(info.location.file_name),
-                            offset=info.location.offset,
-                            length=info.location.length,
-                        ),
-                        attributes=attributes,
-                    )
+                    {
+                        "name": name,
+                        "location": {
+                            "file_name": str(info.location.file_name),
+                            "offset": info.location.offset,
+                            "length": info.location.length,
+                        },
+                        "attributes": attributes,
+                    }
                 )
 
-        json_data = dict(
+        json_data = {
             # The semantic version (https://semver.org/) of the JSON export data format
-            export_format_version=dict(major=1, minor=0, patch=0),
+            "export_format_version": {"major": 1, "minor": 0, "patch": 0},
             # The set of files added to the project
-            files=files,
+            "files": files,
             # The list of all tests
-            tests=tests,
-        )
+            "tests": tests,
+        }
 
         with Path(json_file_name).open("w", encoding="utf-8") as fptr:
             json.dump(json_data, fptr, sort_keys=True, indent=4, separators=(",", ": "))

@@ -508,7 +508,6 @@ class VHDLEntity(object):
         generic_list = []
         # Add interface elements to the generic list
         for interface_element in interface_elements:
-
             if cls._package_generic_re.match(interface_element) is not None:
                 # Ignore package generics
                 continue

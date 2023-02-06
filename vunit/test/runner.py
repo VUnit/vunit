@@ -261,7 +261,6 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         any_not_passed = any(value != PASSED for value in results.values())
 
         with self._stdout_lock():
-
             if (color_output_file is not None) and (any_not_passed or self._is_verbose) and not self._is_quiet:
                 self._print_output(color_output_file_name)
 

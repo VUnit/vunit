@@ -251,7 +251,7 @@ class ActiveHDLInterface(SimulatorInterface):
         # Add the the testbench top-level unit last as coverage is
         # only collected for the top-level unit specified last
 
-        vhdl_assert_stop_level_mapping = dict(warning=1, error=2, failure=3)
+        vhdl_assert_stop_level_mapping = {"warning": 1, "error": 2, "failure": 3}
 
         tcl = f"""
 proc vunit_load {{}} {{

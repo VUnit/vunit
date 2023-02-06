@@ -226,7 +226,6 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
                 library = self._find_vhdl_library_reference(ref.library)
             except KeyError:
                 if ref.library not in self._builtin_libraries:
-
                     LOGGER.warning("%s: failed to find library '%s'", source_file.name, ref.library)
                 continue
 
