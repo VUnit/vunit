@@ -495,7 +495,6 @@ def _check_duplicates(attrs, file_name, test_name=None):
     previous = {}
     for attr in attrs:
         if attr.name in previous:
-
             loc = (
                 "" if test_name is None else f"test {test_name!s} in "
             ) + f"{file_name!s} line {attr.location.lineno:d}"

@@ -319,7 +319,6 @@ class VerilogModule(object):
         results = []
         parameters = []
         while idx < len(tokens):
-
             if tokens[idx].kind == MODULE:
                 if balance == 0:
                     name = tokens[idx + 1].value

@@ -279,7 +279,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         for library in self._libraries:
             vsim_flags += ["-L", library.name]
 
-        vhdl_assert_stop_level_mapping = dict(warning=1, error=2, failure=3)
+        vhdl_assert_stop_level_mapping = {"warning": 1, "error": 2, "failure": 3}
 
         tcl = """
 proc vunit_load {{{{vsim_extra_args ""}}}} {{
