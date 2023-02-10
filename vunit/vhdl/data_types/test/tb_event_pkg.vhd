@@ -199,6 +199,22 @@ begin
         end loop;
         wait for 1 ps;
         check_equal(get(number, number_observed_idx), get(number, number_produced_idx));
+
+      elsif run("Test condition_operator function") then
+        check_true(condition_operator(bit'('1')));
+        check_true(condition_operator(std_ulogic'('1')));
+        check_true(condition_operator(std_ulogic'('H')));
+        check_true(condition_operator(true));
+
+        check_false(condition_operator(bit'('0')));
+        check_false(condition_operator(std_ulogic'('0')));
+        check_false(condition_operator(std_ulogic'('L')));
+        check_false(condition_operator(std_ulogic'('X')));
+        check_false(condition_operator(std_ulogic'('U')));
+        check_false(condition_operator(std_ulogic'('W')));
+        check_false(condition_operator(std_ulogic'('-')));
+        check_false(condition_operator(std_ulogic'('Z')));
+        check_false(condition_operator(false));
       end if;
     end loop;
 

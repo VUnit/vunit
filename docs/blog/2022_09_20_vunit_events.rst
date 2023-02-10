@@ -330,7 +330,10 @@ use this example as a template for your own project.
  .. raw:: html
       :file: img/vunit_events/wait_statement_preprocessor.html
 
-The preprocessor is added to the project using the :meth:`~vunit.ui.VUnit.add_preprocessor` method. The order number must be higher than that of the location preprocessor which is 1000 by default. This is to avoid unintended interference between the two.
+The preprocessor is added to the project using the :meth:`~vunit.ui.VUnit.add_preprocessor` method. By setting the
+order number lower than that of the location preprocessor (which has a default value of 100), the ``log_active``
+function is inserted first, allowing the location preprocessor to accurately pinpoint the source of the statement.
+
 
 .. raw:: html
       :file: img/vunit_events/add_preprocessor.html
