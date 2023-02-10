@@ -30,8 +30,9 @@ class WaitStatementPreprocessor(Preprocessor):
 
         # Regular expression finding wait statements on the form
         # wait [on sensitivity_list] [until condition] [for timeout];
+        # Any preceding text (prefix) is also picked-up. It will be examined later to exclude some special cases.
         self._wait_re = re.compile(
-            r"wait(\s+on\s+(?P<sensitivity_list>.*?))?(\s+until\s+(?P<condition>.*?))?(\s+for\s+(?P<timeout>.*?))?;",
+            r"(?P<prefix>^[^\r\n]*?)(?P<wait>wait)(\s+on\s+(?P<sensitivity_list>.*?))?(\s+until\s+(?P<condition>.*?))?(\s+for\s+(?P<timeout>.*?))?;",
             re.MULTILINE | re.DOTALL | re.IGNORECASE,
         )
 
@@ -47,24 +48,46 @@ class WaitStatementPreprocessor(Preprocessor):
         wait_statements.sort(key=lambda wait_statement: wait_statement.start(), reverse=True)
 
         for wait_statement in wait_statements:
+            prefix = wait_statement.group("prefix")
+            if prefix:
+                # Ignore commented statements wait looking statements in strings (not foolproof)
+                if ("--" in prefix) or ('"' in prefix):
+                    continue
+                # Remove any preceding statements but keep labels
+                prefix = prefix.split(";")[-1].lstrip()
+
             modified_wait_statement = "wait"
 
             # If the wait statement has an explicit sensitivity list (on ...), then vunit_error must be added to that
             sensitivity_list = wait_statement.group("sensitivity_list")
+            sensitivity_list_signals = []
             if sensitivity_list is not None:
-                new_sensitivity_list = f"{sensitivity_list}, vunit_error"
+                sensitivity_list_signals = [signal.strip() for signal in sensitivity_list.split(",")]
+                new_sensitivity_list = f"{', '.join(sensitivity_list_signals)}, vunit_error"
                 modified_wait_statement += f" on {new_sensitivity_list}"
 
             # Add log_active to an existing condition clause (until ...) or create one if not present
-            original_wait_statement = wait_statement.group(0)
+            original_wait_statement = wait_statement.group(0)[wait_statement.start("wait") - wait_statement.start() :]
             log_message = f'decorate("while waiting on ""{original_wait_statement}""")'
+            # The location preprocessor will not detect that the code in the message is quoted and it will modify
+            # any function it targets. is_active_msg is such a function but by appending a non-printable character
+            # to that function name we avoid this problem without altering the logged message
+            log_message = log_message.replace("is_active_msg", 'is_active_msg" & NUL & "')
             condition = wait_statement.group("condition")
             if condition is None:
-                new_condition = f"log_active(vunit_error, {log_message})"
+                # If there was a sensitivity list the VHDL event attribute of those signals must be in the
+                # condition or the wait statement will remain blocked on those VHDL events (log_active always
+                # returns false).
+                new_condition = " or ".join([f"{signal}'event" for signal in sensitivity_list_signals])
+                new_condition = new_condition + " or " if new_condition else new_condition
+                new_condition += f"log_active(vunit_error, {log_message})"
             elif "vunit_error" in condition:
                 continue  # Don't touch a wait statement already triggering on vunit_error
             else:
-                new_condition = f"({condition}) or log_active(vunit_error, {log_message})"
+                # The condition_operator function turns the original condition to a boolean that can be ORed
+                # with the boolean log_active function. Using the condition operator (??) doesn't work since it can't
+                # be applied to a condition that was already a boolean
+                new_condition = f"condition_operator({condition}) or log_active(vunit_error, {log_message})"
 
             modified_wait_statement += f" until {new_condition}"
 
@@ -76,7 +99,7 @@ class WaitStatementPreprocessor(Preprocessor):
             modified_wait_statement += ";"
 
             # Replace original wait statement
-            code = code[: wait_statement.start()] + modified_wait_statement + code[wait_statement.end() :]
+            code = code[: wait_statement.start("wait")] + modified_wait_statement + code[wait_statement.end() :]
 
         return code
 
@@ -109,16 +132,16 @@ if True:
         def __init__(self, order):
             super().__init__(order)
             self._wait_re = re.compile(
-                r"(?<=preprocess_this : )wait(\s+on\s+(?P<sensitivity_list>.*?))?(\s+until\s+(?P<condition>.*?))?(\s+for\s+(?P<timeout>.*?))?;",
+                r"(?<=preprocess_this :)(?P<prefix>\s)(?P<wait>wait)(\s+on\s+(?P<sensitivity_list>.*?))?(\s+until\s+(?P<condition>.*?))?(\s+for\s+(?P<timeout>.*?))?;",
                 re.MULTILINE | re.DOTALL | re.IGNORECASE,
             )
 
-    vu.add_preprocessor(RestrictedWaitStatementPreprocessor(order=1001))
+    vu.add_preprocessor(RestrictedWaitStatementPreprocessor(order=99))
 else:  # For blog
     # start_snippet add_preprocessor
     vu = VUnit.from_argv()
-    vu.enable_location_preprocessing()  # order = 1000 if no other value is provided
-    vu.add_preprocessor(WaitStatementPreprocessor(order=1001))
+    vu.enable_location_preprocessing()  # order = 100 if no other value is provided
+    vu.add_preprocessor(WaitStatementPreprocessor(order=99))
     # end_snippet add_preprocessor
 
 root = Path(__file__).parent
