@@ -33,7 +33,7 @@
         <span class="k">for</span> <span class="n">wait_statement</span> <span class="ow">in</span> <span class="n">wait_statements</span><span class="p">:</span>
             <span class="n">prefix</span> <span class="o">=</span> <span class="n">wait_statement</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s2">&quot;prefix&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">prefix</span><span class="p">:</span>
-                <span class="c1"># Ignore commented statements wait looking statements in strings (not foolproof)</span>
+                <span class="c1"># Ignore commented wait statements and wait-looking statements in strings (not foolproof)</span>
                 <span class="k">if</span> <span class="p">(</span><span class="s2">&quot;--&quot;</span> <span class="ow">in</span> <span class="n">prefix</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="s1">&#39;&quot;&#39;</span> <span class="ow">in</span> <span class="n">prefix</span><span class="p">):</span>
                     <span class="k">continue</span>
                 <span class="c1"># Remove any preceding statements but keep labels</span>
