@@ -50,7 +50,7 @@ class WaitStatementPreprocessor(Preprocessor):
         for wait_statement in wait_statements:
             prefix = wait_statement.group("prefix")
             if prefix:
-                # Ignore commented statements wait looking statements in strings (not foolproof)
+                # Ignore commented wait statements and wait-looking statements in strings (not foolproof)
                 if ("--" in prefix) or ('"' in prefix):
                     continue
                 # Remove any preceding statements but keep labels
