@@ -5,6 +5,8 @@ Data Types
 
 VUnit comes with a number of convenient data types included:
 
+* **event_t and basic_event_t** (:ref:`event user guide <event_user_guide>`)
+
 * **queue_t** (:ref:`Queue API <queue_pkg>`)
     Queue (FIFO) to which any VHDL primitive data type can be pushed and
     popped (by serializing data to bytes internally). This queue can be
@@ -19,6 +21,7 @@ VUnit comes with a number of convenient data types included:
 .. toctree::
    :hidden:
 
+   event_user_guide
    queue
    integer_array
 
