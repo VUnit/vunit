@@ -22,11 +22,11 @@ deps=
     fmt: black
     pytest
     lint: pycodestyle
-    lint: pylint
+    lint: pylint < 2.12.0
     lint: mypy
     coverage: coverage
     coverage: pycodestyle
-    coverage: pylint
+    coverage: pylint < 2.12.0
     coverage: mypy
     docs: docutils
     docs: sphinx
