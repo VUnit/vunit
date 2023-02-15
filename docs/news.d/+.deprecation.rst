@@ -1,0 +1,1 @@
+Drop Python v3.6.
