@@ -386,16 +386,18 @@ package body run_pkg is
   procedure lock(
     signal runner : inout runner_sync_t;
     constant key : in key_t;
-    constant logger : in logger_t := runner_trace_logger;
+    constant logger : in logger_t := null_logger;
     constant path_offset : in natural := 0;
     constant line_num : in natural := 0;
     constant file_name : in string := "") is
   begin
     lock(runner_state, key);
-    if key.p_is_entry_key then
-      log(logger, "Locked " & replace(runner_phase_t'image(key.p_phase), "_", " ") & " phase entry gate.", trace, path_offset + 1, line_num, file_name);
-    else
-      log(logger, "Locked " & replace(runner_phase_t'image(key.p_phase), "_", " ") & " phase exit gate.", trace, path_offset + 1, line_num, file_name);
+    if logger /= null_logger then
+      if key.p_is_entry_key then
+        log(logger, "Locked " & replace(runner_phase_t'image(key.p_phase), "_", " ") & " phase entry gate.", trace, path_offset + 1, line_num, file_name);
+      else
+        log(logger, "Locked " & replace(runner_phase_t'image(key.p_phase), "_", " ") & " phase exit gate.", trace, path_offset + 1, line_num, file_name);
+      end if;
     end if;
     notify(runner(runner_phase_idx to runner_phase_idx + basic_event_length - 1));
   end;
@@ -403,16 +405,18 @@ package body run_pkg is
   procedure unlock(
     signal runner : inout runner_sync_t;
     constant key : in key_t;
-    constant logger : in logger_t := runner_trace_logger;
+    constant logger : in logger_t := null_logger;
     constant path_offset : in natural := 0;
     constant line_num : in natural := 0;
     constant file_name : in string := "") is
   begin
     unlock(runner_state, key);
-    if key.p_is_entry_key then
-      log(logger, "Unlocked " & replace(runner_phase_t'image(key.p_phase), "_", " ") & " phase entry gate.", trace, path_offset + 1, line_num, file_name);
-    else
-      log(logger, "Unocked " & replace(runner_phase_t'image(key.p_phase), "_", " ") & " phase exit gate.", trace, path_offset + 1, line_num, file_name);
+    if logger /= null_logger then
+      if key.p_is_entry_key then
+        log(logger, "Unlocked " & replace(runner_phase_t'image(key.p_phase), "_", " ") & " phase entry gate.", trace, path_offset + 1, line_num, file_name);
+      else
+        log(logger, "Unocked " & replace(runner_phase_t'image(key.p_phase), "_", " ") & " phase exit gate.", trace, path_offset + 1, line_num, file_name);
+      end if;
     end if;
     notify(runner(runner_phase_idx to runner_phase_idx + basic_event_length - 1));
   end;

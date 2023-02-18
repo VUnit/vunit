@@ -101,7 +101,7 @@ package run_pkg is
   procedure lock(
     signal runner : inout runner_sync_t;
     constant key : in key_t;
-    constant logger : in logger_t := runner_trace_logger;
+    constant logger : in logger_t := null_logger;
     constant path_offset : in natural := 0;
     constant line_num : in natural := 0;
     constant file_name : in string := "");
@@ -109,7 +109,7 @@ package run_pkg is
   procedure unlock(
     signal runner : inout runner_sync_t;
     constant key : in key_t;
-    constant logger : in logger_t := runner_trace_logger;
+    constant logger : in logger_t := null_logger;
     constant path_offset : in natural := 0;
     constant line_num : in natural := 0;
     constant file_name : in string := "");
