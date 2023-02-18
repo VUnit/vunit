@@ -414,61 +414,9 @@ package body run_pkg is
       if key.p_is_entry_key then
         log(logger, "Unlocked " & replace(runner_phase_t'image(key.p_phase), "_", " ") & " phase entry gate.", trace, path_offset + 1, line_num, file_name);
       else
-        log(logger, "Unocked " & replace(runner_phase_t'image(key.p_phase), "_", " ") & " phase exit gate.", trace, path_offset + 1, line_num, file_name);
+        log(logger, "Unlocked " & replace(runner_phase_t'image(key.p_phase), "_", " ") & " phase exit gate.", trace, path_offset + 1, line_num, file_name);
       end if;
     end if;
-    notify(runner(runner_phase_idx to runner_phase_idx + basic_event_length - 1));
-  end;
-
-  procedure lock_entry(
-    signal runner : inout runner_sync_t;
-    constant phase : in runner_legal_phase_t;
-    constant logger : in logger_t := runner_trace_logger;
-    constant path_offset : in natural := 0;
-    constant line_num : in natural := 0;
-    constant file_name : in string := "") is
-  begin
-    lock_entry(runner_state, phase);
-    log(logger, "Locked " & replace(runner_phase_t'image(phase), "_", " ") & " phase entry gate.", trace, path_offset + 1, line_num, file_name);
-    notify(runner(runner_phase_idx to runner_phase_idx + basic_event_length - 1));
-  end;
-
-  procedure unlock_entry(
-    signal runner : inout runner_sync_t;
-    constant phase : in runner_legal_phase_t;
-    constant logger : in logger_t := runner_trace_logger;
-    constant path_offset : in natural := 0;
-    constant line_num : in natural := 0;
-    constant file_name : in string := "") is
-  begin
-    unlock_entry(runner_state, phase);
-    log(logger, "Unlocked " & replace(runner_phase_t'image(phase), "_", " ") & " phase entry gate.", trace, path_offset + 1, line_num, file_name);
-    notify(runner(runner_phase_idx to runner_phase_idx + basic_event_length - 1));
-  end;
-
-  procedure lock_exit(
-    signal runner : inout runner_sync_t;
-    constant phase : in runner_legal_phase_t;
-    constant logger : in logger_t := runner_trace_logger;
-    constant path_offset : in natural := 0;
-    constant line_num : in natural := 0;
-    constant file_name : in string := "") is
-  begin
-    lock_exit(runner_state, phase);
-    log(logger, "Locked " & replace(runner_phase_t'image(phase), "_", " ") & " phase exit gate.", trace, path_offset + 1, line_num, file_name);
-    notify(runner(runner_phase_idx to runner_phase_idx + basic_event_length - 1));
-  end;
-
-  procedure unlock_exit(
-    signal runner : inout runner_sync_t;
-    constant phase : in runner_legal_phase_t;
-    constant logger : in logger_t := runner_trace_logger;
-    constant path_offset : in natural := 0;
-    constant line_num : in natural := 0;
-    constant file_name : in string := "") is
-  begin
-    unlock_exit(runner_state, phase);
-    log(logger, "Unlocked " & replace(runner_phase_t'image(phase), "_", " ") & " phase exit gate.", trace, path_offset + 1, line_num, file_name);
     notify(runner(runner_phase_idx to runner_phase_idx + basic_event_length - 1));
   end;
 
