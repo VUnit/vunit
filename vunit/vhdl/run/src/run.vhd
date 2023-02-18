@@ -399,7 +399,6 @@ package body run_pkg is
         log(logger, "Locked " & replace(runner_phase_t'image(key.p_phase), "_", " ") & " phase exit gate.", trace, path_offset + 1, line_num, file_name);
       end if;
     end if;
-    notify(runner(runner_phase_idx to runner_phase_idx + basic_event_length - 1));
   end;
 
   procedure unlock(
