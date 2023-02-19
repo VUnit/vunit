@@ -7,7 +7,6 @@
 library vunit_lib;
 context vunit_lib.vunit_context;
 context vunit_lib.vc_context;
-use vunit_lib.runner_pkg.all;
 use vunit_lib.id_pkg.all;
 
 library ieee;
