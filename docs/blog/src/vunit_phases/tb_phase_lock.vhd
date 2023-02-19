@@ -255,7 +255,7 @@ begin
     -- start_snippet end_of_simulation_process
     end_of_simulation_process : process
     begin
-      wait until is_active(runner_phase) and (get_phase = test_runner_cleanup) and is_within_gates;
+      wait until is_active(runner_phase) and is_within_gates_of(test_runner_cleanup);
       check_stream_activity;
       wait;
     end process;
