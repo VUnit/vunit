@@ -440,9 +440,9 @@ package body run_pkg is
     return get_phase(runner_state);
   end;
 
-  impure function is_within_gates return boolean is
+  impure function is_within_gates_of(phase : runner_legal_phase_t) return boolean is
   begin
-    return is_within_gates(runner_state);
+    return is_within_gates(runner_state, phase);
   end;
 
   procedure entry_gate(

@@ -124,7 +124,7 @@ package run_pkg is
 
   impure function get_phase return runner_phase_t;
 
-  impure function is_within_gates return boolean;
+  impure function is_within_gates_of(phase : runner_legal_phase_t) return boolean;
 
   procedure entry_gate (
     signal runner : inout runner_sync_t);

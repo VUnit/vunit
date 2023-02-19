@@ -55,7 +55,7 @@ package runner_pkg is
 
   procedure set_gate_status(runner : runner_t; is_within_gates : boolean);
 
-  impure function is_within_gates(runner : runner_t) return boolean;
+  impure function is_within_gates(runner : runner_t; phase : runner_legal_phase_t) return boolean;
 
   procedure set_test_case_name(runner : runner_t; index : positive; new_name : string);
 
@@ -353,8 +353,12 @@ package body runner_pkg is
     end if;
   end;
 
-  impure function is_within_gates(runner : runner_t) return boolean is
+  impure function is_within_gates(runner : runner_t; phase : runner_legal_phase_t) return boolean is
   begin
+    if get_phase(runner) /= phase then
+      return false;
+    end if;
+
     return get(runner.p_data, is_within_gates_idx) = 1;
   end;
 
