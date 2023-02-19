@@ -423,15 +423,19 @@ package body run_pkg is
   procedure wait_until(
     signal runner : in runner_sync_t;
     constant phase : in runner_legal_phase_t;
-    constant logger : in logger_t := runner_trace_logger;
+    constant logger : in logger_t := null_logger;
     constant path_offset : in natural := 0;
     constant line_num : in natural := 0;
     constant file_name : in string := "") is
   begin
     if get_phase(runner_state) /= phase then
-      log(logger, "Waiting for phase = " & replace(runner_phase_t'image(phase), "_", " ") & ".", trace, path_offset + 1, line_num, file_name);
-      wait on runner until get_phase(runner_state) = phase;
-      log(logger, "Waking up. Phase is " & replace(runner_phase_t'image(phase), "_", " ") & ".", trace, path_offset + 1, line_num, file_name);
+      if logger /= null_logger then
+        log(logger, "Waiting for phase = " & replace(runner_phase_t'image(phase), "_", " ") & ".", trace, path_offset + 1, line_num, file_name);
+      end if;
+      wait until is_active(runner_phase) and get_phase(runner_state) = phase;
+      if logger /= null_logger then
+        log(logger, "Waking up. Phase is " & replace(runner_phase_t'image(phase), "_", " ") & ".", trace, path_offset + 1, line_num, file_name);
+      end if;
     end if;
   end;
 

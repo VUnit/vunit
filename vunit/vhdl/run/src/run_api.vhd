@@ -95,9 +95,17 @@ package run_pkg is
     signal runner : runner_sync_t
   ) return boolean;
 
+  -- Get unique key for entry gate of phase.
   impure function get_entry_key(phase : runner_legal_phase_t) return key_t;
+
+  -- Get unique key for exit gate of phase.
   impure function get_exit_key(phase : runner_legal_phase_t) return key_t;
+
+  -- Return true if gate lock associated with key is locked.
   impure function is_locked(key : key_t) return boolean;
+
+  -- Lock gate lock associated with key. An already locked lock will remain
+  -- locked. If a logger is provided, a trace message is issued with the lock event.
   procedure lock(
     signal runner : inout runner_sync_t;
     constant key : in key_t;
@@ -106,6 +114,8 @@ package run_pkg is
     constant line_num : in natural := 0;
     constant file_name : in string := "");
 
+  -- Unlock gate lock associated with key and notify runner_phase event. An already unlocked
+  -- lock will remain unlocked. If a logger is provided, a trace message is issued with the unlock event.
   procedure unlock(
     signal runner : inout runner_sync_t;
     constant key : in key_t;
@@ -114,16 +124,21 @@ package run_pkg is
     constant line_num : in natural := 0;
     constant file_name : in string := "");
 
+  -- Wait until testbench enters phase. If a logger is provided, a trace message is
+  -- issued when starting and stopping the wait.
   procedure wait_until (
     signal runner : in runner_sync_t;
     constant phase : in runner_legal_phase_t;
-    constant logger : in logger_t := runner_trace_logger;
+    constant logger : in logger_t := null_logger;
     constant path_offset : in natural := 0;
     constant line_num  : in natural := 0;
     constant file_name : in string := "");
 
+  -- Get current phase.
   impure function get_phase return runner_phase_t;
 
+  -- Return true when testbench has passed the entry gate of phase but has yet to
+  -- pass the exit gate of that phase.
   impure function is_within_gates_of(phase : runner_legal_phase_t) return boolean;
 
   procedure entry_gate (
