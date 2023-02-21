@@ -1,0 +1,1 @@
+- Update detection of GCC backend to match new format. #901
