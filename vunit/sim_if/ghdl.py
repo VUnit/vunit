@@ -128,7 +128,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         mapping = {
             r"mcode code generator": "mcode",
             r"llvm (\d+\.\d+\.\d+ )?code generator": "llvm",
-            r"GCC back-end code generator": "gcc",
+            r"GCC (back-end|\d+\.\d+\.\d+) code generator": "gcc",
         }
         output = cls._get_version_output(prefix)
         for name, backend in mapping.items():
