@@ -63,7 +63,7 @@ Phase Gate Locks
 ----------------
 
 To see the phase gate locks in action we’re going to revisit the example provided in the :doc:`event blog
-<2022_09_20_vunit_events>`. In that example our ``dut_checker`` process notified its completion with the
+<2023_03_31_vunit_events>`. In that example our ``dut_checker`` process notified its completion with the
 ``dut_checker_done`` event.
 
 .. raw:: html

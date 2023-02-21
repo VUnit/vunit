@@ -1,0 +1,15 @@
+<div class="highlight"><pre><span></span><span class="n">test_runner</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">process</span>
+<span class="k">begin</span>
+<span class="w">  </span><span class="n">test_runner_setup</span><span class="p">(</span><span class="n">runner</span><span class="p">,</span><span class="w"> </span><span class="n">runner_cfg</span><span class="p">);</span>
+<span class="w">  </span><span class="n">set_stop_level</span><span class="p">(</span><span class="n">failure</span><span class="p">);</span>
+
+<span class="w">  </span><span class="k">while</span><span class="w"> </span><span class="n">test_suite</span><span class="w"> </span><span class="k">loop</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="n">run</span><span class="p">(</span><span class="s">&quot;Test that fails multiple times but doesn&#39;t stop&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="w">      </span><span class="n">check_equal</span><span class="p">(</span><span class="mi">17</span><span class="p">,</span><span class="w"> </span><span class="mi">18</span><span class="p">);</span>
+<span class="w">      </span><span class="n">check_equal</span><span class="p">(</span><span class="mi">17</span><span class="p">,</span><span class="w"> </span><span class="mi">19</span><span class="p">);</span>
+<span class="w">    </span><span class="k">end</span><span class="w"> </span><span class="k">if</span><span class="p">;</span>
+<span class="w">  </span><span class="k">end</span><span class="w"> </span><span class="k">loop</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">test_runner_cleanup</span><span class="p">(</span><span class="n">runner</span><span class="p">);</span>
+<span class="k">end</span><span class="w"> </span><span class="k">process</span><span class="p">;</span>
+</pre></div>

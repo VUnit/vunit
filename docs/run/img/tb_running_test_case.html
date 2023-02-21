@@ -1,0 +1,35 @@
+<div class="highlight"><pre><span></span><span class="k">architecture</span><span class="w"> </span><span class="nc">tb</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nc">tb_running_test_case</span><span class="w"> </span><span class="k">is</span>
+<span class="w">  </span><span class="k">signal</span><span class="w"> </span><span class="n">start_stimuli</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">event_t</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">new_event</span><span class="p">;</span>
+<span class="k">begin</span>
+<span class="w">  </span><span class="n">test_runner</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">process</span>
+<span class="w">  </span><span class="k">begin</span>
+<span class="w">    </span><span class="n">test_runner_setup</span><span class="p">(</span><span class="n">runner</span><span class="p">,</span><span class="w"> </span><span class="n">runner_cfg</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="n">test_suite</span><span class="w"> </span><span class="k">loop</span>
+<span class="w">      </span><span class="k">if</span><span class="w"> </span><span class="n">run</span><span class="p">(</span><span class="s">&quot;Test scenario A&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">or</span><span class="w"> </span><span class="n">run</span><span class="p">(</span><span class="s">&quot;Test scenario B&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="w">        </span><span class="n">notify</span><span class="p">(</span><span class="n">start_stimuli</span><span class="p">);</span>
+<span class="w">      </span><span class="k">elsif</span><span class="w"> </span><span class="n">run</span><span class="p">(</span><span class="s">&quot;Test something else&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="w">        </span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Testing something else&quot;</span><span class="p">);</span>
+<span class="w">      </span><span class="k">end</span><span class="w"> </span><span class="k">if</span><span class="p">;</span>
+<span class="w">    </span><span class="k">end</span><span class="w"> </span><span class="k">loop</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">test_runner_cleanup</span><span class="p">(</span><span class="n">runner</span><span class="p">);</span>
+<span class="w">  </span><span class="k">end</span><span class="w"> </span><span class="k">process</span><span class="p">;</span>
+
+<span class="w">  </span><span class="nc">stimuli_generator</span><span class="o">:</span><span class="w"> </span><span class="k">process</span><span class="w"> </span><span class="k">is</span>
+<span class="w">    </span><span class="k">constant</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">key_t</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">get_entry_key</span><span class="p">(</span><span class="n">test_runner_cleanup</span><span class="p">);</span>
+<span class="w">  </span><span class="k">begin</span>
+<span class="w">    </span><span class="k">wait</span><span class="w"> </span><span class="k">until</span><span class="w"> </span><span class="n">is_active</span><span class="p">(</span><span class="n">start_stimuli</span><span class="p">);</span>
+<span class="w">    </span><span class="n">lock</span><span class="p">(</span><span class="n">runner</span><span class="p">,</span><span class="w"> </span><span class="n">key</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="n">running_test_case</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Test scenario A&quot;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">      </span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Applying stimuli for scenario A&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="k">elsif</span><span class="w"> </span><span class="n">running_test_case</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Test scenario B&quot;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">      </span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Applying stimuli for scenario B&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="k">end</span><span class="w"> </span><span class="k">if</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">unlock</span><span class="p">(</span><span class="n">runner</span><span class="p">,</span><span class="w"> </span><span class="n">key</span><span class="p">);</span>
+<span class="w">  </span><span class="k">end</span><span class="w"> </span><span class="k">process</span><span class="p">;</span>
+
+<span class="k">end</span><span class="w"> </span><span class="k">architecture</span><span class="p">;</span>
+</pre></div>

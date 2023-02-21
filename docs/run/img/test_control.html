@@ -1,0 +1,26 @@
+<div class="highlight"><pre><span></span><span class="k">library</span><span class="w"> </span><span class="nn">vunit_lib</span><span class="p">;</span>
+<span class="n">context</span><span class="w"> </span><span class="n">vunit_lib</span><span class="p">.</span><span class="n">vunit_context</span><span class="p">;</span>
+
+<span class="k">entity</span><span class="w"> </span><span class="nc">test_control</span><span class="w"> </span><span class="k">is</span>
+<span class="w">  </span><span class="k">generic</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">nested_runner_cfg</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">);</span>
+<span class="k">end</span><span class="w"> </span><span class="k">entity</span><span class="w"> </span><span class="nc">test_control</span><span class="p">;</span>
+
+<span class="k">architecture</span><span class="w"> </span><span class="nc">tb</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nc">test_control</span><span class="w"> </span><span class="k">is</span>
+<span class="k">begin</span>
+<span class="w">  </span><span class="n">test_runner</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">process</span>
+<span class="w">  </span><span class="k">begin</span>
+<span class="w">    </span><span class="n">test_runner_setup</span><span class="p">(</span><span class="n">runner</span><span class="p">,</span><span class="w"> </span><span class="n">nested_runner_cfg</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="n">test_suite</span><span class="w"> </span><span class="k">loop</span>
+<span class="w">      </span><span class="k">if</span><span class="w"> </span><span class="n">run</span><span class="p">(</span><span class="s">&quot;Test something&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="w">        </span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Testing something&quot;</span><span class="p">);</span>
+<span class="w">      </span><span class="k">elsif</span><span class="w"> </span><span class="n">run</span><span class="p">(</span><span class="s">&quot;Test something else&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="w">        </span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Testing something else&quot;</span><span class="p">);</span>
+<span class="w">      </span><span class="k">end</span><span class="w"> </span><span class="k">if</span><span class="p">;</span>
+<span class="w">    </span><span class="k">end</span><span class="w"> </span><span class="k">loop</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">test_runner_cleanup</span><span class="p">(</span><span class="n">runner</span><span class="p">);</span>
+<span class="w">  </span><span class="k">end</span><span class="w"> </span><span class="k">process</span><span class="p">;</span>
+<span class="k">end</span><span class="w"> </span><span class="k">architecture</span><span class="w"> </span><span class="nc">tb</span><span class="p">;</span>
+</pre></div>

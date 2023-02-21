@@ -10,20 +10,7 @@ from csv import writer
 from pathlib import Path
 from random import choices
 from vunit import VUnit
-from tools.doc_support import highlight_code, highlight_log
-
-
-class LogRegistry:
-    def __init__(self):
-        self._paths = dict()
-
-    def register(self, log_path, html_path):
-        self._paths[log_path] = html_path
-
-    def generate_logs(self):
-        for log_path, html_path in self._paths.items():
-            highlight_log(Path(log_path), Path(html_path))
-
+from tools.doc_support import highlight_code, highlight_log, LogRegistry
 
 vu = VUnit.from_argv()
 vu.add_verification_components()

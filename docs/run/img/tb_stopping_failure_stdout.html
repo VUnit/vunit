@@ -1,0 +1,46 @@
+<div class="highlight" style="background: #002b36; color: #eee8d5;"><pre style="line-height: 125%; background: #002b36; color: #eee8d5;">> python run.py
+Starting lib.tb_stopping_failure.Test that fails on an assert
+Output file: C:\github\vunit\docs\run\src\vunit_out\test_output\lib.tb_stopping_failure.Test_that_fails_on_an_assert_f53b930e2c7649bc33253af52f8ea89a9c05f07b\output.txt
+C:\github\vunit\docs\run\src\tb_stopping_failure.vhd:24:9:@0ms:(assertion error): Assertion violation
+C:\ghdl\bin\ghdl.exe:error: assertion failed
+in process .tb_stopping_failure(tb).test_runner
+C:\ghdl\bin\ghdl.exe:error: simulation failed
+<span style="color: #cb4b16; ">fail</span> (P=0 S=0 F=1 T=3) lib.tb_stopping_failure.Test that fails on an assert (0.5 seconds)
+
+Starting lib.tb_stopping_failure.Test that crashes on boundary problems
+Output file: C:\github\vunit\docs\run\src\vunit_out\test_output\lib.tb_stopping_failure.Test_that_crashes_on_boundary_problems_b53105615efefaa16d0cf9ee1bad37b5d3369e95\output.txt
+C:\ghdl\bin\ghdl.exe:error: index (316) out of bounds (1 to 17) at C:\github\vunit\docs\run\src\tb_stopping_failure.vhd:26
+in process .tb_stopping_failure(tb).test_runner
+C:\ghdl\bin\ghdl.exe:error: simulation failed
+<span style="color: #cb4b16; ">fail</span> (P=0 S=0 F=2 T=3) lib.tb_stopping_failure.Test that crashes on boundary problems (0.5 seconds)
+
+Starting lib.tb_stopping_failure.Test that fails on VUnit check procedure
+Output file: C:\github\vunit\docs\run\src\vunit_out\test_output\lib.tb_stopping_failure.Test_that_fails_on_VUnit_check_procedure_717a6f8ff044e3d5fa7d7d3ec5a32971d74864dd\output.txt
+               0 fs - check                -   ERROR - Equality check failed - Got 17. Expected 18.
+C:\github\vunit\vunit\vhdl\core\src\core_pkg.vhd:84:7:@0ms:(report failure): Stop simulation on log level error
+C:\ghdl\bin\ghdl.exe:error: report failed
+in process .tb_stopping_failure(tb).test_runner
+  from: vunit_lib.logger_pkg.decrease_stop_count at logger_pkg-body.vhd:736
+  from: vunit_lib.logger_pkg.decrease_stop_count at logger_pkg-body.vhd:731
+  from: vunit_lib.logger_pkg.log at logger_pkg-body.vhd:910
+  from: vunit_lib.checker_pkg.log_failing_check at checker_pkg-body.vhd:258
+  from: vunit_lib.checker_pkg.failing_check at checker_pkg-body.vhd:275
+  from: vunit_lib.check_pkg.check_equal at check.vhd:4358
+  from: vunit_lib.check_pkg.check_equal at check.vhd:4313
+  from: process lib.tb_stopping_failure(tb).test_runner at tb_stopping_failure.vhd:28
+C:\ghdl\bin\ghdl.exe:error: simulation failed
+<span style="color: #cb4b16; ">fail</span> (P=0 S=0 F=3 T=3) lib.tb_stopping_failure.Test that fails on VUnit check procedure (0.5 seconds)
+
+==== Summary ============================================================================
+<span style="color: #cb4b16; ">fail</span> lib.tb_stopping_failure.Test that fails on an assert             (0.5 seconds)
+<span style="color: #cb4b16; ">fail</span> lib.tb_stopping_failure.Test that crashes on boundary problems   (0.5 seconds)
+<span style="color: #cb4b16; ">fail</span> lib.tb_stopping_failure.Test that fails on VUnit check procedure (0.5 seconds)
+=========================================================================================
+<span style="color: #008000; ">pass</span> 0 of 3
+<span style="color: #cb4b16; ">fail</span> 3 of 3
+=========================================================================================
+Total time was 1.6 seconds
+Elapsed time was 1.6 seconds
+=========================================================================================
+<span style="color: #cb4b16; ">Some failed!</span>
+</pre></div>
