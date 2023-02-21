@@ -1,0 +1,26 @@
+<div class="highlight" style="background: #002b36; color: #eee8d5;"><pre style="line-height: 125%; background: #002b36; color: #eee8d5;">> python run.py
+Starting lib.tb_stop_level.Test that fails multiple times but doesn't stop
+Output file: C:\github\vunit\docs\run\src\vunit_out\test_output\lib.tb_stop_level.Test_that_fails_multiple_times_but_doesn't_stop_d08f48d859442d0bc71e2bcdd8b429119f7cc17c\output.txt
+               0 fs - check                -   ERROR - Equality check failed - Got 17. Expected 18.
+               0 fs - check                -   ERROR - Equality check failed - Got 17. Expected 19.
+FAILURE - Logger check has 2 errors
+C:\github\vunit\vunit\vhdl\core\src\core_pkg.vhd:84:7:@0ms:(report failure): Final log check failed
+C:\ghdl\bin\ghdl.exe:error: report failed
+in process .tb_stop_level(tb).test_runner
+  from: vunit_lib.logger_pkg.final_log_check at logger_pkg-body.vhd:1249
+  from: vunit_lib.run_pkg.test_runner_cleanup at run.vhd:114
+  from: process lib.tb_stop_level(tb).test_runner at tb_stop_level.vhd:29
+C:\ghdl\bin\ghdl.exe:error: simulation failed
+<span style="color: #cb4b16; ">fail</span> (P=0 S=0 F=1 T=1) lib.tb_stop_level.Test that fails multiple times but doesn't stop (0.5 seconds)
+
+==== Summary =============================================================================
+<span style="color: #cb4b16; ">fail</span> lib.tb_stop_level.Test that fails multiple times but doesn't stop (0.5 seconds)
+==========================================================================================
+<span style="color: #008000; ">pass</span> 0 of 1
+<span style="color: #cb4b16; ">fail</span> 1 of 1
+==========================================================================================
+Total time was 0.5 seconds
+Elapsed time was 0.5 seconds
+==========================================================================================
+<span style="color: #cb4b16; ">Some failed!</span>
+</pre></div>

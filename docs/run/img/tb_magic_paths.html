@@ -1,0 +1,18 @@
+<div class="highlight"><pre><span></span><span class="k">library</span><span class="w"> </span><span class="nn">vunit_lib</span><span class="p">;</span>
+<span class="n">context</span><span class="w"> </span><span class="n">vunit_lib</span><span class="p">.</span><span class="n">vunit_context</span><span class="p">;</span>
+
+<span class="k">entity</span><span class="w"> </span><span class="nc">tb_magic_paths</span><span class="w"> </span><span class="k">is</span>
+<span class="w">  </span><span class="k">generic</span><span class="w"> </span><span class="p">(</span><span class="n">runner_cfg</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">);</span>
+<span class="k">end</span><span class="w"> </span><span class="k">entity</span><span class="p">;</span>
+
+<span class="k">architecture</span><span class="w"> </span><span class="nc">tb</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nc">tb_magic_paths</span><span class="w"> </span><span class="k">is</span>
+<span class="k">begin</span>
+<span class="w">  </span><span class="n">test_runner</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">process</span>
+<span class="w">  </span><span class="k">begin</span>
+<span class="w">    </span><span class="n">test_runner_setup</span><span class="p">(</span><span class="n">runner</span><span class="p">,</span><span class="w"> </span><span class="n">runner_cfg</span><span class="p">);</span>
+<span class="w">    </span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Directory containing testbench: &quot;</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">tb_path</span><span class="p">(</span><span class="n">runner_cfg</span><span class="p">));</span>
+<span class="w">    </span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Test output directory: &quot;</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">output_path</span><span class="p">(</span><span class="n">runner_cfg</span><span class="p">));</span>
+<span class="w">    </span><span class="n">test_runner_cleanup</span><span class="p">(</span><span class="n">runner</span><span class="p">);</span>
+<span class="w">  </span><span class="k">end</span><span class="w"> </span><span class="k">process</span><span class="p">;</span>
+<span class="k">end</span><span class="w"> </span><span class="k">architecture</span><span class="p">;</span>
+</pre></div>
