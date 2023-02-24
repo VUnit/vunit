@@ -31,23 +31,23 @@
   /></a><!--
   -->
   <a title="'docs' workflow Status"
-     href="https://github.com/VUnit/vunit/actions?query=workflow%3Adocs"
-  ><img alt="'docs' workflow Status" src="https://img.shields.io/github/workflow/status/VUnit/vunit/docs/master?longCache=true&style=flat-square&label=docs&logo=GitHub%20Actions&logoColor=fff"
+     href="https://github.com/VUnit/vunit/actions/workflows/docs.yml"
+  ><img alt="'docs' workflow Status" src="https://img.shields.io/github/actions/workflow/status/VUnit/vunit/docs.yml?branch=master&longCache=true&style=flat-square&label=docs&logo=GitHub%20Actions&logoColor=fff"
   /></a><!--
   -->
   <a title="'images' workflow Status"
-     href="https://github.com/VUnit/vunit/actions?query=workflow%3Aimages"
-  ><img alt="'images' workflow Status" src="https://img.shields.io/github/workflow/status/VUnit/vunit/images/master?longCache=true&style=flat-square&label=imgs&logo=GitHub%20Actions&logoColor=fff"
+     href="https://github.com/VUnit/vunit/actions/workflows/images.yml"
+  ><img alt="'images' workflow Status" src="https://img.shields.io/github/actions/workflow/status/VUnit/vunit/images.yml?branch=master&longCache=true&style=flat-square&label=imgs&logo=GitHub%20Actions&logoColor=fff"
   /></a><!--
   -->
   <a title="'push' workflow Status"
-     href="https://github.com/VUnit/vunit/actions?query=workflow%3Apush"
-  ><img alt="'push' workflow Status" src="https://img.shields.io/github/workflow/status/VUnit/vunit/push/master?longCache=true&style=flat-square&label=push&logo=GitHub%20Actions&logoColor=fff"
+     href="https://github.com/VUnit/vunit/actions/workflows/push.yml"
+  ><img alt="'push' workflow Status" src="https://img.shields.io/github/actions/workflow/status/VUnit/vunit/push.yml?branch=master&longCache=true&style=flat-square&label=push&logo=GitHub%20Actions&logoColor=fff"
   /></a><!--
   -->
   <a title="'coverage' workflow Status"
-     href="https://github.com/VUnit/vunit/actions?query=workflow%3Acoverage"
-  ><img alt="'coverage' workflow Status" src="https://img.shields.io/github/workflow/status/VUnit/vunit/coverage/master?longCache=true&style=flat-square&label=coverage&logo=GitHub%20Actions&logoColor=fff"
+     href="https://github.com/VUnit/vunit/actions/workflows/coverage.yml"
+  ><img alt="'coverage' workflow Status" src="https://img.shields.io/github/actions/workflow/status/VUnit/vunit/coverage.yml?branch=master&longCache=true&style=flat-square&label=coverage&logo=GitHub%20Actions&logoColor=fff"
   /></a>
 </p>
 

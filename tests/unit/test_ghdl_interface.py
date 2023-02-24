@@ -58,6 +58,20 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
         check_output.return_value = version
         self.assertEqual(GHDLInterface.determine_backend("prefix"), "llvm")
 
+        version = b"""\
+GHDL 3.0.0-dev (2.0.0.r1369.gf04182410) [Dunoon edition]
+ Compiled with GNAT Version: 12.2.0
+ llvm 15.0.7 code generator
+Written by Tristan Gingold.
+
+Copyright (C) 2003 - 2022 Tristan Gingold.
+GHDL is free software, covered by the GNU General Public License.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+"""
+
+        check_output.return_value = version
+        self.assertEqual(GHDLInterface.determine_backend("prefix"), "llvm")
+
     @mock.patch("subprocess.check_output", autospec=True)
     def test_parses_mcode_backend(self, check_output):
         version = b"""\
@@ -82,6 +96,19 @@ GHDL 0.31 (20140108) [Dunoon edition]
 Written by Tristan Gingold.
 
 Copyright (C) 2003 - 2014 Tristan Gingold.
+GHDL is free software, covered by the GNU General Public License.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+"""
+        check_output.return_value = version
+        self.assertEqual(GHDLInterface.determine_backend("prefix"), "gcc")
+
+        version = b"""\
+GHDL 3.0.0-dev (2.0.0.r1369.gf04182410) [Dunoon edition]
+ Compiled with GNAT Version: 10.4.0
+ GCC 11.2.0 code generator
+Written by Tristan Gingold.
+
+Copyright (C) 2003 - 2022 Tristan Gingold.
 GHDL is free software, covered by the GNU General Public License.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 """

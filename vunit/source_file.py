@@ -217,7 +217,6 @@ class VHDLSourceFile(SourceFile):
         self._vhdl_standard = vhdl_standard
 
         if not no_parse:
-
             try:
                 design_file = vhdl_parser.parse(self.name)
             except KeyboardInterrupt as exk:

@@ -148,7 +148,6 @@ class TestConfiguration(unittest.TestCase):
         )
 
     def test_call_post_check_with_output(self):
-
         output_string = "123___foo\n\nbar"
 
         def read_output():
