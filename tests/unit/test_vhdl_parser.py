@@ -243,6 +243,35 @@ end entity;
         self.assertEqual(generics[1].subtype_indication.code, "boolean")
         self.assertEqual(generics[1].subtype_indication.type_mark, "boolean")
 
+    def test_parsing_entity_with_generics_and_trailing_semicolon(self):
+        entity = self.parse_single_entity(
+            """\
+entity name is
+   generic (max_value : integer range 2-2 to 2**10 := (2-19)*4;
+            enable_foo : boolean  ;
+   );
+end entity;
+"""
+        )
+        self.assertEqual(entity.identifier, "name")
+        self.assertNotEqual(entity.generics, [])
+        self.assertEqual(entity.ports, [])
+        generics = entity.generics
+        self.assertEqual(len(generics), 2)
+
+        self.assertEqual(generics[0].identifier, "max_value")
+        self.assertEqual(generics[0].init_value, "(2-19)*4")
+        self.assertEqual(generics[0].mode, None)
+        self.assertEqual(generics[0].subtype_indication.code, "integer range 2-2 to 2**10")
+        self.assertEqual(generics[0].subtype_indication.type_mark, "integer")
+        # @TODO does not work
+        #        self.assertEqual(generics[0].subtypeIndication.constraint, "range 2-2 to 2**10")
+        self.assertEqual(generics[1].identifier, "enable_foo")
+        self.assertEqual(generics[1].init_value, None)
+        self.assertEqual(generics[1].mode, None)
+        self.assertEqual(generics[1].subtype_indication.code, "boolean")
+        self.assertEqual(generics[1].subtype_indication.type_mark, "boolean")
+
     def test_parsing_entity_with_generics_corner_cases(self):
         self.parse_single_entity(
             """\
@@ -293,28 +322,7 @@ end entity;
         )
         self.assertEqual(len(entity.generics), 0)
 
-    def test_parsing_entity_with_ports(self):
-        entity = self.parse_single_entity(
-            """\
-entity name is
-port (
-    clk : in std_logic;
- \t data : out std_logic_vector(11-1 downto 0);
-    signal_data2 : in std_logic;
-\t  data3 :\tin signal_type;
-    data4_signal : in\tstd_logic;
-    data5\t: in type_signal;
-\t\tsignal clk2 : in std_logic;
-    signal\tdata7 : out std_logic_vector(11-1 downto 0);
-    signal signal_data8 : in std_logic;
-    signal\t data9 : in signal_type;
-    signal data10_signal :\tin std_logic;\t
-    signal \t data11 : in type_signal
-);
-end entity;
-"""
-        )
-
+    def _check_entity_with_ports(self, entity):
         self.assertEqual(entity.identifier, "name")
         self.assertEqual(entity.generics, [])
         self.assertNotEqual(entity.ports, [])
@@ -403,6 +411,52 @@ end entity;
         self.assertEqual(ports[11].subtype_indication.code, "type_signal")
         self.assertEqual(ports[11].subtype_indication.type_mark, "type_signal")
         self.assertEqual(ports[11].subtype_indication.constraint, None)
+
+    def test_parsing_entity_with_ports(self):
+        entity = self.parse_single_entity(
+            """\
+entity name is
+port (
+    clk : in std_logic;
+ \t data : out std_logic_vector(11-1 downto 0);
+    signal_data2 : in std_logic;
+\t  data3 :\tin signal_type;
+    data4_signal : in\tstd_logic;
+    data5\t: in type_signal;
+\t\tsignal clk2 : in std_logic;
+    signal\tdata7 : out std_logic_vector(11-1 downto 0);
+    signal signal_data8 : in std_logic;
+    signal\t data9 : in signal_type;
+    signal data10_signal :\tin std_logic;\t
+    signal \t data11 : in type_signal
+);
+end entity;
+"""
+        )
+        self._check_entity_with_ports(entity)
+
+    def test_parsing_entity_with_ports_and_trailing_semicolon(self):
+        entity = self.parse_single_entity(
+            """\
+entity name is
+port (
+    clk : in std_logic;
+ \t data : out std_logic_vector(11-1 downto 0);
+    signal_data2 : in std_logic;
+\t  data3 :\tin signal_type;
+    data4_signal : in\tstd_logic;
+    data5\t: in type_signal;
+\t\tsignal clk2 : in std_logic;
+    signal\tdata7 : out std_logic_vector(11-1 downto 0);
+    signal signal_data8 : in std_logic;
+    signal\t data9 : in signal_type;
+    signal data10_signal :\tin std_logic;\t
+    signal \t data11 : in type_signal
+;);
+end entity;
+"""
+        )
+        self._check_entity_with_ports(entity)
 
     def test_parsing_simple_package_body(self):
         package_body = self.parse_single_package_body(
