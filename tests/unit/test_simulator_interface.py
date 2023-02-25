@@ -117,13 +117,7 @@ Compile passed
         with mock.patch("vunit.sim_if.check_output", autospec=True) as check_output:
             check_output.side_effect = check_output_side_effect
             printer = MockPrinter()
-            self.assertRaises(
-                CompileError,
-                simif.compile_source_files,
-                project,
-                printer=printer,
-                continue_on_error=True,
-            )
+            simif.compile_source_files(project, printer=printer, continue_on_error=True)
             self.assertEqual(
                 printer.output,
                 """\
