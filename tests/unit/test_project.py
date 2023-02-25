@@ -140,7 +140,7 @@ end package body;
             "file.vhd",
             """\
 entity foo is
- port (;);
+ port (foo : in bit;
 end entity;
 """,
         )

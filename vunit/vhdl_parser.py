@@ -508,6 +508,10 @@ class VHDLEntity(object):
         generic_list = []
         # Add interface elements to the generic list
         for interface_element in interface_elements:
+            if len(interface_element.strip()) == 0:
+                # Ignore space after a trailing comma
+                continue
+
             if cls._package_generic_re.match(interface_element) is not None:
                 # Ignore package generics
                 continue
@@ -538,6 +542,9 @@ class VHDLEntity(object):
         port_list = []
         # Add interface elements to the port list
         for interface_element in interface_elements:
+            if len(interface_element.strip()) == 0:
+                # Ignore space after a trailing comma
+                continue
             port_list.append(VHDLInterfaceElement.parse(interface_element, is_signal=True))
 
         return port_list
