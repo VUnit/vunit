@@ -102,7 +102,6 @@ begin
 
     elsif run("test parity") then
       mock(uart_logger, error);
-      show_all(display_handler);
 
       debug("master_parity_mode = " & parity_mode_t'image(master_parity_mode) & lf &
             "slave_parity_mode = " & parity_mode_t'image(slave_parity_mode));
