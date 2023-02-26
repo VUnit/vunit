@@ -76,9 +76,7 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         self._project = None
 
         if gui and (not self.find_executable("gtkwave")):
-            raise RuntimeError(
-                "Cannot find the gtkwave executable in the PATH environment variable. GUI not possible"
-            )
+            raise RuntimeError("Cannot find the gtkwave executable in the PATH environment variable. GUI not possible")
 
         self._gui = gui
         self._gtkwave_args = gtkwave_args
@@ -87,9 +85,9 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         self._supports_jit = self.determine_version(prefix) >= 1.9
 
         if self.use_color:
-            environ['NVC_COLORS'] = "always"
+            environ["NVC_COLORS"] = "always"
 
-    def has_valid_exit_code(self):
+    def has_valid_exit_code(self):  # pylint: disable=arguments-differ
         """
         Return if the simulation should fail with nonzero exit codes
         """
@@ -100,9 +98,7 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         """
         Get the output of 'nvc --version'
         """
-        return subprocess.check_output(
-            [str(Path(prefix) / cls.executable), "--version"]
-        ).decode()
+        return subprocess.check_output([str(Path(prefix) / cls.executable), "--version"]).decode()
 
     @classmethod
     def determine_version(cls, prefix):
@@ -149,11 +145,11 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
                 if not path.parent.exists():
                     makedirs(path.parent)
 
-                if not run_command([str(Path(self._prefix) / self.executable),
-                                    "--work=" + library.directory,
-                                    "--init"], env=self.get_env()):
-                    raise RuntimeError(
-                        "Failed to initialise library " + library.directory)
+                if not run_command(
+                    [str(Path(self._prefix) / self.executable), "--work=" + library.directory, "--init"],
+                    env=self.get_env(),
+                ):
+                    raise RuntimeError("Failed to initialise library " + library.directory)
 
         vhdl_standards = set(
             source_file.get_vhdl_standard()
@@ -164,9 +160,7 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         if not vhdl_standards:
             self._vhdl_standard = VHDL.STD_2008
         elif len(vhdl_standards) != 1:
-            raise RuntimeError(
-                f'NVC cannot handle mixed VHDL standards, found {vhdl_standards!r}'
-            )
+            raise RuntimeError(f"NVC cannot handle mixed VHDL standards, found {vhdl_standards!r}")
         else:
             self._vhdl_standard = list(vhdl_standards)[0]
 
@@ -197,7 +191,7 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         if vhdl_standard == VHDL.STD_2019:
             return "2019"
 
-        raise ValueError(f'Invalid VHDL standard {vhdl_standard}')
+        raise ValueError(f"Invalid VHDL standard {vhdl_standard}")
 
     def _get_command(self, std, worklib, workpath):
         """
@@ -205,12 +199,12 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         """
         cmd = [
             str(Path(self._prefix) / self.executable),
-            f'--work={worklib}:{workpath!s}',
-            f'--std={self._std_str(std)}',
+            f"--work={worklib}:{workpath!s}",
+            f"--std={self._std_str(std)}",
         ]
 
         for library in self._project.get_libraries():
-            cmd += [f'--map={library.name}:{library.directory}']
+            cmd += [f"--map={library.name}:{library.directory}"]
 
         return cmd
 
@@ -218,9 +212,9 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         """
         Returns the command to compile a VHDL file
         """
-        cmd = self._get_command(source_file.get_vhdl_standard(),
-                                source_file.library.name,
-                                source_file.library.directory)
+        cmd = self._get_command(
+            source_file.get_vhdl_standard(), source_file.library.name, source_file.library.directory
+        )
 
         cmd += ["-a"]
         cmd += source_file.compile_options.get("nvc.a_flags", [])
@@ -239,26 +233,24 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
             makedirs(script_path)
 
         if self._gui:
-            wave_file = script_path / (f'{config.entity_name}.fst')
+            wave_file = script_path / (f"{config.entity_name}.fst")
             if wave_file.exists():
                 remove(wave_file)
         else:
             wave_file = None
 
         libdir = self._project.get_library(config.library_name).directory
-        cmd = self._get_command(self._vhdl_standard,
-                                config.library_name,
-                                libdir)
+        cmd = self._get_command(self._vhdl_standard, config.library_name, libdir)
 
         cmd += ["-H", config.sim_options.get("nvc.heap_size", "64m")]
 
         cmd += ["-e"]
 
         cmd += config.sim_options.get("nvc.elab_flags", [])
-        cmd += [f'{config.entity_name}-{config.architecture_name}']
+        cmd += [f"{config.entity_name}-{config.architecture_name}"]
 
         for name, value in config.generics.items():
-            cmd += [f'-g{name}={value}']
+            cmd += [f"-g{name}={value}"]
 
         if not elaborate_only:
             cmd += ["--no-save"]
@@ -266,13 +258,13 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
                 cmd += ["--jit"]
             cmd += ["-r"]
             cmd += config.sim_options.get("nvc.sim_flags", [])
-            cmd += [f'--exit-severity={config.vhdl_assert_stop_level}']
+            cmd += [f"--exit-severity={config.vhdl_assert_stop_level}"]
 
             if config.sim_options.get("disable_ieee_warnings", False):
                 cmd += ["--ieee-warnings=off"]
 
             if wave_file:
-                cmd += [f'--wave={wave_file}']
+                cmd += [f"--wave={wave_file}"]
 
         print(" ".join(cmd))
 
