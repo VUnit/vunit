@@ -23,7 +23,14 @@ package body stream_master_pkg is
     variable msg : msg_t := new_msg(stream_push_msg);
     constant normalized_data : std_logic_vector(data'length-1 downto 0) := data;
   begin
-    push_std_ulogic_vector(msg, normalized_data);
+    -- push_std_ulogic_vector(msg, normalized_data);
+
+    -- info("sending normalized_data " & to_hstring(normalized_data));
+    if data'ascending then
+      push_std_ulogic_vector(msg, normalized_data);
+    else
+      push_std_ulogic_vector(msg, normalized_data);
+    end if;
     push_boolean(msg, last);
     send(net, stream.p_actor, msg);
   end;
