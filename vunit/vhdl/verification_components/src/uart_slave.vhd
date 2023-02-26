@@ -22,14 +22,15 @@ entity uart_slave is
 end entity;
 
 architecture a of uart_slave is
-  signal baud_rate : natural := uart.p_baud_rate;
-  signal local_event : std_logic := '0';
-  constant data_queue : queue_t := new_queue;
+  signal baud_rate     : natural       := uart.p_baud_rate;
+  signal local_event   : std_logic     := '0';
+  constant data_queue  : queue_t       := new_queue;
+
 begin
 
   main : process
     variable reply_msg, msg : msg_t;
-    variable msg_type : msg_type_t;
+    variable msg_type       : msg_type_t;
   begin
     receive(net, uart.p_actor, msg);
     msg_type := message_type(msg);
@@ -53,20 +54,48 @@ begin
   end process;
 
   recv : process
+    constant parity_mode : parity_mode_t := uart.p_parity_mode;
+
     procedure uart_recv(variable data : out std_logic_vector;
-                        signal rx : in std_logic;
-                        baud_rate : integer) is
-      constant time_per_bit : time := (10**9 / baud_rate) * 1 ns;
+                        signal rx     : in  std_logic;
+                        baud_rate     :     integer) is
+      constant time_per_bit      : time := (10**9 / baud_rate) * 1 ns;
       constant time_per_half_bit : time := (10**9 / (2*baud_rate)) * 1 ns;
+
+      procedure check_parity(
+        data : in std_logic_vector;
+        parity_bit : in std_logic) is
+        constant checker : checker_t := new_checker("uart");
+      begin
+        case parity_mode is
+          when even =>
+            check_equal(checker, parity_bit, xor data, result(". Data 0x" & to_hstring(data) &". Incorrect parity bit for parity even"));
+          when odd =>
+            check_equal(checker, parity_bit, not (xor data), result(". Data 0x" & to_hstring(data) & ". Incorrect parity bit for parity odd"));
+          when space =>
+            check_equal(checker, parity_bit, '0', result(". Data 0x" & to_hstring(data) & ". Incorrect parity bit for parity space"));
+          when mark =>
+            check_equal(checker, parity_bit, '1', result(". Data 0x" & to_hstring(data) & ". Incorrect parity bit for parity mark"));
+          when others => null;
+        end case;
+      end procedure check_parity;
+
     begin
-      wait for time_per_half_bit; -- middle of start bit
+      wait for time_per_half_bit;       -- middle of start bit
       assert rx = not uart.p_idle_state;
-      wait for time_per_bit; -- skip start bit
+      wait for time_per_bit;            -- skip start bit
 
       for i in 0 to data'length-1 loop
         data(i) := rx;
         wait for time_per_bit;
       end loop;
+
+      if parity_mode /= none then
+        check_parity(
+          data => data,
+          parity_bit => rx);
+        wait for time_per_bit;
+      end if;
 
       assert rx = uart.p_idle_state;
     end procedure;

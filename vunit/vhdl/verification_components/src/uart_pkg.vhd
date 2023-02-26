@@ -15,10 +15,13 @@ use work.integer_vector_ptr_pkg.all;
 use work.queue_pkg.all;
 
 package uart_pkg is
+  type parity_mode_t is (none, even, odd, space, mark);
+
   type uart_master_t is record
     p_actor : actor_t;
     p_baud_rate : natural;
     p_idle_state : std_logic;
+    p_parity_mode : parity_mode_t;
   end record;
 
   type uart_slave_t is record
@@ -26,6 +29,7 @@ package uart_pkg is
     p_baud_rate : natural;
     p_idle_state : std_logic;
     p_data_length : positive;
+    p_parity_mode : parity_mode_t;
   end record;
 
   -- Set the baud rate [bits/s]
@@ -40,11 +44,14 @@ package uart_pkg is
   constant default_baud_rate : natural := 115200;
   constant default_idle_state : std_logic := '1';
   constant default_data_length : positive := 8;
+  constant default_parity_mode : parity_mode_t := none;
   impure function new_uart_master(initial_baud_rate : natural := default_baud_rate;
-                                  idle_state : std_logic := default_idle_state) return uart_master_t;
+                                  idle_state : std_logic := default_idle_state;
+                                  parity_mode : parity_mode_t := default_parity_mode) return uart_master_t;
   impure function new_uart_slave(initial_baud_rate : natural := default_baud_rate;
                                  idle_state : std_logic := default_idle_state;
-                                 data_length : positive := default_data_length) return uart_slave_t;
+                                 data_length : positive := default_data_length;
+                                 parity_mode : parity_mode_t := default_parity_mode) return uart_slave_t;
 
   impure function as_stream(uart_master : uart_master_t) return stream_master_t;
   impure function as_stream(uart_slave : uart_slave_t) return stream_slave_t;
@@ -57,21 +64,25 @@ end package;
 package body uart_pkg is
 
   impure function new_uart_master(initial_baud_rate : natural := default_baud_rate;
-                                  idle_state : std_logic := default_idle_state) return uart_master_t is
-  begin
-    return (p_actor => new_actor,
-            p_baud_rate => initial_baud_rate,
-            p_idle_state => idle_state);
-  end;
-
-  impure function new_uart_slave(initial_baud_rate : natural := default_baud_rate;
-                                 idle_state : std_logic := default_idle_state;
-                                 data_length : positive := default_data_length) return uart_slave_t is
+                                  idle_state : std_logic := default_idle_state;
+                                  parity_mode : parity_mode_t := default_parity_mode) return uart_master_t is
   begin
     return (p_actor => new_actor,
             p_baud_rate => initial_baud_rate,
             p_idle_state => idle_state,
-            p_data_length => data_length);
+            p_parity_mode => parity_mode);
+  end;
+
+  impure function new_uart_slave(initial_baud_rate : natural := default_baud_rate;
+                                 idle_state : std_logic := default_idle_state;
+                                 data_length : positive := default_data_length;
+                                 parity_mode : parity_mode_t := default_parity_mode) return uart_slave_t is
+  begin
+    return (p_actor => new_actor,
+            p_baud_rate => initial_baud_rate,
+            p_idle_state => idle_state,
+            p_data_length => data_length,
+            p_parity_mode => parity_mode);
   end;
 
   impure function as_stream(uart_master : uart_master_t) return stream_master_t is
