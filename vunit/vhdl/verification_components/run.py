@@ -171,11 +171,9 @@ TB_AXI_STREAM.test("test random check stall on slave").add_config(
 )
 
 tb_uart_parity_test = LIB.test_bench("tb_uart").get_tests("test parity")[0]
-parity_modes =  {'even', 'odd', 'space', 'mark'}
+parity_modes = {"even", "odd", "space", "mark"}
 for master_parity_mode, slave_parity_mode in product(parity_modes, parity_modes):
-    tb_cfg = dict(
-        master_parity_mode=master_parity_mode,
-        slave_parity_mode=slave_parity_mode)
+    tb_cfg = dict(master_parity_mode=master_parity_mode, slave_parity_mode=slave_parity_mode)
     config_as_str = encode(tb_cfg)
     tb_uart_parity_test.add_config(name=config_as_str, generics=dict(encoded_tb_cfg=config_as_str))
 
