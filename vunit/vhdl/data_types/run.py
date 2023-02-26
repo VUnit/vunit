@@ -21,4 +21,6 @@ for fname in glob(str(ROOT / "test" / "*.vhd")):
         continue
     LIB.add_source_file(fname)
 
+VU.set_sim_option("nvc.heap_size", "256m")
+
 VU.main()
