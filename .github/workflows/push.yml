@@ -71,7 +71,7 @@ jobs:
       run: tox -e py${{ matrix.task }} -- --color=yes
 
 #
-# Docker (Linux) acceptance tests
+# Docker (Linux) tests (GHDL)
 #
 
   docker:
@@ -93,6 +93,33 @@ jobs:
 
     - name: '🚧 Run job'
       run: docker run --rm -tv $(pwd):/src -w /src ghcr.io/vunit/dev/${{ matrix.task.tag }} tox -e py${{ matrix.task.do }}-ghdl
+
+#
+# Docker (Linux) tests (NVC)
+#
+
+  nvc:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        task: [
+          {do: 39-acceptance},
+          {do: 39-vcomponents},
+        ]
+    name: '🛳️ Container · ${{ matrix.task.do }} · NVC'
+    steps:
+
+    - name: '🧰 Checkout'
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: '🛳️ Build container image'
+      run: docker build -t vunit/nvc - < .github/nvc.dockerfile
+
+    - name: '🚧 Run job'
+      run: docker run --rm -tv $(pwd):/src -w /src vunit/nvc tox -e py${{ matrix.task.do }}-nvc
 
 #
 # Windows (MSYS2) with 'nightly' GHDL
