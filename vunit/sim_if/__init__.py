@@ -74,6 +74,13 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         """
         return True
 
+    @classmethod
+    def supports_vhdl_call_paths(cls):
+        """
+        Returns True when this simulator supports VHDL-2019 call paths
+        """
+        return False
+
     @staticmethod
     def find_executable(executable):
         """
