@@ -26,7 +26,7 @@ package body location_pkg is
       end if;
     end if;
 
-    write(result.file_name, "");
+    swrite(result.file_name, "");
     return result;
   end;
 end package body;
