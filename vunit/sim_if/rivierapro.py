@@ -94,6 +94,13 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         return None
 
     @classmethod
+    def supports_vhdl_call_paths(cls):
+        """
+        Returns True when this simulator supports VHDL-2019 call paths
+        """
+        return True
+
+    @classmethod
     def supports_vhdl_package_generics(cls):
         """
         Returns True when this simulator supports VHDL package generics

@@ -213,6 +213,40 @@ in your VUnit Git repository? You have to do this first if installing using setu
 
         library.add_source_files(VHDL_PATH / "JSON-for-VHDL" / "src" / "*.vhdl")
 
+    def _add_vhdl_logging(self):
+        """
+        Add logging functionality
+        """
+
+        use_call_paths = self._simulator_class.supports_vhdl_call_paths() and (
+            self._vhdl_standard in VHDL.STD_2019.and_later
+        )
+        if use_call_paths:
+            self._vunit_lib.add_source_file(VHDL_PATH / "logging" / "src" / "location_pkg-body-2019p.vhd")
+        else:
+            self._vunit_lib.add_source_file(VHDL_PATH / "logging" / "src" / "location_pkg-body-2008m.vhd")
+
+        for file_name in get_checked_file_names_from_globs(VHDL_PATH / "logging" / "src" / "*.vhd", allow_empty=False):
+            base_file_name = Path(file_name).name
+
+            if base_file_name.startswith("location_pkg-body"):
+                continue
+
+            standards = set()
+            for standard in VHDL.STANDARDS:
+                standard_name = str(standard)
+                if standard_name + "p" in base_file_name:
+                    standards.update(standard.and_later)
+                elif standard_name + "m" in base_file_name:
+                    standards.update(standard.and_earlier)
+                elif standard_name in base_file_name:
+                    standards.add(standard)
+
+            if standards and self._vhdl_standard not in standards:
+                continue
+
+            self._vunit_lib.add_source_file(file_name)
+
     def add_verilog_builtins(self):
         """
         Add Verilog builtins
@@ -235,10 +269,10 @@ in your VUnit Git repository? You have to do this first if installing using setu
             })
         """
         self._add_data_types(external=external)
+        self._add_vhdl_logging()
         self._add_files(VHDL_PATH / "*.vhd")
         for path in (
             "core",
-            "logging",
             "string_ops",
             "check",
             "dictionary",
