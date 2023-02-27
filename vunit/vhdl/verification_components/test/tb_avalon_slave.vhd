@@ -77,9 +77,9 @@ begin
   begin
     test_runner_setup(runner, runner_cfg);
     set_format(display_handler, verbose, true);
-    show(tb_logger, display_handler, verbose);
-    show(default_logger, display_handler, verbose);
-    show(com_logger, display_handler, verbose);
+    show(tb_logger, display_handler, trace);
+    show(default_logger, display_handler, trace);
+    show(com_logger, display_handler, trace);
     burstcount <= std_logic_vector(to_unsigned(1, burstcount'length));
     wait until rising_edge(clk);
 

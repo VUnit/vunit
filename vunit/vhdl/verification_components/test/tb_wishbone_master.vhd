@@ -87,10 +87,10 @@ begin
   begin
     test_runner_setup(runner, runner_cfg);
     set_format(display_handler, verbose, true);
-    show(tb_logger, display_handler, verbose);
-    show(default_logger, display_handler, verbose);
-    show(master_logger, display_handler, verbose);
-    show(com_logger, display_handler, verbose);
+    show(tb_logger, display_handler, trace);
+    show(default_logger, display_handler, trace);
+    show(master_logger, display_handler, trace);
+    show(com_logger, display_handler, trace);
 
     wait until rising_edge(clk);
 

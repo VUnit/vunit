@@ -46,7 +46,7 @@ begin
   begin
     test_runner_setup(runner, runner_cfg);
     set_format(display_handler, verbose, true);
-    show(avalon_sink_stream.p_logger, display_handler, verbose);
+    show(avalon_sink_stream.p_logger, display_handler, trace);
 
     wait until rising_edge(clk);
     if run("test single push and pop") then
