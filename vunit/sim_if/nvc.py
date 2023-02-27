@@ -127,6 +127,13 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         return False
 
     @classmethod
+    def supports_vhdl_call_paths(cls):
+        """
+        Returns True when this simulator supports VHDL-2019 call paths
+        """
+        return True
+
+    @classmethod
     def supports_vhdl_package_generics(cls):
         """
         Returns True when this simulator supports VHDL package generics
