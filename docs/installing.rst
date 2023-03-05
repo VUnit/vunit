@@ -38,8 +38,6 @@ VHDL only
 
   *  Tested with LLVM and mcode backends; GCC backend might work aswell.
 
-  *  Support for using `GTKWave`_ to view waveforms.
-
   *  Works with versions >= 0.33.
 
      .. HINT::
@@ -47,11 +45,17 @@ VHDL only
        GHDL is a rolling project, it is therefore recommended to use the latest
        `nightly release <https://github.com/ghdl/ghdl/releases/tag/nightly>`_ tarball.
 
+*  `NVC`_: Works with versions >= 1.9.
+
+.. HINT::
+  GHDL and NVC support using `GTKWave`_ to view waveforms.
+
 .. _Aldec Riviera-PRO: https://www.aldec.com/en/products/functional_verification/riviera-pro
 .. _Aldec Active-HDL: https://www.aldec.com/en/products/fpga_simulation/active-hdl
 .. _GHDL: https://github.com/ghdl/ghdl
 .. _nightly release: https://github.com/ghdl/ghdl/releases/tag/nightly
 .. _GTKWave: http://gtkwave.sourceforge.net/
+.. _NVC: https://www.nickg.me.uk/nvc/
 
 VHDL or SystemVerilog
 ^^^^^^^^^^^^^^^^^^^^^
