@@ -1,6 +1,9 @@
 name: 'docs'
 
-on: [ push, pull_request ]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
 
 env:
   # https://github.com/tox-dev/tox/issues/1468
