@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from sys import path as sys_path
+from os import environ
 from os.path import abspath
 from pathlib import Path
 
@@ -58,25 +59,40 @@ todo_include_todos = False
 
 # -- Options for HTML output --------------------------------------------------
 
-if (ROOT / "_theme").is_dir():
-    html_theme_path = ["."]
-    html_theme = "_theme"
-    html_theme_options = {
-        "analytics_id": "UA-112393863-1",
-        "logo_only": True,
-        "vcs_pageview_mode": "blob",
-        "style_nav_header_background": "#0c479d",
-        "home_breadcrumbs": False,
-    }
-    html_context = {
-        "conf_py_path": f"{ROOT.name}/",
-        "display_github": True,
-        "github_user": "VUnit",
-        "github_repo": "vunit",
-        "github_version": "master/",
-    }
-else:
-    html_theme = "alabaster"
+html_theme = "furo"
+
+html_css_files = [
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css",
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css",
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css",
+]
+
+html_theme_options = {
+    "source_repository": "https://github.com/VUnit/vunit",
+    "source_branch": environ.get("GITHUB_REF_NAME", "master"),
+    "source_directory": "docs",
+    "sidebar_hide_name": True,
+    "footer_icons": [
+        {
+            "name": "Twitter @VUnitFramework",
+            "url": "https://twitter.com/VUnitFramework",
+            "html": "",
+            "class": "fa-solid fa-brands fa-twitter",
+        },
+        {
+            "name": "Gitter VUnit/vunit",
+            "url": "https://gitter.im/VUnit/vunit",
+            "html": "",
+            "class": "fa-solid fa-brands fa-gitter",
+        },
+        {
+            "name": "GitHub VUnit/vunit",
+            "url": "https://github.com/VUnit/vunit",
+            "html": "",
+            "class": "fa-solid fa-brands fa-github",
+        },
+    ],
+}
 
 html_static_path = ["_static"]
 

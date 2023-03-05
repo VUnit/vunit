@@ -18,22 +18,7 @@ from shutil import copyfile
 from create_release_notes import create_release_notes
 
 
-DROOT = Path(__file__).parent.parent / 'docs'
-
-
-def get_theme(path: Path, url: str):
-    """
-    Check if the theme is available locally, retrieve it with curl and tar otherwise
-    """
-    tpath = path / "_theme"
-    if not tpath.is_dir() or not (tpath / "theme.conf").is_file():
-        if not tpath.is_dir():
-            tpath.mkdir()
-        zpath = path / "theme.tgz"
-        if not zpath.is_file():
-            check_call(["curl", "-fsSL", url, "-o", str(zpath)])
-        tar_cmd = ["tar", "--strip-components=1", "-C", str(tpath), "-xvzf", str(zpath)]
-        check_call(tar_cmd)
+ROOT = Path(__file__).parent.parent
 
 
 def main():
@@ -41,11 +26,7 @@ def main():
     Build documentation/website
     """
     create_release_notes()
-    copyfile(str(DROOT / '..' / 'LICENSE.rst'), str(DROOT / 'license.rst'))
-    get_theme(
-        DROOT,
-        "https://codeload.github.com/buildthedocs/sphinx.theme/tar.gz/v1"
-    )
+    copyfile(str(ROOT / 'LICENSE.rst'), str(ROOT / 'docs/license.rst'))
     check_call(
         [
             sys.executable,
