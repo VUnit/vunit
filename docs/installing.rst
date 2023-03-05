@@ -1,55 +1,81 @@
 .. _installing:
 
 Installing
-==========
+##########
+
 
 Requirements
-------------
+============
 
-VUnit supports VHDL (93, 2002, 2008 and 2019), Verilog and (experimentally) SystemVerilog; and it is known to work on
-GNU/Linux, Windows and Mac OS; on x86, x64, armv7 and aarch64. Full VUnit functionality requires Python (3.6 or higher) and
-a simulator supported by the VUnit Python test runner (see list below). However, VUnit can run with limited functionality
-entirely within VHDL using the :doc:`VHDL test runner <./run/user_guide>`.
+.. NOTE::
+  Full VUnit functionality requires Python (3.6 or higher) and a simulator
+  supported by the VUnit Python test runner (see list below).
+  However, VUnit can run with limited functionality entirely within VHDL using
+  the :doc:`VHDL test runner <./run/user_guide>`.
 
-Simulators:
+Language
+--------
 
-.. admonition:: Only VHDL
+VUnit supports VHDL (93, 2002, 2008 and 2019),
+Verilog and (experimentally) SystemVerilog.
 
-   -  `Aldec Riviera-PRO`_: Tested with Riviera-PRO 2015.06, 2015.10, 2016.02, 2016.10 (x64/x86).
-   -  `Aldec Active-HDL`_: Tested with Active-HDL 9.3, 10.1, 10.2, 10.3 (x64/x86)
-   -  `GHDL`_
+Platform
+--------
 
-      -  Works with versions >= 0.33 (Note: GHDL is a rolling project, it is therefore recommended to use the latest `nightly release <https://github.com/ghdl/ghdl/releases/tag/nightly>`_ tarball.)
-      -  Tested with LLVM and mcode backends, gcc backend might work aswell.
-      -  Integrated support for using `GTKWave`_ to view waveforms.
+VUnit is known to work on GNU/Linux, Windows and Mac OS; on x86, x64, armv7 and aarch64.
 
-.. admonition:: VHDL or SystemVerilog
+Simulator
+----------
 
-   -  `Mentor Graphics ModelSim/Questa`_: Tested with 10.1 - 10.5
+VHDL only
+^^^^^^^^^
 
-.. CAUTION::
+*  `Aldec Riviera-PRO`_: Tested with Riviera-PRO 2015.06, 2015.10, 2016.02, 2016.10 (x64/x86).
 
-   -  `Cadence Incisive`_ (**Experimental**)
+*  `Aldec Active-HDL`_: Tested with Active-HDL 9.3, 10.1, 10.2, 10.3 (x64/x86).
 
-      - Community contribution by `Colin Marquardt <https://github.com/cmarqu>`_.
-        VUnit maintainers do not have access to this simulator to verify the functionality.
+*  `GHDL`_
 
-      - Run ``incisive_vhdl_fixup.py`` to remove VHDL constructs that are
-        not compatible with Incisive
+  *  Tested with LLVM and mcode backends; GCC backend might work aswell.
+
+  *  Support for using `GTKWave`_ to view waveforms.
+
+  *  Works with versions >= 0.33.
+
+     .. HINT::
+
+       GHDL is a rolling project, it is therefore recommended to use the latest
+       `nightly release <https://github.com/ghdl/ghdl/releases/tag/nightly>`_ tarball.
 
 .. _Aldec Riviera-PRO: https://www.aldec.com/en/products/functional_verification/riviera-pro
 .. _Aldec Active-HDL: https://www.aldec.com/en/products/fpga_simulation/active-hdl
-.. _Mentor Graphics ModelSim/Questa: http://www.mentor.com/products/fv/modelsim/
-.. _Cadence Incisive: https://www.cadence.com/content/cadence-www/global/en_US/home/tools/system-design-and-verification/simulation-and-testbench-verification/incisive-enterprise-simulator.html
 .. _GHDL: https://github.com/ghdl/ghdl
 .. _nightly release: https://github.com/ghdl/ghdl/releases/tag/nightly
 .. _GTKWave: http://gtkwave.sourceforge.net/
 
+VHDL or SystemVerilog
+^^^^^^^^^^^^^^^^^^^^^
+
+*  `Mentor Graphics ModelSim/Questa`_: Tested with 10.1 - 10.5
+
+.. CAUTION::
+
+  *  `Cadence Incisive`_ (**Experimental**)
+
+    * Community contribution by `Colin Marquardt <https://github.com/cmarqu>`_.
+      VUnit maintainers do not have access to this simulator to verify the functionality.
+
+    * Run ``incisive_vhdl_fixup.py`` to remove VHDL constructs that are not
+      compatible with Incisive.
+
+.. _Mentor Graphics ModelSim/Questa: http://www.mentor.com/products/fv/modelsim/
+.. _Cadence Incisive: https://www.cadence.com/content/cadence-www/global/en_US/home/tools/system-design-and-verification/simulation-and-testbench-verification/incisive-enterprise-simulator.html
 
 .. _installing_pypi:
 
 Using the Python Package Manager
---------------------------------
+================================
+
 The recommended way to get VUnit is to install the :ref:`latest stable release <latest_release>` via `pip <https://pip.pypa.io/en/stable/>`__:
 
 .. code-block:: console
@@ -65,7 +91,8 @@ Once installed, VUnit may be updated to new versions via a similar method:
 .. _installing_master:
 
 Using the Development Version
------------------------------
+=============================
+
 Start by cloning our `GIT repository on GitHub <https://github.com/vunit/vunit/>`__:
 
 .. code-block:: console
@@ -109,7 +136,7 @@ There are three methods to make VUnit importable in your ``run.py`` script.:
 .. _installing_dev:
 
 For VUnit Developers
---------------------
+====================
 
 For those interested in development of VUnit, it is best to install
 VUnit so that the sources from git are installed in-place instead of
