@@ -193,9 +193,8 @@ Releases are automatically made by GitHub Actions on any ``master`` commit which
 
 To create a new tagged release commit:
 
-- Create corresponding release notes in ``docs/release_notes/X.Y.Z.rst``.
-   - The release notes files in ``docs/release_notes/`` are used to
-     automatically generate the :ref:`release notes <release_notes>`.
+- Reference :ref:`release_notes_instructions` for creating relevant news that will be
+  added to the final draft of the :ref:`release_notes`.
 - Execute ``python tools/release.py create X.Y.Z``.
    - Will make commit with the new ``about.py`` version and release notes and tag it.
    - Will make another commit setting ``about.py`` to the next pre release candidate version.
@@ -222,3 +221,37 @@ Therefore, when bumping the submodules, maintainers/contributors need to remembe
 version.
 
 Furthermore, since OSVVM is tagged periodically, bumping from tag to tag is strongly suggested.
+
+.. _release_notes_instructions:
+
+Release Notes Instructions
+--------------------------
+
+The :vunit_file:`release notes directory <docs/news.d>` contains "newsfragments" which
+are short (`reST formatted
+<https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_) files that
+contain information for users.
+
+Make sure to use full sentences in the **past or present tense** and use punctuation.
+
+Each file should be named like ``<issue #>.<type>.rst``, where ``<issue #>`` is the
+GitHub issue or pull request number, and ``<type>`` is one of:
+
+* ``breaking``: a change which may break existing functionality, such as feature removal
+  or behavior change
+* ``bugfix``: fixes a bug
+* ``change``: backwards compatible features or improvements
+* ``deprecation``: feature deprecation
+* ``misc``: a ticket was closed, but it is not necessarily important for the user
+
+For example: ``123.feature.rst``, ``456.bugfix.rst``.
+
+``towncrier`` preserves multiple paragraphs and formatting
+(code blocks, lists, and so on), but for entries other than features, it is usually
+better to stick to a single paragraph to keep it concise.
+
+The Tox ``*-docs`` environment will construct a draft, "unreleased" section in the
+generated HTML page to make it easier to debug and fix syntax issues with the
+newsfragments. During a release, towncrier will add the latest
+:vunit_file:`newsfragments <docs/news.d>` to the :ref:`release_notes` and then remove
+the newsfragments from version control.

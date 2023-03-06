@@ -15,10 +15,12 @@ my_logger.csv
 /build/
 /dist/
 /docs/_build
+/docs/_release_notes_draft.rst
 /docs/_theme
 /docs/license.rst
-/docs/release_notes.rst
+/docs/theme.tgz
 /examples/vhdl/array_axis_vcs/src/test/data/out.csv
+/release/
 /tests/acceptance/*_out
 /tests/unit/test_report_output.txt
 /vunit/vhdl/check/test/tb_check_equal.vhd

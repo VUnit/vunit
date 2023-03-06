@@ -1,2 +1,0 @@
-- Fix missing msg_type in push and pop of msg_t.
-- Ensure axi_lite_master always aligns with aclk to avoid VHDL/Verilog simulation mismatch.

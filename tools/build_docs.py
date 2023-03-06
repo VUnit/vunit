@@ -10,15 +10,16 @@
 Command line utility to build documentation/website
 """
 
-from subprocess import check_call
-from pathlib import Path
+import shlex
 import sys
-from sys import argv
+
+from pathlib import Path
+from subprocess import check_call
 from shutil import copyfile
-from create_release_notes import create_release_notes
 
 
-DROOT = Path(__file__).parent.parent / 'docs'
+REPO_ROOT = Path(__file__).parent.parent
+DROOT = REPO_ROOT / 'docs'
 
 
 def get_theme(path: Path, url: str):
@@ -36,26 +37,60 @@ def get_theme(path: Path, url: str):
         check_call(tar_cmd)
 
 
-def main():
+def update_release_notes(version):
+    """Gather newsfragments and add them to the release notes.
+
+    Args:
+        version (str):
+            Version to set the section to for all newsfragments.
     """
-    Build documentation/website
+    print(f"Adding newsfragment enteries to release notes for release {version}")
+    if version:
+        check_call(shlex.split(f"towncrier build --version {version} --yes"))
+    else:
+        # Produce draft version and write to file
+        draft_file = DROOT / "_release_notes_draft.rst"
+        with open(draft_file, "w", encoding="utf-8") as fptr:
+            check_call(
+                shlex.split("towncrier build --version UNRELEASED --draft"), stdout=fptr
+            )
+
+
+def main(version=None):
+    """Build documentation/website.
+
+    Args:
+        version (str):
+            Version to set the section to for all newsfragments. Newsfragments will be
+            added to the release notes and the now old newsfragments will be staged for
+            removal.
+
+            .. important::
+                Only set the version during a release, otherwise files will be
+                forcefully removed and staged for commit. For testing changes, set this
+                to ``None`` so that the documentation shows unreleased changes but does
+                not trigger removal of newsfragments in the source tree.
     """
-    create_release_notes()
+    update_release_notes(version)
     copyfile(str(DROOT / '..' / 'LICENSE.rst'), str(DROOT / 'license.rst'))
     get_theme(
         DROOT,
         "https://codeload.github.com/buildthedocs/sphinx.theme/tar.gz/v1"
     )
+    # Version is set for a release, so in that case this is not being called by tox so
+    # we do not pass args. When not building for release, set release_notes_draft to
+    # include the draft in the docs.
     check_call(
         [
             sys.executable,
             "-m",
             "sphinx"
-        ] + ([] if len(argv) < 2 else argv[2:]) + [
+        ] + ([] if len(sys.argv) < 2 or version else sys.argv[2:])
+        + (["-t", "release_notes_draft"] if version is None else []) + [
             "-TEWanb",
             "html",
-            Path(__file__).parent.parent / "docs",
-            argv[1],
+            str(Path(__file__).parent.parent / "docs"),
+            str(REPO_ROOT / "release" / "docs") if version else sys.argv[1],
         ]
     )
 

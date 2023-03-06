@@ -1,2 +1,0 @@
-- Ignore files added twice with identical contents. Closes #341
-- Made queues type safe

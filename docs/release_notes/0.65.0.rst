@@ -1,9 +1,0 @@
-- Added sim and compile options to set rivierapro/activehdl flags. :vunit_issue:`143`.
-- Removed builtin ``-dbg`` flag to vcom for aldec tools. Use set_compile_option instead to set it yourself.
-- Fixed a bug with custom relative output_path.
-- Documentation fixes & improvements.
-- Update rivierapro and activehdl toolchain discovery. :vunit_issue:`148`.
-- Added possibility to set ``VUNIT_<SIMULATOR_NAME>_PATH`` environment
-  variable to specify simulation executable path. :vunit_issue:`148`.
-- Added ``-k/--keep-compiling`` flag. :vunit_issue:`140`.
-- Added optional ``output_path`` argument to ``pre_config``. :vunit_issue:`146`.

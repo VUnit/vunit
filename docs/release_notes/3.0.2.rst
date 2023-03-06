@@ -1,4 +1,0 @@
-- Added is_empty on queues
-- Documented queue_t and integer_array_t
-- Fixed memory leak
-  

@@ -1,6 +1,8 @@
 name: 'push'
 
 on:
+  label:
+    types: [created, edited]
   push:
   pull_request:
   workflow_dispatch:
@@ -139,12 +141,54 @@ jobs:
       run: tox -e py${{ matrix.task }} -- --color=yes
 
 #
+# Release Notes (News) Validation
+#
+  news-matrix-prep:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - id: set-matrix
+        run: |
+          set -e
+
+          cat <<EOF > json
+          ${{ toJSON(github.event.pull_request.labels.*.name) }}
+          EOF
+
+          eval "news_labels=( $(jq '.[] | select(test("news:"))' json) )"
+          news_labels_json=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${news_labels[@]}")
+
+          echo "Setting matrix to labels: ${news_labels[@]}"
+          echo "Matrix labels JSON: $news_labels_json"
+          echo "matrix={\"news\":$(echo $news_labels_json)}" >> $GITHUB_OUTPUT
+
+  news:
+    runs-on: ubuntu-latest
+    needs: news-matrix-prep
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.news-matrix-prep.outputs.matrix) }}
+    name: '📰 Validate News · ${{ matrix.news }}'
+    steps:
+
+    - name: '🧰 Checkout'
+      uses: actions/checkout@v3
+
+    - name: News file exists
+      run: |
+        fname="$(echo ${{ github.event.pull_request.number }}.${{ matrix.news }}.rst | sed 's,news:,,g')"
+        news_file="docs/news.d/$fname"
+        echo "News file that must exist for the label '${{ matrix.news }}': '$news_file'"
+        test -f $news_file
+
+#
 # Deploy to PyPI
 #
 
   deploy:
     runs-on: ubuntu-latest
-    needs: [ fmt, lin, docker, win ]
+    needs: [ fmt, lin, docker, win, news ]
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     name: '🚀 Deploy'
     steps:

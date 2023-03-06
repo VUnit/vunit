@@ -1,1 +1,0 @@
--  Add ``output`` argument to ``post_check``. :vunit_issue:`332`

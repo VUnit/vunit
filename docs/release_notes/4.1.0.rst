@@ -1,7 +1,0 @@
-- Enhancements to Stream VCI and AXI Stream VCs. (:vunit_issue:`420`, :vunit_issue:`422`, :vunit_issue:`429`, :vunit_issue:`483`)
-- Add option 'overwrite' to set_sim_option. (:vunit_issue:`471`)
-- ActiveHDL: add code coverage support. (:vunit_issue:`461`)
-- GtkWave: add sim option 'ghdl.init_file.gui'. (:vunit_issue:`459`)
-- GHDL: add boolean option ghdl.elab_e, to execute 'ghdl -e' only. (:vunit_issue:`467`)
-- GHDL: with VHDL 2008 nonzero return values produce a fail. (:vunit_issue:`469`)
-- Add experimental VHDL 2019 support. (:vunit_issue:`549`)

@@ -1,1 +1,0 @@
-- Update test scanner pattern to be based on ``runner_cfg``. :vunit_issue:`138`

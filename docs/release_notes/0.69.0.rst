@@ -1,1 +1,0 @@
-Added check_equal for strings.
