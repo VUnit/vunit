@@ -11,6 +11,4 @@ Examples
   In those cases, replacing ``context vunit_lib.vunit_context`` with the content of :vunit_file:`vunit/vhdl/vunit_context.vhd`
   and :vunit_file:`vunit/vhdl/data_types/src/data_types_context.vhd` might work.
 
-.. exec::
-  from examples import examples
-  examples()
+.. include:: examples.inc

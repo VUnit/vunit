@@ -17,35 +17,26 @@ from os import listdir, remove
 from pathlib import Path
 from subprocess import check_call
 
-from io import StringIO
-from contextlib import redirect_stdout
 from textwrap import indent
 
 
 ROOT = Path(__file__).parent.parent / "docs"
 
 
-def examples(debug=False):
+def examples():
     """
     Traverses the examples directory and generates examples.rst with the docstrings
     """
     eg_path = ROOT.parent / "examples"
-    for language, subdir in {"VHDL": "vhdl", "SystemVerilog": "verilog"}.items():
-        print("\n".join([language, "~~~~~~~~~~~~~~~~~~~~~~~", "\n"]))
-        for item in listdir(str(eg_path / subdir)):
-            loc = eg_path / subdir / item
-            if loc.is_dir():
-                f = StringIO()
-                with redirect_stdout(f):
-                    _data = _get_eg_doc(
-                        loc,
-                        f"{subdir!s}/{item!s}",
-                    )
-                if debug:
-                    print(".. NOTE::")
-                    print(indent(f.getvalue(), "  * "))
-                if _data:
-                    print(_data)
+    with open(ROOT / "examples.inc", "w") as fptr:
+        for language, subdir in {"VHDL": "vhdl", "SystemVerilog": "verilog"}.items():
+            fptr.write("\n".join([language, "~" * len(language), "\n"]))
+            for item in listdir(str(eg_path / subdir)):
+                loc = eg_path / subdir / item
+                if loc.is_dir():
+                    _data = _get_eg_doc(loc, f"{subdir!s}/{item!s}")
+                    if _data:
+                        fptr.write(_data)
 
 
 def _get_eg_doc(location: Path, ref):
@@ -90,4 +81,4 @@ def _get_eg_doc(location: Path, ref):
 
 
 if __name__ == "__main__":
-    examples(True)
+    examples()
