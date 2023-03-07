@@ -1,0 +1,1 @@
+Add ``add_vhdl_builtins`` and ``add_verilog_builtins``.

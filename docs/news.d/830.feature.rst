@@ -1,0 +1,1 @@
+Make ``dict_t`` type generic.

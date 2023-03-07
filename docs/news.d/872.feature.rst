@@ -1,0 +1,1 @@
+Add support for byte enable to Avalon slave.

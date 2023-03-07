@@ -1,0 +1,1 @@
+Support detecting and failing on ambiguous direct entity instantiations.

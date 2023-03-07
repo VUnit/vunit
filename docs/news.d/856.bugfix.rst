@@ -1,0 +1,1 @@
+Fix axi_lite_master wait behaviour if idle.
