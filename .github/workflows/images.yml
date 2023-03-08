@@ -1,4 +1,4 @@
-name: 'images'
+name: 'Container images'
 
 on:
   push:
@@ -13,7 +13,9 @@ env:
   DOCKER_BUILDKIT: '1'
 
 jobs:
-  build:
+
+
+  GHDL:
     strategy:
       fail-fast: false
       matrix:
@@ -24,26 +26,54 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-    - uses: actions/checkout@v3
+    - name: 🧰 Checkout
+      uses: actions/checkout@v3
 
-    - name: Build image
-      env:
-        TAG: ${{ matrix.task.tag }}
-        PKG: ${{ matrix.task.pkg }}
-      run: |
+    - name: '🛳️ Build container image'
+      run: >-
+        TAG=${{ matrix.task.tag }}
+        PKG=${{ matrix.task.pkg }}
         ./.github/images.sh
 
-    - name: Login to ghcr.io
+    - name: '🛰️ Push container image to registry'
       if: github.event_name != 'pull_request' && github.repository == 'VUnit/vunit'
-      uses: docker/login-action@v1
+      uses: pyTooling/Actions/with-post-step@r0
       with:
-        registry: ghcr.io
-        username: gha
-        password: ${{ github.token }}
+        main: |
+          echo '${{ github.token }}' | docker login ghcr.io -u gha --password-stdin
+          DIMG="vunit/dev/${{ matrix.task.tag }}"
+          docker tag "$DIMG" "ghcr.io/$DIMG"
+          docker push "ghcr.io/$DIMG"
+        post: for registry in gcr.io ghcr.io docker.io; do docker logout "$registry"; done
 
-    - name: Docker push
-      if: github.event_name != 'pull_request' && github.repository == 'VUnit/vunit'
+
+  NVC:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: 🧰 Checkout
+      uses: actions/checkout@v3
+
+    - name: '🛳️ Build container image'
       run: |
-        DIMG="vunit/dev/${{ matrix.task.tag }}"
-        docker tag "$DIMG" "ghcr.io/$DIMG"
-        docker push "ghcr.io/$DIMG"
+        docker build -t ghcr.io/vunit/dev/nvc -<<EOF
+        FROM gcr.io/hdl-containers/nvc
+
+        RUN apt-get update -qq \
+         && DEBIAN_FRONTEND=noninteractive apt-get -y install --no-install-recommends \
+           python3-pip \
+         && apt-get autoclean && apt-get clean && apt-get -y autoremove \
+         && update-ca-certificates \
+         && rm -rf /var/lib/apt/lists/*
+
+        RUN pip install -U tox colorama coverage --progress-bar off
+        EOF
+
+    - name: '🛰️ Push container image to registry'
+      if: github.event_name != 'pull_request' && github.repository == 'VUnit/vunit'
+      uses: pyTooling/Actions/with-post-step@r0
+      with:
+        main: |
+          echo '${{ github.token }}' | docker login ghcr.io -u gha --password-stdin
+          docker push ghcr.io/vunit/dev/nvc
+        post: for registry in gcr.io ghcr.io docker.io; do docker logout "$registry"; done
