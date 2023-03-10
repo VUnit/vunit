@@ -11,7 +11,7 @@ Create monolithic release notes file from several input files
 from pathlib import Path
 from os.path import relpath
 from glob import glob
-from subprocess import check_output, CalledProcessError
+from subprocess import check_call, check_output, CalledProcessError
 from shutil import which
 import datetime
 
@@ -33,22 +33,15 @@ def create_release_notes():
     """
     source_path = Path(__file__).parent.parent / "docs"
 
+    check_call(["towncrier", "build", "--keep"], cwd=source_path.parent)
+
     releases = get_releases(source_path)
     latest_release = releases[0]
 
-    with (source_path / "release_notes.rst").open("w", encoding="utf-8") as fptr:
+    with (source_path / "release_notes.inc").open("w", encoding="utf-8") as fptr:
         fptr.write(
-            f"""
-.. _release_notes:
-
-Release notes
-=============
-
-.. NOTE:: For installation instructions read :ref:`this <installing>`.
-
-`Commits since last release <https://github.com/VUnit/vunit/compare/{latest_release.tag!s}...master>`__
-
-"""
+            "`Commits since last release "
+            f"<https://github.com/VUnit/vunit/compare/{latest_release.tag!s}...master>`__"
         )
 
         fptr.write("\n\n")
