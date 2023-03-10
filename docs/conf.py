@@ -4,11 +4,14 @@ from sys import path as sys_path
 from os import environ
 from os.path import abspath
 from pathlib import Path
+from shutil import copyfile
 
 
 ROOT = Path(__file__).resolve().parent
 
 sys_path.insert(0, abspath("."))
+
+copyfile(str(ROOT.parent / "LICENSE.rst"), str(ROOT / "license.rst"))
 
 # -- Generate examples.inc ----------------------------------------------------
 

@@ -12,9 +12,7 @@ Command line utility to build documentation/website
 
 from subprocess import check_call
 from pathlib import Path
-import sys
-from sys import argv
-from shutil import copyfile
+from sys import argv, executable
 from create_release_notes import create_release_notes
 
 
@@ -26,10 +24,9 @@ def main():
     Build documentation/website
     """
     create_release_notes()
-    copyfile(str(ROOT / 'LICENSE.rst'), str(ROOT / 'docs/license.rst'))
     check_call(
         [
-            sys.executable,
+            executable,
             "-m",
             "sphinx"
         ] + ([] if len(argv) < 2 else argv[2:]) + [
