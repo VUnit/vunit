@@ -14,10 +14,6 @@ log.csv
 my_logger.csv
 /build/
 /dist/
-/docs/_build
-/docs/_theme
-/docs/license.rst
-/docs/release_notes.rst
 /examples/vhdl/array_axis_vcs/src/test/data/out.csv
 /tests/acceptance/*_out
 /tests/unit/test_report_output.txt
