@@ -18,8 +18,8 @@ def create_release_notes():
     """
     Create monolithic release notes file from several input files
     """
-    root = Path(__file__).parent.parent
-    docsroot = root / "docs"
+    docsroot = Path(__file__).parent
+    root = docsroot.parent
 
     check_call(["towncrier", "build", "--keep"], cwd=root)
 

@@ -11,6 +11,10 @@ ROOT = Path(__file__).resolve().parent
 
 sys_path.insert(0, abspath("."))
 
+from create_release_notes import create_release_notes
+
+create_release_notes()
+
 copyfile(str(ROOT.parent / "LICENSE.rst"), str(ROOT / "license.rst"))
 
 # -- Generate examples.inc ----------------------------------------------------

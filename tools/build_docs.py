@@ -13,7 +13,6 @@ Command line utility to build documentation/website
 from subprocess import check_call
 from pathlib import Path
 from sys import argv, executable
-from create_release_notes import create_release_notes
 
 
 ROOT = Path(__file__).parent.parent
@@ -23,7 +22,6 @@ def main():
     """
     Build documentation/website
     """
-    create_release_notes()
     check_call(
         [
             executable,
