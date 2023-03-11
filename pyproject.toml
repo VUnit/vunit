@@ -32,13 +32,18 @@ underlines = ["-", "~"]
     showcontent = true
 
     [[tool.towncrier.type]]
-    directory = "change"
-    name = "Changes"
+    directory = "deprecation"
+    name = "Deprecations"
     showcontent = true
 
     [[tool.towncrier.type]]
-    directory = "deprecation"
-    name = "Deprecations"
+    directory = "doc"
+    name = "Documentation"
+    showcontent = true
+
+    [[tool.towncrier.type]]
+    directory = "feature"
+    name = "Features"
     showcontent = true
 
     [[tool.towncrier.type]]
