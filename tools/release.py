@@ -35,7 +35,7 @@ def main():
         validate_new_release(version, pre_tag=True)
         make_release_commit(version)
 
-        new_version = f"{major:d}.{minor:d}.{patch + 1:d}rc0"
+        new_version = f"{major:d}.{minor:d}.{patch + 1:d}-dev"
         set_version(new_version)
         make_next_pre_release_commit(new_version)
 
