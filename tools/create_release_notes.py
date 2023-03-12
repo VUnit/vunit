@@ -50,7 +50,9 @@ def create_release_notes():
             is_last = idx == len(releases) - 1
 
             if release.is_latest:
-                fptr.write(".. _latest_release:\n\n")
+                fptr.write(".. _release:latest:\n\n")
+
+            fptr.write(f".. _release:{release.name}:\n\n")
 
             title = f":vunit_commit:`{release.name!s} <{release.tag!s}>` - {release.date.strftime('%Y-%m-%d')!s}"
             if release.is_latest:
@@ -66,9 +68,7 @@ def create_release_notes():
                     f"<https://github.com/VUnit/vunit/compare/{releases[idx + 1].tag!s}...{release.tag!s}>`__"
                 )
 
-            fptr.write("\n\n")
-
-            fptr.write(f".. include:: {relpath(release.file_name, source_path)!s}\n")
+            fptr.write(f"\n\n.. include:: {relpath(release.file_name, source_path)!s}\n\n")
 
 
 class Release(object):

@@ -80,7 +80,7 @@ VHDL or SystemVerilog
 Using the Python Package Manager
 ================================
 
-The recommended way to get VUnit is to install the :ref:`latest stable release <latest_release>` via `pip <https://pip.pypa.io/en/stable/>`__:
+The recommended way to get VUnit is to install the :ref:`latest stable release <release:latest>` via `pip <https://pip.pypa.io/en/stable/>`__:
 
 .. code-block:: console
 
