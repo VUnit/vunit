@@ -9,6 +9,7 @@ Support functions for creating blogs
 """
 
 import re
+from pathlib import Path
 from pygments import highlight
 from pygments.lexers.hdl import VhdlLexer
 from pygments.lexers.python import PythonLexer
@@ -169,10 +170,7 @@ def create_span(style, fg, bg):
 
     font_weight = font_weights.get(style, None)
     if font_weight is None:
-        temp = style
-        style = fg
-        fg = temp
-        # raise RuntimeError(f"Unknown style {style}")
+        style, fg = fg, style
 
     if fg:
         color = _CONEMU_COLORS.get(fg, None)
@@ -261,8 +259,10 @@ def highlight_log(log_path, output_path):
 
 
 class LogRegistry:
+    """Registry log paths from which html documents shall be generated."""
+
     def __init__(self):
-        self._paths = dict()
+        self._paths = {}
 
     def register(self, log_path, html_path):
         self._paths[log_path] = html_path
