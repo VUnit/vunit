@@ -18,6 +18,11 @@ use work.integer_vector_ptr_pkg.all;
 package body check_pkg is
   type boolean_vector is array (natural range <>) of boolean;
 
+  function result(str : string := "") return string is
+  begin
+    return decorate(str);
+  end;
+
   function logical_right_shift (
     constant arg   : boolean_vector;
     constant count : natural)

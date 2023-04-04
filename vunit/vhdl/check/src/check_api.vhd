@@ -29,8 +29,11 @@ package check_pkg is
   impure function get_checker_stat return checker_stat_t;
   procedure reset_checker_stat;
 
-  alias check_result_tag is decorate_tag;
-  alias result is decorate[string return string];
+  -- TODO: Make an alias when NVC compiles correctly
+  --alias check_result_tag is decorate_tag;
+  constant check_result_tag : string := "<+/->";
+  --alias result is decorate[string return string];
+  function result(str : string := "") return string;
 
   type edge_t is (rising_edge, falling_edge, both_edges);
   type trigger_event_t is (first_pipe, first_no_pipe, penultimate);
