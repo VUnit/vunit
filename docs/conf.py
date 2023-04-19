@@ -53,8 +53,6 @@ language = "en"
 
 exclude_patterns = ["release_notes/*.*"]
 
-pygments_style = "sphinx"
-
 todo_include_todos = False
 
 # -- Options for HTML output --------------------------------------------------
