@@ -8,11 +8,10 @@
 Functionality to represent and operate on VHDL and Verilog source files
 """
 from pathlib import Path
-from typing import Union
+from typing import Union, Dict
 import logging
 from copy import copy
 import traceback
-from vunit.sim_if.factory import SIMULATOR_FACTORY
 from vunit.hashing import hash_string
 from vunit.vhdl_parser import VHDLReference
 from vunit.cached import file_content_hash
@@ -28,14 +27,16 @@ class SourceFile(object):
     """
     Represents a generic source file
     """
+    _global_compile_options: Dict
 
     def __init__(self, name, library, file_type):
         self.name = name
-        self.library = library
-        self.file_type = file_type
+        self.library: Library = library
+        self.file_type: str = file_type
         self.design_units = []
         self._content_hash = None
         self._compile_options = {}
+        self._global_compile_options = {}
 
         # The file name before preprocessing
         self.original_name = name
@@ -74,6 +75,7 @@ class SourceFile(object):
         """
         Set compile option
         """
+        from vunit.sim_if.factory import SIMULATOR_FACTORY
         SIMULATOR_FACTORY.check_compile_option(name, value)
         self._compile_options[name] = copy(value)
 
@@ -81,6 +83,7 @@ class SourceFile(object):
         """
         Add compile option
         """
+        from vunit.sim_if.factory import SIMULATOR_FACTORY
         SIMULATOR_FACTORY.check_compile_option(name, value)
 
         if name not in self._compile_options:
@@ -88,28 +91,41 @@ class SourceFile(object):
         else:
             self._compile_options[name] += value
 
+    def set_global_compile_options(self, global_options: Dict):
+        self._global_compile_options = global_options
+
     @property
     def compile_options(self):
         return self._compile_options
 
-    def get_compile_option(self, name):
+    def get_compile_option(self, name, include_global=True):
         """
         Return a copy of the compile option list
         """
+        from vunit.sim_if.factory import SIMULATOR_FACTORY
         SIMULATOR_FACTORY.check_compile_option_name(name)
 
         if name not in self._compile_options:
             self._compile_options[name] = []
 
-        return copy(self._compile_options[name])
+        if include_global and name in self._global_compile_options:
+            return copy(self._compile_options[name] + self._global_compile_options[name])
+        else:
+            return copy(self._compile_options[name])
 
-    def _compile_options_hash(self):
+    def _compile_options_hash(self, include_global=True):
         """
         Compute hash of compile options
 
         Needs to be updated if there are nested dictionaries
         """
-        return hash_string(repr(sorted(self._compile_options.items())))
+        if include_global:
+            return hash_string(
+                repr(sorted(self._compile_options.items()))
+                 + repr(sorted(self._global_compile_options.items()))
+                )
+        else:
+            return hash_string(repr(sorted(self._compile_options.items())))
 
     @property
     def content_hash(self):

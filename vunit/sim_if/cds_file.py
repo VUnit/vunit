@@ -5,7 +5,7 @@
 # Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
 
 """
-Handles Cadence Incisive .cds files
+Handles Cadence Incisive/Xcelium .cds files
 """
 
 import re
@@ -14,7 +14,7 @@ from ..ostools import read_file, write_file
 
 class CDSFile(dict):
     """
-    Handles Cadence Incisive .cds files
+    Handles Cadence Incisive/Xcelium .cds files
 
     Only cares about 'define' but other lines are kept intact
     """

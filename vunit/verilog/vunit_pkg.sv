@@ -79,7 +79,11 @@ class test_runner;
       end
 
       if (index == -1) begin
-         $error("Internal error: Cannot find 'enabled_test_cases' key");
+         `ifdef XCELIUM
+            $error("Internal error: Cannot find 'enabled_test_cases' key"); $finish(1);
+         `else
+            $error("Internal error: Cannot find 'enabled_test_cases' key");
+         `endif
       end
 
       for (int i=index; i<runner_cfg.len(); i++) begin
@@ -106,7 +110,11 @@ class test_runner;
       end
 
       if (index == -1) begin
-         $error("Internal error: Cannot find 'output path' key");
+         `ifdef XCELIUM
+            $error("Internal error: Cannot find 'output path' key"); $finish(1);
+         `else
+            $error("Internal error: Cannot find 'output path' key");
+         `endif
       end
 
       for (int i=index; i<runner_cfg.len(); i++) begin
@@ -135,7 +143,12 @@ class test_runner;
    function void cleanup();
       $fwrite(trace_fd, "test_suite_done\n");
       exit_without_errors = 1;
-      $stop(0);
+      `ifdef XCELIUM
+         $finish(0);
+      `else
+         $stop(0);
+      `endif
+
    endfunction
 
    function int loop();
@@ -162,7 +175,11 @@ class test_runner;
                end
                else if (!found) begin
                   $error("Found no \"%s\" test case", test_cases_to_run[j]);
-                  $stop(1);
+                  `ifdef XCELIUM
+                     $finish(1);
+                  `else
+                     $stop(1);
+                  `endif
                   return 0;
                end
             end
@@ -219,6 +236,11 @@ class test_runner;
          begin
             #(timeout_in_ns * 1ns);
             $error("Timeout waiting finish after %.3f ns", timeout_in_ns);
+            `ifdef XCELIUM
+               $finish(1);
+            `else
+            `endif
+
             disable wait_or_timeout;
          end
          begin

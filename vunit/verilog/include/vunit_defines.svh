@@ -26,7 +26,13 @@
 
 `define TEST_CASE_SETUP if (__runner__.is_test_case_setup())
 `define TEST_CASE_CLEANUP if (__runner__.is_test_case_cleanup())
-`define __ERROR_FUNC(msg) $error(msg)
+
+`ifdef XCELIUM
+   `define __ERROR_FUNC(msg) $error(msg); $finish(1)
+`else
+   `define __ERROR_FUNC(msg) $error(msg)
+`endif
+
 `define CREATE_ARG_STRING(arg, arg_str) \
    $swrite(arg_str, arg); \
    for (int i=0; i<arg_str.len(); i++) begin \

@@ -7,6 +7,7 @@
 """
 UI classes SourceFile and SourceFileList
 """
+from typing import Dict
 
 from .. import ostools
 
@@ -15,9 +16,11 @@ class SourceFileList(list):
     """
     A list of :class:`.SourceFile`
     """
+    _global_compile_options : Dict
 
     def __init__(self, source_files):
         list.__init__(self, source_files)
+        self._global_compile_options = {}
 
     def set_compile_option(self, name, value):
         """
@@ -45,6 +48,11 @@ class SourceFileList(list):
         for source_file in self:
             source_file.add_compile_option(name, value)
 
+    def set_global_compile_options(self, global_options: Dict):
+        self._global_compile_options = global_options
+        for source_file in self:
+            source_file.set_global_compile_options(global_options)
+
     def add_dependency_on(self, source_file):
         """
         Add manual dependency of these files on other file(s)
@@ -66,11 +74,13 @@ class SourceFile(object):
     """
     A single file
     """
+    _global_compile_options : Dict
 
     def __init__(self, source_file, project, ui):
         self._source_file = source_file
         self._project = project
         self._ui = ui
+        self._global_compile_options = {}
 
     @property
     def name(self):
@@ -128,6 +138,12 @@ class SourceFile(object):
         :param name: |compile_option|
         """
         return self._source_file.get_compile_option(name)
+
+    def set_global_compile_options(self, global_options: Dict):
+        self._global_compile_options = global_options
+
+    def get_global_compile_options(self):
+        return self._global_compile_options
 
     def add_dependency_on(self, source_file):
         """

@@ -27,6 +27,7 @@ from vunit.source_file import (
 )
 from vunit.vhdl_standard import VHDL, VHDLStandard
 from vunit.library import Library
+from typing import List
 
 LOGGER = logging.getLogger(__name__)
 
@@ -429,7 +430,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
                 timestamps[source_file] = ostools.get_modification_time(hash_file_name)
         return timestamps
 
-    def get_files_in_compile_order(self, incremental=True, dependency_graph=None, files=None):
+    def get_files_in_compile_order(self, incremental=True, dependency_graph=None, files=None) -> List[SourceFile]:
         """
         Get a list of all files in compile order
         param: incremental: Only return files that need recompile if True
