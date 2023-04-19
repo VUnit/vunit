@@ -82,7 +82,9 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         self._gtkwave_args = gtkwave_args
         self._vhdl_standard = None
         self._coverage_test_dirs = set()
-        self._supports_jit = self.determine_version(prefix) >= 1.9
+
+        (major, minor) = self.determine_version(prefix)
+        self._supports_jit = major > 1 or (major == 1 and minor >= 9)
 
         if self.use_color:
             environ["NVC_COLORS"] = "always"
@@ -105,12 +107,12 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         """
         Determine the NVC version
         """
-        return float(
-            re.match(
-                r"nvc ([0-9]*\.[0-9]*).*\(.*\)",
-                cls._get_version_output(prefix),
-            ).group(1)
-        )
+        raw = cls._get_version_output(prefix)
+        match = re.match(r"nvc ([0-9]+)\.([0-9]+).*", raw)
+        if not match:
+            raise RuntimeError(f"Cannot determine NVC version: {raw}")
+
+        return (int(match.group(1)), int(match.group(2)))
 
     @classmethod
     def supports_vhpi(cls):
