@@ -130,10 +130,10 @@ jobs:
       fail-fast: false
       matrix:
         task: [
-          39-acceptance-ghdl,
-          39-vcomponents-ghdl,
-          39-lint,
-          39-unit,
+          310-acceptance-ghdl,
+          310-vcomponents-ghdl,
+          310-lint,
+          310-unit,
         ]
     name: '🟦 Windows · nightly · ${{ matrix.task }}'
     defaults:
