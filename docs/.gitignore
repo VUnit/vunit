@@ -1,6 +1,4 @@
 /_build/
-/_theme/
 /*.inc
 /license.rst
 /release_notes.rst
-/theme.tgz

@@ -31,6 +31,7 @@ deps=
     coverage: mypy
     coverage: Pygments
     docs: docutils
+    docs: furo
     docs: sphinx
     docs: sphinx-argparse
 
