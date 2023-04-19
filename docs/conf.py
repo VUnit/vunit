@@ -9,6 +9,12 @@ ROOT = Path(__file__).resolve().parent
 
 sys_path.insert(0, abspath("."))
 
+# -- Generate examples.inc ----------------------------------------------------
+
+from examples import examples
+
+examples()
+
 # -- Sphinx Options -----------------------------------------------------------
 
 # If your project needs a minimal Sphinx version, state it here.
@@ -20,7 +26,6 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.todo",
     "sphinxarg.ext",  # Automatic argparse command line argument documentation
-    "exec",
 ]
 
 autodoc_default_options = {
@@ -51,7 +56,7 @@ pygments_style = "sphinx"
 
 todo_include_todos = False
 
-# -- Options for HTML output ----------------------------------------------
+# -- Options for HTML output --------------------------------------------------
 
 if (ROOT / "_theme").is_dir():
     html_theme_path = ["."]
@@ -82,14 +87,14 @@ html_favicon = str(Path(html_static_path[0]) / "vunit.ico")
 # Output file base name for HTML help builder.
 htmlhelp_basename = "VUnitDoc"
 
-# -- InterSphinx ----------------------------------------------------------
+# -- InterSphinx --------------------------------------------------------------
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3.8/", None),
     "pytest": ("https://docs.pytest.org/en/latest/", None),
 }
 
-# -- ExtLinks -------------------------------------------------------------
+# -- ExtLinks -----------------------------------------------------------------
 
 extlinks = {
     "vunit_example": ("https://github.com/VUnit/vunit/tree/master/examples/%s/", "%s"),
