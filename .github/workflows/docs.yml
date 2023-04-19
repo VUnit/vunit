@@ -37,25 +37,9 @@ jobs:
         name: VUnit-site
         path: .tox/py311-docs/tmp/docsbuild/
 
-    - name: Publish site to gh-pages
-      if: github.event_name != 'pull_request' && github.repository == 'VUnit/vunit' && github.ref_name == 'master'
-      env:
-        GH_DEPKEY: ${{ secrets.VUNIT_GITHUB_IO_DEPLOY_KEY }}
-      run: |
-        cd .tox/py311-docs/tmp/docsbuild/
-        touch .nojekyll
-
-        git init
-        git add .
-        git config --local user.email "push@gha"
-        git config --local user.name "GHA"
-        git commit -a -m "update ${{ github.sha }}"
-
-        git remote add origin git@github.com:VUnit/VUnit.github.io
-
-        eval `ssh-agent -t 60 -s`
-        echo "$GH_DEPKEY" | ssh-add -
-        mkdir -p ~/.ssh/
-        ssh-keyscan github.com >> ~/.ssh/known_hosts
-        git push -u origin +master
-        ssh-agent -k
+    - name: '🚀 Publish site'
+      if: github.event_name != 'pull_request' && github.ref_name == 'master'
+      run: >-
+        GH_DEPKEY='${{ secrets.VUNIT_GITHUB_IO_DEPLOY_KEY }}'
+        ./.github/publish_site.sh
+        '${{ github.repository }}'
