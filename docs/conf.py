@@ -51,7 +51,7 @@ release = ""
 
 language = "en"
 
-exclude_patterns = ["release_notes/*.*"]
+exclude_patterns = ["release_notes/*.*", "news.d/*.*"]
 
 todo_include_todos = False
 

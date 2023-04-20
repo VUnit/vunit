@@ -189,26 +189,38 @@ A full list of test environments can be seen by issuing the following command:
 Making releases
 ~~~~~~~~~~~~~~~
 
+.. IMPORTANT::
+  Reference :ref:`release_notes_instructions` for creating relevant news fragments that will be added to the :ref:`release_notes`.
+
 Releases are automatically made by GitHub Actions on any ``master`` commit which is tagged.
 
 To create a new tagged release commit:
 
-- Create corresponding release notes in ``docs/release_notes/X.Y.Z.rst``.
-   - The release notes files in ``docs/release_notes/`` are used to
-     automatically generate the :ref:`release notes <release_notes>`.
+- Build the docs and review the content of ``docs/news.inc``.
+
+  - If necessary, create additional news files and build the docs again.
+
+- Add the news summary as the release notes and remove news fragments:
+
+  .. code-block::python
+
+     mv docs/news.inc docs/release_notes/X.Y.Z.rst
+     git add docs/release_notes/X.Y.Z.rst
+     git rm -f docs/news.d/*.rst
+
 - Execute ``python tools/release.py create X.Y.Z``.
-   - Will make commit with the new ``about.py`` version and release notes and tag it.
-   - Will make another commit setting ``about.py`` to the next pre release candidate version.
+   - Will make and tag a commit with the new ``about.py`` version, the release notes and removed news files.
+   - Will make another commit setting ``about.py`` to the next development version.
+
 - Push the tag to remote to trigger the release build.
-   -  ``git push origin vX.Y.Z``
+   - ``git push origin vX.Y.Z``
+
 - If the release build is successful, you can push the two commits to master.
-   -  ``git push origin master``
-   - If, in the meantime, a new commit has come into origin/master the two
-     commits have to be merged into origin/master.
+   - ``git push origin master``
+   - If, in the meantime, a new commit has come into origin/master the two commits have to be merged into origin/master.
 
-
-The CI service makes a release by uploading a new package to PyPI when a tag
-named ``vX.Y.Z`` is found in Git. A new release will not be made if:
+The CI service makes a release by uploading a new package to PyPI when a tag named ``vX.Y.Z`` is found in Git.
+A new release will not be made if:
 
 - The ``X.Y.Z`` release is already on PyPI.
 - The repo tag does not exist.
@@ -222,3 +234,31 @@ Therefore, when bumping the submodules, maintainers/contributors need to remembe
 version.
 
 Furthermore, since OSVVM is tagged periodically, bumping from tag to tag is strongly suggested.
+
+.. _release_notes_instructions:
+
+Release Notes Instructions
+--------------------------
+
+The :vunit_file:`release notes directory <docs/news.d>` contains "newsfragments" which
+are short (`reST formatted
+<https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_) files that
+contain information for users.
+
+Make sure to use full sentences in the **past or present tense** and use punctuation.
+
+Each file should be named like ``<issue #>.<type>.rst``, where ``<issue #>`` is the
+GitHub issue or pull request number, and ``<type>`` is one of:
+
+* ``breaking``: a change which may break existing functionality, such as feature removal
+  or behavior change
+* ``bugfix``: fixes a bug
+* ``change``: backwards compatible features or improvements
+* ``deprecation``: feature deprecation
+* ``misc``: a ticket was closed, but it is not necessarily important for the user
+
+For example: ``123.feature.rst``, ``456.bugfix.rst``.
+
+``towncrier`` preserves multiple paragraphs and formatting
+(code blocks, lists, and so on), but for entries other than features, it is usually
+better to stick to a single paragraph to keep it concise.
