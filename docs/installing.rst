@@ -131,11 +131,11 @@ There are three methods to make VUnit importable in your ``run.py`` script.:
 3. Add the following to your ``run.py`` file **before** the ``import vunit``
    statement:
 
-   .. code-block:: python
+.. code-block:: python
 
-      import sys
-      sys.path.append("/path/to/vunit_repo_root/")
-      import vunit
+   import sys
+   sys.path.append("/path/to/vunit_repo_root/")
+   import vunit
 
 .. _installing_dev:
 
@@ -148,14 +148,14 @@ to the Python site-packages directory. This can be achieved by using
 the ``-e`` flag with ``pip``, or the ``develop`` option with
 ``setup.py``, or setting the ``PYTHONPATH`` environment variable.
 
-   .. code-block:: console
+.. code-block:: console
 
-      > git clone https://github.com/VUnit/vunit.git
-      > cd vunit
+   > git clone https://github.com/VUnit/vunit.git
+   > cd vunit
 
-      > python setup.py develop
-      or
-      > pip install -e .
+   > python setup.py develop
+   or
+   > pip install -e .
 
 By installing VUnit in this manner, the git sources can be edited directly in
 your workspace while the ``VUnit`` package is still globally available in your
