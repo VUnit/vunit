@@ -1,0 +1,1 @@
+[JSON-for-VHDL] Fix invalid XML characters in the example.

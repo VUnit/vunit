@@ -1,0 +1,1 @@
+Clarify that ``VUNIT_SIMULATOR`` is set to ``modelsim`` when using Questa.

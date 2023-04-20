@@ -1,0 +1,1 @@
+[Active-HDL] Enable VHDL-2019.

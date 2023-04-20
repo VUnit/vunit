@@ -1,0 +1,1 @@
+[JSON-for-VHDL] Bump to ``95e848b8``.

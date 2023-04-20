@@ -1,0 +1,1 @@
+Add timing diagrams to the Check Library user guide.

@@ -250,15 +250,16 @@ Make sure to use full sentences in the **past or present tense** and use punctua
 Each file should be named like ``<issue #>.<type>.rst``, where ``<issue #>`` is the
 GitHub issue or pull request number, and ``<type>`` is one of:
 
-* ``breaking``: a change which may break existing functionality, such as feature removal
-  or behavior change
-* ``bugfix``: fixes a bug
-* ``change``: backwards compatible features or improvements
-* ``deprecation``: feature deprecation
-* ``misc``: a ticket was closed, but it is not necessarily important for the user
+* ``breaking``:may break existing functionality; such as feature removal or behavior change.
+* ``bugfix``: fixes a bug.
+* ``doc``: related to the documentation.
+* ``deprecation``: feature deprecation.
+* ``feature``: backwards compatible feature addition or improvement.
+* ``misc``: a ticket was closed, but it is not necessarily important for the user.
 
 For example: ``123.feature.rst``, ``456.bugfix.rst``.
 
-``towncrier`` preserves multiple paragraphs and formatting
-(code blocks, lists, and so on), but for entries other than features, it is usually
-better to stick to a single paragraph to keep it concise.
+.. HINT::
+  ``towncrier`` preserves multiple paragraphs and formatting
+  (code blocks, lists, and so on), but for entries other than features, it is usually better to stick
+  to a single paragraph to keep it concise.

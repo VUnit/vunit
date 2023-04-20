@@ -1,0 +1,1 @@
+Fix parsing of port type starting with signal.

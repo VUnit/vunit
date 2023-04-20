@@ -1,0 +1,1 @@
+Python 3.6 was EOL in Dec 2021; use Python 3.7 as the minimum tested version.
