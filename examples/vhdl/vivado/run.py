@@ -20,6 +20,7 @@ ROOT = Path(__file__).parent
 SRC_PATH = ROOT / "src"
 
 VU = VUnit.from_argv()
+VU.add_vhdl_builtins()
 
 VU.add_library("lib").add_source_files(SRC_PATH / "*.vhd")
 VU.add_library("tb_lib").add_source_files(SRC_PATH / "test" / "*.vhd")

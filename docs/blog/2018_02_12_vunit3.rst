@@ -75,7 +75,7 @@ Verification Components
 -----------------------
 
 In VUnit 3.0 we have a *beta* version of a :ref:`verification
-component <vc_library>` library. Using the improved ``com`` message
+component <vc_user_guide>` library. Using the improved ``com`` message
 passing it is very easy to create advanced verification components and
 we hope to get many pull requests from users for other bus types in
 the future. We've already seen some initiatives from the VUnit community
@@ -93,7 +93,7 @@ Out of the box we provide the following verification components:
   - UART RX/TX
   - (B)RAM master
 
-For more information see the :ref:`verification component library user guide <vc_library>`.
+For more information see the :ref:`verification component library user guide <vc_user_guide>`.
 
 Logging
 -------

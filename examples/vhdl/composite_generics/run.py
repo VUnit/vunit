@@ -22,6 +22,7 @@ def encode(tb_cfg):
 
 
 VU = VUnit.from_argv()
+VU.add_vhdl_builtins()
 
 TB_LIB = VU.add_library("tb_lib")
 TB_LIB.add_source_files(Path(__file__).parent / "test" / "*.vhd")

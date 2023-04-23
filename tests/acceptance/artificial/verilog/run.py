@@ -6,15 +6,18 @@
 
 from pathlib import Path
 from glob import glob
-from vunit.verilog import VUnit
+from vunit import VUnit
+
 
 root = Path(__file__).parent
 
 vu = VUnit.from_argv()
+vu.add_verilog_builtins()
+
 lib = vu.add_library("lib")
 lib2 = vu.add_library("lib2")
-files = glob(str(root / "*.sv"))
-for file in files:
+
+for file in glob(str(root / "*.sv")):
     if "tb_with_parameter_config" in file:
         lib2.add_source_files(file, defines={"DEFINE_FROM_RUN_PY": ""})
     else:
@@ -65,4 +68,5 @@ def configure_tb_same_sim_all_pass(ui):
 configure_tb_with_parameter_config()
 configure_tb_same_sim_all_pass(vu)
 lib.module("tb_other_file_tests").scan_tests_from_file(str(root / "other_file_tests.sv"))
+
 vu.main()

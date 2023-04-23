@@ -42,7 +42,7 @@ Main Features
   * Outputs JUnit report files for better `Jenkins`_ :ref:`integration <continuous_integration>`.
   * Builds on the commonly used `xUnit`_ architecture.
 
-* :ref:`Built-in VHDL utility libraries <vhdl_libraries>`:
+* :ref:`Built-in HDL utility libraries <hdl_libraries>`:
 
   * :doc:`Run library <./run/user_guide>` providing functionality for declaring multiple test cases within HDL
     testbenches.
@@ -84,7 +84,7 @@ Those are made available through the built-ins API, which is based on the librar
 
 Both the core and builtins are available in the public :ref:`python_interface` of VUnit.
 Details about how to execute a project are explained in :ref:`cli`.
-Further info about the optional libraries is found in :ref:`vhdl_libraries`.
+Further info about the optional libraries is found in :ref:`hdl_libraries`.
 
 Experimental co-simulation through GHDL's VHPIDIRECT is supported in `VUnit/cosim <https://vunit.github.io/cosim/>`__.
 

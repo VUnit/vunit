@@ -10,7 +10,9 @@ from vunit import VUnit
 ROOT = Path(__file__).parent
 
 UI = VUnit.from_argv()
+UI.add_vhdl_builtins()
 UI.add_random()
+
 UI.library("vunit_lib").add_source_files(ROOT / "test" / "*.vhd")
 
 UI.main()

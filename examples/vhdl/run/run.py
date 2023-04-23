@@ -19,6 +19,7 @@ from vunit import VUnit
 ROOT = Path(__file__).parent
 
 VU = VUnit.from_argv()
+VU.add_vhdl_builtins()
 
 LIB = VU.add_library("lib")
 LIB.add_source_files(ROOT / "*.vhd")

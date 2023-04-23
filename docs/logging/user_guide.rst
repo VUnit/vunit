@@ -1,7 +1,7 @@
 .. _logging_library:
 
-Logging Library
-===============
+Logging Library User Guide
+==========================
 
 Introduction
 ------------
@@ -303,6 +303,7 @@ the ``run.py`` file like this:
 .. code-block:: python
 
     ui = VUnit.from_argv()
+    ui.add_vhdl_builtins()
     ui.enable_location_preprocessing()
 
 Regardless of method the location information is appended to the end of the log entry:

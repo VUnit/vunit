@@ -7,11 +7,13 @@
 # Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
 
 from pathlib import Path
-from vunit.verilog import VUnit
+from vunit import VUnit
 
 ROOT = Path(__file__).parent
 
 VU = VUnit.from_argv()
+VU.add_verilog_builtins()
+
 LIB = VU.add_library("lib")
 LIB.add_source_files(ROOT / "*.sv")
 LIB.add_source_files(ROOT / "*.vams").set_compile_option("modelsim.vlog_flags", ["-ams"])

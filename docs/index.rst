@@ -29,13 +29,25 @@ often"* approach through automation. :ref:`Read more <about>`
    testimonials/testimonials
 
 .. toctree::
-   :caption: Documentation
+   :caption: Guides
    :hidden:
 
    user_guide
+   id/user_guide
+   logging/user_guide
+   check/user_guide
+   run/user_guide
+   com/user_guide
+   verification_components/user_guide
+   data_types/user_guide
+
+.. toctree::
+   :caption: Reference
+   :hidden:
+
    cli
    py/ui
-   vhdl_libraries
+   hdl_libraries
    examples
 
 .. toctree::

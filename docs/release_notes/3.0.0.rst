@@ -1,4 +1,4 @@
-- *beta* version of a :ref:`verification component <vc_library>` library.
+- *beta* version of a :ref:`verification component <vc_user_guide>` library.
 
   - AXI read/write slaves
   - Memory model

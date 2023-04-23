@@ -1,7 +1,7 @@
 .. _check_library:
 
-Check Library
-=============
+Check Library User Guide
+========================
 
 Introduction
 ------------
@@ -712,6 +712,7 @@ of this check comes when you enable the check preprocessor in your VUnit run scr
 .. code-block:: python
 
     ui = VUnit.from_argv()
+    ui.add_vhdl_builtins()
     ui.enable_check_preprocessing()
 
 The check preprocessor scans your code for calls to ``check_relation`` and then parses ``expr`` as a VHDL relation. From

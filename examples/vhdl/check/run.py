@@ -17,6 +17,7 @@ from pathlib import Path
 from vunit import VUnit
 
 VU = VUnit.from_argv()
+VU.add_vhdl_builtins()
 
 # Enable location preprocessing but exclude all but check_false to make the example less bloated
 VU.enable_location_preprocessing(
