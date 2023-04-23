@@ -286,7 +286,7 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
             status = False
 
         if self._gui and not elaborate_only:
-            cmd = ["gtkwave"] + shlex.split(self._gtkwave_args) + [wave_file]
+            cmd = ["gtkwave"] + shlex.split(self._gtkwave_args) + [str(wave_file)]
 
             init_file = config.sim_options.get(self.name + ".gtkwave_script.gui", None)
             if init_file is not None:
