@@ -52,8 +52,6 @@ In fact, ``pytest`` is required for running the acceptance tests, because some s
 certain tests to fail.
 See :doc:`pytest:how-to/skipping`.
 
-Python example
-''''''''''''''
 .. code-block:: shell
    :caption: Example of running all unit tests
 
@@ -202,7 +200,7 @@ To create a new tagged release commit:
 
 - Add the news summary as the release notes and remove news fragments:
 
-  .. code-block::python
+  .. code-block:: python
 
      mv docs/news.inc docs/release_notes/X.Y.Z.rst
      git add docs/release_notes/X.Y.Z.rst
