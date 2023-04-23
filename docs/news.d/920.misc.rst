@@ -1,1 +1,0 @@
-[CI] Forks push the docs to branch gh-pages (so it's published at ``<USERNAME>.github.io/vunit``).

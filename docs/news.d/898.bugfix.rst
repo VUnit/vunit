@@ -1,1 +1,0 @@
-Detect GHDL backend with newer GCC|LLVM.

@@ -1,1 +1,0 @@
-Skip non-generic OSVVM packages when the simulator supports generics.

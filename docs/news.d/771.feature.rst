@@ -1,1 +1,0 @@
-Skip addition of built-in dependencies (OSVVM and/or JSON-for-VHDL) if the library is added previously.

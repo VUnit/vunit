@@ -1,2 +1,0 @@
-Improved release notes by adding sections using `towncrier <https://github.com/twisted/towncrier>`__ to aid in finding
-relevant information about releases and updated contributing guide with instructions.

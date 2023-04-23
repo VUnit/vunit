@@ -1,1 +1,0 @@
-[Vivado] Add flag ``fail_on_non_hdl_files``.

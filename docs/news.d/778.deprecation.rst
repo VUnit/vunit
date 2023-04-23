@@ -1,2 +1,0 @@
-Add ``compile_builtins`` deprecation warning.
-Use ``add_vhdl_builtins`` and/or ``add_verilog_builtins`` instead.

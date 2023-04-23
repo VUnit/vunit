@@ -1,0 +1,77 @@
+
+Bug Fixes
+~~~~~~~~~
+
+- [JSON-for-VHDL] Fix invalid XML characters in the example. (:vunit_issue:`356`, :vunit_issue:`845`)
+- Fix AXI Stream slave back to back transfers. (:vunit_issue:`573`, :vunit_issue:`858`)
+- [Riviera-PRO] Fix for RUNTIME_0232 and RUNTIME_022 messages. (:vunit_issue:`621`, :vunit_issue:`825`)
+- Fix delta cycle race conditions. (:vunit_issue:`642`, :vunit_issue:`813`)
+- Skip non-generic OSVVM packages when the simulator supports generics. (:vunit_issue:`768`, :vunit_issue:`769`)
+- Fix location preprocessor casing bug. (:vunit_issue:`773`, :vunit_issue:`774`)
+- Support detecting and failing on ambiguous direct entity instantiations. (:vunit_issue:`781`)
+- [Vivado] Add flag ``fail_on_non_hdl_files``. (:vunit_issue:`782`, :vunit_issue:`786`)
+- Fix parsing of port type starting with signal. (:vunit_issue:`792`, :vunit_issue:`826`)
+- Fix false pass. (:vunit_issue:`794`)
+- Fix axi_lite_master wait behaviour if idle. (:vunit_issue:`797`, :vunit_issue:`856`)
+- Handle PermissionError while listing available simulators. (:vunit_issue:`819`, :vunit_issue:`820`)
+- [ModelSim/Questa] Workaround for compilation bug. (:vunit_issue:`838`, :vunit_issue:`840`)
+- Support generics with explicit constant declaration. (:vunit_issue:`852`, :vunit_issue:`854`)
+- Detect GHDL backend with newer GCC|LLVM. (:vunit_issue:`898`, :vunit_issue:`901`)
+
+
+Deprecations
+~~~~~~~~~~~~
+
+- Add ``compile_builtins`` deprecation warning.
+  Use ``add_vhdl_builtins`` and/or ``add_verilog_builtins`` instead. (:vunit_issue:`559`, :vunit_issue:`757`, :vunit_issue:`777`, :vunit_issue:`778`)
+- [OSVVM] Bump to 2022.04. (:vunit_issue:`754`, :vunit_issue:`780`, :vunit_issue:`790`, :vunit_issue:`827`)
+- Python 3.6 was EOL in Dec 2021; use Python 3.7 as the minimum tested version.
+- [JSON-for-VHDL] Bump to ``95e848b8``.
+
+
+Documentation
+~~~~~~~~~~~~~
+
+- Add timing diagrams to the Check Library user guide. (:vunit_issue:`576`, :vunit_issue:`823`)
+- Add ``add_vhdl_builtins`` and ``add_verilog_builtins``. (:vunit_issue:`757`)
+- Add section Overview, including a diagram. (:vunit_issue:`779`)
+- Improve documentation for ``pre_config`` and ``post_check``. (:vunit_issue:`801`, :vunit_issue:`849`)
+- Improve help of CLI option ``--clean``. (:vunit_issue:`810`, :vunit_issue:`855`)
+- Added LibraryList. (:vunit_issue:`816`)
+- Fix typos. (:vunit_issue:`821`, :vunit_issue:`832`)
+- Clarify that ``VUNIT_SIMULATOR`` is set to ``modelsim`` when using Questa. (:vunit_issue:`834`, :vunit_issue:`850`)
+- Improve documentation of ``check_enabled``. (:vunit_issue:`874`)
+- Added Identity package user guide. (:vunit_issue:`887`, :vunit_issue:`888`)
+- Change theme to `furo <https://github.com/pradyunsg/furo>`__. (:vunit_issue:`912`)
+- Add blog post on FPGA World 2022 in Stockholm.
+- Add blog post on VUnit's relation to other frameworks.
+
+
+Features
+~~~~~~~~
+
+- Add NVC simulator support. (:vunit_issue:`44`, :vunit_issue:`904`, :vunit_issue:`914`, :vunit_issue:`926`, :vunit_issue:`927`, :vunit_issue:`930`)
+- Skip addition of built-in dependencies (OSVVM and/or JSON-for-VHDL) if the library is added previously. (:vunit_issue:`767`, :vunit_issue:`771`)
+- Add method to get list of libraries from VUnit object. (:vunit_issue:`815`)
+- Make ``dict_t`` type generic. (:vunit_issue:`830`, :vunit_issue:`835`)
+- Add support for byte enable to Avalon slave. (:vunit_issue:`872`)
+- [Active-HDL] Enable VHDL-2019. (:vunit_issue:`875`)
+- Add high-level event synchronization mechanism. (:vunit_issue:`883`)
+- Add Identity package. (:vunit_issue:`887`)
+- Add phases for better runtime control. (:vunit_issue:`900`)
+- [VHDL-2019] Support interface lists with trailing comma. (:vunit_issue:`903`)
+- [VHDL-2019] Add method ``supports_vhdl_call_paths`` to the simulator interface. (:vunit_issue:`908`)
+- Introduce new class ``LibraryList`` and add method to get list of libraries from VUnit object.
+
+
+Miscellaneous
+~~~~~~~~~~~~~
+
+- Replace ``inspect.getargspec`` method, removed in Python 3.11. (:vunit_issue:`868`)
+- Test support on Python 3.11. (:vunit_issue:`870`)
+- [CI] Add workflow_dispatch. (:vunit_issue:`911`)
+- [CI] Add NVC jobs. (:vunit_issue:`917`)
+- Improved release notes by adding sections using `towncrier <https://github.com/twisted/towncrier>`__ to aid in finding
+  relevant information about releases and updated contributing guide with instructions. (:vunit_issue:`918`, :vunit_issue:`921`)
+- [CI] Forks push the docs to branch gh-pages (so it's published at ``<USERNAME>.github.io/vunit``). (:vunit_issue:`920`)
+- Add utilities to create HTML from code snippets and VUnit logs.

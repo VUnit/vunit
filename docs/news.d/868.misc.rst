@@ -1,1 +1,0 @@
-Replace ``inspect.getargspec`` method, removed in Python 3.11.

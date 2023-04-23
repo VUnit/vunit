@@ -1,1 +1,0 @@
-Introduce new class ``LibraryList`` and add method to get list of libraries from VUnit object.

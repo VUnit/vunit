@@ -1,1 +1,0 @@
-[VHDL-2019] Add method ``supports_vhdl_call_paths`` to the simulator interface.
