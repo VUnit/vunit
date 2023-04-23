@@ -205,7 +205,7 @@ wait statement.
 
 If you are using Active-HDL or Riviera-PRO and compiling your code with VHDL-2019, log location is automatically
 supported. If that is no option, you can use VUnit's location preprocessor to achieve the same result
-(see :ref:`log location <logging/user_guide:Log Location>`). If you are not using either of these options, the extra
+(see :ref:`logging_library:LogLocation`). If you are not using either of these options, the extra
 entry (or entries if you have multiple wait statements) will not be helpful. However, there are other ways to identify
 the problematic wait statement(s):
 

@@ -279,6 +279,8 @@ counted to get statistics on disabled log messages.
     disable(get_logger("memory_ip:timing_check"), warning);
 
 
+.. _logging_library:LogLocation:
+
 Log Location
 ------------
 

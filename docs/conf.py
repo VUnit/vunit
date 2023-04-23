@@ -33,7 +33,6 @@ extensions = [
     "sphinx.ext.extlinks",
     "sphinx.ext.intersphinx",
     "sphinx.ext.todo",
-    "sphinx.ext.autosectionlabel",
     "sphinxarg.ext",  # Automatic argparse command line argument documentation
 ]
 
