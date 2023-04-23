@@ -82,7 +82,7 @@ class ActiveHDLInterface(SimulatorInterface):
     def __init__(self, prefix, output_path, gui=False):
         SimulatorInterface.__init__(self, output_path, gui)
         self._library_cfg = str(Path(output_path) / "library.cfg")
-        self._prefix = prefix
+        self.prefix = prefix
         self._create_library_cfg()
         self._libraries = []
         self._coverage_files = set()
@@ -123,7 +123,7 @@ class ActiveHDLInterface(SimulatorInterface):
         """
         return (
             [
-                str(Path(self._prefix) / "vcom"),
+                str(Path(self.prefix) / "vcom"),
                 "-quiet",
                 "-j",
                 str(Path(self._library_cfg).parent),
@@ -141,7 +141,7 @@ class ActiveHDLInterface(SimulatorInterface):
         """
         Returns the command to compile a Verilog file
         """
-        args = [str(Path(self._prefix) / "vlog"), "-quiet", "-lc", self._library_cfg]
+        args = [str(Path(self.prefix) / "vlog"), "-quiet", "-lc", self._library_cfg]
         args += source_file.compile_options.get("activehdl.vlog_flags", [])
         args += ["-work", source_file.library.name, source_file.name]
         for library in self._libraries:
@@ -165,7 +165,7 @@ class ActiveHDLInterface(SimulatorInterface):
 
         if not file_exists(path):
             proc = Process(
-                [str(Path(self._prefix) / "vlib"), library_name, path],
+                [str(Path(self.prefix) / "vlib"), library_name, path],
                 cwd=str(Path(self._library_cfg).parent),
                 env=self.get_env(),
             )
@@ -175,7 +175,7 @@ class ActiveHDLInterface(SimulatorInterface):
             return
 
         proc = Process(
-            [str(Path(self._prefix) / "vmap"), library_name, path],
+            [str(Path(self.prefix) / "vmap"), library_name, path],
             cwd=str(Path(self._library_cfg).parent),
             env=self.get_env(),
         )
@@ -189,7 +189,7 @@ class ActiveHDLInterface(SimulatorInterface):
             return
 
         with Path(self._library_cfg).open("w", encoding="utf-8") as ofile:
-            ofile.write(f'$INCLUDE = "{str(Path(self._prefix).parent / "vlib" / "library.cfg")}"\n')
+            ofile.write(f'$INCLUDE = "{str(Path(self.prefix).parent / "vlib" / "library.cfg")}"\n')
 
     _library_re = re.compile(r'([a-zA-Z_]+)\s=\s"(.*)"')
 
@@ -327,7 +327,7 @@ proc vunit_run {} {
             fptr.write(merge_command + "\n")
 
         vcover_cmd = [
-            str(Path(self._prefix) / "vsimsa"),
+            str(Path(self.prefix) / "vsimsa"),
             "-tcl",
             str(fix_path(merge_script_name)),
         ]
@@ -396,7 +396,7 @@ proc vunit_run {} {
 
         try:
             args = [
-                str(Path(self._prefix) / "vsim"),
+                str(Path(self.prefix) / "vsim"),
                 "-gui" if gui else "-c",
                 "-l",
                 str(Path(batch_file_name).parent / "transcript"),

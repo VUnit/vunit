@@ -24,11 +24,11 @@ class VsimSimulatorMixin(object):
     """
 
     def __init__(self, prefix, persistent, sim_cfg_file_name):
-        self._prefix = prefix
+        self.prefix = prefix
         sim_cfg_file_name = str(Path(sim_cfg_file_name).resolve())
         self._sim_cfg_file_name = sim_cfg_file_name
 
-        prefix = self._prefix  # Avoid circular dependency inhibiting process destruction
+        prefix = self.prefix  # Avoid circular dependency inhibiting process destruction
         env = self.get_env()
 
         def create_process(ident):
@@ -270,7 +270,7 @@ proc vunit_run {} {
 
         try:
             args = [
-                str(Path(self._prefix) / "vsim"),
+                str(Path(self.prefix) / "vsim"),
                 "-gui" if gui else "-c",
                 "-l",
                 str(Path(batch_file_name).parent / "transcript"),

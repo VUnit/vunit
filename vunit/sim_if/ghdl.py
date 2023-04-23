@@ -94,7 +94,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         backend="llvm",
     ):
         SimulatorInterface.__init__(self, output_path, gui)
-        self._prefix = prefix
+        self.prefix = prefix
         self._project = None
 
         if gui and (not self.find_executable("gtkwave")):
@@ -238,7 +238,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         Returns the command to compile a vhdl file
         """
         cmd = [
-            str(Path(self._prefix) / self.executable),
+            str(Path(self.prefix) / self.executable),
             "-a",
             f"--workdir={source_file.library.directory!s}",
             f"--work={source_file.library.name!s}",
@@ -270,7 +270,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         """
         Return GHDL simulation command
         """
-        cmd = [str(Path(self._prefix) / self.executable)]
+        cmd = [str(Path(self.prefix) / self.executable)]
 
         cmd += ["-e"] if ghdl_e else ["--elab-run"]
 

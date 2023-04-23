@@ -188,6 +188,7 @@ See https://github.com/VUnit/vunit/issues/777.
 """
             )
             print(hline)
+        self._simulator_if = self._create_simulator_if(for_init=True)
 
     def _create_database(self):
         """
@@ -779,18 +780,27 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         all_ok = self._main_run(post_run)
         return all_ok
 
-    def _create_simulator_if(self):
+    def _create_simulator_if(self, for_init=False):
         """
         Create new simulator instance
+            param: for_init: Allows missing simulator with a warning instead of an error
         """
 
         if self._simulator_class is None:
-            LOGGER.error(
+            missing_simulator_msg = (
                 "No available simulator detected.\n"
                 "Simulator binary folder must be available in PATH environment variable.\n"
                 "Simulator binary folder can also be set the in VUNIT_<SIMULATOR_NAME>_PATH environment variable.\n"
             )
-            sys.exit(1)
+            if for_init:
+                LOGGER.warning(
+                    missing_simulator_msg
+                    + "Please set a simulator either through environment variables or through set_simulator"
+                )
+                return None
+            else:
+                LOGGER.error(missing_simulator_msg)
+                sys.exit(1)
 
         if not Path(self._simulator_output_path).exists():
             os.makedirs(self._simulator_output_path)
@@ -801,9 +811,10 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         """
         Main with running tests
         """
-        simulator_if = self._create_simulator_if()
-        test_list = self._create_tests(simulator_if)
-        self._compile(simulator_if)
+        if not self._simulator_if:
+            self._simulator_if = self._create_simulator_if()
+        test_list = self._create_tests(self._simulator_if)
+        self._compile(self._simulator_if)
         print()
 
         start_time = ostools.get_time()
@@ -821,9 +832,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         report.print_str()
 
         if post_run is not None:
-            post_run(results=Results(self._output_path, simulator_if, report))
-
-        del simulator_if
+            post_run(results=Results(self._output_path, self._simulator_if, report))
 
         if self._args.xunit_xml is not None:
             xml = report.to_junit_xml_str(self._args.xunit_xml_format)
@@ -910,8 +919,9 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         """
         Main function when only compiling
         """
-        simulator_if = self._create_simulator_if()
-        self._compile(simulator_if)
+        if not self._simulator_if:
+            self._simulator_if = self._create_simulator_if()
+        self._compile(self._simulator_if)
         return True
 
     def _create_output_path(self, clean: bool):
@@ -1105,6 +1115,24 @@ other preprocessors. Lowest value first. The order between preprocessors with th
             return None
         return self._simulator_class.name
 
+    def get_simulator_id(self):
+        """
+        Get the id of the simulator used.
+        Will return None if no simulator was found.
+        """
+        if self._simulator_if is None:
+            return None
+        return self._simulator_if.id
+
+    def get_simulator_prefix(self):
+        """
+        Get the perfix of the simulator used.
+        Will return None if no simulator was found.
+        """
+        if self._simulator_if is None:
+            return None
+        return self._simulator_if.prefix
+
     def simulator_supports_coverage(self):
         """
         Returns True when the simulator supports coverage
@@ -1114,3 +1142,17 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         if self._simulator_class is None:
             return None
         return self._simulator_class.supports_coverage()
+
+    def set_simulator(self, simulator, id=None, prefix=None):
+        """
+        Set the simulator to use, alternative to using environment variables
+        Useful for frequent simulator switching
+        param: simulator: Name of simulator to use
+        param: id: Optionally specify unique name for this instance of this simulator
+        param: prefix: Optionally specify prefix of the simulator
+        """
+        self._simulator_class = SIMULATOR_FACTORY.get_simulator(simulator)
+        self._simulator_if = self._create_simulator_if()
+        self._simulator_if.set_id(id)
+        self._simulator_if.set_prefix(prefix)
+        self._simulator_output_path = str(Path(self._output_path) / self.get_simulator_id())
