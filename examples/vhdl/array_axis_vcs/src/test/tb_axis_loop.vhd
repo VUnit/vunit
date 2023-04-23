@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2022, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
 
 -- This testbench is a Minimum Working Example (MWE) of VUnit's resources to read/write CSV files and to verify
 -- AXI4-Stream components. A CSV file that contains comma separated integers is read from `data_path & csv_i`, and it is
