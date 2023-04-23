@@ -10,7 +10,6 @@ Functions to add builtin VHDL code to a project for compilation
 
 from pathlib import Path
 from glob import glob
-from warnings import warn
 import logging
 
 from vunit.vhdl_standard import VHDL, VHDLStandard
@@ -38,7 +37,7 @@ class Builtins(object):
         def add(name, deps=tuple()):
             self._builtins_adder.add_type(name, getattr(self, f"_add_{name!s}"), deps)
 
-        add("array_util")
+        add("array_util")  # Removed in v5.0.0
         add("com")
         add("verification_components", ["com", "osvvm"])
         add("osvvm")
@@ -95,19 +94,12 @@ class Builtins(object):
                 allow_empty=False,
             )
 
-    def _add_array_util(self):
+    @staticmethod
+    def _add_array_util():
         """
-        Add array utility
+        Array utility was removed in v5.0.0. Raise a runtime error.
         """
-        if not self._vhdl_standard >= VHDL.STD_2008:
-            raise RuntimeError("Array util only supports vhdl 2008 and later")
-
-        arr_deprecation_note = (
-            "'array_t' is deprecated and it will removed in future releases; use 'integer_array_t' instead"
-        )
-        warn(arr_deprecation_note, Warning)
-
-        self._vunit_lib.add_source_files(VHDL_PATH / "array" / "src" / "*.vhd")
+        raise RuntimeError("Array util was removed in v5.0.0; use 'integer_array_t' instead")
 
     def _add_random(self):
         """
