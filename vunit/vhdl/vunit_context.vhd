@@ -15,15 +15,12 @@ context vunit_context is
   use vunit_lib.log_levels_pkg.all;
   use vunit_lib.logger_pkg.all;
   use vunit_lib.log_handler_pkg.all;
-  use vunit_lib.log_deprecated_pkg.all;
   use vunit_lib.id_pkg.all;
   use vunit_lib.ansi_pkg.all;
   use vunit_lib.checker_pkg.all;
   use vunit_lib.check_pkg.all;
-  use vunit_lib.check_deprecated_pkg.all;
   use vunit_lib.run_types_pkg.all;
   use vunit_lib.run_pkg.all;
-  use vunit_lib.run_deprecated_pkg.all;
   use vunit_lib.runner_pkg.key_t;
   use vunit_lib.event_common_pkg.all;
   use vunit_lib.event_pkg.all;
