@@ -17,7 +17,6 @@ import re
 import shutil
 from json import dump
 from sys import stdout  # To avoid output catched in non-verbose mode
-from warnings import warn
 from ..exceptions import CompileError
 from ..ostools import Process
 from . import SimulatorInterface, ListOfStringOption, StringOption, BooleanOption
@@ -38,7 +37,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
 
     compile_options = [
         ListOfStringOption("ghdl.a_flags"),
-        ListOfStringOption("ghdl.flags"),
+        ListOfStringOption("ghdl.flags"),  # Removed in v5.0.0
     ]
 
     sim_options = [
@@ -237,6 +236,9 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         """
         Returns the command to compile a vhdl file
         """
+        if source_file.compile_options.get("ghdl.flags", []) != []:
+            raise RuntimeError("'ghdl.flags was removed in v5.0.0; use 'ghdl.a_flags' instead")
+
         cmd = [
             str(Path(self._prefix) / self.executable),
             "-a",
@@ -247,16 +249,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         for library in self._project.get_libraries():
             cmd += [f"-P{library.directory!s}"]
 
-        a_flags = source_file.compile_options.get("ghdl.a_flags", [])
-        flags = source_file.compile_options.get("ghdl.flags", [])
-        if flags != []:
-            warn(
-                ("'ghdl.flags' is deprecated and it will be removed in future releases; use 'ghdl.a_flags' instead"),
-                Warning,
-            )
-            a_flags += flags
-
-        cmd += a_flags
+        cmd += source_file.compile_options.get("ghdl.a_flags", [])
 
         if source_file.compile_options.get("enable_coverage", False):
             # Add gcc compilation flags for coverage
