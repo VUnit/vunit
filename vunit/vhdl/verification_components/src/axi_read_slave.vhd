@@ -99,8 +99,8 @@ begin
       if beats > 0 and (rvalid = '0' or rready = '1') and not self.should_stall_data then
         rvalid <= '1';
         for j in 0 to burst.size-1 loop
-          idx := (address + j) mod self.data_size;
-          rdata(8*idx+7 downto 8*idx) <= std_logic_vector(to_unsigned(read_byte(axi_slave.p_memory, address+j), 8));
+          idx := address - (address mod self.data_size) + j;
+          rdata(8*j+7 downto 8*j) <= std_logic_vector(to_unsigned(read_byte(axi_slave.p_memory, idx), 8));
         end loop;
 
         if burst.burst_type = axi_burst_type_incr then
