@@ -100,7 +100,13 @@ begin
         rvalid <= '1';
         for j in 0 to burst.size-1 loop
           idx := address - (address mod self.data_size) + j;
-          rdata(8*j+7 downto 8*j) <= std_logic_vector(to_unsigned(read_byte(axi_slave.p_memory, idx), 8));
+
+          --Don't try to read lower than the burst's base addr; only kicks in when unaligned
+          if idx >= burst.address then
+            rdata(8*j+7 downto 8*j) <= std_logic_vector(to_unsigned(read_byte(axi_slave.p_memory, idx), 8));
+          else
+            rdata(8*j+7 downto 8*j) <= (others => '-');
+          end if;
         end loop;
 
         if burst.burst_type = axi_burst_type_incr then
