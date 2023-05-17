@@ -94,21 +94,22 @@ begin
           beats := burst.length;
           rid <= std_logic_vector(to_unsigned(burst.id, rid'length));
           rresp <= axi_resp_okay;
-          address := burst.address - (burst.address mod self.data_size); --aligned address
+          address := burst.address - (burst.address mod burst.size); --aligned address
         end if;
       end if;
 
       if beats > 0 and (rvalid = '0' or rready = '1') and not self.should_stall_data then
         rvalid <= '1';
+        rdata  <= (others => '-');
         for j in 0 to burst.size-1 loop
           idx := (address + j) mod self.data_size;
 
           --Don't try to read lower than the burst's base addr; only kicks in when unaligned
-          if address >= burst.address then
+          if address+j >= burst.address then
             debug(logger, "RD addr " & integer'image(address+j) & ", put in byte lane " & integer'image(idx));
             rdata(8*idx+7 downto 8*idx) <= std_logic_vector(to_unsigned(read_byte(axi_slave.p_memory, address+j), 8));
           else
-            rdata(8*idx+7 downto 8*idx) <= (others => '-');
+            debug(logger, "SKIP RD addr " & integer'image(address+j));
           end if;
         end loop;
 
