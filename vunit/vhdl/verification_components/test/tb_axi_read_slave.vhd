@@ -101,7 +101,7 @@ begin
       size := 2**log_size;
       random_integer_vector_ptr(rnd, data, size * len, 0, 255);
 
-      buf := allocate(memory, 8 * len, alignment => alignment);
+      buf := allocate(memory, length(data), alignment => alignment);
       for i in 0 to length(data)-1 loop
         write_byte(memory, base_address(buf)+i, get(data, i));
       end loop;
@@ -116,7 +116,7 @@ begin
     variable log_size : natural;
     variable buf : buffer_t;
     variable id : std_logic_vector(arid'range);
-    variable len : natural;
+    variable len : positive;
     variable burst : axi_burst_type_t;
     variable start_time, diff_time : time;
   begin
@@ -138,7 +138,7 @@ begin
             assert false;
         end case;
 
-        log_size := rnd.RandInt(0, log_data_size-1);
+        log_size := rnd.RandInt(0, log_data_size);
         transfer(log_size, len, id, burst, alignment => 4096);
       end loop;
 
@@ -157,7 +157,18 @@ begin
             assert false;
         end case;
 
-        log_size := rnd.RandInt(0, log_data_size-1);
+        log_size := rnd.RandInt(0, log_data_size);
+
+        --If the burst will cross a 4KB boundary, lower the length
+        --If the min length is reached and still crossing, lower the size
+        while (2**log_size * len) > (4096 - (num_bytes(memory) mod 4096)) loop
+          debug("total size = " & integer'image(2**log_size * len) & ", num_bytes = " & integer'image(num_bytes(memory)));
+          if len = 1 then
+            log_size := log_size - 1;
+          else
+            len := len - 1;
+          end if;
+        end loop;
         transfer(log_size, len, id, burst, alignment => rnd.RandInt(1, log_data_size));
       end loop;
 
