@@ -100,7 +100,7 @@ begin
 
       if beats > 0 and (rvalid = '0' or rready = '1') and not self.should_stall_data then
         rvalid <= '1';
-        rdata  <= (others => '-');
+        rdata  <= (rdata'range => '-');
         for j in 0 to burst.size-1 loop
           idx := (address + j) mod self.data_size;
 
