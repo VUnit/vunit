@@ -8,6 +8,7 @@
 Test of the Verilog parser
 """
 
+from typing import Optional
 from unittest import TestCase, mock
 import os
 from pathlib import Path
@@ -15,6 +16,7 @@ import time
 import shutil
 from vunit.ostools import renew_path
 from vunit.parsing.verilog.parser import VerilogParser
+from vunit.parsing.verilog.preprocess import Defines, IncludePaths
 
 
 class TestVerilogParser(TestCase):  # pylint: disable=too-many-public-methods
@@ -377,7 +379,7 @@ endmodule;
         self.assertEqual(len(result.modules), 1)
         self.assertEqual(result.modules[0].name, "mod2")
 
-    def write_file(self, file_name, contents):
+    def write_file(self, file_name: str, contents: str) -> None:
         """
         Write file with contents into output path
         """
@@ -388,7 +390,9 @@ endmodule;
         with full_name.open("w") as fptr:
             fptr.write(contents)
 
-    def parse(self, code, include_paths=None, cache=None, defines=None):
+    def parse(
+        self, code: str, include_paths: Optional[IncludePaths] = None, cache=None, defines: Optional[Defines] = None
+    ):
         """
         Helper function to parse
         """

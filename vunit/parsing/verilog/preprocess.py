@@ -30,6 +30,11 @@ from vunit.ostools import read_file
 LOGGER = logging.getLogger(__name__)
 
 
+Defines = Dict[str, "Macro"]
+IncludePaths = List[str]
+IncludedFiles = List[Tuple[str, Optional[str]]]
+
+
 class Macro:
     """
     A `define macro with zero or more arguments
@@ -158,11 +163,6 @@ class Macro:
 
         values.append(value)
         return values
-
-
-Defines = Dict[str, Macro]
-IncludePaths = List[str]
-IncludedFiles = List[Tuple[str, Optional[str]]]
 
 
 class VerilogPreprocessor:

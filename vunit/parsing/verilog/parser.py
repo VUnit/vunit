@@ -14,12 +14,15 @@ Verilog parsing functionality
 import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-from typing_extensions import TypeAlias, Self
+from typing_extensions import Self
 from vunit.ostools import read_file
 from vunit.parsing.encodings import HDL_FILE_ENCODING
 from vunit.parsing.tokenizer import Token, TokenStream, EOFException, LocationException
 from vunit.parsing.verilog.tokenizer import VerilogTokenizer
 from vunit.parsing.verilog.preprocess import (
+    Defines,
+    IncludePaths,
+    IncludedFiles,
     VerilogPreprocessor,
     find_included_file,
     Macro,
@@ -28,11 +31,6 @@ from vunit.parsing.verilog.tokens import KeywordKind, TokenKind
 from vunit.cached import file_content_hash
 
 LOGGER = logging.getLogger(__name__)
-
-
-Defines: TypeAlias = Dict[str, Macro]
-IncludePaths: TypeAlias = List[str]
-IncludedFiles: TypeAlias = List[Tuple[str, Optional[str]]]
 
 
 class VerilogParser:
