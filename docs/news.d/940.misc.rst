@@ -1,0 +1,1 @@
+[NVC] Multi-word command line arguments are now quoted in the log.
