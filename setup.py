@@ -76,7 +76,7 @@ setup(
         "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
     ],
     python_requires=">=3.7",
-    install_requires=["colorama"],
+    install_requires=["colorama", "typing-extensions"],
     requires=["colorama", "typing-extensions"],
     license="Mozilla Public License 2.0 (MPL 2.0)",
     author="Lars Asplund",

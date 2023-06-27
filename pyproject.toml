@@ -63,6 +63,7 @@ passenv=ALDEC_LICENSE_FILE
 
 deps=
     fmt: black
+    typing-extensions
     pytest
     lint: pycodestyle
     lint: pylint
