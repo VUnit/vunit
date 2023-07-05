@@ -303,7 +303,7 @@ proc vunit_run {} {
 }
 """
 
-    def merge_coverage(self, file_name, args=None):
+    def merge_coverage(self, file_name="", args=None):
         """
         Merge coverage from all test cases,
         """

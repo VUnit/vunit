@@ -366,7 +366,7 @@ proc _vunit_sim_restart {} {
 
         return " ".join(vsim_extra_args)
 
-    def merge_coverage(self, file_name, args=None):
+    def merge_coverage(self, file_name="", args=None):
         """
         Merge coverage from all test cases
         """

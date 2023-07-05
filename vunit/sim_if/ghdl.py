@@ -63,7 +63,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         group.add_argument("--gtkwave-args", default="", help="Arguments to pass to gtkwave")
 
     @classmethod
-    def from_args(cls, args, output_path, **kwargs):
+    def from_args(cls, args, output_path):
         """
         Create instance from args namespace
         """
@@ -387,7 +387,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
 
         return compilation_ok
 
-    def merge_coverage(self, file_name, args=None):
+    def merge_coverage(self, file_name=None):
         """
         Merge coverage from all test cases
         """

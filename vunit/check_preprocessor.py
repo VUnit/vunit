@@ -26,7 +26,7 @@ class CheckPreprocessor(Preprocessor):
         self._leading_paranthesis = re.compile(r"[\s(]*")
         self._trailing_paranthesis = re.compile(r"[\s)]*")
 
-    def run(self, code, file_name):  # pylint: disable=unused-argument
+    def run(self, code, file_name=None):  # pylint: disable=unused-argument
         check_relation_pattern = re.compile(r"[^a-zA-Z0-9_](?P<call>check_relation)\s*(?P<parameters>\()", re.MULTILINE)
 
         check_relation_calls = list(check_relation_pattern.finditer(code))
