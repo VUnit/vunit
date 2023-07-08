@@ -94,7 +94,7 @@ class LocationPreprocessor(Preprocessor):
     _subprogram_declaration_start_backwards_pattern = re.compile(r"\s+(erudecorp|noitcnuf)", re.IGNORECASE)
     _assignment_pattern = re.compile(r"\s*(:=|<=)", re.MULTILINE)
 
-    def run(self, code, file_name):
+    def run(self, code, file_name=None):
         potential_subprogram_call_with_arguments_pattern = re.compile(
             r"[^a-zA-Z0-9_](?P<subprogram>" + "|".join(self._subprograms_with_arguments) + r")\s*(?P<args>\()",
             re.MULTILINE,
