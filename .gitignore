@@ -18,4 +18,3 @@ my_logger.csv
 /tests/acceptance/*_out
 /tests/unit/test_report_output.txt
 /vunit/vhdl/check/test/tb_check_equal.vhd
-/vunit/vhdl/check/test/tb_check_match.vhd
