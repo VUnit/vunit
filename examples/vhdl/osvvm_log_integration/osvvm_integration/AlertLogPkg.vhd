@@ -944,7 +944,7 @@ package body AlertLogPkg is
         if WriteAlertErrorCountVar then
           return ErrorCount + 1;
         else
-          return no_val;
+          return -1;
         end if ;
       end;
 
@@ -1001,27 +1001,29 @@ package body AlertLogPkg is
           if not IsTranscriptOpen or IsTranscriptMirrored then
             write_to_log (
               output,
+              "",
               msg => message,
               log_time => log_time,
               log_level => alert_level,
               log_source_name => log_source_name,
-              val_1 => AlertLogJustifyAmountVar,
-              val_2 => error_count,
+              int_1 => AlertLogJustifyAmountVar,
+              int_2 => error_count,
               str_1 => AlertPrefixVar.Get(OSVVM_DEFAULT_ALERT_PREFIX),
               str_2 => prefix,
               str_3 => suffix
             );
           end if;
 
-          if IsTranscriptOpen or IsTranscriptMirrored then
+          if IsTranscriptOpen then
             write_to_log (
               TranscriptFile,
+              "path/to/my_transcript.txt", -- TODO: Add support for retrieving transcript path
               msg => message,
               log_time => log_time,
               log_level => alert_level,
               log_source_name => log_source_name,
-              val_1 => AlertLogJustifyAmountVar,
-              val_2 => error_count,
+              int_1 => AlertLogJustifyAmountVar,
+              int_2 => error_count,
               str_1 => AlertPrefixVar.Get(OSVVM_DEFAULT_ALERT_PREFIX),
               str_2 => prefix,
               str_3 => suffix
@@ -2237,7 +2239,7 @@ package body AlertLogPkg is
         if WriteLogErrorCountVar and WriteAlertErrorCountVar then
           return ErrorCount;
         else
-          return no_val;
+          return -1;
         end if ;
       end;
 
@@ -2280,26 +2282,28 @@ package body AlertLogPkg is
       if not IsTranscriptOpen or IsTranscriptMirrored then
         write_to_log (
           output,
+          "",
           msg => Message,
           log_time => log_time,
           log_level => log_level,
           log_source_name => log_source_name,
-          val_1 => AlertLogJustifyAmountVar,
-          val_2 => error_count,
+          int_1 => AlertLogJustifyAmountVar,
+          int_2 => error_count,
           str_1 => LogPrefixVar.Get(OSVVM_DEFAULT_LOG_PREFIX),
           str_3 => suffix
         );
       end if;
 
-      if IsTranscriptOpen or IsTranscriptMirrored then
+      if IsTranscriptOpen then
         write_to_log (
           TranscriptFile,
+          "path/to/my_transcript.txt", -- TODO: Add support for retrieving transcript path
           msg => Message,
           log_time => log_time,
           log_level => log_level,
           log_source_name => log_source_name,
-          val_1 => AlertLogJustifyAmountVar,
-          val_2 => error_count,
+          int_1 => AlertLogJustifyAmountVar,
+          int_2 => error_count,
           str_1 => LogPrefixVar.Get(OSVVM_DEFAULT_LOG_PREFIX),
           str_3 => suffix
         );

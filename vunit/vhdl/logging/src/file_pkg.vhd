@@ -32,7 +32,7 @@ package file_pkg is
     log_level : string;
     log_source_name : string;
     str_1: string;
-    val_1, val_2, val_3, val_4, val_5 : integer);
+    int_1, int_2, int_3, int_4, int_5 : integer);
 
 end package;
 
@@ -226,7 +226,7 @@ package body file_pkg is
     log_level : string;
     log_source_name : string;
     str_1: string;
-    val_1, val_2, val_3, val_4, val_5 : integer) is
+    int_1, int_2, int_3, int_4, int_5 : integer) is
 
     constant id : natural := get(file_id.p_data, id_idx);
     variable name_ptr : string_ptr_t;
@@ -235,8 +235,16 @@ package body file_pkg is
 
     procedure write_to_log_i(file log_destination : text) is
     begin
-      write_to_log(log_destination, msg, log_time, log_level, log_source_name, val_1 => val_1, val_2 => val_2,
-        val_3 => val_3, val_4 => val_4, val_5 => val_5, str_1 => str_1);
+      if is_original_pkg then
+        write_to_log(log_destination, "", msg, log_time, log_level, log_source_name, int_1 => int_1, int_2 => int_2,
+          int_3 => int_3, int_4 => int_4, int_5 => int_5, str_1 => str_1);
+      else
+        write_to_log(
+          log_destination,
+          to_string(to_string_ptr(get(file_id.p_data, name_idx))),
+          msg, log_time, log_level, log_source_name, int_1 => int_1, int_2 => int_2,
+          int_3 => int_3, int_4 => int_4, int_5 => int_5, str_1 => str_1);
+      end if;
     end;
   begin
     case id is

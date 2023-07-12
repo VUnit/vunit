@@ -9,24 +9,27 @@ use work.log_levels_pkg.all;
 use work.string_ops.upper;
 
 package body common_log_pkg is
+  constant is_original_pkg : boolean := true;
 
   procedure write_to_log(
     file log_destination : text;
-    msg : string := "";
+    log_destination_path : string := no_string;
+    msg : string := no_string;
     log_time : time := no_time;
-    log_level : string := "";
-    log_source_name : string := "";
+    log_level : string := no_string;
+    log_source_name : string := no_string;
     str_1, str_2, str_3, str_4, str_5, str_6, str_7, str_8, str_9, str_10 : string := "";
-    val_1, val_2, val_3, val_4, val_5, val_6, val_7, val_8, val_9, val_10 : integer := no_val
+    int_1, int_2, int_3, int_4, int_5, int_6, int_7, int_8, int_9, int_10 : integer := 0;
+    bool_1, bool_2, bool_3, bool_4, bool_5, bool_6, bool_7, bool_8, bool_9, bool_10 : boolean := false
   ) is
 
     alias file_name is str_1;
 
-    alias format is val_1;
-    alias line_num is val_2;
-    alias sequence_number is val_3;
-    alias use_color is val_4;
-    alias get_max_logger_name_length is val_5;
+    alias format is int_1;
+    alias line_num is int_2;
+    alias sequence_number is int_3;
+    alias use_color is int_4;
+    alias get_max_logger_name_length is int_5;
 
     constant max_time_str : string := time'image(1 sec);
     constant max_time_length : natural := max_time_str'length;
