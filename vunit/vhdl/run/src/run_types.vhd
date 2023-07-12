@@ -7,7 +7,7 @@
 -- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
 
 use std.textio.all;
-use work.dictionary.all;
+use work.dict_pkg.all;
 use work.event_private_pkg.all;
 
 library ieee;
@@ -46,6 +46,9 @@ package run_types_pkg is
   constant runner_timeout_idx : natural := 2 * basic_event_length;
   constant vunit_error_idx : natural := 3 * basic_event_length;
   constant runner_exit_status_idx : natural :=4 * basic_event_length;
+
+  -- Private
+  constant run_db : dict_t := new_dict;
 end package;
 
 package body run_types_pkg is

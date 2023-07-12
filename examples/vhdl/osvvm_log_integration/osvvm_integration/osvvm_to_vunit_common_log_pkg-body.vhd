@@ -8,25 +8,57 @@ library vunit_lib;
 context vunit_lib.vunit_context;
 
 package body common_log_pkg is
+  constant is_original_pkg : boolean := false;
+  -- Create a namespace for OSVVM to avoid name collisions between OSVVM alert/log ID names
+  -- and VUnit logger names. The file handler handling the OSVVM transcript file is also
+  -- attached to this logger.
+  constant osvvm : logger_t := get_logger("OSVVM");
+
+  constant has_file_handler : integer_vector_ptr_t := new_integer_vector_ptr(1);
+
   procedure write_to_log(
     file log_destination : text;
-    msg : string := "";
+    log_destination_path : string := no_string;
+    msg : string := no_string;
     log_time : time := no_time;
-    log_level : string := "";
-    log_source_name : string := "";
+    log_level : string := no_string;
+    log_source_name : string := no_string;
     str_1, str_2, str_3, str_4, str_5, str_6, str_7, str_8, str_9, str_10 : string := "";
-    val_1, val_2, val_3, val_4, val_5, val_6, val_7, val_8, val_9, val_10 : integer := no_val
+    int_1, int_2, int_3, int_4, int_5, int_6, int_7, int_8, int_9, int_10 : integer := 0;
+    bool_1, bool_2, bool_3, bool_4, bool_5, bool_6, bool_7, bool_8, bool_9, bool_10 : boolean := false
   ) is
-    constant stripped_log_level : string := strip(log_level);
 
-    alias prefix is str_2;
-    alias suffix is str_3;
+    constant stripped_log_level : string := strip(log_level);
+    variable file_log_handler : log_handler_t;
 
     variable logger : logger_t;
     variable vunit_log_level : log_level_t;
-    variable full_msg : line;
+    variable reenable_display_handler : boolean := false;
+
+    impure function remove_parent_path(full_path : string) return string is
+      variable parts : lines_t :=  split(full_path, "/");
+    begin
+      return parts(parts'right).all;
+    end;
   begin
-    logger := get_logger(log_source_name);
+    logger := get_logger(log_source_name, parent => osvvm);
+
+    -- Here we do the simplified assumption that when the transcript is opened it stays
+    -- on and is always mirrored. Allowing arbitrary use of transcript and mirroring
+    -- requires additional code. The transcript file is moved to the VUnit output path
+    -- to avoid access from multiple threads when running parallel simulations.
+    if (log_destination_path /= no_string) then
+      if (get(has_file_handler, 0) = 0) then
+        file_log_handler := new_log_handler(join(get_string(run_db, "output_path"), remove_parent_path(log_destination_path)));
+        -- The message has already been logged to display so temporarily disable it
+        set_log_handlers(osvvm, (0 => file_log_handler));
+        show_all(logger, file_log_handler);
+        reenable_display_handler := true;
+        set(has_file_handler, 0, 1);
+      else
+        return;
+      end if;
+    end if;
 
     if stripped_log_level = "WARNING" then
       vunit_log_level := warning;
@@ -42,17 +74,11 @@ package body common_log_pkg is
       vunit_log_level := info;
     end if;
 
-    if prefix /= "" then
-      write(full_msg, prefix & " ");
-    end if;
-
-    write(full_msg, msg);
-
-    if suffix /= "" then
-      write(full_msg, " " & suffix);
-    end if;
-
     log(logger, msg, vunit_log_level, path_offset => 4);
+
+    if reenable_display_handler then
+      set_log_handlers(osvvm, (display_handler, file_log_handler));
+    end if;
   end;
 
 end package body;

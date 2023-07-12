@@ -18,6 +18,7 @@ use std.textio.all;
 use work.event_common_pkg.all;
 use work.event_private_pkg.all;
 use work.checker_pkg.all;
+use work.dict_pkg.all;
 
 package body run_pkg is
   procedure test_runner_setup(
@@ -40,6 +41,8 @@ package body run_pkg is
     if has_key(runner_cfg, "use_color") and boolean'value(get(runner_cfg, "use_color")) then
       enable_colors;
     end if;
+
+    set_string(run_db, "output_path", output_path(runner_cfg));
 
     if not active_python_runner(runner_cfg) then
       set_stop_level(failure);

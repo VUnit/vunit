@@ -156,15 +156,15 @@ package body log_handler_pkg is
     if log_file_name = null_file_name then
       null;
     elsif log_file_name = stdout_file_name then
-      write_to_log(OUTPUT, msg, log_time, log_level_t'image(log_level), logger_name,
-      val_1 => get(log_handler.p_data, format_idx), str_1 => file_name,
-      val_2 => line_num, val_3 => sequence_number, val_4 => get(log_handler.p_data, use_color_idx),
-      val_5 => get_max_logger_name_length(log_handler));
+      write_to_log(OUTPUT, "", msg, log_time, log_level_t'image(log_level), logger_name,
+      int_1 => get(log_handler.p_data, format_idx), str_1 => file_name,
+      int_2 => line_num, int_3 => sequence_number, int_4 => get(log_handler.p_data, use_color_idx),
+      int_5 => get_max_logger_name_length(log_handler));
     else
       write_to_log(to_file_id(get(log_handler.p_data, file_id_idx)), msg, log_time, log_level_t'image(log_level), logger_name,
-      val_1 => get(log_handler.p_data, format_idx), str_1 => file_name,
-      val_2 => line_num, val_3 => sequence_number, val_4 => get(log_handler.p_data, use_color_idx),
-      val_5 => get_max_logger_name_length(log_handler));
+      int_1 => get(log_handler.p_data, format_idx), str_1 => file_name,
+      int_2 => line_num, int_3 => sequence_number, int_4 => get(log_handler.p_data, use_color_idx),
+      int_5 => get_max_logger_name_length(log_handler));
     end if;
   end;
 
