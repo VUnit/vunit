@@ -275,7 +275,7 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
             if wave_file:
                 cmd += [f"--wave={wave_file}"]
 
-        print(" ".join(cmd))
+        print(" ".join([f"'{word}'" if " " in word else word for word in cmd]))
 
         status = True
 
