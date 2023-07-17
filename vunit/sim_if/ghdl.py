@@ -92,7 +92,6 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         gtkwave_args="",
         backend="llvm",
     ):
-
         SimulatorInterface.__init__(self, output_path, gui)
         self._prefix = prefix
         self._project = None

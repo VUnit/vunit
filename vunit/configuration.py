@@ -204,8 +204,7 @@ class ConfigurationVisitor(object):
     def _check_enabled(self):
         pass
 
-    @staticmethod
-    def get_configuration_dicts():
+    def get_configuration_dicts(self):
         raise NotImplementedError
 
     def set_attribute(self, name, value):

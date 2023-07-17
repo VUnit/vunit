@@ -38,7 +38,7 @@ class TestBenchList(object):
                     self._add_test_bench(test_bench)
                     if design_unit.is_entity:
                         if design_unit.name not in self._vhdl_configurations:
-                            self._vhdl_configurations[design_unit.name] = dict(test_bench=None, configurations=[])
+                            self._vhdl_configurations[design_unit.name] = {"test_bench": None, "configurations": []}
 
                         self._vhdl_configurations[design_unit.name]["test_bench"] = test_bench
                         for configuration in self._vhdl_configurations[design_unit.name]["configurations"]:
@@ -46,7 +46,7 @@ class TestBenchList(object):
 
             if design_unit.is_vhdl_configuration:
                 if design_unit.entity_name not in self._vhdl_configurations:
-                    self._vhdl_configurations[design_unit.entity_name] = dict(test_bench=None, configurations=[])
+                    self._vhdl_configurations[design_unit.entity_name] = {"test_bench": None, "configurations": []}
 
                 self._vhdl_configurations[design_unit.entity_name]["configurations"].append(design_unit.name)
                 if self._vhdl_configurations[design_unit.entity_name]["test_bench"]:
