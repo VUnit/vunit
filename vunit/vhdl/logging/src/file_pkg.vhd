@@ -31,8 +31,12 @@ package file_pkg is
     log_time : time;
     log_level : string;
     log_source_name : string;
-    str_1: string;
-    int_1, int_2, int_3, int_4, int_5 : integer);
+    log_source_path: string;
+    log_format : natural range 0 to 4;
+    log_source_line_number : natural;
+    log_sequence_number : natural;
+    use_color : boolean;
+    max_logger_name_length : integer);
 
 end package;
 
@@ -225,8 +229,12 @@ package body file_pkg is
     log_time : time;
     log_level : string;
     log_source_name : string;
-    str_1: string;
-    int_1, int_2, int_3, int_4, int_5 : integer) is
+    log_source_path: string;
+    log_format : natural range 0 to 4;
+    log_source_line_number : natural;
+    log_sequence_number : natural;
+    use_color : boolean;
+    max_logger_name_length : integer) is
 
     constant id : natural := get(file_id.p_data, id_idx);
     variable name_ptr : string_ptr_t;
@@ -236,14 +244,35 @@ package body file_pkg is
     procedure write_to_log_i(file log_destination : text) is
     begin
       if is_original_pkg then
-        write_to_log(log_destination, "", msg, log_time, log_level, log_source_name, int_1 => int_1, int_2 => int_2,
-          int_3 => int_3, int_4 => int_4, int_5 => int_5, str_1 => str_1);
+        write_to_log(
+          log_destination => log_destination,
+          log_destination_path => "",
+          msg => msg,
+          log_time => log_time,
+          log_level => log_level,
+          log_source_name => log_source_name,
+          log_source_path => log_source_path,
+          log_format => log_format,
+          log_source_line_number => log_source_line_number,
+          log_sequence_number => log_sequence_number,
+          use_color => use_color,
+          max_logger_name_length => max_logger_name_length
+          );
       else
         write_to_log(
-          log_destination,
-          to_string(to_string_ptr(get(file_id.p_data, name_idx))),
-          msg, log_time, log_level, log_source_name, int_1 => int_1, int_2 => int_2,
-          int_3 => int_3, int_4 => int_4, int_5 => int_5, str_1 => str_1);
+          log_destination => log_destination,
+          log_destination_path => to_string(to_string_ptr(get(file_id.p_data, name_idx))),
+          msg => msg,
+          log_time => log_time,
+          log_level => log_level,
+          log_source_name => log_source_name,
+          log_source_path => log_source_path,
+          log_format => log_format,
+          log_source_line_number => log_source_line_number,
+          log_sequence_number => log_sequence_number,
+          use_color => use_color,
+          max_logger_name_length => max_logger_name_length
+        );
       end if;
     end;
   begin

@@ -22,10 +22,7 @@ package body common_log_pkg is
     msg : string := no_string;
     log_time : time := no_time;
     log_level : string := no_string;
-    log_source_name : string := no_string;
-    str_1, str_2, str_3, str_4, str_5, str_6, str_7, str_8, str_9, str_10 : string := "";
-    int_1, int_2, int_3, int_4, int_5, int_6, int_7, int_8, int_9, int_10 : integer := 0;
-    bool_1, bool_2, bool_3, bool_4, bool_5, bool_6, bool_7, bool_8, bool_9, bool_10 : boolean := false
+    log_source_name : string := no_string
   ) is
 
     constant stripped_log_level : string := strip(log_level);
@@ -74,7 +71,7 @@ package body common_log_pkg is
       vunit_log_level := info;
     end if;
 
-    log(logger, msg, vunit_log_level, path_offset => 4);
+    log(logger, msg, vunit_log_level, path_offset => 4, line_num => 0, file_name => "");
 
     if reenable_display_handler then
       set_log_handlers(osvvm, (display_handler, file_log_handler));

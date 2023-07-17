@@ -34,24 +34,6 @@ package common_log_pkg is
     log_level : string := no_string;
     -- Name of the producer of the log message. Hierarchical names use colon as the delimiter.
     -- For example "parent_component:child_component".
-    log_source_name : string := no_string;
-
-    -----------------------------------------------------------------------------------------------------------------
-    -- Parameters specific to an implementation of this interface. Only standard IEEE, non-custom, types are allowed.
-    -- The documentation below is valid for VUnit only
-    -----------------------------------------------------------------------------------------------------------------
-
-    -- Path to file from which the log entry was issued if the location is known, empty string otherwise
-    log_source_path : string;
-    -- Log format raw, level, verbose, or csv expressed as an integer 0 - 3.
-    log_format : natural range 0 to 3;
-    -- Line number in file from which the log entry was issued if the location is known, 0 otherwise
-    log_source_line_number : natural;
-    -- Sequence number for log entry
-    log_sequence_number : natural;
-    -- True if log entry is to be in color
-    use_color : boolean;
-    -- Max length of logger names (used for alignment)
-    max_logger_name_length : natural
+    log_source_name : string := no_string
   );
 end package;

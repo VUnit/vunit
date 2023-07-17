@@ -1005,12 +1005,7 @@ package body AlertLogPkg is
               msg => message,
               log_time => log_time,
               log_level => alert_level,
-              log_source_name => log_source_name,
-              int_1 => AlertLogJustifyAmountVar,
-              int_2 => error_count,
-              str_1 => AlertPrefixVar.Get(OSVVM_DEFAULT_ALERT_PREFIX),
-              str_2 => prefix,
-              str_3 => suffix
+              log_source_name => log_source_name
             );
           end if;
 
@@ -1021,12 +1016,7 @@ package body AlertLogPkg is
               msg => message,
               log_time => log_time,
               log_level => alert_level,
-              log_source_name => log_source_name,
-              int_1 => AlertLogJustifyAmountVar,
-              int_2 => error_count,
-              str_1 => AlertPrefixVar.Get(OSVVM_DEFAULT_ALERT_PREFIX),
-              str_2 => prefix,
-              str_3 => suffix
+              log_source_name => log_source_name
             );
           end if;
         end if ;
@@ -2286,11 +2276,7 @@ package body AlertLogPkg is
           msg => Message,
           log_time => log_time,
           log_level => log_level,
-          log_source_name => log_source_name,
-          int_1 => AlertLogJustifyAmountVar,
-          int_2 => error_count,
-          str_1 => LogPrefixVar.Get(OSVVM_DEFAULT_LOG_PREFIX),
-          str_3 => suffix
+          log_source_name => log_source_name
         );
       end if;
 
@@ -2301,11 +2287,7 @@ package body AlertLogPkg is
           msg => Message,
           log_time => log_time,
           log_level => log_level,
-          log_source_name => log_source_name,
-          int_1 => AlertLogJustifyAmountVar,
-          int_2 => error_count,
-          str_1 => LogPrefixVar.Get(OSVVM_DEFAULT_LOG_PREFIX),
-          str_3 => suffix
+          log_source_name => log_source_name
         );
       end if;
     end procedure LocalLog ;

@@ -52,7 +52,7 @@ for osvvm_file in osvvm_files_to_compile:
     osvvm.add_source_files(root / ".." / ".." / ".." / "vunit" / "vhdl" / "osvvm" / osvvm_file)
 
 if args.use_vunit_log:
-    osvvm.add_source_files(root / ".." / ".." / ".." / "vunit" / "vhdl" / "logging" / "src" / "common_log_pkg.vhd")
+    osvvm.add_source_files(root / "osvvm_integration" / "osvvm_to_vunit_common_log_pkg.vhd")
     osvvm.add_source_files(root / "osvvm_integration" / "osvvm_to_vunit_common_log_pkg-body.vhd")
     osvvm.add_source_files(root / "osvvm_integration" / "AlertLogPkg.vhd")
 else:
