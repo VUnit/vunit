@@ -235,7 +235,9 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         cmd += [source_file.name]
         return cmd
 
-    def simulate(self, output_path, test_suite_name, config, elaborate_only):
+    def simulate(
+        self, output_path, simulator_output_path, test_suite_name, config, elaborate_only
+    ):  # pylint: disable=too-many-branches
         """
         Simulate with entity as top level using generics
         """
@@ -261,7 +263,10 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         cmd += ["-e"]
 
         cmd += config.sim_options.get("nvc.elab_flags", [])
-        cmd += [f"{config.entity_name}-{config.architecture_name}"]
+        if config.vhdl_config_name is not None:
+            cmd += [config.vhdl_config_name]
+        else:
+            cmd += [f"{config.entity_name}-{config.architecture_name}"]
 
         for name, value in config.generics.items():
             cmd += [f"-g{name}={value}"]
@@ -285,7 +290,7 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         status = True
 
         try:
-            proc = Process(cmd)
+            proc = Process(cmd, cwd=simulator_output_path)
             proc.consume_output()
         except Process.NonZeroExitCode:
             status = False
@@ -298,6 +303,6 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
                 cmd += ["--script", str(Path(init_file).resolve())]
 
             stdout.write(f'{" ".join(cmd)}\n')
-            subprocess.call(cmd)
+            subprocess.call(cmd, cwd=simulator_output_path)
 
         return status
