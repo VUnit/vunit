@@ -156,15 +156,32 @@ package body log_handler_pkg is
     if log_file_name = null_file_name then
       null;
     elsif log_file_name = stdout_file_name then
-      write_to_log(OUTPUT, "", msg, log_time, log_level_t'image(log_level), logger_name,
-      int_1 => get(log_handler.p_data, format_idx), str_1 => file_name,
-      int_2 => line_num, int_3 => sequence_number, int_4 => get(log_handler.p_data, use_color_idx),
-      int_5 => get_max_logger_name_length(log_handler));
+      write_to_log(
+        log_destination => OUTPUT,
+        log_destination_path => "",
+        msg => msg,
+        log_time => log_time,
+        log_level => log_level_t'image(log_level),
+        log_source_name => logger_name,
+        log_source_path => file_name,
+        log_format => get(log_handler.p_data, format_idx),
+        log_source_line_number => line_num,
+        log_sequence_number => sequence_number,
+        use_color => get(log_handler.p_data, use_color_idx) = 1,
+        max_logger_name_length => get_max_logger_name_length(log_handler));
     else
-      write_to_log(to_file_id(get(log_handler.p_data, file_id_idx)), msg, log_time, log_level_t'image(log_level), logger_name,
-      int_1 => get(log_handler.p_data, format_idx), str_1 => file_name,
-      int_2 => line_num, int_3 => sequence_number, int_4 => get(log_handler.p_data, use_color_idx),
-      int_5 => get_max_logger_name_length(log_handler));
+      write_to_log(
+        file_id => to_file_id(get(log_handler.p_data, file_id_idx)),
+        msg => msg,
+        log_time => log_time,
+        log_level => log_level_t'image(log_level),
+        log_source_name => logger_name,
+        log_source_path => file_name,
+        log_format => get(log_handler.p_data, format_idx),
+        log_source_line_number => line_num,
+        log_sequence_number => sequence_number,
+        use_color => get(log_handler.p_data, use_color_idx) = 1,
+        max_logger_name_length => get_max_logger_name_length(log_handler));
     end if;
   end;
 

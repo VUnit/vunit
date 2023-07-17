@@ -36,21 +36,24 @@ package body common_log_pkg is
     log_time : time := no_time;
     log_level : string := no_string;
     log_source_name : string := no_string;
-    str_1, str_2, str_3, str_4, str_5, str_6, str_7, str_8, str_9, str_10 : string := "";
-    int_1, int_2, int_3, int_4, int_5, int_6, int_7, int_8, int_9, int_10 : integer := 0;
-    bool_1, bool_2, bool_3, bool_4, bool_5, bool_6, bool_7, bool_8, bool_9, bool_10 : boolean := false
+    log_source_path : string;
+    log_format : natural range 0 to 3;
+    log_source_line_number : natural;
+    log_sequence_number : natural;
+    use_color : boolean;
+    max_logger_name_length : natural
+
   ) is
-    alias sequence_number is int_3;
     constant stdout : boolean := log_destination_path = no_string;
     constant current_mode : natural range init_mode to mirror_mode := get(mode, 0);
     variable reopen_transcript : boolean := false;
     variable enable_mirror : boolean := false;
   begin
-    if stdout and (get(last_sequence_number, stdout_idx) = sequence_number) then
+    if stdout and (get(last_sequence_number, stdout_idx) = log_sequence_number) then
       return;
     end if;
 
-    if not stdout and (get(last_sequence_number, file_idx) = sequence_number) then
+    if not stdout and (get(last_sequence_number, file_idx) = log_sequence_number) then
       return;
     end if;
 
@@ -61,45 +64,45 @@ package body common_log_pkg is
         TranscriptClose;
         SetTranscriptMirror(false);
         if stdout then
-          set(last_sequence_number, stdout_idx, sequence_number);
+          set(last_sequence_number, stdout_idx, log_sequence_number);
           set(mode, 0, stdout_mode);
         else
           TranscriptOpen(join(get_string(run_db, "output_path"), "osvvm_transcript.txt"));
-          set(last_sequence_number, file_idx, sequence_number);
+          set(last_sequence_number, file_idx, log_sequence_number);
           set(mode, 0, file_mode);
         end if;
       when stdout_mode =>
         if not stdout then
           TranscriptOpen(join(get_string(run_db, "output_path"), "osvvm_transcript.txt"));
-          set(last_sequence_number, file_idx, sequence_number);
+          set(last_sequence_number, file_idx, log_sequence_number);
           set(mode, 0, mirror_mode);
-          if get(last_sequence_number, stdout_idx) /= sequence_number then
+          if get(last_sequence_number, stdout_idx) /= log_sequence_number then
             SetTranscriptMirror;
-            set(last_sequence_number, stdout_idx, sequence_number);
+            set(last_sequence_number, stdout_idx, log_sequence_number);
           else
             enable_mirror := true;
           end if;
         else
-          set(last_sequence_number, stdout_idx, sequence_number);
+          set(last_sequence_number, stdout_idx, log_sequence_number);
         end if;
       when file_mode =>
         if stdout then
-          set(last_sequence_number, stdout_idx, sequence_number);
+          set(last_sequence_number, stdout_idx, log_sequence_number);
           set(mode, 0, mirror_mode);
 
-          if get(last_sequence_number, file_idx) /= sequence_number then
+          if get(last_sequence_number, file_idx) /= log_sequence_number then
             SetTranscriptMirror;
-            set(last_sequence_number, file_idx, sequence_number);
+            set(last_sequence_number, file_idx, log_sequence_number);
           else
             TranscriptClose;
             reopen_transcript := true;
           end if;
         else
-          set(last_sequence_number, file_idx, sequence_number);
+          set(last_sequence_number, file_idx, log_sequence_number);
         end if;
       when mirror_mode =>
-        set(last_sequence_number, stdout_idx, sequence_number);
-        set(last_sequence_number, file_idx, sequence_number);
+        set(last_sequence_number, stdout_idx, log_sequence_number);
+        set(last_sequence_number, file_idx, log_sequence_number);
     end case;
 
     if (log_level = "warning") or (log_level = "error") or (log_level = "failure") then
