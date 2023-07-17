@@ -27,6 +27,14 @@ The following compilation options are known.
    Extra arguments passed to ModelSim ``vlog`` command when compiling Verilog files.
    Must be a list of strings.
 
+``nvc.a_flags``
+   Extra arguments passed to ``nvc -a`` command during compilation.
+   Must be a list of strings.
+
+``nvc.global_flags``
+   Extra global arguments to pass to ``nvc`` before the ``-a`` command.
+   Must be a list of strings.
+
 ``rivierapro.vcom_flags``
    Extra arguments passed to Riviera PRO ``vcom`` command when compiling VHDL files.
    Must be a list of strings.
@@ -193,3 +201,20 @@ The following simulation options are known.
    user from sourcing a list of scripts directly. The following is the current work
    around to sourcing multiple user TCL-files:
    ``source <path/to/script.tcl>``
+
+``nvc.elab_flags``
+   Extra elaboration flags passed to ``nvc -e``.
+   Must be a list of strings.
+
+``nvc.global_flags``
+   Extra global arguments to pass to ``nvc`` before the ``-e`` or ``-r``
+   commands.
+   Must be a list of strings.
+
+``nvc.heap_size``
+   Simulation heap size.
+   Must be a string, for example ``"64m"``.
+
+``nvc.sim_flags``
+   Extra simulation flags passed to ``nvc -r``.
+   Must be a list of strings.

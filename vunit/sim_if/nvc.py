@@ -35,10 +35,12 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
     supports_colors_in_gui = True
 
     compile_options = [
+        ListOfStringOption("nvc.global_flags"),
         ListOfStringOption("nvc.a_flags"),
     ]
 
     sim_options = [
+        ListOfStringOption("nvc.global_flags"),
         ListOfStringOption("nvc.sim_flags"),
         ListOfStringOption("nvc.elab_flags"),
         StringOption("nvc.heap_size"),
@@ -225,6 +227,8 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
             source_file.get_vhdl_standard(), source_file.library.name, source_file.library.directory
         )
 
+        cmd += source_file.compile_options.get("nvc.global_flags", [])
+
         cmd += ["-a"]
         cmd += source_file.compile_options.get("nvc.a_flags", [])
 
@@ -252,6 +256,7 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         cmd = self._get_command(self._vhdl_standard, config.library_name, libdir)
 
         cmd += ["-H", config.sim_options.get("nvc.heap_size", "64m")]
+        cmd += config.sim_options.get("nvc.global_flags", [])
 
         cmd += ["-e"]
 
