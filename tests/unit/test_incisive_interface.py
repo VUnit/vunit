@@ -21,6 +21,8 @@ from vunit.project import Project
 from vunit.ostools import renew_path, write_file, read_file
 from vunit.test.bench import Configuration
 from vunit.vhdl_standard import VHDL
+from tests.common import create_tempdir
+from tests.unit.test_test_bench import Entity
 
 
 class TestIncisiveInterface(unittest.TestCase):
@@ -501,9 +503,9 @@ define work "%s/libraries/work"
             simif.compile_project(project)
 
         config = make_config()
-        self.assertTrue(simif.simulate("suite_output_path", "test_suite_name", config))
-        elaborate_args_file = str(Path("suite_output_path") / simif.name / "irun_elaborate.args")
-        simulate_args_file = str(Path("suite_output_path") / simif.name / "irun_simulate.args")
+        self.assertTrue(simif.simulate("suite_output_path", "simulator_output_path", "test_suite_name", config))
+        elaborate_args_file = str(Path("simulator_output_path") / "irun_elaborate.args")
+        simulate_args_file = str(Path("simulator_output_path") / "irun_simulate.args")
         run_command.assert_has_calls(
             [
                 mock.call(
@@ -539,7 +541,7 @@ define work "%s/libraries/work"
                 "-work work",
                 '-nclibdirname "%s"' % str(Path(self.output_path) / "libraries"),
                 '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
-                '-log "%s"' % str(Path("suite_output_path") / simif.name / "irun_elaborate.log"),
+                '-log "%s"' % str(Path("simulator_output_path") / "irun_elaborate.log"),
                 "-quiet",
                 '-reflib "lib_path"',
                 "-access +r",
@@ -563,7 +565,7 @@ define work "%s/libraries/work"
                 "-work work",
                 '-nclibdirname "%s"' % str(Path(self.output_path) / "libraries"),
                 '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
-                '-log "%s"' % str(Path("suite_output_path") / simif.name / "irun_simulate.log"),
+                '-log "%s"' % str(Path("simulator_output_path") / "irun_simulate.log"),
                 "-quiet",
                 '-reflib "lib_path"',
                 "-access +r",
@@ -589,9 +591,9 @@ define work "%s/libraries/work"
             simif.compile_project(project)
 
         config = make_config(verilog=True)
-        self.assertTrue(simif.simulate("suite_output_path", "test_suite_name", config))
-        elaborate_args_file = str(Path("suite_output_path") / simif.name / "irun_elaborate.args")
-        simulate_args_file = str(Path("suite_output_path") / simif.name / "irun_simulate.args")
+        self.assertTrue(simif.simulate("suite_output_path", "simulator_output_path", "test_suite_name", config))
+        elaborate_args_file = str(Path("simulator_output_path") / "irun_elaborate.args")
+        simulate_args_file = str(Path("simulator_output_path") / "irun_simulate.args")
         run_command.assert_has_calls(
             [
                 mock.call(
@@ -627,7 +629,7 @@ define work "%s/libraries/work"
                 "-work work",
                 '-nclibdirname "%s"' % str(Path(self.output_path) / "libraries"),
                 '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
-                '-log "%s"' % str(Path("suite_output_path") / simif.name / "irun_elaborate.log"),
+                '-log "%s"' % str(Path("simulator_output_path") / "irun_elaborate.log"),
                 "-quiet",
                 '-reflib "lib_path"',
                 "-access +r",
@@ -651,7 +653,7 @@ define work "%s/libraries/work"
                 "-work work",
                 '-nclibdirname "%s"' % str(Path(self.output_path) / "libraries"),
                 '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
-                '-log "%s"' % str(Path("suite_output_path") / simif.name / "irun_simulate.log"),
+                '-log "%s"' % str(Path("simulator_output_path") / "irun_simulate.log"),
                 "-quiet",
                 '-reflib "lib_path"',
                 "-access +r",
@@ -668,9 +670,9 @@ define work "%s/libraries/work"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
         config = make_config(sim_options={"incisive.irun_sim_flags": ["custom", "flags"]})
-        self.assertTrue(simif.simulate("suite_output_path", "test_suite_name", config))
-        elaborate_args_file = str(Path("suite_output_path") / simif.name / "irun_elaborate.args")
-        simulate_args_file = str(Path("suite_output_path") / simif.name / "irun_simulate.args")
+        self.assertTrue(simif.simulate("suite_output_path", "simulator_output_path", "test_suite_name", config))
+        elaborate_args_file = str(Path("simulator_output_path") / "irun_elaborate.args")
+        simulate_args_file = str(Path("simulator_output_path") / "irun_simulate.args")
         run_command.assert_has_calls(
             [
                 mock.call(
@@ -706,9 +708,9 @@ define work "%s/libraries/work"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
         config = make_config(verilog=True, generics={"genstr": "genval", "genint": 1, "genbool": True})
-        self.assertTrue(simif.simulate("suite_output_path", "test_suite_name", config))
-        elaborate_args_file = str(Path("suite_output_path") / simif.name / "irun_elaborate.args")
-        simulate_args_file = str(Path("suite_output_path") / simif.name / "irun_simulate.args")
+        self.assertTrue(simif.simulate("suite_output_path", "simulator_output_path", "test_suite_name", config))
+        elaborate_args_file = str(Path("simulator_output_path") / "irun_elaborate.args")
+        simulate_args_file = str(Path("simulator_output_path") / "irun_simulate.args")
         run_command.assert_has_calls(
             [
                 mock.call(
@@ -742,9 +744,9 @@ define work "%s/libraries/work"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path, hdlvar="custom_hdlvar")
         config = make_config()
-        self.assertTrue(simif.simulate("suite_output_path", "test_suite_name", config))
-        elaborate_args_file = str(Path("suite_output_path") / simif.name / "irun_elaborate.args")
-        simulate_args_file = str(Path("suite_output_path") / simif.name / "irun_simulate.args")
+        self.assertTrue(simif.simulate("suite_output_path", "simulator_output_path", "test_suite_name", config))
+        elaborate_args_file = str(Path("simulator_output_path") / "irun_elaborate.args")
+        simulate_args_file = str(Path("simulator_output_path") / "irun_simulate.args")
         run_command.assert_has_calls(
             [
                 mock.call(
@@ -776,8 +778,10 @@ define work "%s/libraries/work"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
         config = make_config(verilog=True)
-        self.assertTrue(simif.simulate("suite_output_path", "test_suite_name", config, elaborate_only=True))
-        elaborate_args_file = str(Path("suite_output_path") / simif.name / "irun_elaborate.args")
+        self.assertTrue(
+            simif.simulate("suite_output_path", "simulator_output_path", "test_suite_name", config, elaborate_only=True)
+        )
+        elaborate_args_file = str(Path("simulator_output_path") / "irun_elaborate.args")
         run_command.assert_has_calls(
             [
                 mock.call(
@@ -808,7 +812,7 @@ define work "%s/libraries/work"
                 "-work work",
                 '-nclibdirname "%s"' % str(Path(self.output_path) / "libraries"),
                 '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
-                '-log "%s"' % str(Path("suite_output_path") / simif.name / "irun_elaborate.log"),
+                '-log "%s"' % str(Path("simulator_output_path") / "irun_elaborate.log"),
                 "-quiet",
                 "-access +r",
                 '-input "@run"',
@@ -824,8 +828,8 @@ define work "%s/libraries/work"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
         config = make_config()
-        self.assertFalse(simif.simulate("suite_output_path", "test_suite_name", config))
-        elaborate_args_file = str(Path("suite_output_path") / simif.name / "irun_elaborate.args")
+        self.assertFalse(simif.simulate("suite_output_path", "simulator_output_path", "test_suite_name", config))
+        elaborate_args_file = str(Path("simulator_output_path") / "irun_elaborate.args")
         run_command.assert_has_calls(
             [
                 mock.call(
@@ -848,9 +852,9 @@ define work "%s/libraries/work"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
         config = make_config()
-        self.assertFalse(simif.simulate("suite_output_path", "test_suite_name", config))
-        elaborate_args_file = str(Path("suite_output_path") / simif.name / "irun_elaborate.args")
-        simulate_args_file = str(Path("suite_output_path") / simif.name / "irun_simulate.args")
+        self.assertFalse(simif.simulate("suite_output_path", "simulator_output_path", "test_suite_name", config))
+        elaborate_args_file = str(Path("simulator_output_path") / "irun_elaborate.args")
+        simulate_args_file = str(Path("simulator_output_path") / "irun_simulate.args")
         run_command.assert_has_calls(
             [
                 mock.call(
@@ -886,9 +890,9 @@ define work "%s/libraries/work"
         with mock.patch("vunit.sim_if.check_output", autospec=True, return_value="") as dummy:
             simif.compile_project(project)
         config = make_config()
-        self.assertTrue(simif.simulate("suite_output_path", "test_suite_name", config))
-        elaborate_args_file = str(Path("suite_output_path") / simif.name / "irun_elaborate.args")
-        simulate_args_file = str(Path("suite_output_path") / simif.name / "irun_simulate.args")
+        self.assertTrue(simif.simulate("suite_output_path", "simulator_output_path", "test_suite_name", config))
+        elaborate_args_file = str(Path("simulator_output_path") / "irun_elaborate.args")
+        simulate_args_file = str(Path("simulator_output_path") / "irun_simulate.args")
         run_command.assert_has_calls(
             [
                 mock.call(
@@ -923,7 +927,7 @@ define work "%s/libraries/work"
                 "-work work",
                 '-nclibdirname "%s"' % str(Path(self.output_path) / "libraries"),
                 '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
-                '-log "%s"' % str(Path("suite_output_path") / simif.name / "irun_elaborate.log"),
+                '-log "%s"' % str(Path("simulator_output_path") / "irun_elaborate.log"),
                 "-quiet",
                 '-reflib "lib_path"',
                 "-access +rwc",
@@ -947,7 +951,7 @@ define work "%s/libraries/work"
                 "-work work",
                 '-nclibdirname "%s"' % str(Path(self.output_path) / "libraries"),
                 '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
-                '-log "%s"' % str(Path("suite_output_path") / simif.name / "irun_simulate.log"),
+                '-log "%s"' % str(Path("simulator_output_path") / "irun_simulate.log"),
                 "-quiet",
                 '-reflib "lib_path"',
                 "-access +rwc",
@@ -955,6 +959,21 @@ define work "%s/libraries/work"
                 "-top lib.ent:arch",
             ],
         )
+
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
+    def test_configuration_and_entity_selection(self, find_cds_root_irun, find_cds_root_virtuoso):
+        find_cds_root_irun.return_value = "cds_root_irun"
+        find_cds_root_virtuoso.return_value = None
+
+        with create_tempdir() as tempdir:
+            design_unit = Entity("tb_entity", file_name=str(Path(tempdir) / "file.vhd"))
+            design_unit.generic_names = ["runner_cfg"]
+            config = Configuration("name", design_unit, vhdl_config_name="cfg")
+            simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
+            self.assertEqual(simif._select_vhdl_top(config), "cfg")  # pylint: disable=protected-access
+            config = Configuration("name", design_unit)
+            self.assertEqual(simif._select_vhdl_top(config), "lib.tb_entity:arch")  # pylint: disable=protected-access
 
     def setUp(self):
         self.output_path = str(Path(__file__).parent / "test_incisive_out")
@@ -985,4 +1004,5 @@ def make_config(sim_options=None, generics=None, verilog=False):
 
     cfg.sim_options = {} if sim_options is None else sim_options
     cfg.generics = {} if generics is None else generics
+    cfg.vhdl_config_name = None
     return cfg

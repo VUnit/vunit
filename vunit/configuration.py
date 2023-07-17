@@ -25,6 +25,10 @@ class AttributeException(Exception):
     pass
 
 
+class GenericAndVHDLConfigurationException(Exception):
+    pass
+
+
 class Configuration(object):  # pylint: disable=too-many-instance-attributes
     """
     Represents a configuration of a test bench
@@ -39,12 +43,14 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
         pre_config=None,
         post_check=None,
         attributes=None,
+        vhdl_config_name=None,
     ):
         self.name = name
         self._design_unit = design_unit
         self.generics = {} if generics is None else generics
         self.sim_options = {} if sim_options is None else sim_options
         self.attributes = {} if attributes is None else attributes
+        self.vhdl_config_name = vhdl_config_name
 
         self.tb_path = str(Path(design_unit.original_file_name).parent)
 
@@ -64,6 +70,7 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
             pre_config=self.pre_config,
             post_check=self.post_check,
             attributes=self.attributes.copy(),
+            vhdl_config_name=self.vhdl_config_name,
         )
 
     @property
@@ -102,10 +109,21 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
         else:
             raise AttributeException
 
+    def set_vhdl_config_name(self, name):
+        """
+        Set VHDL configuration name
+        """
+        if self.generics:
+            raise GenericAndVHDLConfigurationException("Generics can't be used with VHDL configurations.")
+
+        self.vhdl_config_name = name
+
     def set_generic(self, name, value):
         """
         Set generic
         """
+        if self.vhdl_config_name:
+            raise GenericAndVHDLConfigurationException("Generics can't be used with VHDL configurations.")
         if name not in self._design_unit.generic_names:
             LOGGER.warning(
                 "Generic '%s' set to value '%s' not found in %s '%s.%s'. Possible values are [%s]",
@@ -186,13 +204,15 @@ class ConfigurationVisitor(object):
     def _check_enabled(self):
         pass
 
-    @staticmethod
-    def get_configuration_dicts():
+    def get_configuration_dicts(self):
         raise NotImplementedError
 
     def set_attribute(self, name, value):
         """
-        Set attribute
+        Set attribute.
+
+        :param name: Attribute name.
+        :param value: Attribute value.
         """
         self._check_enabled()
         for configs in self.get_configuration_dicts():
@@ -201,7 +221,10 @@ class ConfigurationVisitor(object):
 
     def set_generic(self, name, value):
         """
-        Set generic
+        Set generic.
+
+        :param name: Generic name.
+        :param value: Generic value.
         """
         self._check_enabled()
         for configs in self.get_configuration_dicts():
@@ -210,8 +233,10 @@ class ConfigurationVisitor(object):
 
     def set_sim_option(self, name, value, overwrite=True):
         """
-        Set sim option
+        Set simulation option
 
+        :param name: Simulation option name.
+        :param value: Simulation option value.
         :param overwrite: To overwrite the option or append to the existing value
         """
         self._check_enabled()
@@ -225,6 +250,8 @@ class ConfigurationVisitor(object):
     def set_pre_config(self, value):
         """
         Set pre_config function
+
+        :param value: pre_config function.
         """
         self._check_enabled()
         for configs in self.get_configuration_dicts():
@@ -234,13 +261,15 @@ class ConfigurationVisitor(object):
     def set_post_check(self, value):
         """
         Set post_check function
+
+        :param value: post_check function.
         """
         self._check_enabled()
         for configs in self.get_configuration_dicts():
             for config in configs.values():
                 config.post_check = value
 
-    def add_config(  # pylint: disable=too-many-arguments
+    def add_config(  # pylint: disable=too-many-arguments, too-many-branches
         self,
         name,
         generics=None,
@@ -248,9 +277,10 @@ class ConfigurationVisitor(object):
         post_check=None,
         sim_options=None,
         attributes=None,
+        vhdl_config_name=None,
     ):
         """
-        Add a configuration copying unset fields from the default configuration:
+        Add a configuration copying unset fields from the default configuration.
         """
         self._check_enabled()
 
@@ -272,6 +302,8 @@ class ConfigurationVisitor(object):
                 config.post_check = post_check
 
             if generics is not None:
+                if config.vhdl_config_name:
+                    raise GenericAndVHDLConfigurationException
                 config.generics.update(generics)
 
             if sim_options is not None:
@@ -283,4 +315,22 @@ class ConfigurationVisitor(object):
                         raise AttributeException
                 config.attributes.update(attributes)
 
+            if vhdl_config_name is not None:
+                if config.generics:
+                    raise GenericAndVHDLConfigurationException
+                config.vhdl_config_name = vhdl_config_name
+
             configs[config.name] = config
+
+    def delete_config(self, name):
+        """
+        Delete a configuration.
+        """
+        found_config = False
+        for configs in self.get_configuration_dicts():
+            if name in configs:
+                found_config = True
+                del configs[name]
+
+        if not found_config:
+            raise RuntimeError(f"Configuration name {name!s} not defined")

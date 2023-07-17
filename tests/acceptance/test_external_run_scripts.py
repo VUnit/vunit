@@ -176,6 +176,34 @@ class TestExternalRunScripts(TestCase):
             ],
         )
 
+    def test_vhdl_configuration_example_project(self):
+        self.check(ROOT / "examples/vhdl/vhdl_configuration/run.py")
+        check_report(
+            self.report_file,
+            [
+                ("passed", "lib.tb_selecting_dut_with_vhdl_configuration.rtl.Test reset"),
+                ("passed", "lib.tb_selecting_dut_with_vhdl_configuration.behavioral.Test reset"),
+                ("passed", "lib.tb_selecting_dut_with_vhdl_configuration.rtl.Test state change"),
+                ("passed", "lib.tb_selecting_dut_with_vhdl_configuration.behavioral.Test state change"),
+                ("passed", "lib.tb_selecting_test_runner_with_vhdl_configuration.test_reset_behavioral"),
+                ("passed", "lib.tb_selecting_test_runner_with_vhdl_configuration.test_reset_rtl"),
+                ("passed", "lib.tb_selecting_test_runner_with_vhdl_configuration.test_state_change_behavioral"),
+                ("passed", "lib.tb_selecting_test_runner_with_vhdl_configuration.test_state_change_rtl"),
+                ("passed", "lib.tb_reset.width=8"),
+                ("passed", "lib.tb_reset.width=32"),
+                ("passed", "lib.tb_selecting_dut_with_generate_statement.dut_rtl_width=8.Test reset"),
+                ("passed", "lib.tb_selecting_dut_with_generate_statement.dut_behavioral_width=8.Test reset"),
+                ("passed", "lib.tb_selecting_dut_with_generate_statement.dut_rtl_width=32.Test reset"),
+                ("passed", "lib.tb_selecting_dut_with_generate_statement.dut_behavioral_width=32.Test reset"),
+                ("passed", "lib.tb_selecting_dut_with_generate_statement.dut_rtl_width=8.Test state change"),
+                ("passed", "lib.tb_selecting_dut_with_generate_statement.dut_behavioral_width=8.Test state change"),
+                ("passed", "lib.tb_selecting_dut_with_generate_statement.dut_rtl_width=32.Test state change"),
+                ("passed", "lib.tb_selecting_dut_with_generate_statement.dut_behavioral_width=32.Test state change"),
+                ("passed", "lib.tb_state_change.width=8"),
+                ("passed", "lib.tb_state_change.width=32"),
+            ],
+        )
+
     @mark.xfail(
         not (simulator_is("ghdl") or simulator_is("nvc")),
         reason="Support complex JSON strings as generic",

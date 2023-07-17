@@ -41,6 +41,10 @@ class DesignUnit(object):
     def is_module(self):
         return False
 
+    @property
+    def is_vhdl_configuration(self):
+        return False
+
 
 class VHDLDesignUnit(DesignUnit):
     """
@@ -93,6 +97,22 @@ class Entity(VHDLDesignUnit):
 
     @property
     def is_entity(self):
+        return True
+
+
+class VHDLConfiguration(VHDLDesignUnit):
+    "Represents a VHDL configuration."
+
+    def __init__(self, name, source_file, entity_name):
+        VHDLDesignUnit.__init__(self, name, source_file, "configuration", True)
+        self._entity_name = entity_name
+
+    @property
+    def entity_name(self):
+        return self._entity_name
+
+    @property
+    def is_vhdl_configuration(self):
         return True
 
 

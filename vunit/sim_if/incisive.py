@@ -277,12 +277,22 @@ define work "{self._output_path}/libraries/work"
         cds = CDSFile.parse(self._cdslib)
         return cds
 
-    def simulate(self, output_path, test_suite_name, config, elaborate_only=False):  # pylint: disable=too-many-locals
+    @staticmethod
+    def _select_vhdl_top(config):
+        "Select VHDL configuration or entity as top."
+        if config.vhdl_config_name is None:
+            return f"{config.library_name!s}.{config.entity_name!s}:{config.architecture_name!s}"
+
+        return f"{config.vhdl_config_name!s}"
+
+    def simulate(
+        self, output_path, simulator_output_path, test_suite_name, config, elaborate_only=False
+    ):  # pylint: disable=too-many-locals,too-many-branches
         """
         Elaborates and Simulates with entity as top level using generics
         """
 
-        script_path = str(Path(output_path) / self.name)
+        script_path = str(simulator_output_path)
         launch_gui = self._gui is not False and not elaborate_only
 
         if elaborate_only:
@@ -336,7 +346,8 @@ define work "{self._output_path}/libraries/work"
                 args += [f"-top {config.library_name!s}.{config.entity_name!s}:sv"]
             else:
                 # we have a VHDL toplevel:
-                args += [f"-top {config.library_name!s}.{config.entity_name!s}:{config.architecture_name!s}"]
+                args += [f"-top {self._select_vhdl_top(config)}"]
+
             argsfile = f"{script_path!s}/irun_{step!s}.args"
             write_file(argsfile, "\n".join(args))
             if not run_command(

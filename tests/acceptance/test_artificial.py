@@ -245,4 +245,16 @@ EXPECTED_REPORT = (
         "failed",
         "lib.tb_assert_stop_level.Report failure when VHDL assert stop level = failure",
     ),
+    (
+        "passed",
+        "lib.tb_with_vhdl_configuration.cfg1.test2",
+    ),
+    (
+        "passed",
+        "lib.tb_with_vhdl_configuration.cfg2.test1",
+    ),
+    (
+        "passed",
+        "lib.tb_with_vhdl_configuration.cfg2.test2",
+    ),
 )

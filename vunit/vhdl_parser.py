@@ -125,7 +125,7 @@ class VHDLPackageBody(object):
 
 class VHDLConfiguration(object):
     """
-    A configuratio declaration
+    A configuration declaration
     """
 
     def __init__(self, identifier, entity):

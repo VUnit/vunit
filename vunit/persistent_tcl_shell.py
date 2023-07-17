@@ -25,7 +25,7 @@ class PersistentTclShell(object):
         self._lock = threading.Lock()
         self._create_process = create_process
 
-    def _process(self):
+    def _process(self, simulator_output_path):
         """
         Create the vsim process
         """
@@ -39,7 +39,7 @@ class PersistentTclShell(object):
             except KeyError:
                 pass
 
-            process = self._create_process(ident)
+            process = self._create_process(ident, simulator_output_path)
             self._processes[ident] = process
 
         process.writeline("puts #VUNIT_RETURN")
@@ -53,27 +53,27 @@ class PersistentTclShell(object):
             raise
         return process
 
-    def execute(self, cmd):
+    def execute(self, cmd, simulator_output_path):
         """
         Execute a command to the persistent TCL shell
         """
-        process = self._process()
+        process = self._process(simulator_output_path)
         process.writeline(cmd)
         process.writeline("puts #VUNIT_RETURN")
         process.consume_output(output_consumer)
 
-    def read_var(self, varname):
+    def read_var(self, varname, simulator_output_path):
         """
         Read a variable from the persistent TCL shell
         """
-        process = self._process()
+        process = self._process(simulator_output_path)
         process.writeline(f"puts #VUNIT_READVAR=${varname!s}")
         consumer = ReadVarOutputConsumer()
         process.consume_output(consumer)
         return consumer.var
 
-    def read_bool(self, varname):
-        result = self.read_var(varname)
+    def read_bool(self, varname, simulator_output_path):
+        result = self.read_var(varname, simulator_output_path)
         assert result in ("true", "false")
         return result == "true"
 
