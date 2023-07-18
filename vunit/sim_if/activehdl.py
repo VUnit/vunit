@@ -239,11 +239,14 @@ class ActiveHDLInterface(SimulatorInterface):
             set_generic_name_str,
             "-lib",
             config.library_name,
-            config.entity_name,
         ]
 
-        if config.architecture_name is not None:
-            vsim_flags.append(config.architecture_name)
+        if config.vhdl_configuration_name is None:
+            vsim_flags.append(config.entity_name)
+            if config.architecture_name is not None:
+                vsim_flags.append(config.architecture_name)
+        else:
+            vsim_flags.append(config.vhdl_configuration_name)
 
         if config.sim_options.get("enable_coverage", False):
             coverage_file_path = str(Path(output_path) / "coverage.acdb")
