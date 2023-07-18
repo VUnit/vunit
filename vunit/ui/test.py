@@ -36,6 +36,7 @@ class Test(object):
         post_check=None,
         sim_options=None,
         attributes=None,
+        vhdl_configuration_name=None,
     ):
         """
         Add a configuration to this test copying the default configuration.
@@ -50,6 +51,7 @@ class Test(object):
         :param post_check: A :ref:`callback function <pre_and_post_hooks>` to be called after test execution.
         :param sim_options: A `dict` containing the sim_options to be set in addition to the default configuration.
         :param attributes: A `dict` containing the attributes to be set in addition to the default configuration.
+        :param vhdl_configuration_name: Name of VHDL configuration to use for the testbench entity, if any.
 
         :example:
 
@@ -86,6 +88,7 @@ class Test(object):
             post_check=post_check,
             sim_options=sim_options,
             attributes=attributes,
+            vhdl_configuration_name=vhdl_configuration_name,
         )
 
     def set_attribute(self, name, value):
@@ -135,6 +138,15 @@ class Test(object):
 
         """
         self._test_case.set_generic(name, value)
+
+    def set_vhdl_configuration_name(self, value: str):
+        """
+        Set VHDL configuration name of all
+        |configurations| of this test
+
+        :param value: The VHDL configuration name
+        """
+        self._test_case.set_vhdl_configuration_name(value)
 
     def set_sim_option(self, name, value, overwrite=True):
         """

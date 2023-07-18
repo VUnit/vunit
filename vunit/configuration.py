@@ -39,12 +39,14 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
         pre_config=None,
         post_check=None,
         attributes=None,
+        vhdl_configuration_name=None,
     ):
         self.name = name
         self._design_unit = design_unit
         self.generics = {} if generics is None else generics
         self.sim_options = {} if sim_options is None else sim_options
         self.attributes = {} if attributes is None else attributes
+        self.vhdl_configuration_name = vhdl_configuration_name
 
         self.tb_path = str(Path(design_unit.original_file_name).parent)
 
@@ -64,6 +66,7 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
             pre_config=self.pre_config,
             post_check=self.post_check,
             attributes=self.attributes.copy(),
+            vhdl_configuration_name=self.vhdl_configuration_name,
         )
 
     @property
@@ -101,6 +104,12 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
             self.attributes[name] = value
         else:
             raise AttributeException
+
+    def set_vhdl_configuration_name(self, name):
+        """
+        Set VHDL configuration name
+        """
+        self.vhdl_configuration_name = name
 
     def set_generic(self, name, value):
         """
@@ -208,6 +217,15 @@ class ConfigurationVisitor(object):
             for config in configs.values():
                 config.set_generic(name, value)
 
+    def set_vhdl_configuration_name(self, value: str):
+        """
+        Set VHDL configuration name
+        """
+        self._check_enabled()
+        for configs in self.get_configuration_dicts():
+            for config in configs.values():
+                config.set_vhdl_configuration_name(value)
+
     def set_sim_option(self, name, value, overwrite=True):
         """
         Set sim option
@@ -248,6 +266,7 @@ class ConfigurationVisitor(object):
         post_check=None,
         sim_options=None,
         attributes=None,
+        vhdl_configuration_name=None,
     ):
         """
         Add a configuration copying unset fields from the default configuration:
@@ -282,5 +301,8 @@ class ConfigurationVisitor(object):
                     if not attribute.startswith("."):
                         raise AttributeException
                 config.attributes.update(attributes)
+
+            if vhdl_configuration_name is not None:
+                config.vhdl_configuration_name = vhdl_configuration_name
 
             configs[config.name] = config
