@@ -176,6 +176,31 @@ class TestExternalRunScripts(TestCase):
             ],
         )
 
+    def test_vhdl_configuration_example_project(self):
+        self.check(ROOT / "examples/vhdl/vhdl_configuration/run.py")
+        check_report(
+            self.report_file,
+            [
+                ("passed", "lib.tb_selecting_dut_with_vhdl_configuration.behavioral_16.Test reset"),
+                ("passed", "lib.tb_selecting_dut_with_vhdl_configuration.rtl_16.Test state change"),
+                ("passed", "lib.tb_selecting_dut_with_vhdl_configuration.rtl_32.Test reset"),
+                ("passed", "lib.tb_selecting_dut_with_vhdl_configuration.rtl_8.Test state change"),
+                ("passed", "lib.tb_selecting_dut_with_vhdl_configuration.behavioral_8.Test state change"),
+                ("passed", "lib.tb_selecting_dut_with_vhdl_configuration.rtl_8.Test reset"),
+                ("passed", "lib.tb_selecting_dut_with_vhdl_configuration.behavioral_16.Test state change"),
+                ("passed", "lib.tb_selecting_dut_with_vhdl_configuration.behavioral_8.Test reset"),
+                ("passed", "lib.tb_selecting_dut_with_vhdl_configuration.rtl_16.Test reset"),
+                ("passed", "lib.tb_selecting_test_runner_with_vhdl_configuration.test_reset_rtl_8"),
+                ("passed", "lib.tb_selecting_test_runner_with_vhdl_configuration.test_reset_rtl_16"),
+                ("passed", "lib.tb_selecting_test_runner_with_vhdl_configuration.test_state_change_rtl_16"),
+                ("passed", "lib.tb_selecting_test_runner_with_vhdl_configuration.test_reset_behavioral_16"),
+                ("passed", "lib.tb_selecting_test_runner_with_vhdl_configuration.test_state_change_rtl_8"),
+                ("passed", "lib.tb_selecting_test_runner_with_vhdl_configuration.test_state_change_behavioral_8"),
+                ("passed", "lib.tb_selecting_test_runner_with_vhdl_configuration.test_state_change_behavioral_16"),
+                ("passed", "lib.tb_selecting_test_runner_with_vhdl_configuration.test_reset_behavioral_8"),
+            ],
+        )
+
     @mark.xfail(
         not (simulator_is("ghdl") or simulator_is("nvc")),
         reason="Support complex JSON strings as generic",
