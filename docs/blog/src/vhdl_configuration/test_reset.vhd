@@ -10,34 +10,33 @@ context vunit_lib.vunit_context;
 library ieee;
 use ieee.std_logic_1164.all;
 
-architecture test_state_change_a of test_runner is
+-- start_snippet test_reset_architecture_of_test_runner
+architecture test_reset_architecture of test_runner is
 begin
   main : process
   begin
     test_runner_setup(runner, nested_runner_cfg);
 
-    reset <= '0';
-
+    -- start_folding -- Test code here
     d <= (others => '1');
-    wait until rising_edge(clk);
-    wait for 0 ns;
-    check_equal(q, std_logic_vector'(q'range => '1'));
-
-    d <= (others => '0');
+    reset <= '1';
     wait until rising_edge(clk);
     wait for 0 ns;
     check_equal(q, 0);
+    -- end_folding -- Test code here
 
     test_runner_cleanup(runner);
   end process;
 
   test_runner_watchdog(runner, 10 * clk_period);
 end;
+-- end_snippet test_reset_architecture_of_test_runner
 
-configuration test_state_change_behavioral of tb_selecting_test_runner_with_vhdl_configuration is
+-- start_snippet test_reset_configurations
+configuration test_reset_behavioral of tb_selecting_test_runner_with_vhdl_configuration is
   for tb
     for test_runner_inst : test_runner
-      use entity work.test_runner(test_state_change_a);
+      use entity work.test_runner(test_reset_architecture);
     end for;
 
     for test_fixture
@@ -48,10 +47,10 @@ configuration test_state_change_behavioral of tb_selecting_test_runner_with_vhdl
   end for;
 end;
 
-configuration test_state_change_rtl of tb_selecting_test_runner_with_vhdl_configuration is
+configuration test_reset_rtl of tb_selecting_test_runner_with_vhdl_configuration is
   for tb
     for test_runner_inst : test_runner
-      use entity work.test_runner(test_state_change_a);
+      use entity work.test_runner(test_reset_architecture);
     end for;
 
     for test_fixture
@@ -61,3 +60,4 @@ configuration test_state_change_rtl of tb_selecting_test_runner_with_vhdl_config
     end for;
   end for;
 end;
+-- end_snippet test_reset_configurations

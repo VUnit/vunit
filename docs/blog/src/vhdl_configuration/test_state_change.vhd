@@ -10,7 +10,7 @@ context vunit_lib.vunit_context;
 library ieee;
 use ieee.std_logic_1164.all;
 
-architecture test_state_change_a of test_runner is
+architecture test_state_change_architecture of test_runner is
 begin
   main : process
   begin
@@ -37,7 +37,7 @@ end;
 configuration test_state_change_behavioral of tb_selecting_test_runner_with_vhdl_configuration is
   for tb
     for test_runner_inst : test_runner
-      use entity work.test_runner(test_state_change_a);
+      use entity work.test_runner(test_state_change_architecture);
     end for;
 
     for test_fixture
@@ -51,7 +51,7 @@ end;
 configuration test_state_change_rtl of tb_selecting_test_runner_with_vhdl_configuration is
   for tb
     for test_runner_inst : test_runner
-      use entity work.test_runner(test_state_change_a);
+      use entity work.test_runner(test_state_change_architecture);
     end for;
 
     for test_fixture

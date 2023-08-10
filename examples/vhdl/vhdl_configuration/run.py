@@ -20,18 +20,18 @@ lib.add_source_files(root / "*.vhd")
 # pure VHDL configuration. For example, by running with different generic values.
 tb = lib.test_bench("tb_selecting_dut_with_vhdl_configuration")
 
-for vhdl_configuration_name in ["dff_rtl", "dff_behavioral"]:
+for dut_architecture in ["rtl", "behavioral"]:
     for width in [8, 16]:
         tb.add_config(
-            name=f"{vhdl_configuration_name}_{width}",
+            name=f"{dut_architecture}_{width}",
             generics=dict(width=width),
-            vhdl_configuration_name=vhdl_configuration_name,
+            vhdl_configuration_name=dut_architecture,
         )
 
 # A top-level VHDL configuration is bound to an entity, i.e. the testbench. However,
 # when handled as part of VUnit configurations it can also be applied to a
 # single test case
-tb.test("Test reset").add_config(name="dff_rtl_32", generics=dict(width=32), vhdl_configuration_name="dff_rtl")
+tb.test("Test reset").add_config(name="rtl_32", generics=dict(width=32), vhdl_configuration_name="rtl")
 
 
 # If the test runner is placed in a component instantiated into the testbench, different architectures of that
@@ -44,12 +44,14 @@ tb.test("Test reset").add_config(name="dff_rtl_32", generics=dict(width=32), vhd
 # is to put each test suite in its own testbench and make the test fixture a component reused between the testbenches.
 # That approach do not require any VHDL configurations.
 tb = lib.test_bench("tb_selecting_test_runner_with_vhdl_configuration")
-for vhdl_configuration_name in ["test_reset", "test_state_change"]:
-    for width in [8, 16]:
-        tb.add_config(
-            name=f"{vhdl_configuration_name}_{width}",
-            generics=dict(width=width),
-            vhdl_configuration_name=vhdl_configuration_name,
-        )
+for test_case_name in ["test_reset", "test_state_change"]:
+    for dut_architecture in ["rtl", "behavioral"]:
+        vhdl_configuration_name = f"{test_case_name}_{dut_architecture}"
+        for width in [8, 16]:
+            tb.add_config(
+                name=f"{vhdl_configuration_name}_{width}",
+                generics=dict(width=width),
+                vhdl_configuration_name=vhdl_configuration_name,
+            )
 
 vu.main()
