@@ -1,0 +1,1 @@
+Added support for simulating top-level VHDL configurations.

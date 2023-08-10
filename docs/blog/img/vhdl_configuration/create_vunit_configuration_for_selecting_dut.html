@@ -1,0 +1,8 @@
+<div class="highlight"><pre><span></span><span class="n">tb</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">test_bench</span><span class="p">(</span><span class="s2">&quot;tb_selecting_dut_with_generics&quot;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">dut_arch</span><span class="p">,</span> <span class="n">width</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">([</span><span class="s2">&quot;rtl&quot;</span><span class="p">,</span> <span class="s2">&quot;behavioral&quot;</span><span class="p">],</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="mi">16</span><span class="p">]):</span>
+    <span class="n">tb</span><span class="o">.</span><span class="n">add_config</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dut_arch</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">width</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="n">generics</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span> <span class="n">dff_arch</span><span class="o">=</span><span class="n">dut_arch</span><span class="p">),</span>
+    <span class="p">)</span>
+</pre></div>

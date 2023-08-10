@@ -56,6 +56,7 @@ architecture tb of tb_selecting_test_runner_with_vhdl_configuration is
   end component;
 
 begin
+  -- start_snippet test_runner_component_instantiation
   test_runner_inst : component test_runner
     generic map(
       clk_period => clk_period,
@@ -68,6 +69,7 @@ begin
       d => d,
       q => q
     );
+  -- end_snippet test_runner_component_instantiation
 
   test_fixture : block is
   begin
