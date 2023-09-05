@@ -84,13 +84,13 @@ The recommended way to get VUnit is to install the :ref:`latest stable release <
 
 .. code-block:: console
 
-   > pip install vunit_hdl
+   > pip install vunit-hdl
 
 Once installed, VUnit may be updated to new versions via a similar method:
 
 .. code-block:: console
 
-   > pip install -U vunit_hdl
+   > pip install -U vunit-hdl
 
 .. _installing_master:
 
