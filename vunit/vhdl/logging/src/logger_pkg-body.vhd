@@ -878,6 +878,7 @@ package body logger_pkg is
   begin
     if logger = null_logger then
       core_failure("Attempt to log to uninitialized logger");
+      deallocate(location);
       return;
     end if;
 
@@ -902,6 +903,8 @@ package body logger_pkg is
       -- Count even if disabled
       count_log(logger, log_level);
     end if;
+
+    deallocate(location);
   end procedure;
 
   procedure debug(logger : logger_t;
