@@ -8,6 +8,10 @@
 UI class Test
 """
 
+from typing import Any, Callable, Optional, cast
+from vunit.sim_if import OptionType
+from vunit.test.bench import TestConfigurationVisitor
+from vunit.ui.results import Results
 from .common import lower_generics
 
 
@@ -17,11 +21,11 @@ class Test(object):
 
     """
 
-    def __init__(self, test_case):
+    def __init__(self, test_case: TestConfigurationVisitor) -> None:
         self._test_case = test_case
 
     @property
-    def name(self):
+    def name(self) -> str:
         """
         :returns: the entity or module name of the test bench
         """
@@ -29,15 +33,15 @@ class Test(object):
 
     def add_config(  # pylint: disable=too-many-arguments
         self,
-        name,
-        generics=None,
-        parameters=None,
-        pre_config=None,
-        post_check=None,
-        sim_options=None,
-        attributes=None,
-        vhdl_configuration_name=None,
-    ):
+        name: str,
+        generics: Optional[dict] = None,
+        parameters: Optional[dict] = None,
+        pre_config: Optional[Callable] = None,
+        post_check: Optional[Callable] = None,
+        sim_options: Optional[dict[str, OptionType]] = None,
+        attributes: Optional[dict] = None,
+        vhdl_configuration_name: Optional[str] = None,
+    ) -> None:
         """
         Add a configuration to this test copying the default configuration.
 
@@ -79,7 +83,7 @@ class Test(object):
         generics = {} if generics is None else generics
         generics = lower_generics(generics)
         parameters = {} if parameters is None else parameters
-        generics.update(parameters)
+        cast(dict, generics).update(parameters)
         attributes = {} if attributes is None else attributes
         self._test_case.add_config(
             name=name,
@@ -91,7 +95,7 @@ class Test(object):
             vhdl_configuration_name=vhdl_configuration_name,
         )
 
-    def set_attribute(self, name, value):
+    def set_attribute(self, name: str, value: Any) -> None:
         """
         Set a value of attribute within all |configurations| of this test
 
@@ -107,7 +111,7 @@ class Test(object):
         """
         self._test_case.set_attribute(name, value)
 
-    def set_generic(self, name, value):
+    def set_generic(self, name: str, value: Any) -> None:
         """
         Set a value of generic within all |configurations| of this test
 
@@ -123,7 +127,7 @@ class Test(object):
         """
         self._test_case.set_generic(name.lower(), value)
 
-    def set_parameter(self, name, value):
+    def set_parameter(self, name: str, value: Any) -> None:
         """
         Set a value of parameter within all |configurations| of this test
 
@@ -139,7 +143,7 @@ class Test(object):
         """
         self._test_case.set_generic(name, value)
 
-    def set_vhdl_configuration_name(self, value: str):
+    def set_vhdl_configuration_name(self, value: str) -> None:
         """
         Set VHDL configuration name of all
         |configurations| of this test
@@ -148,7 +152,7 @@ class Test(object):
         """
         self._test_case.set_vhdl_configuration_name(value)
 
-    def set_sim_option(self, name, value, overwrite=True):
+    def set_sim_option(self, name: str, value: OptionType, overwrite: bool = True) -> None:
         """
         Set simulation option within all |configurations| of this test
 
@@ -165,7 +169,7 @@ class Test(object):
         """
         self._test_case.set_sim_option(name, value, overwrite)
 
-    def set_pre_config(self, value):
+    def set_pre_config(self, value: Callable) -> None:
         """
         Set :ref:`pre_config <pre_and_post_hooks>` function of all |configurations| of this test
 
@@ -173,7 +177,7 @@ class Test(object):
         """
         self._test_case.set_pre_config(value)
 
-    def set_post_check(self, value):
+    def set_post_check(self, value: Callable) -> None:
         """
         Set :ref:`post_check <pre_and_post_hooks>` function of all |configurations| of this test
 

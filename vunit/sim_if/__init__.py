@@ -13,10 +13,12 @@ import os
 from os import environ, listdir, pathsep
 import subprocess
 from pathlib import Path
-from typing import List
+from typing import Any, List, Union
 from ..ostools import Process, simplify_path
 from ..exceptions import CompileError
 from ..color_printer import NO_COLOR_PRINTER
+
+OptionType = Union[str, list[str], bool]
 
 
 class Option(object):
@@ -416,7 +418,7 @@ class VHDLAssertLevelOption(Option):
             raise ValueError(f"Option {self.name!r} must be one of {self._legal_values!s}. Got {value!r}")
 
 
-def is_string_not_iterable(value):
+def is_string_not_iterable(value: Any) -> bool:
     """
     Returns True if value is a string and not another iterable
     """

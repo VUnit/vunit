@@ -9,8 +9,13 @@ UI class TestBench
 """
 
 from fnmatch import fnmatch
+from typing import Any, Callable, Optional, cast
+
+from vunit.sim_if import OptionType
+from vunit.ui.library import Library
 from .common import lower_generics
 from .test import Test
+from vunit.test.bench import TestBench as Test_Bench
 
 
 class TestBench(object):
@@ -20,25 +25,25 @@ class TestBench(object):
     bench will apply that option to all test cases belonging to that test bench.
     """
 
-    def __init__(self, test_bench, library):
+    def __init__(self, test_bench: Test_Bench, library: Library) -> None:
         self._test_bench = test_bench
         self._library = library
 
     @property
-    def name(self):
+    def name(self) -> str:
         """
         :returns: The entity or module name of the test bench
         """
         return self._test_bench.name
 
     @property
-    def library(self):
+    def library(self) -> Library:
         """
         :returns: The library that contains this test bench
         """
         return self._library
 
-    def set_attribute(self, name, value):
+    def set_attribute(self, name: str, value: str) -> None:
         """
         Set a value of attribute within all |configurations| of this test bench or test cases within it
 
@@ -54,7 +59,7 @@ class TestBench(object):
         """
         self._test_bench.set_attribute(name, value)
 
-    def set_generic(self, name, value):
+    def set_generic(self, name: str, value: Any) -> None:
         """
         Set a value of generic within all |configurations| of this test bench or test cases within it
 
@@ -70,7 +75,7 @@ class TestBench(object):
         """
         self._test_bench.set_generic(name.lower(), value)
 
-    def set_parameter(self, name, value):
+    def set_parameter(self, name: str, value: Any) -> None:
         """
         Set a value of parameter within all |configurations| of this test bench or test cases within it
 
@@ -86,7 +91,7 @@ class TestBench(object):
         """
         self._test_bench.set_generic(name, value)
 
-    def set_vhdl_configuration_name(self, value: str):
+    def set_vhdl_configuration_name(self, value: str) -> None:
         """
         Set VHDL configuration name of all
         |configurations| of this test bench or test cases within it
@@ -95,7 +100,7 @@ class TestBench(object):
         """
         self._test_bench.set_vhdl_configuration_name(value)
 
-    def set_sim_option(self, name, value, overwrite=True):
+    def set_sim_option(self, name: str, value: OptionType, overwrite: bool = True) -> None:
         """
         Set simulation option within all |configurations| of this test bench or test cases within it
 
@@ -112,7 +117,7 @@ class TestBench(object):
         """
         self._test_bench.set_sim_option(name, value, overwrite)
 
-    def set_pre_config(self, value):
+    def set_pre_config(self, value: Callable) -> None:
         """
         Set :ref:`pre_config <pre_and_post_hooks>` function of all
         |configurations| of this test bench or test cases within it
@@ -121,7 +126,7 @@ class TestBench(object):
         """
         self._test_bench.set_pre_config(value)
 
-    def set_post_check(self, value):
+    def set_post_check(self, value: Callable) -> None:
         """
         Set :ref:`post_check <pre_and_post_hooks>` function of all
         |configurations| of this test bench or test cases within it
@@ -132,15 +137,15 @@ class TestBench(object):
 
     def add_config(  # pylint: disable=too-many-arguments
         self,
-        name,
-        generics=None,
-        parameters=None,
-        pre_config=None,
-        post_check=None,
-        sim_options=None,
-        attributes=None,
-        vhdl_configuration_name=None,
-    ):
+        name: str,
+        generics: Optional[dict[str, Any]] = None,
+        parameters: Optional[dict[str, Any]] = None,
+        pre_config: Optional[Callable] = None,
+        post_check: Optional[Callable] = None,
+        sim_options: Optional[dict[str, OptionType]] = None,
+        attributes: Optional[dict[str, Any]] = None,
+        vhdl_configuration_name: Optional[str] = None,
+    ) -> None:
         """
         Add a configuration of this test bench or to all test cases within it by copying the default configuration.
 
@@ -183,7 +188,7 @@ class TestBench(object):
         generics = {} if generics is None else generics
         generics = lower_generics(generics)
         parameters = {} if parameters is None else parameters
-        generics.update(parameters)
+        cast(dict, generics).update(parameters)
         attributes = {} if attributes is None else attributes
         self._test_bench.add_config(
             name=name,
@@ -195,7 +200,7 @@ class TestBench(object):
             vhdl_configuration_name=vhdl_configuration_name,
         )
 
-    def test(self, name):
+    def test(self, name: str) -> Test:
         """
         Get a test within this test bench
 
@@ -204,7 +209,7 @@ class TestBench(object):
         """
         return Test(self._test_bench.get_test_case(name))
 
-    def get_tests(self, pattern="*"):
+    def get_tests(self, pattern: str = "*") -> list[Test]:
         """
         Get a list of tests
 
@@ -219,7 +224,7 @@ class TestBench(object):
             results.append(Test(test_case))
         return results
 
-    def scan_tests_from_file(self, file_name):
+    def scan_tests_from_file(self, file_name: str) -> None:
         """
         Scan tests from another file than the one containing the test
         bench.  Useful for when the top level test bench does not

@@ -8,58 +8,14 @@
 UI classes SourceFile and SourceFileList
 """
 
+from typing import Iterable, List, Optional, Union
+
+from vunit.project import Project
+from vunit.sim_if import OptionType
+from vunit.ui import VUnit
+from vunit.ui.library import Library
 from .. import ostools
-
-
-class SourceFileList(list):
-    """
-    A list of :class:`.SourceFile`
-    """
-
-    def __init__(self, source_files):
-        list.__init__(self, source_files)
-
-    def set_compile_option(self, name, value):
-        """
-        Set compile option for all files in the list
-
-        :param name: |compile_option|
-        :param value: The value of the compile option
-
-        :example:
-
-        .. code-block:: python
-
-           files.set_compile_option("ghdl.a_flags", ["--no-vital-checks"])
-        """
-        for source_file in self:
-            source_file.set_compile_option(name, value)
-
-    def add_compile_option(self, name, value):
-        """
-        Add compile option to all files in the list
-
-        :param name: |compile_option|
-        :param value: The value of the compile option
-        """
-        for source_file in self:
-            source_file.add_compile_option(name, value)
-
-    def add_dependency_on(self, source_file):
-        """
-        Add manual dependency of these files on other file(s)
-
-        :param source_file: The file(s) which this file depends on
-
-        :example:
-
-        .. code-block:: python
-
-           other_file = lib.get_source_file("other_file.vhd")
-           files.add_dependency_on(other_file)
-        """
-        for my_source_file in self:
-            my_source_file.add_dependency_on(source_file)
+from vunit.source_file import SourceFile as Source_File, VHDLSourceFile
 
 
 class SourceFile(object):
@@ -67,37 +23,37 @@ class SourceFile(object):
     A single file
     """
 
-    def __init__(self, source_file, project, ui):
+    def __init__(self, source_file: Source_File, project: Project, ui: VUnit) -> None:
         self._source_file = source_file
         self._project = project
         self._ui = ui
 
     @property
-    def name(self):
+    def name(self) -> str:
         """
         The name of the SourceFile
         """
         return ostools.simplify_path(self._source_file.name)
 
     @property
-    def vhdl_standard(self):
+    def vhdl_standard(self) -> Optional[str]:
         """
         The VHDL standard applicable to the file,
         None if not a VHDL file
         """
-        if self._source_file.file_type == "vhdl":
+        if isinstance(self._source_file, VHDLSourceFile):
             return str(self._source_file.get_vhdl_standard())
 
         return None
 
     @property
-    def library(self):
+    def library(self) -> Library:
         """
         The library of the source file
         """
         return self._ui.library(self._source_file.library.name)
 
-    def set_compile_option(self, name, value):
+    def set_compile_option(self, name: str, value: OptionType) -> None:
         """
         Set compile option for this file
 
@@ -112,7 +68,7 @@ class SourceFile(object):
         """
         self._source_file.set_compile_option(name, value)
 
-    def add_compile_option(self, name, value):
+    def add_compile_option(self, name: str, value: OptionType) -> None:
         """
         Add compile option to this file
 
@@ -121,7 +77,7 @@ class SourceFile(object):
         """
         self._source_file.add_compile_option(name, value)
 
-    def get_compile_option(self, name):
+    def get_compile_option(self, name: str) -> OptionType:
         """
         Return compile option of this file
 
@@ -129,7 +85,7 @@ class SourceFile(object):
         """
         return self._source_file.get_compile_option(name)
 
-    def add_dependency_on(self, source_file):
+    def add_dependency_on(self, source_file: Union[Iterable[Source_File], Source_File]) -> None:
         """
         Add manual dependency of this file other file(s)
 
@@ -145,8 +101,59 @@ class SourceFile(object):
         if isinstance(source_file, SourceFile):
             private_source_file = source_file._source_file  # pylint: disable=protected-access
             self._project.add_manual_dependency(self._source_file, depends_on=private_source_file)
-        elif hasattr(source_file, "__iter__"):
+        elif isinstance(source_file, Iterable):
             for element in source_file:
                 self.add_dependency_on(element)
         else:
             raise ValueError(source_file)
+
+
+class SourceFileList(List[SourceFile]):
+    """
+    A list of :class:`.SourceFile`
+    """
+
+    def __init__(self, source_files: Iterable[SourceFile]):
+        list.__init__(self, source_files)
+
+    def set_compile_option(self, name: str, value: OptionType) -> None:
+        """
+        Set compile option for all files in the list
+
+        :param name: |compile_option|
+        :param value: The value of the compile option
+
+        :example:
+
+        .. code-block:: python
+
+           files.set_compile_option("ghdl.a_flags", ["--no-vital-checks"])
+        """
+        for source_file in self:
+            source_file.set_compile_option(name, value)
+
+    def add_compile_option(self, name: str, value: OptionType) -> None:
+        """
+        Add compile option to all files in the list
+
+        :param name: |compile_option|
+        :param value: The value of the compile option
+        """
+        for source_file in self:
+            source_file.add_compile_option(name, value)
+
+    def add_dependency_on(self, source_file: Source_File) -> None:
+        """
+        Add manual dependency of these files on other file(s)
+
+        :param source_file: The file(s) which this file depends on
+
+        :example:
+
+        .. code-block:: python
+
+           other_file = lib.get_source_file("other_file.vhd")
+           files.add_dependency_on(other_file)
+        """
+        for my_source_file in self:
+            my_source_file.add_dependency_on(source_file)

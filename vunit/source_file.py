@@ -8,10 +8,11 @@
 Functionality to represent and operate on VHDL and Verilog source files
 """
 from pathlib import Path
-from typing import Union
+from typing import Literal, Union
 import logging
 from copy import copy
 import traceback
+from vunit.sim_if import OptionType
 from vunit.sim_if.factory import SIMULATOR_FACTORY
 from vunit.hashing import hash_string
 from vunit.vhdl_parser import VHDLReference
@@ -35,7 +36,7 @@ class SourceFile(object):
         self.file_type = file_type
         self.design_units = []
         self._content_hash = None
-        self._compile_options = {}
+        self._compile_options: dict[str, OptionType] = {}
 
         # The file name before preprocessing
         self.original_name = name
@@ -70,14 +71,14 @@ class SourceFile(object):
     def __repr__(self):
         return f"SourceFile({self.name!s}, {self.library.name!s})"
 
-    def set_compile_option(self, name, value):
+    def set_compile_option(self, name: str, value: OptionType):
         """
         Set compile option
         """
         SIMULATOR_FACTORY.check_compile_option(name, value)
         self._compile_options[name] = copy(value)
 
-    def add_compile_option(self, name, value):
+    def add_compile_option(self, name: str, value: OptionType):
         """
         Add compile option
         """
@@ -86,7 +87,7 @@ class SourceFile(object):
         if name not in self._compile_options:
             self._compile_options[name] = copy(value)
         else:
-            self._compile_options[name] += value
+            self._compile_options[name] += value  # type: ignore
 
     @property
     def compile_options(self):
@@ -117,6 +118,9 @@ class SourceFile(object):
         Compute hash of contents and compile options
         """
         return hash_string(self._content_hash + self._compile_options_hash())
+
+    def add_to_library(self, library: Library):
+        raise NotImplemented
 
 
 class VerilogSourceFile(SourceFile):
@@ -347,7 +351,7 @@ VERILOG_FILE_TYPES = ("verilog", "systemverilog")
 FILE_TYPES = ("vhdl",) + VERILOG_FILE_TYPES
 
 
-def file_type_of(file_name):
+def file_type_of(file_name: Union[str, Path]) -> Literal["vhdl", "verilog", "systemverilog"]:
     """
     Return the file type of file_name based on the file ending
     """

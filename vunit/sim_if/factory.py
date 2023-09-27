@@ -9,13 +9,14 @@ Create simulator instances
 """
 
 import os
+from typing import Union
 from .activehdl import ActiveHDLInterface
 from .ghdl import GHDLInterface
 from .incisive import IncisiveInterface
 from .modelsim import ModelSimInterface
 from .nvc import NVCInterface
 from .rivierapro import RivieraProInterface
-from . import BooleanOption, ListOfStringOption, VHDLAssertLevelOption
+from . import BooleanOption, ListOfStringOption, Option, VHDLAssertLevelOption
 
 
 class SimulatorFactory(object):
@@ -37,7 +38,7 @@ class SimulatorFactory(object):
             NVCInterface,
         ]
 
-    def _extract_compile_options(self):
+    def _extract_compile_options(self) -> dict[str, Option]:
         """
         Return all supported compile options
         """
@@ -51,7 +52,7 @@ class SimulatorFactory(object):
                 result[opt.name] = opt
         return result
 
-    def _extract_sim_options(self):
+    def _extract_sim_options(self) -> dict[str, Option]:
         """
         Return all supported sim options
         """
@@ -75,7 +76,7 @@ class SimulatorFactory(object):
 
         return result
 
-    def check_sim_option(self, name, value):
+    def check_sim_option(self, name: str, value: Union[str, list[str], bool]):
         """
         Check that sim_option has legal name and value
         """
@@ -94,7 +95,7 @@ class SimulatorFactory(object):
         if name not in known_options:
             raise ValueError(f"Unknown compile_option {name!r}, expected one of {known_options!r}")
 
-    def check_compile_option(self, name, value):
+    def check_compile_option(self, name: str, value: Union[str, list[str], bool]) -> None:
         """
         Check that the compile option is valid
         """

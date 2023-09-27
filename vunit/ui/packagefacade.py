@@ -9,6 +9,11 @@ UI class PackageFacade
 """
 
 from pathlib import Path
+from typing import Optional, Union
+from vunit.design_unit import DesignUnit
+
+from vunit.ui import VUnit
+from vunit.ui.source import SourceFileList
 from ..com import codec_generator
 
 
@@ -17,13 +22,18 @@ class PackageFacade(object):
     User interface of a Package
     """
 
-    def __init__(self, parent, library_name, package_name, design_unit):
+    def __init__(self, parent: VUnit, library_name: str, package_name: str, design_unit: DesignUnit) -> None:
         self._parent = parent
         self._library_name = library_name
         self._package_name = package_name
         self._design_unit = design_unit
 
-    def generate_codecs(self, codec_package_name=None, used_packages=None, output_file_name=None):
+    def generate_codecs(
+        self,
+        codec_package_name: Optional[str] = None,
+        used_packages: Optional[list[str]] = None,
+        output_file_name: Optional[Union[str, Path]] = None,
+    ) -> SourceFileList:
         """
         Generates codecs for the datatypes in this Package
         """
