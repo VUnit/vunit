@@ -515,7 +515,9 @@ See https://github.com/VUnit/vunit/issues/777 and http://vunit.github.io/hdl_lib
                 result_list.append(source_file)
         return result_list
 
-    def get_dependencies_in_compile_order(self, target_files=None, implementation_dependencies=False) -> list[SourceFile]:
+    def get_dependencies_in_compile_order(
+        self, target_files=None, implementation_dependencies=False
+    ) -> list[SourceFile]:
         """
         Get a list of dependencies of target files including the
         target files.

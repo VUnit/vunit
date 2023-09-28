@@ -12,10 +12,8 @@ from pathlib import Path
 from glob import glob
 from os import environ
 from logging import getLogger
-from typing import Any, Iterable, Optional, List, TypeVar, Union
+from typing import Iterable, Optional, List, TypeVar, Union
 
-from vunit.ui.source import SourceFile
-from ..sim_if import is_string_not_iterable
 from ..vhdl_standard import VHDL, VHDLStandard
 
 LOGGER = getLogger(__name__)

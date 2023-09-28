@@ -17,7 +17,7 @@ import traceback
 import logging
 import json
 import os
-from typing import Any, Callable, Literal, Optional, Set, Union, cast
+from typing import Any, Callable, Literal, Optional, Set, Union, cast, TYPE_CHECKING
 from pathlib import Path
 from fnmatch import fnmatch
 from vunit.test.list import TestList
@@ -47,7 +47,6 @@ from .source import SourceFile, SourceFileList
 from .library import Library, LibraryList
 from .results import Results
 
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from vunit.source_file import SourceFile as Source_File

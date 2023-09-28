@@ -120,7 +120,7 @@ class SourceFile(object):
         return hash_string(self._content_hash + self._compile_options_hash())
 
     def add_to_library(self, library: Library):
-        raise NotImplemented
+        raise NotImplementedError
 
 
 class VerilogSourceFile(SourceFile):

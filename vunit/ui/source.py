@@ -8,17 +8,16 @@
 UI classes SourceFile and SourceFileList
 """
 
-from typing import Iterable, List, Optional, Union
+from typing import Iterable, List, Optional, Union, TYPE_CHECKING
 
-from vunit.project import Project
-from vunit.sim_if import OptionType
+from ..project import Project
+from ..sim_if import OptionType
 from .. import ostools
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from vunit.source_file import SourceFile as Source_File
-    from vunit.ui import VUnit
-    from vunit.ui.library import Library
+    from ..source_file import SourceFile as Source_File
+    from . import VUnit
+    from .library import Library
 
 
 class SourceFile(object):
@@ -45,7 +44,7 @@ class SourceFile(object):
         None if not a VHDL file
         """
         # Import here to avoid circular import problems
-        from vunit.source_file import VHDLSourceFile
+        from vunit.source_file import VHDLSourceFile  # pylint: disable=import-outside-toplevel
 
         if isinstance(self._source_file, VHDLSourceFile):
             return str(self._source_file.get_vhdl_standard())
@@ -118,9 +117,6 @@ class SourceFileList(List[SourceFile]):
     """
     A list of :class:`.SourceFile`
     """
-
-    def __init__(self, source_files: Iterable[SourceFile]):
-        list.__init__(self, source_files)
 
     def set_compile_option(self, name: str, value: OptionType) -> None:
         """

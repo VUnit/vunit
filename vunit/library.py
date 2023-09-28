@@ -11,13 +11,12 @@ Functionality to represent and operate on a HDL code library
 """
 
 import logging
-from typing import cast
+from typing import cast, TYPE_CHECKING
 from vunit.design_unit import Entity, VHDLDesignUnit
-from typing import TYPE_CHECKING
+from vunit.vhdl_standard import VHDLStandard
 
 if TYPE_CHECKING:
     from vunit.source_file import SourceFile, VHDLSourceFile, VerilogSourceFile
-from vunit.vhdl_standard import VHDLStandard
 
 LOGGER = logging.getLogger(__name__)
 

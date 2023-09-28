@@ -9,13 +9,12 @@ UI class TestBench
 """
 
 from fnmatch import fnmatch
-from typing import Any, Callable, Optional, cast
+from typing import Any, Callable, Optional, cast, TYPE_CHECKING
 
-from vunit.sim_if import OptionType
+from ..sim_if import OptionType
+from ..test.bench import TestBench as Test_Bench
 from .common import lower_generics
 from .test import Test
-from vunit.test.bench import TestBench as Test_Bench
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from vunit.ui.library import Library

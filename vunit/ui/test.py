@@ -11,7 +11,6 @@ UI class Test
 from typing import Any, Callable, Optional, cast
 from vunit.sim_if import OptionType
 from vunit.test.bench import TestConfigurationVisitor
-from vunit.ui.results import Results
 from .common import lower_generics
 
 

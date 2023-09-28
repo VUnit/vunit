@@ -11,10 +11,11 @@ UI classes Library and LibraryList
 from pathlib import Path
 from fnmatch import fnmatch
 from typing import Any, List, Literal, Optional, Union
-from vunit.sim_if import OptionType
+from typing import TYPE_CHECKING
 
-from vunit.test.bench_list import TestBenchList
-from vunit.ui.preprocessor import Preprocessor
+from ..sim_if import OptionType
+from ..test.bench_list import TestBenchList
+from .preprocessor import Preprocessor
 from ..vhdl_standard import VHDL, VHDLStandard
 from ..project import Project
 from ..source_file import file_type_of, FILE_TYPES, VERILOG_FILE_TYPES
@@ -23,8 +24,6 @@ from .common import check_not_empty, get_checked_file_names_from_globs
 from .source import SourceFile, SourceFileList
 from .testbench import TestBench
 from .packagefacade import PackageFacade
-
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from vunit.ui import VUnit
@@ -196,7 +195,7 @@ class Library(object):
 
         """
         return SourceFileList(
-            source_files=[
+            [
                 self.add_source_file(
                     file_name,
                     preprocessors,
@@ -361,9 +360,6 @@ class LibraryList(List[Library]):
     """
     A list of :class:`.Library`
     """
-
-    def __init__(self, libraries: "list[Library]"):
-        list.__init__(self, libraries)
 
     def get_test_benches(self, pattern: str = "*", allow_empty: bool = False) -> list[TestBench]:
         """
