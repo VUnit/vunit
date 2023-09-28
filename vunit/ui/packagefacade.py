@@ -12,9 +12,12 @@ from pathlib import Path
 from typing import Optional, Union
 from vunit.design_unit import DesignUnit
 
-from vunit.ui import VUnit
 from vunit.ui.source import SourceFileList
 from ..com import codec_generator
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from vunit.ui import VUnit
 
 
 class PackageFacade(object):
@@ -22,7 +25,7 @@ class PackageFacade(object):
     User interface of a Package
     """
 
-    def __init__(self, parent: VUnit, library_name: str, package_name: str, design_unit: DesignUnit) -> None:
+    def __init__(self, parent: "VUnit", library_name: str, package_name: str, design_unit: DesignUnit) -> None:
         self._parent = parent
         self._library_name = library_name
         self._package_name = package_name

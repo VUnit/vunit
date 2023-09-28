@@ -12,10 +12,13 @@ from fnmatch import fnmatch
 from typing import Any, Callable, Optional, cast
 
 from vunit.sim_if import OptionType
-from vunit.ui.library import Library
 from .common import lower_generics
 from .test import Test
 from vunit.test.bench import TestBench as Test_Bench
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from vunit.ui.library import Library
 
 
 class TestBench(object):
@@ -25,7 +28,7 @@ class TestBench(object):
     bench will apply that option to all test cases belonging to that test bench.
     """
 
-    def __init__(self, test_bench: Test_Bench, library: Library) -> None:
+    def __init__(self, test_bench: Test_Bench, library: "Library") -> None:
         self._test_bench = test_bench
         self._library = library
 
@@ -37,7 +40,7 @@ class TestBench(object):
         return self._test_bench.name
 
     @property
-    def library(self) -> Library:
+    def library(self) -> "Library":
         """
         :returns: The library that contains this test bench
         """

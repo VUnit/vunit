@@ -14,7 +14,6 @@ from typing import Any, List, Literal, Optional, Union
 from vunit.sim_if import OptionType
 
 from vunit.test.bench_list import TestBenchList
-from vunit.ui import VUnit
 from vunit.ui.preprocessor import Preprocessor
 from ..vhdl_standard import VHDL, VHDLStandard
 from ..project import Project
@@ -25,13 +24,18 @@ from .source import SourceFile, SourceFileList
 from .testbench import TestBench
 from .packagefacade import PackageFacade
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from vunit.ui import VUnit
+
 
 class Library(object):
     """
     User interface of a library
     """
 
-    def __init__(self, library_name: str, parent: VUnit, project: Project, test_bench_list: TestBenchList) -> None:
+    def __init__(self, library_name: str, parent: "VUnit", project: Project, test_bench_list: TestBenchList) -> None:
         self._library_name = library_name
         self._parent = parent
         self._project = project

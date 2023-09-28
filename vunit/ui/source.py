@@ -12,10 +12,13 @@ from typing import Iterable, List, Optional, Union
 
 from vunit.project import Project
 from vunit.sim_if import OptionType
-from vunit.ui import VUnit
-from vunit.ui.library import Library
 from .. import ostools
-from vunit.source_file import SourceFile as Source_File, VHDLSourceFile
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from vunit.source_file import SourceFile as Source_File
+    from vunit.ui import VUnit
+    from vunit.ui.library import Library
 
 
 class SourceFile(object):
@@ -23,7 +26,7 @@ class SourceFile(object):
     A single file
     """
 
-    def __init__(self, source_file: Source_File, project: Project, ui: VUnit) -> None:
+    def __init__(self, source_file: "Source_File", project: Project, ui: "VUnit") -> None:
         self._source_file = source_file
         self._project = project
         self._ui = ui
@@ -41,13 +44,16 @@ class SourceFile(object):
         The VHDL standard applicable to the file,
         None if not a VHDL file
         """
+        # Import here to avoid circular import problems
+        from vunit.source_file import VHDLSourceFile
+
         if isinstance(self._source_file, VHDLSourceFile):
             return str(self._source_file.get_vhdl_standard())
 
         return None
 
     @property
-    def library(self) -> Library:
+    def library(self) -> "Library":
         """
         The library of the source file
         """
@@ -85,7 +91,7 @@ class SourceFile(object):
         """
         return self._source_file.get_compile_option(name)
 
-    def add_dependency_on(self, source_file: Union[Iterable[Source_File], Source_File]) -> None:
+    def add_dependency_on(self, source_file: Union[Iterable["Source_File"], "Source_File"]) -> None:
         """
         Add manual dependency of this file other file(s)
 
@@ -142,7 +148,7 @@ class SourceFileList(List[SourceFile]):
         for source_file in self:
             source_file.add_compile_option(name, value)
 
-    def add_dependency_on(self, source_file: Source_File) -> None:
+    def add_dependency_on(self, source_file: "Source_File") -> None:
         """
         Add manual dependency of these files on other file(s)
 

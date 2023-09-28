@@ -10,9 +10,11 @@ UI class Results
 
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
+from typing import TYPE_CHECKING
 
-from vunit.sim_if import SimulatorInterface
-from vunit.test.report import TestReport
+if TYPE_CHECKING:
+    from vunit.sim_if import SimulatorInterface
+    from vunit.test.report import TestReport
 from .common import TEST_OUTPUT_PATH
 
 
@@ -21,7 +23,7 @@ class Results(object):
     Gives access to results after running tests
     """
 
-    def __init__(self, output_path: str, simulator_if: SimulatorInterface, report: TestReport) -> None:
+    def __init__(self, output_path: str, simulator_if: "SimulatorInterface", report: "TestReport") -> None:
         self._output_path = output_path
         self._simulator_if = simulator_if
         self._report = report

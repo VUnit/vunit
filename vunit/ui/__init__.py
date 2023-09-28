@@ -23,7 +23,6 @@ from fnmatch import fnmatch
 from vunit.test.list import TestList
 
 from vunit.ui.preprocessor import Preprocessor
-from vunit.source_file import SourceFile as Source_File
 
 from ..database import PickledDataBase, DataBase
 from .. import ostools
@@ -47,6 +46,11 @@ from .common import LOGGER, TEST_OUTPUT_PATH, select_vhdl_standard, check_not_em
 from .source import SourceFile, SourceFileList
 from .library import Library, LibraryList
 from .results import Results
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from vunit.source_file import SourceFile as Source_File
 
 
 class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-public-methods
@@ -943,7 +947,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
             target_files=target_files,
         )
 
-    def _get_testbench_files(self, simulator_if: Union[None, SimulatorInterface]) -> list[Source_File]:
+    def _get_testbench_files(self, simulator_if: Union[None, SimulatorInterface]) -> list["Source_File"]:
         """
         Return the list of all test bench files for the currently selected tests to run
         """

@@ -13,7 +13,10 @@ Functionality to represent and operate on a HDL code library
 import logging
 from typing import cast
 from vunit.design_unit import Entity, VHDLDesignUnit
-from vunit.source_file import SourceFile, VHDLSourceFile, VerilogSourceFile
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from vunit.source_file import SourceFile, VHDLSourceFile, VerilogSourceFile
 from vunit.vhdl_standard import VHDLStandard
 
 LOGGER = logging.getLogger(__name__)
@@ -49,7 +52,7 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
 
         self._is_external = is_external
 
-    def add_source_file(self, source_file: SourceFile) -> SourceFile:
+    def add_source_file(self, source_file: "SourceFile") -> "SourceFile":
         """
         Add source file to library unless it exists
 
