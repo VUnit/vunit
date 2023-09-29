@@ -148,7 +148,7 @@ class CodecVHDLPackage(VHDLPackage):
 
         msg_type_enumeration_types = []
         for record in self.record_types:
-            if record.elements[0].identifier_list[0] == "msg_type":
+            if record.elements[0].identifier_List[0] == "msg_type":
                 msg_type_enumeration_types.append(record.elements[0].subtype_indication.code)
 
         msg_type_enumeration_literals = []
@@ -276,7 +276,7 @@ class CodecVHDLPackage(VHDLPackage):
 
         msg_type_record_types = []
         for record in self.record_types:
-            if record.elements[0].identifier_list[0] == "msg_type":
+            if record.elements[0].identifier_List[0] == "msg_type":
                 msg_type_record_types.append(record)
 
         return msg_type_record_types

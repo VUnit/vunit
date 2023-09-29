@@ -17,7 +17,7 @@ import traceback
 import logging
 import json
 import os
-from typing import Any, Callable, Literal, Optional, Set, Union, cast, TYPE_CHECKING
+from typing import Any, Callable, Dict, List, Optional, Set, Union, cast, TYPE_CHECKING
 from pathlib import Path
 from fnmatch import fnmatch
 from vunit.test.list import TestList
@@ -332,7 +332,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         :param allow_empty: To disable an error if no labraries matched the pattern
         :returns: A :class:`.LibraryList` object
         """
-        results: list[Library] = []
+        results: List[Library] = []
 
         for library in self._project.get_libraries():
             if not fnmatch(library.name, pattern):
@@ -534,13 +534,13 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self,
         pattern: Union[str, Path],
         library_name: str,
-        preprocessors: Optional[list[Preprocessor]] = None,
+        preprocessors: Optional[List[Preprocessor]] = None,
         include_dirs: Optional[list] = None,
         defines: Optional[dict] = None,
         allow_empty: bool = False,
         vhdl_standard: Optional[str] = None,
         no_parse: bool = False,
-        file_type: Optional[Literal["vhdl", "verilog", "systemverilog"]] = None,
+        file_type: Optional[str] = None,
     ) -> SourceFileList:
         """
         Add source files matching wildcard pattern to library
@@ -579,12 +579,12 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self,
         file_name: Union[str, Path],
         library_name: str,
-        preprocessors: Optional[list[Preprocessor]] = None,
-        include_dirs: Optional[list[Any]] = None,
+        preprocessors: Optional[List[Preprocessor]] = None,
+        include_dirs: Optional[List[Any]] = None,
         defines: Optional[dict] = None,
         vhdl_standard: Optional[str] = None,
         no_parse: bool = False,
-        file_type: Optional[Literal["vhdl", "verilog", "systemverilog"]] = None,
+        file_type: Optional[str] = None,
     ) -> SourceFile:
         """
         Add source file to library
@@ -618,7 +618,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         )
 
     def _preprocess(
-        self, library_name: str, file_name: Union[str, Path], preprocessors: Optional[list[Preprocessor]]
+        self, library_name: str, file_name: Union[str, Path], preprocessors: Optional[List[Preprocessor]]
     ) -> str:
         """
         Preprocess file_name within library_name using explicit preprocessors
@@ -672,8 +672,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
     def enable_location_preprocessing(
         self,
-        additional_subprograms: Optional[list[str]] = None,
-        exclude_subprograms: Optional[list[str]] = None,
+        additional_subprograms: Optional[List[str]] = None,
+        exclude_subprograms: Optional[List[str]] = None,
         order: int = 100,
     ) -> None:
         """
@@ -823,7 +823,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
 
         return report.all_ok()
 
-    def _main_list_only(self) -> Literal[True]:
+    def _main_list_only(self) -> bool:
         """
         Main function when only listing test cases
         """
@@ -833,7 +833,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         print(f"Listed {test_list.num_tests} tests")
         return True
 
-    def _main_export_json(self, json_file_name: Union[str, Path]) -> Literal[True]:  # pylint: disable=too-many-locals
+    def _main_export_json(self, json_file_name: Union[str, Path]) -> bool:  # pylint: disable=too-many-locals
         """
         Main function when exporting to JSON
         """
@@ -888,7 +888,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
 
         return True
 
-    def _main_list_files_only(self) -> Literal[True]:
+    def _main_list_files_only(self) -> bool:
         """
         Main function when only listing files
         """
@@ -898,7 +898,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         print(f"Listed {len(files)} files")
         return True
 
-    def _main_compile_only(self) -> Literal[True]:
+    def _main_compile_only(self) -> bool:
         """
         Main function when only compiling
         """
@@ -946,7 +946,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
             target_files=target_files,
         )
 
-    def _get_testbench_files(self, simulator_if: Union[None, SimulatorInterface]) -> list["Source_File"]:
+    def _get_testbench_files(self, simulator_if: Union[None, SimulatorInterface]) -> List["Source_File"]:
         """
         Return the list of all test bench files for the currently selected tests to run
         """
@@ -992,7 +992,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         self._builtins.add_verilog_builtins()
 
     def add_vhdl_builtins(
-        self, external: Optional[dict[str, list[str]]] = None, use_external_log: Optional[Union[str, Path]] = None
+        self, external: Optional[Dict[str, List[str]]] = None, use_external_log: Optional[Union[str, Path]] = None
     ) -> None:
         """
         Add VUnit VHDL builtin libraries.
@@ -1053,7 +1053,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         """
         self._builtins.add("json4vhdl")
 
-    def get_compile_order(self, source_files: Optional[list[SourceFile]] = None) -> SourceFileList:
+    def get_compile_order(self, source_files: Optional[List[SourceFile]] = None) -> SourceFileList:
         """
         Get the compile order of all or specific source files and
         their dependencies.
@@ -1077,7 +1077,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         source_files_ordered = self._project.get_dependencies_in_compile_order(target_files)
         return SourceFileList([SourceFile(source_file, self._project, self) for source_file in source_files_ordered])
 
-    def get_implementation_subset(self, source_files: list[SourceFile]) -> SourceFileList:
+    def get_implementation_subset(self, source_files: List[SourceFile]) -> SourceFileList:
         """
         Get the subset of files which are required to successfully
         elaborate the list of input files without any missing

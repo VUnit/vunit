@@ -9,7 +9,7 @@ UI class PackageFacade
 """
 
 from pathlib import Path
-from typing import Optional, Union, TYPE_CHECKING
+from typing import List, Optional, Union, TYPE_CHECKING
 from vunit.design_unit import DesignUnit
 
 from vunit.ui.source import SourceFileList
@@ -33,7 +33,7 @@ class PackageFacade(object):
     def generate_codecs(
         self,
         codec_package_name: Optional[str] = None,
-        used_packages: Optional[list[str]] = None,
+        used_packages: Optional[List[str]] = None,
         output_file_name: Optional[Union[str, Path]] = None,
     ) -> SourceFileList:
         """

@@ -10,7 +10,7 @@ Contains classes to manage the creation of test benches and runnable test cases 
 
 import re
 import logging
-from collections import OrderedDict
+from typing import List, OrderedDict
 
 from vunit.source_file import SourceFile
 from .list import TestList
@@ -49,10 +49,10 @@ class TestBenchList(object):
     def get_test_bench(self, library_name, name) -> TestBench:
         return self._libraries[library_name][name]
 
-    def get_test_benches_in_library(self, library_name: str) -> list[TestBench]:
+    def get_test_benches_in_library(self, library_name: str) -> List[TestBench]:
         return list(self._libraries.get(library_name, {}).values())
 
-    def get_test_benches(self) -> list[TestBench]:
+    def get_test_benches(self) -> List[TestBench]:
         """
         Get all test benches
         """

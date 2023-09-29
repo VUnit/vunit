@@ -10,7 +10,7 @@ UI classes Library and LibraryList
 
 from pathlib import Path
 from fnmatch import fnmatch
-from typing import Any, List, Literal, Optional, Union
+from typing import Any, List, Optional, Union
 from typing import TYPE_CHECKING
 
 from ..sim_if import OptionType
@@ -166,13 +166,13 @@ class Library(object):
     def add_source_files(  # pylint: disable=too-many-arguments
         self,
         pattern: Union[str, Path],
-        preprocessors: Optional[list[Preprocessor]] = None,
-        include_dirs: Optional[list[str]] = None,
+        preprocessors: Optional[List[Preprocessor]] = None,
+        include_dirs: Optional[List[str]] = None,
         defines: Optional[dict] = None,
         allow_empty: bool = False,
         vhdl_standard: Optional[str] = None,
         no_parse: bool = False,
-        file_type: Optional[Literal["vhdl", "verilog", "systemverilog"]] = None,
+        file_type: Optional[str] = None,
     ) -> SourceFileList:
         """
         Add source files matching wildcard pattern to library
@@ -212,12 +212,12 @@ class Library(object):
     def add_source_file(  # pylint: disable=too-many-arguments
         self,
         file_name: Union[str, Path],
-        preprocessors: Optional[list[Preprocessor]] = None,
-        include_dirs: Optional[list[str]] = None,
+        preprocessors: Optional[List[Preprocessor]] = None,
+        include_dirs: Optional[List[str]] = None,
         defines: Optional[dict] = None,
         vhdl_standard: Optional[str] = None,
         no_parse: bool = False,
-        file_type: Optional[Literal["vhdl", "verilog", "systemverilog"]] = None,
+        file_type: Optional[str] = None,
     ) -> SourceFile:
         """
         Add source file to library
@@ -324,7 +324,7 @@ class Library(object):
 
         return TestBench(self._test_bench_list.get_test_bench(self._library_name, name), self)
 
-    def get_test_benches(self, pattern: str = "*", allow_empty: bool = False) -> list[TestBench]:
+    def get_test_benches(self, pattern: str = "*", allow_empty: bool = False) -> List[TestBench]:
         """
         Get a list of test benches
 
@@ -361,7 +361,7 @@ class LibraryList(List[Library]):
     A list of :class:`.Library`
     """
 
-    def get_test_benches(self, pattern: str = "*", allow_empty: bool = False) -> list[TestBench]:
+    def get_test_benches(self, pattern: str = "*", allow_empty: bool = False) -> List[TestBench]:
         """
         Get a list of test benches
 

@@ -8,7 +8,7 @@
 UI class Test
 """
 
-from typing import Any, Callable, Optional, cast
+from typing import Any, Callable, Dict, Optional, cast
 from vunit.sim_if import OptionType
 from vunit.test.bench import TestConfigurationVisitor
 from .common import lower_generics
@@ -37,7 +37,7 @@ class Test(object):
         parameters: Optional[dict] = None,
         pre_config: Optional[Callable] = None,
         post_check: Optional[Callable] = None,
-        sim_options: Optional[dict[str, OptionType]] = None,
+        sim_options: Optional[Dict[str, OptionType]] = None,
         attributes: Optional[dict] = None,
         vhdl_configuration_name: Optional[str] = None,
     ) -> None:

@@ -8,7 +8,7 @@
 Functionality to represent and operate on VHDL and Verilog source files
 """
 from pathlib import Path
-from typing import Literal, Union
+from typing import Dict, Union
 import logging
 from copy import copy
 import traceback
@@ -36,7 +36,7 @@ class SourceFile(object):
         self.file_type = file_type
         self.design_units = []
         self._content_hash = None
-        self._compile_options: dict[str, OptionType] = {}
+        self._compile_options: Dict[str, OptionType] = {}
 
         # The file name before preprocessing
         self.original_name = name
@@ -351,7 +351,7 @@ VERILOG_FILE_TYPES = ("verilog", "systemverilog")
 FILE_TYPES = ("vhdl",) + VERILOG_FILE_TYPES
 
 
-def file_type_of(file_name: Union[str, Path]) -> Literal["vhdl", "verilog", "systemverilog"]:
+def file_type_of(file_name: Union[str, Path]) -> str:
     """
     Return the file type of file_name based on the file ending
     """

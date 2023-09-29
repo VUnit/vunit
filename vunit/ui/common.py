@@ -12,7 +12,7 @@ from pathlib import Path
 from glob import glob
 from os import environ
 from logging import getLogger
-from typing import Iterable, Optional, List, TypeVar, Union
+from typing import Dict, Iterable, Optional, List, TypeVar, Union
 
 from ..vhdl_standard import VHDL, VHDLStandard
 
@@ -38,7 +38,7 @@ def select_vhdl_standard(vhdl_standard: Optional[str] = None) -> VHDLStandard:
 T = TypeVar("T")
 
 
-def lower_generics(generics: dict[str, T]) -> dict[str, T]:
+def lower_generics(generics: Dict[str, T]) -> Dict[str, T]:
     """
     Convert all generics names to lower case to match internal representation.
     @TODO Maybe warn in case of conflict. VHDL forbids this though so the user will notice anyway.
@@ -46,7 +46,7 @@ def lower_generics(generics: dict[str, T]) -> dict[str, T]:
     return dict((name.lower(), value) for name, value in generics.items())
 
 
-def check_not_empty(lst: list[T], allow_empty: bool, error_msg: str) -> list[T]:
+def check_not_empty(lst: List[T], allow_empty: bool, error_msg: str) -> List[T]:
     """
     Raise ValueError if the list is empty unless allow_empty is True
     Returns the list
@@ -56,7 +56,7 @@ def check_not_empty(lst: list[T], allow_empty: bool, error_msg: str) -> list[T]:
     return lst
 
 
-def get_checked_file_names_from_globs(pattern: Union[Iterable[str], str, Path], allow_empty: bool) -> list[str]:
+def get_checked_file_names_from_globs(pattern: Union[Iterable[str], str, Path], allow_empty: bool) -> List[str]:
     """
     Get file names from globs and check that exist
     """

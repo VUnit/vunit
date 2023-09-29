@@ -9,7 +9,7 @@ UI class TestBench
 """
 
 from fnmatch import fnmatch
-from typing import Any, Callable, Optional, cast, TYPE_CHECKING
+from typing import Any, Callable, Dict, List, Optional, cast, TYPE_CHECKING
 
 from ..sim_if import OptionType
 from ..test.bench import TestBench as Test_Bench
@@ -140,12 +140,12 @@ class TestBench(object):
     def add_config(  # pylint: disable=too-many-arguments
         self,
         name: str,
-        generics: Optional[dict[str, Any]] = None,
-        parameters: Optional[dict[str, Any]] = None,
+        generics: Optional[Dict[str, Any]] = None,
+        parameters: Optional[Dict[str, Any]] = None,
         pre_config: Optional[Callable] = None,
         post_check: Optional[Callable] = None,
-        sim_options: Optional[dict[str, OptionType]] = None,
-        attributes: Optional[dict[str, Any]] = None,
+        sim_options: Optional[Dict[str, OptionType]] = None,
+        attributes: Optional[Dict[str, Any]] = None,
         vhdl_configuration_name: Optional[str] = None,
     ) -> None:
         """
@@ -211,7 +211,7 @@ class TestBench(object):
         """
         return Test(self._test_bench.get_test_case(name))
 
-    def get_tests(self, pattern: str = "*") -> list[Test]:
+    def get_tests(self, pattern: str = "*") -> List[Test]:
         """
         Get a list of tests
 

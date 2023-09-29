@@ -9,7 +9,7 @@ UI class Results
 """
 
 from pathlib import Path
-from typing import Any, Dict, Optional, Union, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, Union, TYPE_CHECKING
 from .common import TEST_OUTPUT_PATH
 
 if TYPE_CHECKING:
@@ -27,7 +27,7 @@ class Results(object):
         self._simulator_if = simulator_if
         self._report = report
 
-    def merge_coverage(self, file_name: str, args: Optional[list[str]] = None) -> None:
+    def merge_coverage(self, file_name: str, args: Optional[List[str]] = None) -> None:
         """
         Create a merged coverage report from the individual coverage files
 

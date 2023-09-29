@@ -9,10 +9,9 @@
 """
 Functionality to represent and operate on a HDL code project
 """
-from typing import Optional, Union
+from typing import List, Optional, Union, OrderedDict
 from pathlib import Path
 import logging
-from collections import OrderedDict
 from vunit.hashing import hash_string
 from vunit.dependency_graph import DependencyGraph, CircularDependencyException
 from vunit.vhdl_parser import VHDLParser
@@ -48,7 +47,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         self._libraries: OrderedDict[str, Library] = OrderedDict()
         # Mapping between library lower case name and real library name
         self._lower_library_names_dict = {}
-        self._source_files_in_order: list[SourceFile] = []
+        self._source_files_in_order: List[SourceFile] = []
         self._manual_dependencies = []
         self._depend_on_package_body = depend_on_package_body
         self._builtin_libraries = set(["ieee", "std"])
@@ -517,7 +516,7 @@ See https://github.com/VUnit/vunit/issues/777 and http://vunit.github.io/hdl_lib
 
     def get_dependencies_in_compile_order(
         self, target_files=None, implementation_dependencies=False
-    ) -> list[SourceFile]:
+    ) -> List[SourceFile]:
         """
         Get a list of dependencies of target files including the
         target files.
@@ -593,7 +592,7 @@ See https://github.com/VUnit/vunit/issues/777 and http://vunit.github.io/hdl_lib
 
         return sorted(files, key=comparison_key)
 
-    def get_source_files_in_order(self) -> list[SourceFile]:
+    def get_source_files_in_order(self) -> List[SourceFile]:
         """
         Get a list of source files in the order they were added to the project
         """

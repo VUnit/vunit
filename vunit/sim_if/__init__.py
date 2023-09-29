@@ -18,7 +18,7 @@ from ..ostools import Process, simplify_path
 from ..exceptions import CompileError
 from ..color_printer import NO_COLOR_PRINTER
 
-OptionType = Union[str, list[str], bool]
+OptionType = Union[str, List[str], bool]
 
 
 class Option(object):

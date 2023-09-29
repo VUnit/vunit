@@ -11,7 +11,7 @@ Functionality to represent and operate on a HDL code library
 """
 
 import logging
-from typing import cast, TYPE_CHECKING
+from typing import List, cast, TYPE_CHECKING
 from vunit.design_unit import Entity, VHDLDesignUnit
 from vunit.vhdl_standard import VHDLStandard
 
@@ -109,7 +109,7 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
         if design_unit.name in dictionary:
             self._warning_on_duplication(design_unit, dictionary[design_unit.name].source_file.name)
 
-    def add_vhdl_design_units(self, design_units: list[VHDLDesignUnit]):
+    def add_vhdl_design_units(self, design_units: List[VHDLDesignUnit]):
         """
         Add VHDL design units to the library
         """

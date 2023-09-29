@@ -9,7 +9,7 @@ Create simulator instances
 """
 
 import os
-from typing import Union
+from typing import Dict, List, Union
 from .activehdl import ActiveHDLInterface
 from .ghdl import GHDLInterface
 from .incisive import IncisiveInterface
@@ -38,7 +38,7 @@ class SimulatorFactory(object):
             NVCInterface,
         ]
 
-    def _extract_compile_options(self) -> dict[str, Option]:
+    def _extract_compile_options(self) -> Dict[str, Option]:
         """
         Return all supported compile options
         """
@@ -52,7 +52,7 @@ class SimulatorFactory(object):
                 result[opt.name] = opt
         return result
 
-    def _extract_sim_options(self) -> dict[str, Option]:
+    def _extract_sim_options(self) -> Dict[str, Option]:
         """
         Return all supported sim options
         """
@@ -76,7 +76,7 @@ class SimulatorFactory(object):
 
         return result
 
-    def check_sim_option(self, name: str, value: Union[str, list[str], bool]):
+    def check_sim_option(self, name: str, value: Union[str, List[str], bool]):
         """
         Check that sim_option has legal name and value
         """
@@ -95,7 +95,7 @@ class SimulatorFactory(object):
         if name not in known_options:
             raise ValueError(f"Unknown compile_option {name!r}, expected one of {known_options!r}")
 
-    def check_compile_option(self, name: str, value: Union[str, list[str], bool]) -> None:
+    def check_compile_option(self, name: str, value: Union[str, List[str], bool]) -> None:
         """
         Check that the compile option is valid
         """

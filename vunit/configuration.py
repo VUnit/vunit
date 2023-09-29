@@ -12,7 +12,7 @@ import logging
 import inspect
 from pathlib import Path
 from copy import copy
-from typing import Any, Callable, OrderedDict, Union
+from typing import Any, Callable, List, OrderedDict, Union
 from vunit.sim_if.factory import SIMULATOR_FACTORY
 
 
@@ -129,7 +129,7 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
         else:
             self.generics[name] = value
 
-    def set_sim_option(self, name: str, value: Union[str, list[str], bool]):
+    def set_sim_option(self, name: str, value: Union[str, List[str], bool]):
         """
         Set sim option
         """
@@ -196,7 +196,7 @@ class ConfigurationVisitor(object):
     def _check_enabled(self):
         pass
 
-    def get_configuration_dicts(self) -> list[OrderedDict[Any, Configuration]]:
+    def get_configuration_dicts(self) -> List[OrderedDict[Any, Configuration]]:
         raise NotImplementedError
 
     def set_attribute(self, name: str, value: Any):
@@ -226,7 +226,7 @@ class ConfigurationVisitor(object):
             for config in configs.values():
                 config.set_vhdl_configuration_name(value)
 
-    def set_sim_option(self, name: str, value: Union[str, list[str], bool], overwrite=True) -> None:
+    def set_sim_option(self, name: str, value: Union[str, List[str], bool], overwrite=True) -> None:
         """
         Set sim option
 
