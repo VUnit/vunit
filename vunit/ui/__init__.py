@@ -10,6 +10,7 @@
 Public VUnit User Interface (UI)
 """
 
+from __future__ import annotations
 from argparse import Namespace
 import csv
 import sys
@@ -68,7 +69,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         cls,
         argv: Optional[Namespace] = None,
         vhdl_standard: Optional[str] = None,
-    ) -> "VUnit":
+    ) -> VUnit:
         """
         Create VUnit instance from command line arguments.
 
