@@ -10,8 +10,8 @@ UI class PackageFacade
 
 from pathlib import Path
 from typing import List, Optional, Union, TYPE_CHECKING
-from vunit.design_unit import DesignUnit
 
+from vunit.design_unit import DesignUnit
 from vunit.ui.source import SourceFileList
 from ..com import codec_generator
 
