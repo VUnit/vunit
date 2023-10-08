@@ -12,7 +12,8 @@ import logging
 import inspect
 from pathlib import Path
 from copy import copy
-from typing import Any, Callable, List, OrderedDict, Union
+from collections import OrderedDict
+from typing import Any, Callable, List, Union
 from vunit.sim_if.factory import SIMULATOR_FACTORY
 
 

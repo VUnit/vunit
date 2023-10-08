@@ -10,7 +10,8 @@ Contains classes to manage the creation of test benches and runnable test cases 
 
 import re
 import logging
-from typing import List, OrderedDict
+from typing import List
+from collections import OrderedDict
 
 from vunit.source_file import SourceFile
 from .list import TestList

@@ -13,7 +13,8 @@ from pathlib import Path
 import re
 import bisect
 import collections
-from typing import Any, Iterable, List, Union, OrderedDict
+from collections import OrderedDict
+from typing import Any, Iterable, List, Union
 from ..ostools import file_exists
 from ..cached import cached
 from ..vhdl_parser import remove_comments as remove_vhdl_comments

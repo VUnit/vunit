@@ -9,7 +9,8 @@
 """
 Functionality to represent and operate on a HDL code project
 """
-from typing import List, Optional, Union, OrderedDict
+from collections import OrderedDict
+from typing import List, Optional, Union
 from pathlib import Path
 import logging
 from vunit.hashing import hash_string
