@@ -179,6 +179,7 @@ in your VUnit Git repository? You have to do this first if installing using setu
                     "ScoreboardPkg_int.vhd",
                     "ScoreboardPkg_slv.vhd",
                     "MemoryPkg.vhd",
+                    "MemoryGenericPkg.vhd",
                 ]
             ):
                 continue
@@ -189,6 +190,7 @@ in your VUnit Git repository? You have to do this first if installing using setu
                     "ScoreboardPkg_int_c.vhd",
                     "ScoreboardPkg_slv_c.vhd",
                     "MemoryPkg_c.vhd",
+                    "MemoryPkg_orig_c.vhd",
                 ]
             ):
                 continue
