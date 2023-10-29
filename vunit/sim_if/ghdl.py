@@ -55,9 +55,9 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         group = parser.add_argument_group("ghdl", description="GHDL specific flags")
         group.add_argument(
             "--gtkwave-fmt",
-            choices=["vcd", "ghw"],
+            choices=["vcd", "fst", "ghw"],
             default=None,
-            help="Save .vcd or .ghw to open in gtkwave",
+            help="Save .vcd, .fst, or .ghw to open in gtkwave",
         )
         group.add_argument("--gtkwave-args", default="", help="Arguments to pass to gtkwave")
 
@@ -297,6 +297,8 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
                 sim += [f"--wave={wave_file!s}"]
             elif self._gtkwave_fmt == "vcd":
                 sim += [f"--vcd={wave_file!s}"]
+            elif self._gtkwave_fmt == "fst":
+                sim += [f"--fst={wave_file!s}"]
 
         if not ghdl_e:
             cmd += sim
