@@ -1,0 +1,1 @@
+Added support for exporting `fst` waveforms in GHDL through the `--gtkwave-fmt=fst` CLI argument.
