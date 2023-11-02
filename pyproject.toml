@@ -73,6 +73,7 @@ deps=
     coverage: pylint
     coverage: mypy
     coverage: Pygments
+    coverage: setuptools
     docs: docutils
     docs: furo
     docs: sphinx
