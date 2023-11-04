@@ -2263,7 +2263,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_relation(default_checker, pass, (expr = '1'), msg, level, context_msg, path_offset, line_num, file_name);
+    check_relation(checker, pass, (expr = '1'), msg, level, context_msg, path_offset, line_num, file_name);
     -- pragma translate_on
     return pass;
   end;
