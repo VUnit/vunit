@@ -69,8 +69,6 @@ architecture a of tb_wishbone_slave is
 begin
 
   main_stim : process
-    variable tmp : std_logic_vector(dat_i'range);
-    variable value : std_logic_vector(dat_i'range) := (others => '1');
   begin
     test_runner_setup(runner, runner_cfg);
     set_format(display_handler, verbose, true);

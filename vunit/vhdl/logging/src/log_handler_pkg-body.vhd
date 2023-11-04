@@ -28,15 +28,6 @@ package body log_handler_pkg is
   constant max_logger_name_idx : natural := 5;
   constant log_handler_length : natural := max_logger_name_idx + 1;
 
-  constant max_time_str : string := time'image(1 sec);
-  constant max_time_length : natural := max_time_str'length;
-
-  procedure assert_status(status : file_open_status; file_name : string) is
-  begin
-    assert status = open_ok
-      report "Failed to open file " & file_name & " - " & file_open_status'image(status) severity failure;
-  end procedure;
-
   procedure init_log_file(log_handler : log_handler_t; file_name : string) is
     variable file_id : file_id_t := to_file_id(get(log_handler.p_data, file_id_idx));
   begin

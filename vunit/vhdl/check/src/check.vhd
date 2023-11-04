@@ -909,7 +909,6 @@ package body check_pkg is
 
     procedure close_window(cycle : unsigned; is_ok : boolean) is
       variable close_ok    : boolean := is_ok;
-      variable pass_msg_en : boolean;
     begin
       if is_x(end_event) then
         close_ok := false;

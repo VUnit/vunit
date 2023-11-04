@@ -65,7 +65,6 @@ begin
     variable ascending_vector : std_logic_vector(3 to 11);
     variable descending_vector : std_logic_vector(13 downto 5);
     variable l : lines_t;
-    variable n_asserts_value, n_errors_value : integer;
     constant offset_string :string(10 to 16) := "foo bar";
     constant reverse_string :string(16 downto 10) := "foo bar";
     constant reversed_vector :unsigned(16 downto 4) := "1011010101001";

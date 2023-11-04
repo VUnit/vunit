@@ -58,7 +58,6 @@ architecture a of tb_avalon_slave is
 
   constant tb_logger : logger_t := get_logger("tb");
 
-  signal wr_ack_cnt    : natural range 0 to tb_cfg.num_cycles;
   signal rd_ack_cnt    : natural range 0 to tb_cfg.num_cycles;
 
   constant memory : memory_t := new_memory;
@@ -72,8 +71,6 @@ architecture a of tb_avalon_slave is
 begin
 
   main_stim : process
-    variable tmp : std_logic_vector(writedata'range);
-    variable value : std_logic_vector(writedata'range) := (others => '1');
   begin
     test_runner_setup(runner, runner_cfg);
     set_format(display_handler, verbose, true);

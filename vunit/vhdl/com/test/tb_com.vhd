@@ -34,7 +34,7 @@ begin
   test_runner : process
     variable self, actor, actor2, actor3, actor4                : actor_t;
     variable actor5, my_receiver, my_sender, server, publisher  : actor_t;
-    variable publisher2, subscriber, subscriber2, subscriber3   : actor_t;
+    variable subscriber : actor_t;
     variable actor_vec                                          : actor_vec_t(0 to 2);
     variable status                                             : com_status_t;
     variable n_actors                                           : natural;
@@ -43,9 +43,7 @@ begin
     variable msg, msg2, msg3, msg4                              : msg_t;
     variable request_msg, request_msg2, request_msg3, reply_msg : msg_t;
     variable peeked_msg1, peeked_msg2                           : msg_t;
-    variable msg_vec_ptr                                        : msg_vec_ptr_t;
     variable deprecated_message                                 : message_ptr_t;
-    variable subscription_vec_ptr                               : subscription_vec_ptr_t;
     variable actor_state                                        : actor_state_t;
     variable mailbox_state                                      : mailbox_state_t;
     variable l                                                  : line;

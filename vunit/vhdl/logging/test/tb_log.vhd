@@ -70,9 +70,6 @@ begin
     procedure check_log_file (file_handler : log_handler_t;
                               file_name : string;
                               entries   : dict_t) is
-      file fptr : text;
-      variable l : line;
-      variable status : file_open_status;
     begin
       assert get_file_name(file_handler) = file_name report "file name mismatch";
       flush_file_handler(file_handler);
@@ -83,7 +80,6 @@ begin
     constant print_file_name : string := output_path(runner_cfg) & "print.csv";
     variable logger : logger_t := get_logger("logger");
     variable nested_logger : logger_t := get_logger("nested", parent => logger);
-    variable other_logger : logger_t := get_logger("other");
     variable tmp_logger : logger_t;
     variable entries : dict_t := new_dict;
     variable entries2 : dict_t := new_dict;

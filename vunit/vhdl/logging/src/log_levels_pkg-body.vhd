@@ -44,7 +44,6 @@ package body log_levels_pkg is
 
   impure function create_levels return levels_t is
     variable result : levels_t;
-    variable name_ptr : string_ptr_t;
 
     procedure add_level(log_level : log_level_t; fg, bg : ansi_color_t := no_color; style : ansi_style_t := normal) is
     begin
