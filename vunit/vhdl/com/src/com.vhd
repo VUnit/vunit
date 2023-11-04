@@ -250,9 +250,6 @@ package body com_pkg is
     variable reply_msg   : inout msg_t;
     constant timeout     : in    time := max_timeout) is
     variable status       : com_status_t;
-    variable source_actor : actor_t;
-    variable mailbox      : mailbox_id_t;
-    variable message      : message_ptr_t;
   begin
     delete(reply_msg);
 

@@ -23,7 +23,6 @@ package body print_pkg is
   procedure print(str : string;
                   file_name : string;
                   mode : file_open_kind range write_mode to append_mode := append_mode) is
-    variable l : line;
     variable status : file_open_status;
     file f : text;
   begin

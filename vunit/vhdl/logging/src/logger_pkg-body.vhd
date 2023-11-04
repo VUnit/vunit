@@ -155,17 +155,6 @@ package body logger_pkg is
     return to_id(get(logger.p_data, id_idx));
   end;
 
-  impure function new_logger(name : string; parent : logger_t) return logger_t is
-    constant parent_id : id_t := get_id(parent);
-    constant id : id_t := get_id(name, parent_id);
-  begin
-    if id = null_id then
-      return null_logger;
-    end if;
-
-    return new_logger(id, parent);
-  end;
-
   impure function get_real_parent(parent : logger_t) return logger_t is
   begin
     if parent = null_logger then
