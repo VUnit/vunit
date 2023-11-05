@@ -10,7 +10,7 @@ set -e
 
 echo "isVUnit: $isVUnit"
 
-cd $(dirname "$0")/../.tox/py311-docs/tmp/docsbuild/
+cd $(dirname "$0")/../.tox/py312-docs/tmp/docsbuild/
 touch .nojekyll
 git init
 
