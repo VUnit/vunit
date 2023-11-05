@@ -68,6 +68,7 @@ deps=
     lint: pylint
     lint: mypy
     lint: Pygments
+    lint: setuptools
     coverage: coverage
     coverage: pycodestyle
     coverage: pylint
