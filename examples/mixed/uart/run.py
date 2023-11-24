@@ -21,6 +21,7 @@ SRC_PATH = Path(__file__).parent / "src"
 VHDL_SRC_PATH = Path(__file__).parent / "../../vhdl/uart/src"
 VU = VUnit.from_argv()
 VU.add_verilog_builtins()
+VU.add_vhdl_builtins()
 
 uart_lib = VU.add_library("uart_lib")
 uart_lib.add_source_files(SRC_PATH / "*.sv")
