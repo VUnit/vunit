@@ -29,6 +29,6 @@ uart_lib.add_source_files(VHDL_SRC_PATH / "*.vhd")
 
 VU.add_library("tb_uart_lib").add_source_files(SRC_PATH / "test" / "*.sv")
 
-VU.set_sim_option('modelsim.vsim_flags',['-suppress', '3839'])
+VU.set_sim_option("modelsim.vsim_flags", ["-suppress", "3839"])
 
 VU.main()
