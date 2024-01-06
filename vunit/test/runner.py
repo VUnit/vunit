@@ -33,10 +33,11 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
     VERBOSITY_NORMAL = 1
     VERBOSITY_VERBOSE = 2
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(# pylint: disable=too-many-arguments
         self,
         report,
         output_path,
+        run_script_path,
         verbosity=VERBOSITY_NORMAL,
         num_threads=1,
         fail_fast=False,
@@ -49,6 +50,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         self._local = threading.local()
         self._report = report
         self._output_path = output_path
+        self._run_script_path = run_script_path
         assert verbosity in (
             self.VERBOSITY_QUIET,
             self.VERBOSITY_NORMAL,
@@ -198,7 +200,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
             results[name] = SKIPPED
         self._add_results(test_suite, results, start_time, num_tests, output_file_name)
 
-    def _run_test_suite(  # pylint: disable=too-many-locals
+    def _run_test_suite(# pylint: disable=too-many-locals
         self, test_suite, write_stdout, num_tests, output_path, output_file_name
     ):
         """
@@ -224,7 +226,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
             if write_stdout:
                 output_from = self._stdout_ansi
             else:
-                color_output_file = Path(color_output_file_name).open(  # pylint: disable=consider-using-with
+                color_output_file = Path(color_output_file_name).open(# pylint: disable=consider-using-with
                     "w", encoding="utf-8"
                 )
                 output_from = color_output_file
@@ -241,7 +243,11 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
                 output_file.seek(prev)
                 return contents
 
-            results = test_suite.run(output_path=output_path, read_output=read_output)
+            results = test_suite.run(
+                output_path=output_path,
+                read_output=read_output,
+                run_script_path=self._run_script_path
+            )
         except KeyboardInterrupt as exk:
             self._add_skipped_tests(test_suite, results, start_time, num_tests, output_file_name)
             raise KeyboardInterrupt from exk
@@ -296,7 +302,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
             mapping.add(f"{Path(test_output).name!s} {test_suite.name!s}")
 
         # Sort by everything except hash
-        mapping = sorted(mapping, key=lambda value: value[value.index(" ") :])
+        mapping = sorted(mapping, key=lambda value: value[value.index(" "):])
 
         with mapping_file_name.open("w", encoding="utf-8") as fptr:
             for value in mapping:
@@ -451,7 +457,7 @@ def wrap(file_obj, use_color=True):
     NOTE:
     imports colorama here to avoid dependency from setup.py importing VUnit before colorama is installed
     """
-    from colorama import (  # type: ignore # pylint: disable=import-outside-toplevel
+    from colorama import (# type: ignore # pylint: disable=import-outside-toplevel
         AnsiToWin32,
     )
 

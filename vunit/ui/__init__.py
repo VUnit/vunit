@@ -19,6 +19,7 @@ import os
 from typing import Optional, Set, Union
 from pathlib import Path
 from fnmatch import fnmatch
+from inspect import stack
 
 from ..database import PickledDataBase, DataBase
 from .. import ostools
@@ -59,7 +60,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
     def from_argv(
         cls,
         argv=None,
-        vhdl_standard: Optional[str] = None,
+        vhdl_standard: Optional[str]=None,
     ):
         """
         Create VUnit instance from command line arguments.
@@ -90,7 +91,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
     def from_args(
         cls,
         args,
-        vhdl_standard: Optional[str] = None,
+        vhdl_standard: Optional[str]=None,
     ):
         """
         Create VUnit instance from args namespace.
@@ -114,11 +115,20 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
     def __init__(
         self,
         args,
-        vhdl_standard: Optional[str] = None,
+        vhdl_standard: Optional[str]=None,
     ):
+        
         self._args = args
         self._configure_logging(args.log_level)
         self._output_path = str(Path(args.output_path).resolve())
+        
+        # The run script is defined as the external file making the call that created the VUnit object.
+        # That file is not necessarily the caller of the __init__ function nor the root of the stack.
+        stack_frame = 0
+        this_file_path = Path(__file__).resolve()
+        while Path(stack()[stack_frame][1]).resolve() == this_file_path:
+            stack_frame += 1
+        self._run_script_path = Path(stack()[stack_frame][1]).resolve()
 
         if args.no_color:
             self._printer = NO_COLOR_PRINTER
@@ -207,7 +217,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         return VHDL.standard(vhdl_standard)
 
-    def add_external_library(self, library_name, path: Union[str, Path], vhdl_standard: Optional[str] = None):
+    def add_external_library(self, library_name, path: Union[str, Path], vhdl_standard: Optional[str]=None):
         """
         Add an externally compiled library as a black-box
 
@@ -233,7 +243,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         )
         return self.library(library_name)
 
-    def add_source_files_from_csv(self, project_csv_path: Union[str, Path], vhdl_standard: Optional[str] = None):
+    def add_source_files_from_csv(self, project_csv_path: Union[str, Path], vhdl_standard: Optional[str]=None):
         """
         Add a project configuration, mapping all the libraries and files
 
@@ -268,8 +278,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
     def add_library(
         self,
         library_name: str,
-        vhdl_standard: Optional[str] = None,
-        allow_duplicate: Optional[bool] = False,
+        vhdl_standard: Optional[str]=None,
+        allow_duplicate: Optional[bool]=False,
     ):
         """
         Add a library managed by VUnit.
@@ -311,7 +321,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
     def get_libraries(
         self,
         pattern="*",
-        allow_empty: Optional[bool] = False,
+        allow_empty: Optional[bool]=False,
     ):
         """
         Get a list of libraries
@@ -332,7 +342,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         return LibraryList(results)
 
-    def set_attribute(self, name: str, value: str, allow_empty: Optional[bool] = False):
+    def set_attribute(self, name: str, value: str, allow_empty: Optional[bool]=False):
         """
         Set a value of attribute in all |configurations|
 
@@ -353,7 +363,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         for test_bench in check_not_empty(test_benches, allow_empty, "No test benches found"):
             test_bench.set_attribute(name, value)
 
-    def set_generic(self, name: str, value: str, allow_empty: Optional[bool] = False):
+    def set_generic(self, name: str, value: str, allow_empty: Optional[bool]=False):
         """
         Set a value of generic in all |configurations|
 
@@ -374,7 +384,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         for test_bench in check_not_empty(test_benches, allow_empty, "No test benches found"):
             test_bench.set_generic(name.lower(), value)
 
-    def set_parameter(self, name: str, value: str, allow_empty: Optional[bool] = False):
+    def set_parameter(self, name: str, value: str, allow_empty: Optional[bool]=False):
         """
         Set value of parameter in all |configurations|
 
@@ -399,8 +409,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self,
         name: str,
         value: str,
-        allow_empty: Optional[bool] = False,
-        overwrite: Optional[bool] = True,
+        allow_empty: Optional[bool]=False,
+        overwrite: Optional[bool]=True,
     ):
         """
         Set simulation option in all |configurations|
@@ -423,7 +433,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         for test_bench in check_not_empty(test_benches, allow_empty, "No test benches found"):
             test_bench.set_sim_option(name, value, overwrite)
 
-    def set_compile_option(self, name: str, value: str, allow_empty: Optional[bool] = False):
+    def set_compile_option(self, name: str, value: str, allow_empty: Optional[bool]=False):
         """
         Set compile option of all files
 
@@ -445,7 +455,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         for source_file in check_not_empty(source_files, allow_empty, "No source files found"):
             source_file.set_compile_option(name, value)
 
-    def add_compile_option(self, name: str, value: str, allow_empty: Optional[bool] = False):
+    def add_compile_option(self, name: str, value: str, allow_empty: Optional[bool]=False):
         """
         Add compile option to all files
 
@@ -460,7 +470,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         for source_file in check_not_empty(source_files, allow_empty, "No source files found"):
             source_file.add_compile_option(name, value)
 
-    def get_source_file(self, file_name: Union[str, Path], library_name: Optional[str] = None):
+    def get_source_file(self, file_name: Union[str, Path], library_name: Optional[str]=None):
         """
         Get a source file
 
@@ -484,8 +494,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
     def get_source_files(
         self,
         pattern="*",
-        library_name: Optional[str] = None,
-        allow_empty: Optional[bool] = False,
+        library_name: Optional[str]=None,
+        allow_empty: Optional[bool]=False,
     ):
         """
         Get a list of source files
@@ -513,21 +523,21 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
             results,
             allow_empty,
             f"Pattern {pattern!r} did not match any file"
-            + (f"within library {library_name!s}" if library_name is not None else ""),
+            +(f"within library {library_name!s}" if library_name is not None else ""),
         )
 
         return SourceFileList(results)
 
-    def add_source_files(  # pylint: disable=too-many-arguments
+    def add_source_files(# pylint: disable=too-many-arguments
         self,
         pattern,
         library_name: str,
         preprocessors=None,
         include_dirs=None,
         defines=None,
-        allow_empty: Optional[bool] = False,
-        vhdl_standard: Optional[str] = None,
-        no_parse: Optional[bool] = False,
+        allow_empty: Optional[bool]=False,
+        vhdl_standard: Optional[str]=None,
+        no_parse: Optional[bool]=False,
         file_type=None,
     ):
         """
@@ -563,15 +573,15 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
             file_type=file_type,
         )
 
-    def add_source_file(  # pylint: disable=too-many-arguments
+    def add_source_file(# pylint: disable=too-many-arguments
         self,
         file_name: Union[str, Path],
         library_name: str,
         preprocessors=None,
         include_dirs=None,
         defines=None,
-        vhdl_standard: Optional[str] = None,
-        no_parse: Optional[bool] = False,
+        vhdl_standard: Optional[str]=None,
+        no_parse: Optional[bool]=False,
         file_type=None,
     ):
         """
@@ -953,6 +963,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         runner = TestRunner(
             report,
             str(Path(self._output_path) / TEST_OUTPUT_PATH),
+            self._run_script_path,
             verbosity=verbosity,
             num_threads=self._args.num_threads,
             fail_fast=self._args.fail_fast,
@@ -1031,6 +1042,12 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         Add JSON-for-VHDL library
         """
         self._builtins.add("json4vhdl")
+
+    def add_python(self):
+        """
+        Add python package
+        """
+        self._builtins.add("python")
 
     def get_compile_order(self, source_files=None):
         """

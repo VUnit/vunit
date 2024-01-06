@@ -162,6 +162,10 @@ package run_pkg is
   impure function tb_path (
     constant runner_cfg : string)
     return string;
+    
+  impure function run_script_path(
+    constant runner_cfg : string)
+    return string;
 
   alias test_runner_setup_entry_gate is entry_gate[runner_sync_t];
   alias test_runner_setup_exit_gate is exit_gate[runner_sync_t];
