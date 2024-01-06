@@ -43,6 +43,7 @@ class Builtins(object):
         add("osvvm")
         add("random", ["osvvm"])
         add("json4vhdl")
+        add("python")
 
     def add(self, name, args=None):
         self._builtins_adder.add(name, args)
@@ -210,6 +211,24 @@ in your VUnit Git repository? You have to do this first if installing using setu
             return
 
         library.add_source_files(VHDL_PATH / "JSON-for-VHDL" / "src" / "*.vhdl")
+
+    def _add_python(self):
+        """
+        Add python package
+        """
+        if not self._vhdl_standard >= VHDL.STD_2008:
+            raise RuntimeError("Python package only supports vhdl 2008 and later")
+
+        # TODO: Create enums for FLIs
+        python_package_supported_flis = set(["VHPI"])
+        simulator_supported_flis = self._simulator_class.supported_foreign_language_interfaces()
+        if not python_package_supported_flis & simulator_supported_flis:
+            raise RuntimeError(f"Python package requires support for one of {', '.join(python_package_supported_flis)}")
+
+        self._vunit_lib.add_source_files(VHDL_PATH / "python" / "src" / "python_context.vhd")
+        self._vunit_lib.add_source_files(VHDL_PATH / "python" / "src" / "python_pkg.vhd")
+        if "VHPI" in simulator_supported_flis:
+            self._vunit_lib.add_source_files(VHDL_PATH / "python" / "src" / "python_fli_pkg_vhpi.vhd")
 
     def _add_vhdl_logging(self):
         """

@@ -130,6 +130,38 @@ package body check_pkg is
     end if;
     log(check_result);
   end;
+  
+  impure function is_pass(check_result : check_result_t) return boolean is
+  begin
+    return check_result.p_is_pass;
+  end;
+  
+  impure function get_checker(check_result : check_result_t) return checker_t is
+  begin
+    return check_result.p_checker;
+  end;
+  
+  impure function get_msg(check_result : check_result_t) return string is
+  begin
+    return to_string(check_result.p_msg);
+  end;
+    
+  impure function get_log_level(check_result : check_result_t) return log_level_t is
+  begin
+    return check_result.p_level;
+  end;
+    
+  impure function get_line_num(check_result : check_result_t) return natural is
+  begin
+    return check_result.p_line_num;
+  end;
+    
+  impure function get_file_name(check_result : check_result_t) return string is
+  begin
+    return to_string(check_result.p_file_name);
+  end;
+    
+
 
   -----------------------------------------------------------------------------
   -- check

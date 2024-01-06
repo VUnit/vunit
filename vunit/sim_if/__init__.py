@@ -81,6 +81,13 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         """
         return False
 
+    @classmethod
+    def supported_foreign_language_interfaces(cls):
+        """
+        Returns set of supported foreign interfaces
+        """
+        return set()
+
     @staticmethod
     def find_executable(executable):
         """
