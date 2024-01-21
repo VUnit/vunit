@@ -31,7 +31,8 @@ package python_pkg is
   impure function eval_integer_vector_ptr(expr : string) return integer_vector_ptr_t;
   alias eval is eval_integer_vector_ptr[string return integer_vector_ptr_t];
   
-  function to_call_str(
+  -- TODO: Questa crashes unless this function is impure
+  impure function to_call_str(
     identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : string := ""
   ) return string;
 
@@ -39,7 +40,7 @@ package python_pkg is
     identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : string := ""
   );
 
-  function call_integer(
+  impure function call_integer(
     identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : string := ""
   ) return integer;
   alias call is call_integer[string, string, string, string, string,
@@ -158,7 +159,7 @@ package body python_pkg is
     return result;
   end;
 
-  function to_call_str(
+  impure function to_call_str(
     identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : string := ""
   ) return string is
     constant args : string := "('" & arg1 & "','" & arg2 & "','" & arg3 & "','" & arg4 & "','" & arg5 & "','" & arg6 &
@@ -174,7 +175,7 @@ package body python_pkg is
     exec(to_call_str(identifier, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10));
   end;
     
-  function call_integer(
+  impure function call_integer(
     identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : string := ""
   ) return integer is
   begin

@@ -43,6 +43,7 @@ begin
     variable input_stimuli : integer_array_t;
     variable seed : integer;
     variable test_lengths : integer_vector_ptr_t;
+    variable vhdl_real :real;
 
     procedure set_tcl_installation is
     begin
@@ -75,11 +76,11 @@ begin
             -- Make the query
             if line_num = 0 then
               continue := eval("psg.popup_yes_no('" & get_msg(check_result) & "\nDo you want to Continue?', title = '" &
-                               title(to_string(get_log_level(check_result))) & "')") = "Yes";
+                               title(to_string(get_log_level(check_result))) & "')") = string'("Yes");
             else
               continue := eval("psg.popup_yes_no('" & get_msg(check_result) & "\nDo you want to Continue?', title = '" &
                                title(to_string(get_log_level(check_result))) & " at " & get_file_name(check_result) &
-                               " : " & to_string(line_num) & "')") = "Yes";
+                               " : " & to_string(line_num) & "')") = string'("Yes");
             end if;
             
             if continue then
@@ -155,7 +156,7 @@ begin
           "l = ['a', 'b', 'c']" & LF &
           "s = ', '.join(l)"
         );
-        check_equal(eval("s"), "a, b, c");
+        check_equal(eval("s"), string'("a, b, c"));
         
         -- 4. Using + as a shorthand for & LF &:
         exec(
@@ -183,7 +184,7 @@ begin
         check_equal(eval("an_integer"), 17);
         
         -- Sometimes a helper function is needed
-        exec("a_list = " & to_py_list_str((1, 2, 3, 4)));
+        exec("a_list = " & to_py_list_str(integer_vector'(1, 2, 3, 4)));
         check_equal(eval("sum(a_list)"), 10);
         
         -- For eval it is simply a matter of using a suitable
@@ -195,8 +196,9 @@ begin
         
         -- Every eval has a more explicit alias that may be needed to help the compiler
         exec("from math import pi");
-        info("pi = " & to_string(eval_real("pi")));
-        
+        vhdl_real := eval_real("pi");
+        info("pi = " & to_string(vhdl_real));
+       
         -- Since Python is more dynamically typed than VHDL it is sometimes useful to use
         -- dynamic VUnit types
         exec(
@@ -205,7 +207,7 @@ begin
         test_input := eval("test_input"); -- test_input is a variable of integer_vector_ptr_t type
         check(length(test_input) >= 1);
         check(length(test_input) <= 100);
-        
+--        
       elsif run("Test run script functions") then
         -- As we've seen we can define Python functions with exec (fibonacci) and we can import functions from
         -- Python packages. Writing large functions in exec strings is not optimal since we don't
@@ -388,7 +390,7 @@ begin
         
         -- Let's say we should support packet payloads between 1 and 128 bytes and want to test
         -- a subset of those.
-        test_lengths := new_integer_vector_ptr((1, 2, 8, 16, 32, 64, 127, 128));
+        test_lengths := new_integer_vector_ptr(integer_vector'(1, 2, 8, 16, 32, 64, 127, 128));
         for idx in 0 to length(test_lengths) - 1 loop
           -- Randomize a payload but add an extra byte to store the CRC
           packet := random_integer_vector_ptr(get(test_lengths, idx) + 1, min_value => 0, max_value => 255);
