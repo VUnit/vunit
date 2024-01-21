@@ -220,7 +220,7 @@ in your VUnit Git repository? You have to do this first if installing using setu
             raise RuntimeError("Python package only supports vhdl 2008 and later")
 
         # TODO: Create enums for FLIs
-        python_package_supported_flis = set(["VHPI"])
+        python_package_supported_flis = set(["VHPI", "FLI"])
         simulator_supported_flis = self._simulator_class.supported_foreign_language_interfaces()
         if not python_package_supported_flis & simulator_supported_flis:
             raise RuntimeError(f"Python package requires support for one of {', '.join(python_package_supported_flis)}")
@@ -229,6 +229,8 @@ in your VUnit Git repository? You have to do this first if installing using setu
         self._vunit_lib.add_source_files(VHDL_PATH / "python" / "src" / "python_pkg.vhd")
         if "VHPI" in simulator_supported_flis:
             self._vunit_lib.add_source_files(VHDL_PATH / "python" / "src" / "python_fli_pkg_vhpi.vhd")
+        elif "FLI" in simulator_supported_flis:
+            self._vunit_lib.add_source_files(VHDL_PATH / "python" / "src" / "python_fli_pkg_fli.vhd")
 
     def _add_vhdl_logging(self):
         """
