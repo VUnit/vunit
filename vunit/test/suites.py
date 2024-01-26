@@ -260,7 +260,7 @@ class TestRun(object):
 
         for line in test_results.splitlines():
             if line.startswith("test_start:"):
-                test_name = line[len("test_start:"):]
+                test_name = line[len("test_start:") :]
                 if test_name not in test_starts:
                     test_starts.append(test_name)
 

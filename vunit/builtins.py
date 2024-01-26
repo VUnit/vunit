@@ -219,7 +219,6 @@ in your VUnit Git repository? You have to do this first if installing using setu
         if not self._vhdl_standard >= VHDL.STD_2008:
             raise RuntimeError("Python package only supports vhdl 2008 and later")
 
-        # TODO: Create enums for FLIs
         python_package_supported_flis = set(["VHPI", "FLI"])
         simulator_supported_flis = self._simulator_class.supported_foreign_language_interfaces()
         if not python_package_supported_flis & simulator_supported_flis:

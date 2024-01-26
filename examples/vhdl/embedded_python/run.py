@@ -13,7 +13,7 @@ def hello_world():
     print("Hello World")
 
 
-class Plot():
+class Plot:
 
     def __init__(self, x_points, y_limits, title, x_label, y_label):
         from matplotlib import pyplot as plt
@@ -30,7 +30,7 @@ class Plot():
         plt.ylim(*y_limits)
         x_vector = [x_points[0]] * len(x_points)
         y_vector = [(y_limits[0] + y_limits[1]) / 2] * len(x_points)
-        line, = plt.plot(x_vector, y_vector, 'r-')
+        (line,) = plt.plot(x_vector, y_vector, "r-")
         fig.canvas.draw()
         fig.canvas.flush_events()
         plt.show(block=False)
@@ -78,8 +78,8 @@ def main():
     lib = vu.add_library("lib")
     lib.add_source_files(root / "*.vhd")
 
-    vu.set_compile_option("rivierapro.vcom_flags" , ["-dbg"])
-    vu.set_sim_option("rivierapro.vsim_flags" , ["-interceptcoutput"])
+    vu.set_compile_option("rivierapro.vcom_flags", ["-dbg"])
+    vu.set_sim_option("rivierapro.vsim_flags", ["-interceptcoutput"])
     # Crashes RPRO for some reason. TODO: Fix when the C code is properly
     # integrated into the project. Must be able to debug the C code.
     # vu.set_sim_option("rivierapro.vsim_flags" , ["-cdebug"])
@@ -88,4 +88,4 @@ def main():
 
 
 if __name__ == "__main__":
-  main()
+    main()

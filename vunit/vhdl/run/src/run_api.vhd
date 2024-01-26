@@ -162,7 +162,7 @@ package run_pkg is
   impure function tb_path (
     constant runner_cfg : string)
     return string;
-    
+
   impure function run_script_path(
     constant runner_cfg : string)
     return string;
