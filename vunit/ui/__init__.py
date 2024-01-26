@@ -117,11 +117,11 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         args,
         vhdl_standard: Optional[str]=None,
     ):
-        
+
         self._args = args
         self._configure_logging(args.log_level)
         self._output_path = str(Path(args.output_path).resolve())
-        
+
         # The run script is defined as the external file making the call that created the VUnit object.
         # That file is not necessarily the caller of the __init__ function nor the root of the stack.
         stack_frame = 0

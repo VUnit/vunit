@@ -8,7 +8,7 @@
 
 use std.textio.all;
 
-package python_fli_pkg is
+package python_ffi_pkg is
   procedure python_setup;
   -- TODO: Looks like Riviera-PRO requires the path to the shared library to be fixed at compile time
   -- and that may become a bit limited. VHDL standard allow for expressions.
@@ -40,5 +40,5 @@ package python_fli_pkg is
   attribute foreign of exec : procedure is "VHPI libraries/python; exec";
 end package;
 
-package body python_fli_pkg is
+package body python_ffi_pkg is
 end package body;

@@ -9,5 +9,5 @@
 context python_context is
   library vunit_lib;
   use vunit_lib.python_pkg.all;
-  use vunit_lib.python_fli_pkg.all;
+  use vunit_lib.python_ffi_pkg.all;
 end context;

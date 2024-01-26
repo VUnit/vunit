@@ -65,7 +65,7 @@ class ActiveHDLInterface(SimulatorInterface):
         Returns set of supported foreign interfaces
         """
         return set(["VHPI"])
-    
+
     @classmethod
     def supports_vhdl_package_generics(cls):
         """
@@ -135,8 +135,9 @@ class ActiveHDLInterface(SimulatorInterface):
                 "-j",
                 str(Path(self._library_cfg).parent),
             ]
-            +source_file.compile_options.get("activehdl.vcom_flags", [])
-            +[
+            + source_file.compile_options.get("activehdl.vcom_flags", [])
+            +
+            [
                 self._std_str(source_file.get_vhdl_standard()),
                 "-work",
                 source_file.library.name,

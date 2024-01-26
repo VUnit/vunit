@@ -6,7 +6,7 @@
 --
 -- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
 
-use work.python_fli_pkg.all;
+use work.python_ffi_pkg.all;
 use work.path.all;
 use work.run_pkg.all;
 use work.runner_pkg.all;
@@ -30,7 +30,7 @@ package python_pkg is
 
   impure function eval_integer_vector_ptr(expr : string) return integer_vector_ptr_t;
   alias eval is eval_integer_vector_ptr[string return integer_vector_ptr_t];
-  
+
   -- TODO: Questa crashes unless this function is impure
   impure function to_call_str(
     identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : string := ""
@@ -44,23 +44,25 @@ package python_pkg is
     identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : string := ""
   ) return integer;
   alias call is call_integer[string, string, string, string, string,
-    string, string, string, string, string, string return integer];
+                             string, string, string, string, string, string return integer];
 end package;
 
 package body python_pkg is
+  -- @formatter:off
   procedure import_module_from_file(module_path, as_module_name : string) is
     constant spec_name : string := "__" & as_module_name & "_spec";
-    constant code : string := 
-      "from importlib.util import spec_from_file_location, module_from_spec" & LF &
-      "from pathlib import Path" & LF &
-      "import sys" & LF &
-      spec_name & " = spec_from_file_location('" & as_module_name & "', str(Path('" & module_path & "')))" & LF &
-      as_module_name & " = module_from_spec(" & spec_name & ")" & LF &
-      "sys.modules['" & as_module_name & "'] = " & as_module_name  & LF &
-      spec_name & ".loader.exec_module(" & as_module_name & ")";
+    constant code : string :=
+    "from importlib.util import spec_from_file_location, module_from_spec" & LF &
+    "from pathlib import Path" & LF &
+    "import sys" & LF &
+    spec_name & " = spec_from_file_location('" & as_module_name & "', str(Path('" & module_path & "')))" & LF &
+    as_module_name & " = module_from_spec(" & spec_name & ")" & LF &
+    "sys.modules['" & as_module_name & "'] = " & as_module_name & LF &
+    spec_name & ".loader.exec_module(" & as_module_name & ")";
   begin
     exec(code);
   end;
+  -- @formatter:on
 
   procedure import_run_script(module_name : string := "") is
     constant run_script_path : string := run_script_path(get_cfg(runner_state));
@@ -78,7 +80,7 @@ package body python_pkg is
         end if;
       end loop;
       deallocate(path_items);
-      
+
       -- Set module name to script name minus its extension
       path_items := split(run_script_name.all, ".");
       deallocate(run_script_name);
@@ -145,7 +147,7 @@ package body python_pkg is
   begin
     return l & LF & r;
   end;
-    
+
   impure function eval_integer_vector_ptr(expr : string) return integer_vector_ptr_t is
     constant result_integer_vector : integer_vector := eval(expr);
     constant len : natural := result_integer_vector'length;
@@ -162,19 +164,18 @@ package body python_pkg is
   impure function to_call_str(
     identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : string := ""
   ) return string is
-    constant args : string := "('" & arg1 & "','" & arg2 & "','" & arg3 & "','" & arg4 & "','" & arg5 & "','" & arg6 &
-      "','" & arg7 & "','" & arg8 & "','" & arg9 & "','" & arg10 & "')";
+    constant args : string := "('" & arg1 & "','" & arg2 & "','" & arg3 & "','" & arg4 & "','" & arg5 & "','" & arg6 & "','" & arg7 & "','" & arg8 & "','" & arg9 & "','" & arg10 & "')";
   begin
     return eval_string("'" & identifier & "(' + ', '.join((arg for arg in " & args & " if arg)) + ')'");
   end;
-  
+
   procedure call(
     identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : string := ""
   ) is
   begin
     exec(to_call_str(identifier, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10));
   end;
-    
+
   impure function call_integer(
     identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : string := ""
   ) return integer is

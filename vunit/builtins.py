@@ -228,9 +228,9 @@ in your VUnit Git repository? You have to do this first if installing using setu
         self._vunit_lib.add_source_files(VHDL_PATH / "python" / "src" / "python_context.vhd")
         self._vunit_lib.add_source_files(VHDL_PATH / "python" / "src" / "python_pkg.vhd")
         if "VHPI" in simulator_supported_flis:
-            self._vunit_lib.add_source_files(VHDL_PATH / "python" / "src" / "python_fli_pkg_vhpi.vhd")
+            self._vunit_lib.add_source_files(VHDL_PATH / "python" / "src" / "python_pkg_vhpi.vhd")
         elif "FLI" in simulator_supported_flis:
-            self._vunit_lib.add_source_files(VHDL_PATH / "python" / "src" / "python_fli_pkg_fli.vhd")
+            self._vunit_lib.add_source_files(VHDL_PATH / "python" / "src" / "python_pkg_fli.vhd")
 
     def _add_vhdl_logging(self):
         """
