@@ -8,7 +8,7 @@
 
 use std.textio.all;
 
-package python_fli_pkg is
+package python_ffi_pkg is
   procedure python_setup;
   attribute foreign of python_setup : procedure is "python_setup libraries/python/python_fli.so";
   procedure python_cleanup;
@@ -45,7 +45,7 @@ package python_fli_pkg is
 
 end package;
 
-package body python_fli_pkg is
+package body python_ffi_pkg is
   procedure python_setup is
   begin
     report "ERROR: Failed to call foreign subprogram" severity failure;
@@ -116,6 +116,5 @@ package body python_fli_pkg is
   begin
     report "ERROR: Failed to call foreign subprogram" severity failure;
   end;
-
 
 end package body;
