@@ -31,8 +31,8 @@ def main():
     lib = vu.add_library("lib")
     lib.add_source_files(root / "test" / "*.vhd")
 
-    vu.set_compile_option("rivierapro.vcom_flags" , ["-dbg"])
-    vu.set_sim_option("rivierapro.vsim_flags" , ["-interceptcoutput"])
+    vu.set_compile_option("rivierapro.vcom_flags", ["-dbg"])
+    vu.set_sim_option("rivierapro.vsim_flags", ["-interceptcoutput"])
     # Crashes RPRO for some reason. TODO: Fix when the C code is properly
     # integrated into the project. Must be able to debug the C code.
     # vu.set_sim_option("rivierapro.vsim_flags" , ["-cdebug"])

@@ -89,9 +89,11 @@ class Builtins(object):
 
         for key in ["string", "integer_vector"]:
             self._add_files(
-                pattern=str(VHDL_PATH / "data_types" / "src" / "api" / f"external_{key!s}_pkg.vhd")
-                if external is None or key not in external or not external[key] or external[key] is True
-                else external[key],
+                pattern=(
+                    str(VHDL_PATH / "data_types" / "src" / "api" / f"external_{key!s}_pkg.vhd")
+                    if external is None or key not in external or not external[key] or external[key] is True
+                    else external[key]
+                ),
                 allow_empty=False,
             )
 
@@ -213,7 +215,6 @@ in your VUnit Git repository? You have to do this first if installing using setu
         if not self._vhdl_standard >= VHDL.STD_2008:
             raise RuntimeError("Python package only supports vhdl 2008 and later")
 
-        # TODO: Create enums for FLIs
         python_package_supported_flis = set(["VHPI", "FLI"])
         simulator_supported_flis = self._simulator_class.supported_foreign_language_interfaces()
         if not python_package_supported_flis & simulator_supported_flis:

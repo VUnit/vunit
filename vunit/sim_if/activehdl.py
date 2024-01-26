@@ -136,8 +136,7 @@ class ActiveHDLInterface(SimulatorInterface):
                 str(Path(self._library_cfg).parent),
             ]
             + source_file.compile_options.get("activehdl.vcom_flags", [])
-            +
-            [
+            + [
                 self._std_str(source_file.get_vhdl_standard()),
                 "-work",
                 source_file.library.name,
