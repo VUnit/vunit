@@ -11,6 +11,7 @@ Test the test runner
 from pathlib import Path
 import unittest
 from unittest import mock
+from tempfile import TemporaryFile
 from tests.common import with_tempdir
 from vunit.hashing import hash_string
 from vunit.test.runner import TestRunner
@@ -23,10 +24,13 @@ class TestTestRunner(unittest.TestCase):
     Test the test runner
     """
 
+    def setUp(self):
+        self._run_script = TemporaryFile()
+
     @with_tempdir
     def test_runs_testcases_in_order(self, tempdir):
         report = TestReport()
-        runner = TestRunner(report, tempdir)
+        runner = TestRunner(report, tempdir, self._run_script)
 
         order = []
         test_case1 = self.create_test("test1", True, order=order)
@@ -48,7 +52,7 @@ class TestTestRunner(unittest.TestCase):
     @with_tempdir
     def test_fail_fast(self, tempdir):
         report = TestReport()
-        runner = TestRunner(report, tempdir, fail_fast=True)
+        runner = TestRunner(report, tempdir, self._run_script, fail_fast=True)
 
         order = []
         test_case1 = self.create_test("test1", True, order=order)
@@ -72,7 +76,7 @@ class TestTestRunner(unittest.TestCase):
     @with_tempdir
     def test_handles_python_exeception(self, tempdir):
         report = TestReport()
-        runner = TestRunner(report, tempdir)
+        runner = TestRunner(report, tempdir, self._run_script)
 
         test_case = self.create_test("test", True)
         test_list = TestList()
@@ -88,7 +92,7 @@ class TestTestRunner(unittest.TestCase):
     @with_tempdir
     def test_collects_output(self, tempdir):
         report = TestReport()
-        runner = TestRunner(report, tempdir)
+        runner = TestRunner(report, tempdir, self._run_script)
 
         test_case = self.create_test("test", True)
         test_list = TestList()
@@ -111,7 +115,7 @@ class TestTestRunner(unittest.TestCase):
     @with_tempdir
     def test_can_read_output(self, tempdir):
         report = TestReport()
-        runner = TestRunner(report, tempdir)
+        runner = TestRunner(report, tempdir, self._run_script)
 
         test_case = self.create_test("test", True)
         test_list = TestList()
@@ -138,7 +142,7 @@ class TestTestRunner(unittest.TestCase):
     def test_get_output_path_on_linux(self):
         output_path = "output_path"
         report = TestReport()
-        runner = TestRunner(report, output_path)
+        runner = TestRunner(report, output_path, self._run_script)
 
         with mock.patch("sys.platform", new="linux"):
             with mock.patch("os.environ", new={}):
@@ -169,7 +173,7 @@ class TestTestRunner(unittest.TestCase):
     def test_get_output_path_on_windows(self):
         output_path = "output_path"
         report = TestReport()
-        runner = TestRunner(report, output_path)
+        runner = TestRunner(report, output_path, self._run_script)
 
         with mock.patch("sys.platform", new="win32"):
             with mock.patch("os.environ", new={}):
@@ -213,6 +217,9 @@ class TestTestRunner(unittest.TestCase):
         test_case = TestCaseMock(name=name, run_side_effect=run_side_effect)
         return test_case
 
+    def tearDown(self):
+        self._run_script.close()
+
 
 class TestCaseMock(object):
     """
@@ -226,7 +233,7 @@ class TestCaseMock(object):
         self.called = False
         self.run_side_effect = run_side_effect
 
-    def run(self, output_path, read_output):
+    def run(self, output_path, read_output, run_script_path):
         """
         Mock run method that just records the arguments
         """
