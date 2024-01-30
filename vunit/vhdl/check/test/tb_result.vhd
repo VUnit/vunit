@@ -24,7 +24,6 @@ architecture test_fixture of tb_result is
 begin
   test_runner : process
     constant punctuation_marks_not_preceeded_by_space : string := ".,:;?!";
-    variable stat : checker_stat_t;
   begin
     test_runner_setup(runner, runner_cfg);
 

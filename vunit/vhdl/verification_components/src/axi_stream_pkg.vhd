@@ -34,39 +34,42 @@ package axi_stream_pkg is
   type axi_stream_component_type_t is (null_component, default_component, custom_component);
 
   type axi_stream_protocol_checker_t is record
-    p_type        : axi_stream_component_type_t;
-    p_actor       : actor_t;
-    p_data_length : natural;
-    p_id_length   : natural;
-    p_dest_length : natural;
-    p_user_length : natural;
-    p_logger      : logger_t;
-    p_max_waits   : natural;
+    p_type                      : axi_stream_component_type_t;
+    p_actor                     : actor_t;
+    p_data_length               : natural;
+    p_id_length                 : natural;
+    p_dest_length               : natural;
+    p_user_length               : natural;
+    p_logger                    : logger_t;
+    p_max_waits                 : natural;
+    p_allow_x_in_non_data_bytes : boolean;
   end record;
 
   constant null_axi_stream_protocol_checker : axi_stream_protocol_checker_t := (
-    p_type        => null_component,
-    p_actor       => null_actor,
-    p_data_length => 0,
-    p_id_length   => 0,
-    p_dest_length => 0,
-    p_user_length => 0,
-    p_logger      => null_logger,
-    p_max_waits   => 0
+    p_type                      => null_component,
+    p_actor                     => null_actor,
+    p_data_length               => 0,
+    p_id_length                 => 0,
+    p_dest_length               => 0,
+    p_user_length               => 0,
+    p_logger                    => null_logger,
+    p_max_waits                 => 0,
+    p_allow_x_in_non_data_bytes => false
   );
 
   -- The default protocol checker is used to specify that the checker
   -- configuration is defined by the parent component into which the checker is
   -- instantiated.
   constant default_axi_stream_protocol_checker : axi_stream_protocol_checker_t := (
-    p_type        => default_component,
-    p_actor       => null_actor,
-    p_data_length => 0,
-    p_id_length   => 0,
-    p_dest_length => 0,
-    p_user_length => 0,
-    p_logger      => null_logger,
-    p_max_waits   => 0
+    p_type                      => default_component,
+    p_actor                     => null_actor,
+    p_data_length               => 0,
+    p_id_length                 => 0,
+    p_dest_length               => 0,
+    p_user_length               => 0,
+    p_logger                    => null_logger,
+    p_max_waits                 => 0,
+    p_allow_x_in_non_data_bytes => false
   );
 
   type axi_stream_monitor_t is record
@@ -191,13 +194,14 @@ package axi_stream_pkg is
   ) return axi_stream_monitor_t;
 
   impure function new_axi_stream_protocol_checker(
-    data_length : natural;
-    id_length   : natural  := 0;
-    dest_length : natural  := 0;
-    user_length : natural  := 0;
-    logger      : logger_t := axi_stream_logger;
-    actor       : actor_t  := null_actor;
-    max_waits   : natural  := 16
+    data_length               : natural;
+    id_length                 : natural  := 0;
+    dest_length               : natural  := 0;
+    user_length               : natural  := 0;
+    logger                    : logger_t := axi_stream_logger;
+    actor                     : actor_t  := null_actor;
+    max_waits                 : natural  := 16;
+    allow_x_in_non_data_bytes : boolean  := false
   ) return axi_stream_protocol_checker_t;
 
   impure function data_length(master : axi_stream_master_t) return natural;
@@ -469,24 +473,26 @@ package body axi_stream_pkg is
   end;
 
   impure function new_axi_stream_protocol_checker(
-      data_length : natural;
-      id_length   : natural  := 0;
-      dest_length : natural  := 0;
-      user_length : natural  := 0;
-      logger      : logger_t := axi_stream_logger;
-      actor       : actor_t  := null_actor;
-      max_waits   : natural  := 16
+      data_length               : natural;
+      id_length                 : natural  := 0;
+      dest_length               : natural  := 0;
+      user_length               : natural  := 0;
+      logger                    : logger_t := axi_stream_logger;
+      actor                     : actor_t  := null_actor;
+      max_waits                 : natural  := 16;
+      allow_x_in_non_data_bytes : boolean  := false
     ) return axi_stream_protocol_checker_t is
   begin
     return (
-      p_type        => custom_component,
-      p_actor       => actor,
-      p_data_length => data_length,
-      p_id_length   => id_length,
-      p_dest_length => dest_length,
-      p_user_length => user_length,
-      p_logger      => logger,
-      p_max_waits   => max_waits);
+      p_type                  => custom_component,
+      p_actor                 => actor,
+      p_data_length           => data_length,
+      p_id_length             => id_length,
+      p_dest_length           => dest_length,
+      p_user_length           => user_length,
+      p_logger                => logger,
+      p_max_waits             => max_waits,
+      p_allow_x_in_non_data_bytes => allow_x_in_non_data_bytes);
   end;
 
   impure function data_length(master : axi_stream_master_t) return natural is

@@ -12,4 +12,5 @@ package location_pkg is
   end record;
 
   impure function get_location(path_offset, line_num : natural; file_name : string) return location_t;
+  procedure deallocate(variable location : inout location_t);
 end package;

@@ -146,7 +146,7 @@ for id_length in [0, 8]:
 
 TB_AXI_STREAM_PROTOCOL_CHECKER = LIB.test_bench("tb_axi_stream_protocol_checker")
 
-for data_length in [0, 8]:
+for data_length in [0, 8, 32]:
     for test in TB_AXI_STREAM_PROTOCOL_CHECKER.get_tests("*passing*tdata*"):
         test.add_config(name="data_length=%d" % data_length, generics=dict(data_length=data_length))
 

@@ -29,4 +29,9 @@ package body location_pkg is
     swrite(result.file_name, "");
     return result;
   end;
+
+  procedure deallocate(variable location : inout location_t) is
+  begin
+    deallocate(location.file_name);
+  end;
 end package body;

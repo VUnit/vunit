@@ -1,6 +1,6 @@
 [submodule "vunit/vhdl/osvvm"]
 	path = vunit/vhdl/osvvm
-	url = https://github.com/OSVVM/OSVVM.git
+	url = ../../OSVVM/OSVVM.git
 [submodule "vunit/vhdl/JSON-for-VHDL"]
 	path = vunit/vhdl/JSON-for-VHDL
-	url = https://github.com/Paebbels/JSON-for-VHDL.git
+	url = ../../Paebbels/JSON-for-VHDL.git

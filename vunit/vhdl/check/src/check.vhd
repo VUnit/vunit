@@ -909,7 +909,6 @@ package body check_pkg is
 
     procedure close_window(cycle : unsigned; is_ok : boolean) is
       variable close_ok    : boolean := is_ok;
-      variable pass_msg_en : boolean;
     begin
       if is_x(end_event) then
         close_ok := false;
@@ -2263,7 +2262,7 @@ package body check_pkg is
     variable pass : boolean;
   begin
     -- pragma translate_off
-    check_relation(default_checker, pass, (expr = '1'), msg, level, context_msg, path_offset, line_num, file_name);
+    check_relation(checker, pass, (expr = '1'), msg, level, context_msg, path_offset, line_num, file_name);
     -- pragma translate_on
     return pass;
   end;

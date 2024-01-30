@@ -194,15 +194,8 @@ begin
     variable i : natural;
     variable n_run_a, n_run_b, n_run_c : natural := 0;
     variable t_start : time;
-    constant test_checker : checker_t := new_checker("test_checker");
     variable runner_cfg : line;
     variable passed : boolean;
-    variable level : log_level_t;
-    variable my_checker : checker_t;
-    variable error_counter : natural := 0;
-    constant test_runner_logger : logger_t := get_logger("test_runner");
-    constant test_runner_setup_entry_key : key_t := get_entry_key(test_runner_setup);
-    constant test_runner_setup_exit_key : key_t := get_exit_key(test_runner_setup);
     constant test_case_setup_entry_key : key_t := get_entry_key(test_case_setup);
     constant test_case_setup_exit_key : key_t := get_exit_key(test_case_setup);
 

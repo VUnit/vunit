@@ -65,7 +65,7 @@ begin
 
   check_runner : process
     variable passed : boolean;
-    variable check_result, check_result2 : check_result_t;
+    variable check_result : check_result_t;
     variable stat : checker_stat_t;
     constant default_level : log_level_t := error;
 

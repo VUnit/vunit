@@ -54,7 +54,7 @@ underlines = ["-", "~"]
 [tool.tox]
 legacy_tox_ini = """
 [tox]
-envlist = py{36,37,38,39,310,311}-{fmt,unit,lint,docs}, py{36,37,38,39,310,311}-{acceptance,vcomponents}-{activehdl,ghdl,modelsim,nvc,rivierapro}, py{36,37,38,39,310,311}-coverage
+envlist = py{36,37,38,39,310,311,312}-{fmt,unit,lint,docs}, py{36,37,38,39,310,311,312}-{acceptance,vcomponents}-{activehdl,ghdl,modelsim,nvc,rivierapro}, py{36,37,38,39,310,311,312}-coverage
 isolated_build = True
 
 [testenv]
@@ -68,11 +68,13 @@ deps=
     lint: pylint
     lint: mypy
     lint: Pygments
+    lint: setuptools
     coverage: coverage
     coverage: pycodestyle
     coverage: pylint
     coverage: mypy
     coverage: Pygments
+    coverage: setuptools
     docs: docutils
     docs: furo
     docs: sphinx

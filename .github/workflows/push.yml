@@ -28,7 +28,7 @@ jobs:
     - name: '🐍 Setup Python'
       uses: actions/setup-python@v4
       with:
-        python-version: '3.11'
+        python-version: '3.12'
 
     - name: '🐍 Install dependencies'
       run: |
@@ -36,7 +36,7 @@ jobs:
         pip install -U virtualenv tox --progress-bar off
 
     - name: '🐍 Run black'
-      run: tox -e py311-fmt -- --check
+      run: tox -e py312-fmt -- --check
 
 #
 # Linux linting and unit tests
@@ -48,9 +48,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { py: '3.11' , task: 311-lint }
+          - { py: '3.12' , task: 312-lint }
           - { py: '3.7'  , task: 37-unit }
-          - { py: '3.11' , task: 311-unit }
+          - { py: '3.12' , task: 312-unit }
     name: '🐧 Ubuntu · ${{ matrix.task }}'
     steps:
 
@@ -80,8 +80,8 @@ jobs:
       fail-fast: false
       matrix:
         task: [
-          {do: 311-acceptance,  tag: llvm},
-          {do: 311-vcomponents, tag: mcode},
+          {do: 312-acceptance,  tag: llvm},
+          {do: 312-vcomponents, tag: mcode},
         ]
     name: '🛳️ Container · ${{ matrix.task.do }} · ${{ matrix.task.tag }}'
     steps:
@@ -116,7 +116,7 @@ jobs:
         submodules: recursive
 
     - name: '🚧 Run job'
-      uses: docker://ghcr.io/vunit/dev/nvc
+      uses: docker://ghcr.io/vunit/dev/nvc@sha256:e6337a2b40a2eed076ffda9a5ef0af2c676718fcc7cf0c31fcfe24505de759c4
       with:
         args: tox -e py${{ matrix.task.do }}-nvc
 
@@ -188,7 +188,7 @@ jobs:
     - name: '🐍 Setup Python'
       uses: actions/setup-python@v4
       with:
-        python-version: '3.11'
+        python-version: '3.12'
 
     - name: '🐍 Install dependencies'
       run: |

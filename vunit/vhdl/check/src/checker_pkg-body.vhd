@@ -152,6 +152,7 @@ package body checker_pkg is
       check_result.p_msg := new_string_ptr(string_pool, p_std_msg(std_fail_msg, msg, std_fail_ctx));
     end if;
 
+    deallocate(location);
     return check_result;
   end;
 

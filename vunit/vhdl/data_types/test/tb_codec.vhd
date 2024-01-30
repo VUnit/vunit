@@ -81,16 +81,12 @@ begin
       return ieee.numeric_std."="(l, r);
     end function "=";
 
-    variable r1, r2 : real;
     constant positive_zero : real := 0.0;
     constant negative_zero : real := -1.0/1.0e45;
     constant positive_infinity : real := 1.0e39;
     constant negative_infinity : real := -1.0e39;
 
     constant special_chars       : string(1 to 3) := "),(";
-    constant comma               : character      := ',';
-    constant lp                  : character      := '(';
-    constant rp                  : character      := ')';
     variable null_string         : string(10 to 9);
     variable t1  : time;
     variable string_15_downto_4 : string(15 downto 4);
