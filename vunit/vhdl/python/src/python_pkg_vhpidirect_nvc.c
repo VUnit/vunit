@@ -6,16 +6,16 @@
 //
 // Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
 
-#include <stdbool.h>
 #include <stdio.h>
+#include <vhpi_user.h>
+#include <assert.h>
 
-#include "mti.h"
 #include "python_pkg.h"
-
-#define MAX_VHDL_PARAMETER_STRING_LENGTH 100000
 
 PyObject* globals = NULL;
 PyObject* locals = NULL;
+
+#define MAX_VHDL_PARAMETER_STRING_LENGTH 100000
 
 void python_cleanup(void);
 
@@ -46,7 +46,7 @@ static void py_error_handler(const char* context, const char* code_or_expr,
   } else {
     printf("ERROR %s:\n\n%s\n\n%s\n\n", context, code_or_expr, reason);
   }
-  mti_FatalError();
+  assert(0);
 }
 
 static void ffi_error_handler(const char* context, bool cleanup) {
@@ -56,7 +56,7 @@ static void ffi_error_handler(const char* context, bool cleanup) {
   }
 
   printf("ERROR %s\n\n", context);
-  mti_FatalError();
+  assert(0);
 }
 
 void python_setup(void) {
@@ -109,47 +109,44 @@ void python_cleanup(void) {
     Py_DECREF(locals);
   }
 
+
   if (Py_FinalizeEx()) {
     printf("WARNING: Failed to finalize Python\n");
   }
 }
 
-static const char* get_parameter(mtiVariableIdT id) {
-  mtiTypeIdT type;
-  int len;
+static const char* get_parameter(const char* expr, int64_t length) {
   static char vhdl_parameter_string[MAX_VHDL_PARAMETER_STRING_LENGTH];
 
-  type = mti_GetVarType(id);
-  len = mti_TickLength(type);
-  mti_GetArrayVarValue(id, vhdl_parameter_string);
-  vhdl_parameter_string[len] = 0;
+  memcpy(vhdl_parameter_string, expr, sizeof(char) * length);
+  vhdl_parameter_string[length] = '\0';
 
   return vhdl_parameter_string;
 }
 
-int eval_integer(mtiVariableIdT id) {
-  const char* expr = get_parameter(id);
+int eval_integer(const char* expr, int64_t length) {
+  // Get null-terminated expression parameter from VHDL function call
+  const char *param = get_parameter(expr, length);
 
   // Eval(uate) expression in Python
-  PyObject* eval_result = eval(expr);
+  PyObject* eval_result = eval(param);
 
   // Return result to VHDL
-  return get_integer(eval_result, expr, true);
+  return get_integer(eval_result, param, true);
 }
 
-mtiRealT eval_real(mtiVariableIdT id) {
-  const char* expr = get_parameter(id);
-  mtiRealT result;
+double eval_real(const char* expr, int64_t length) {
+  // Get null-terminated expression parameter from VHDL function call
+  const char *param = get_parameter(expr, length);
 
   // Eval(uate) expression in Python
-  PyObject* eval_result = eval(expr);
+  PyObject* eval_result = eval(param);
 
   // Return result to VHDL
-  MTI_ASSIGN_TO_REAL(result, get_real(eval_result, expr, true));
-  return result;
+  return get_real(eval_result, param, true);
 }
 
-void p_get_integer_vector(mtiVariableIdT vec) {
+void get_integer_vector(int* vec, int64_t length) {
   // Get evaluation result from Python
   PyObject* eval_result = eval("__eval_result__.get()");
 
@@ -160,18 +157,14 @@ void p_get_integer_vector(mtiVariableIdT vec) {
                             "__eval_result__.get()");
   }
 
-  const int list_size = PyList_GET_SIZE(eval_result);
-  const int vec_len = mti_TickLength(mti_GetVarType(vec));
-  int* arr = (int*)mti_GetArrayVarValue(vec, NULL);
-
-  for (int idx = 0; idx < vec_len; idx++) {
-    arr[idx] = get_integer(PyList_GetItem(eval_result, idx),
+  for (int idx = 0; idx < length; idx++) {
+    vec[idx] = get_integer(PyList_GetItem(eval_result, idx),
                            "__eval_result__.get()", false);
   }
   Py_DECREF(eval_result);
 }
 
-void p_get_real_vector(mtiVariableIdT vec) {
+void get_real_vector(double* vec, int64_t length) {
   // Get evaluation result from Python
   PyObject* eval_result = eval("__eval_result__.get()");
 
@@ -182,34 +175,33 @@ void p_get_real_vector(mtiVariableIdT vec) {
                             "__eval_result__.get()");
   }
 
-  const int list_size = PyList_GET_SIZE(eval_result);
-  const int vec_len = mti_TickLength(mti_GetVarType(vec));
-  double* arr = (double*)mti_GetArrayVarValue(vec, NULL);
-
-  for (int idx = 0; idx < vec_len; idx++) {
-    arr[idx] = get_real(PyList_GetItem(eval_result, idx),
-                        "__eval_result__.get()", false);
+  for (int idx = 0; idx < length; idx++) {
+    vec[idx] = get_real(PyList_GetItem(eval_result, idx),
+                           "__eval_result__.get()", false);
   }
   Py_DECREF(eval_result);
 }
 
-void p_get_string(mtiVariableIdT vec) {
+void get_py_string(char* vec, int64_t length) {
   // Get evaluation result from Python
   PyObject* eval_result = eval("__eval_result__.get()");
 
   const char* py_str = get_string(eval_result);
-  char* vhdl_str = (char*)mti_GetArrayVarValue(vec, NULL);
-  strcpy(vhdl_str, py_str);
+  strcpy(vec, py_str);
 
   Py_DECREF(eval_result);
 }
 
-void exec(mtiVariableIdT id) {
-  // Get code parameter from VHDL procedure call
-  const char* code = get_parameter(id);
+void exec(const char* code, int64_t length) {
+  // Get null-terminated code parameter from VHDL function call
+  const char *param = get_parameter(code, length);
 
   // Exec(ute) Python code
-  if (PyRun_String(code, Py_file_input, globals, locals) == NULL) {
-    py_error_handler("executing", code, NULL, true);
+  if (PyRun_String(param, Py_file_input, globals, locals) == NULL) {
+    py_error_handler("executing", param, NULL, true);
   }
 }
+
+void (*vhpi_startup_routines[])() = {
+   NULL
+};

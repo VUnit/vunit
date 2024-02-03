@@ -19,8 +19,8 @@ typedef void (*py_error_handler_callback)(const char*, const char*, const char*,
                                           bool);
 void register_py_error_handler(py_error_handler_callback callback);
 
-typedef void (*fli_error_handler_callback)(const char*, bool);
-void register_fli_error_handler(fli_error_handler_callback callback);
+typedef void (*ffi_error_handler_callback)(const char*, bool);
+void register_ffi_error_handler(ffi_error_handler_callback callback);
 
 char* get_string(PyObject* pyobj);
 void check_conversion_error(const char* expr);

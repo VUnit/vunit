@@ -9,14 +9,14 @@
 #include "python_pkg.h"
 
 static py_error_handler_callback py_error_handler = NULL;
-static fli_error_handler_callback fli_error_handler = NULL;
+static ffi_error_handler_callback ffi_error_handler = NULL;
 
 void register_py_error_handler(py_error_handler_callback callback) {
   py_error_handler = callback;
 }
 
-void register_fli_error_handler(fli_error_handler_callback callback) {
-  fli_error_handler = callback;
+void register_ffi_error_handler(ffi_error_handler_callback callback) {
+  ffi_error_handler = callback;
 }
 
 char* get_string(PyObject* pyobj) {

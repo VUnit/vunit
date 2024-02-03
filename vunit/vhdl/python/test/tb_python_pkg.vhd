@@ -98,131 +98,132 @@ begin
       end loop;
       check_equal(to_py_list_str(vhdl_integer_vector_ptr), "[-1,0,1]");
 
-      elsif run("Test eval of integer_vector_ptr expression") then
-        check_equal(length(eval(to_py_list_str(new_integer_vector_ptr))), 0);
+    elsif run("Test eval of integer_vector_ptr expression") then
+      check_equal(length(eval(to_py_list_str(new_integer_vector_ptr))), 0);
 
-        vhdl_integer_vector_ptr := eval(to_py_list_str(integer_vector'(0 => 17)));
-        check_equal(get(vhdl_integer_vector_ptr, 0), 17);
+      vhdl_integer_vector_ptr := eval(to_py_list_str(integer_vector'(0 => 17)));
+      check_equal(get(vhdl_integer_vector_ptr, 0), 17);
 
-        vhdl_integer_vector_ptr := eval(to_py_list_str(integer_vector'(-2 ** 31, -1, 0, 1, 2 ** 31 - 1)));
-        check_equal(get(vhdl_integer_vector_ptr, 0), -2 ** 31);
-        check_equal(get(vhdl_integer_vector_ptr, 1), -1);
-        check_equal(get(vhdl_integer_vector_ptr, 2), 0);
-        check_equal(get(vhdl_integer_vector_ptr, 3), 1);
-        check_equal(get(vhdl_integer_vector_ptr, 4), 2 ** 31 - 1);
+      vhdl_integer_vector_ptr := eval(to_py_list_str(integer_vector'(-2 ** 31, -1, 0, 1, 2 ** 31 - 1)));
+      check_equal(get(vhdl_integer_vector_ptr, 0), -2 ** 31);
+      check_equal(get(vhdl_integer_vector_ptr, 1), -1);
+      check_equal(get(vhdl_integer_vector_ptr, 2), 0);
+      check_equal(get(vhdl_integer_vector_ptr, 3), 1);
+      check_equal(get(vhdl_integer_vector_ptr, 4), 2 ** 31 - 1);
 
-      elsif run("Test eval of string expression") then
-        check_equal(eval("''"), string'(""));
-        check_equal(eval("'\\'"), string'("\"));
-        check_equal(eval_string("'Hello from VUnit'"), "Hello from VUnit");
+    elsif run("Test eval of string expression") then
+      check_equal(eval("''"), string'(""));
+      check_equal(eval("'\\'"), string'("\"));
+      check_equal(eval_string("'Hello from VUnit'"), "Hello from VUnit");
 
-        -- TODO: We could use a helper function converting newlines to VHDL linefeeds
-        check_equal(eval_string("'Hello\\nWorld'"), "Hello\nWorld");
+      -- TODO: We could use a helper function converting newlines to VHDL linefeeds
+      check_equal(eval_string("'Hello\\nWorld'"), "Hello\nWorld");
 
-      elsif run("Test converting real_vector to Python list string") then
-        check_equal(to_py_list_str(empty_real_vector), "[]");
-        -- TODO: real'image creates a scientific notation with an arbitrary number of
-        -- digits that makes the string representation hard to predict/verify.
-        -- check_equal(to_py_list_str(real_vector'(0 => 1.1)), "[1.1]");
-        -- check_equal(to_py_list_str(real_vector'(-1.1, 0.0, 1.3)), "[-1.1,0.0,1.3]");
+    elsif run("Test converting real_vector to Python list string") then
+      check_equal(to_py_list_str(empty_real_vector), "[]");
+      -- TODO: real'image creates a scientific notation with an arbitrary number of
+      -- digits that makes the string representation hard to predict/verify.
+      -- check_equal(to_py_list_str(real_vector'(0 => 1.1)), "[1.1]");
+      -- check_equal(to_py_list_str(real_vector'(-1.1, 0.0, 1.3)), "[-1.1,0.0,1.3]");
 
-      elsif run("Test eval of real_vector expression") then
-        check(eval(to_py_list_str(empty_real_vector)) = empty_real_vector);
-        check(eval(to_py_list_str(real_vector'(0 => 17.0))) = real_vector'(0 => 17.0));
-        vhdl_real_vector := eval(to_py_list_str(test_real_vector));
-        for idx in vhdl_real_vector'range loop
-          check_equal(vhdl_real_vector(idx), vhdl_real_vector(idx));
-        end loop;
+    elsif run("Test eval of real_vector expression") then
+      check(eval(to_py_list_str(empty_real_vector)) = empty_real_vector);
+      check(eval(to_py_list_str(real_vector'(0 => 17.0))) = real_vector'(0 => 17.0));
+      vhdl_real_vector := eval(to_py_list_str(test_real_vector));
+      for idx in vhdl_real_vector'range loop
+        check_equal(vhdl_real_vector(idx), vhdl_real_vector(idx));
+      end loop;
 
-      ---------------------------------------------------------------------
-      -- Test exec
-      ---------------------------------------------------------------------
-      elsif run("Test basic exec") then
-        exec("py_int = 21");
-        check_equal(eval("py_int"), 21);
+    ---------------------------------------------------------------------
+    -- Test exec
+    ---------------------------------------------------------------------
+    elsif run("Test basic exec") then
+      exec("py_int = 21");
+      check_equal(eval("py_int"), 21);
 
-      elsif run("Test exec with multiple code snippets separated by a semicolon") then
-        exec("a = 1; b = 2");
-        check_equal(eval("a"), 1);
-        check_equal(eval("b"), 2);
+    elsif run("Test exec with multiple code snippets separated by a semicolon") then
+      exec("a = 1; b = 2");
+      check_equal(eval("a"), 1);
+      check_equal(eval("b"), 2);
 
-      elsif run("Test exec with multiple code snippets separated by a newline") then
-        exec(
-          "a = 1" & LF &
-          "b = 2"
-        );
-        check_equal(eval("a"), 1);
-        check_equal(eval("b"), 2);
+    elsif run("Test exec with multiple code snippets separated by a newline") then
+      exec(
+        "a = 1" & LF &
+        "b = 2"
+      );
+      check_equal(eval("a"), 1);
+      check_equal(eval("b"), 2);
 
-      elsif run("Test exec with code construct with indentation") then
-        exec(
-          "a = [None] * 2" & LF &
-          "for idx in range(len(a)):" & LF &
-          "    a[idx] = idx"
-        );
+    elsif run("Test exec with code construct with indentation") then
+      exec(
+        "a = [None] * 2" & LF &
+        "for idx in range(len(a)):" & LF &
+        "    a[idx] = idx"
+      );
 
-        check_equal(eval("a[0]"), 0);
-        check_equal(eval("a[1]"), 1);
+      check_equal(eval("a[0]"), 0);
+      check_equal(eval("a[1]"), 1);
 
-      elsif run("Test a simpler multiline syntax") then
-        exec(
-          "a = [None] * 2" +
-          "for idx in range(len(a)):" +
-          "    a[idx] = idx"
-        );
+    elsif run("Test a simpler multiline syntax") then
+      exec(
+        "a = [None] * 2" +
+        "for idx in range(len(a)):" +
+        "    a[idx] = idx"
+      );
 
-        check_equal(eval("a[0]"), 0);
-        check_equal(eval("a[1]"), 1);
+      check_equal(eval("a[0]"), 0);
+      check_equal(eval("a[1]"), 1);
 
-      elsif run("Test exec of locally defined function") then
-        exec(
-          "def local_test():" & LF &
-          "    return 1"
-        );
+    elsif run("Test exec of locally defined function") then
+      exec(
+        "def local_test():" & LF &
+        "    return 1"
+      );
 
-        check_equal(eval("local_test()"), 1);
+      check_equal(eval("local_test()"), 1);
 
-      elsif run("Test exec of function defined in run script") then
-        import_run_script;
-        check_equal(eval("run.remote_test()"), 2);
+    elsif run("Test exec of function defined in run script") then
+      import_run_script;
+      check_equal(eval("run.remote_test()"), 2);
 
-        import_run_script("my_run_script");
-        check_equal(eval("my_run_script.remote_test()"), 2);
+      import_run_script("my_run_script");
+      check_equal(eval("my_run_script.remote_test()"), 2);
 
-        exec("from my_run_script import remote_test");
-        check_equal(eval("remote_test()"), 2);
+      exec("from my_run_script import remote_test");
+      check_equal(eval("remote_test()"), 2);
 
-      ---------------------------------------------------------------------
-      -- Test error handling
-      ---------------------------------------------------------------------
-      elsif run("Test exceptions in exec") then
-        exec(
-          "doing_something_right = 17" & LF &
-          "doing_something_wrong = doing_something_right_misspelled"
-        );
+    ---------------------------------------------------------------------
+    -- Test error handling
+    ---------------------------------------------------------------------
+    elsif run("Test exceptions in exec") then
+      exec(
+        "doing_something_right = 17" & LF &
+        "doing_something_wrong = doing_something_right_misspelled"
+      );
 
-      elsif run("Test exceptions in eval") then
-        vhdl_int := eval("1 / 0");
+    elsif run("Test exceptions in eval") then
+      vhdl_int := eval("1 / 0");
 
-      elsif run("Test eval with type error") then
-        vhdl_int := eval("10 / 2");
+    elsif run("Test eval with type error") then
+      vhdl_int := eval("10 / 2");
 
-      elsif run("Test raising exception") then
-        -- TODO: It fails as expected but the feedback is a bit strange
-        exec("raise RuntimeError('An exception')");
+    elsif run("Test raising exception") then
+      -- TODO: It fails as expected but the feedback is a bit strange
+      exec("raise RuntimeError('An exception')");
 
-      ---------------------------------------------------------------------
-      -- Misc tests
-      ---------------------------------------------------------------------
-      elsif run("Test globals and locals") then
-        exec("assert(globals() == locals())");
+    ---------------------------------------------------------------------
+    -- Misc tests
+    ---------------------------------------------------------------------
+    elsif run("Test globals and locals") then
+      exec("assert(globals() == locals())");
 
-      elsif run("Test print flushing") then
-        -- TODO: Observing that buffer isn't flushed until end of simulation
-        exec("from time import sleep");
-        exec("print('Before sleep', flush=True)");
-        exec("sleep(5)");
-        exec("print('After sleep')");
+    elsif run("Test print flushing") then
+      -- TODO: Observing that for some simulators the buffer isn't flushed
+      -- until the end of simulation
+      exec("from time import sleep");
+      exec("print('Before sleep', flush=True)");
+      exec("sleep(5)");
+      exec("print('After sleep')");
 
       end if;
     end loop;

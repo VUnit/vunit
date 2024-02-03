@@ -6,7 +6,7 @@
 
 from pathlib import Path
 from vunit import VUnit
-from vunit.python_pkg import compile_vhpi_application, compile_fli_application
+from vunit.python_pkg import compile_vhpi_application, compile_fli_application, compile_vhpidirect_nvc_application
 
 
 def remote_test():
@@ -27,6 +27,8 @@ def main():
         compile_vhpi_application(root, vu)
     elif simulator_name == "modelsim":
         compile_fli_application(root, vu)
+    elif simulator_name == "nvc":
+        compile_vhpidirect_nvc_application(root, vu)
 
     lib = vu.add_library("lib")
     lib.add_source_files(root / "test" / "*.vhd")
@@ -36,6 +38,7 @@ def main():
     # Crashes RPRO for some reason. TODO: Fix when the C code is properly
     # integrated into the project. Must be able to debug the C code.
     # vu.set_sim_option("rivierapro.vsim_flags" , ["-cdebug"])
+    vu.set_sim_option("nvc.sim_flags", ["--load", str(root / "vunit_out" / "nvc" / "libraries" / "python.so")])
 
     vu.main()
 

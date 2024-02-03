@@ -354,30 +354,27 @@ begin
       -- and VHDL does not. However, there are Python constraint solvers that might be helpful
       -- if a randomization constraint is difficult to solve with a procedural VHDL code.
       -- This is not such a difficult problem but just an example of using a Python constraint solver.
-      -- The example is taken directly from the examples provided with the Python package.
       elsif run("Test constraint solving") then
-        exec("from cocotb_coverage import crv"); -- Install with pip install cocotb-coverage
+        exec("from constraint import Problem"); -- Install with pip install python-constraint
+        exec("from random import choice");
         exec(
-          "class RandExample(crv.Randomized):" +
-          "    def __init__(self, z):" +
-          "        crv.Randomized.__init__(self)" +
-          "        self.x = 0" +
-          "        self.y = 0" +
-          "        self.z = z" +
-          "        self.x_c = lambda x, z: x > z" +
-          "        self.add_rand('x', list(range(16)))" +
-          "        self.add_rand('y', list(range(16)))" +
-          "        self.add_constraint(lambda x, z : x != z)" +
-          "        self.add_constraint(lambda y, z : y <= z)" +
-          "        self.add_constraint(lambda x, y : x + y == 8)"
+          "problem = Problem()" +
+          "problem.addVariables(['x', 'y', 'z'], list(range(16)))" + -- Three variables in the 0 - 15 range
+
+          -- Constrain the variable
+          "problem.addConstraint(lambda x, y, z: x != z)" +
+          "problem.addConstraint(lambda x, y, z: y <= z)" +
+          "problem.addConstraint(lambda x, y, z: x + y == 8)" +
+
+          -- Pick a random solution
+          "solutions = problem.getSolutions()" +
+          "solution = choice(solutions)"
         );
-        exec("foo = RandExample(5)");
-        exec("foo.randomize()");
 
         -- Check that the constraints were met
-        check(eval_integer("foo.x") /= eval_integer("foo.z"));
-        check(eval_integer("foo.y") <= eval_integer("foo.z"));
-        check_equal(eval_integer("foo.x") + eval_integer("foo.y"), 8);
+        check(eval_integer("solution['x']") /= eval_integer("solution['z']"));
+        check(eval_integer("solution['y']") <= eval_integer("solution['z']"));
+        check_equal(eval_integer("solution['x']") + eval_integer("solution['y']"), 8);
 
       elsif run("Test using a Python module as the golden reference") then
         -- In this example we want to test that a receiver correctly accepts
