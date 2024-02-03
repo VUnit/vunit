@@ -45,9 +45,15 @@ package python_pkg is
   ) return integer;
   alias call is call_integer[string, string, string, string, string,
                              string, string, string, string, string, string return integer];
+
 end package;
 
 package body python_pkg is
+  function ssin (v : real) return real is
+  begin
+    assert false severity failure;
+  end;
+
   -- @formatter:off
   procedure import_module_from_file(module_path, as_module_name : string) is
     constant spec_name : string := "__" & as_module_name & "_spec";
@@ -65,16 +71,16 @@ package body python_pkg is
   -- @formatter:on
 
   procedure import_run_script(module_name : string := "") is
-    constant run_script_path : string := run_script_path(get_cfg(runner_state));
+    constant script_path : string := run_script_path(get_cfg(runner_state));
     variable path_items : lines_t;
-    variable run_script_name : line;
+    variable script_name : line;
   begin
     if module_name = "" then
       -- Extract the last item in the full path
-      path_items := split(run_script_path, "/");
+      path_items := split(script_path, "/");
       for idx in path_items'range loop
         if idx = path_items'right then
-          run_script_name := path_items(idx);
+          script_name := path_items(idx);
         else
           deallocate(path_items(idx));
         end if;
@@ -82,17 +88,17 @@ package body python_pkg is
       deallocate(path_items);
 
       -- Set module name to script name minus its extension
-      path_items := split(run_script_name.all, ".");
-      deallocate(run_script_name);
+      path_items := split(script_name.all, ".");
+      deallocate(script_name);
       for idx in path_items'range loop
         if idx = path_items'left then
-          import_module_from_file(run_script_path, path_items(idx).all);
+          import_module_from_file(script_path, path_items(idx).all);
         end if;
         deallocate(path_items(idx));
       end loop;
       deallocate(path_items);
     else
-      import_module_from_file(run_script_path, module_name);
+      import_module_from_file(script_path, module_name);
     end if;
   end;
 
@@ -131,9 +137,9 @@ package body python_pkg is
   begin
     swrite(l, "[");
     for idx in vec'range loop
-      -- to_string of real seems to express an integer real as an integer: to_string(1.0) is "1".
-      -- use real'image instead.
-      swrite(l, real'image(vec(idx)));
+      -- Inconsistency between simulators if to_string and/or real'image of 1.0 returns "1" or "1.0"
+      -- Enforce type with float()
+      swrite(l, "float(" & to_string(vec(idx)) & ")");
       if idx /= vec'right then
         swrite(l, ",");
       end if;

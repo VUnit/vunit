@@ -159,3 +159,56 @@ def compile_fli_application(run_script_root, vu):  # pylint: disable=too-many-lo
         print(proc.stdout)
         print(proc.stderr)
         raise RuntimeError("Failed to link FLI application")
+
+
+def compile_vhpidirect_nvc_application(run_script_root, vu):
+    """
+    Compile VHPIDIRECT application for NVC.
+    """
+    path_to_shared_lib = (run_script_root / "vunit_out" / vu.get_simulator_name() / "libraries").resolve()
+    if not path_to_shared_lib.exists():
+        path_to_shared_lib.mkdir(parents=True, exist_ok=True)
+    shared_lib = path_to_shared_lib / "python.so"
+    path_to_python_include = (
+        Path(sys.executable).parent.parent.resolve() / "include" / f"python{sys.version_info[0]}.{sys.version_info[1]}"
+    )
+    path_to_python_libs = Path(sys.executable).parent.parent.resolve() / "bin"
+    python_shared_lib = f"libpython{sys.version_info[0]}.{sys.version_info[1]}"
+    path_to_python_pkg = Path(__file__).parent.resolve() / "vhdl" / "python" / "src"
+
+    c_file_paths = [path_to_python_pkg / "python_pkg_vhpidirect_nvc.c", path_to_python_pkg / "python_pkg.c"]
+
+    for c_file_path in c_file_paths:
+        args = [
+            "gcc",
+            "-c",
+            "-I",
+            str(path_to_python_include),
+            str(c_file_path),
+        ]
+
+        proc = subprocess.run(args, capture_output=True, text=True, check=False, cwd=str(path_to_shared_lib / ".."))
+        if proc.returncode != 0:
+            print(proc.stdout)
+            print(proc.stderr)
+            raise RuntimeError("Failed to compile NVC VHPIDIRECT application")
+
+    args = [
+        "gcc",
+        "-shared",
+        "-fPIC",
+        "-o",
+        str(shared_lib),
+        "python_pkg.o",
+        "python_pkg_vhpidirect_nvc.o",
+        "-l",
+        python_shared_lib,
+        "-L",
+        str(path_to_python_libs),
+    ]
+
+    proc = subprocess.run(args, capture_output=True, text=True, check=False, cwd=str(path_to_shared_lib / ".."))
+    if proc.returncode != 0:
+        print(proc.stdout)
+        print(proc.stderr)
+        raise RuntimeError("Failed to link NVC VHPIDIRECT application")

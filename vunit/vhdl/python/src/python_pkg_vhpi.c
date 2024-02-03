@@ -26,13 +26,12 @@ static void py_error_handler(const char* context, const char* code_or_expr,
   // Use provided error reason or try extracting the reason from the Python
   // exception
   if (reason == NULL) {
-    PyObject* exc;
-
-    exc = PyErr_GetRaisedException();
-    if (exc != NULL) {
-      reason = get_string(exc);
-      Py_DECREF(exc);
+    PyObject *ptype, *pvalue, *ptraceback;
+    PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+    if (ptype != NULL) {
+      reason = get_string(pvalue);
     }
+    PyErr_Restore(ptype, pvalue, ptraceback);
   }
 
   // Clean-up Python session first in case vhpi_assert stops the simulation
@@ -53,7 +52,7 @@ static void py_error_handler(const char* context, const char* code_or_expr,
   vhpi_control(vhpiStop);
 }
 
-static void vhpi_error_handler(const char* context, bool cleanup) {
+static void ffi_error_handler(const char* context, bool cleanup) {
   vhpiErrorInfoT err;
 
   // Clean-up Python session first in case vhpi_assert stops the simulation
@@ -76,24 +75,24 @@ static void vhpi_error_handler(const char* context, bool cleanup) {
 PLI_VOID python_setup(const struct vhpiCbDataS* cb_p) {
   Py_Initialize();
   if (!Py_IsInitialized()) {
-    vhpi_error_handler("Failed to initialize Python", false);
+    ffi_error_handler("Failed to initialize Python", false);
   }
 
   PyObject* main_module = PyImport_AddModule("__main__");
   if (main_module == NULL) {
-    vhpi_error_handler("Failed to get the main module", true);
+    ffi_error_handler("Failed to get the main module", true);
   }
 
   globals = PyModule_GetDict(main_module);
   if (globals == NULL) {
-    vhpi_error_handler("Failed to get the global dictionary", true);
+    ffi_error_handler("Failed to get the global dictionary", true);
   }
 
   // globals and locals are the same at the top-level
   locals = globals;
 
   register_py_error_handler(py_error_handler);
-  register_fli_error_handler(vhpi_error_handler);
+  register_ffi_error_handler(ffi_error_handler);
 }
 
 PLI_VOID python_cleanup(const struct vhpiCbDataS* cb_p) {
@@ -111,7 +110,7 @@ static const char* get_parameter(const struct vhpiCbDataS* cb_p) {
   vhpiHandleT parameter_handle =
       vhpi_handle_by_index(vhpiParamDecls, cb_p->obj, 0);
   if (parameter_handle == NULL) {
-    vhpi_error_handler("getting VHDL parameter handle", true);
+    ffi_error_handler("getting VHDL parameter handle", true);
   }
 
   vhpiValueT parameter;
@@ -122,7 +121,7 @@ static const char* get_parameter(const struct vhpiCbDataS* cb_p) {
   parameter.format = vhpiStrVal;
 
   if (vhpi_get_value(parameter_handle, &parameter)) {
-    vhpi_error_handler("getting VHDL parameter value", true);
+    ffi_error_handler("getting VHDL parameter value", true);
   }
 
   return vhdl_parameter_string;
