@@ -47,14 +47,14 @@ void check_conversion_error(const char* expr) {
 
 void handle_type_check_error(PyObject* pyobj, const char* context,
                              const char* expr) {
-  PyObject* type_name = PyType_GetName(Py_TYPE(pyobj));
-  if (type_name == NULL) {
+  PyTypeObject* type = pyobj->ob_type;
+  if (type == NULL) {
     py_error_handler(context, expr, "Expression evaluates to an unknown type.",
                      true);
   }
+  const char* type_name_str = type->tp_name;
+  Py_DECREF(type);
 
-  const char* type_name_str = get_string(type_name);
-  Py_DECREF(type_name);
   if (type_name_str == NULL) {
     py_error_handler(context, expr, "Expression evaluates to an unknown type.",
                      true);
