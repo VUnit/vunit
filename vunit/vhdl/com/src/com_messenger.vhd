@@ -12,7 +12,6 @@ use work.com_support_pkg.all;
 use work.queue_pkg.all;
 use work.queue_pool_pkg.all;
 use work.string_ptr_pkg.all;
-use work.codec_pkg.all;
 use work.logger_pkg.all;
 use work.log_levels_pkg.all;
 use work.id_pkg.all;

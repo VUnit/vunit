@@ -4,8 +4,6 @@
 --
 -- Copyright (c) 2014-2024, Lars Asplund lars.anders.asplund@gmail.com
 
-use work.log_handler_pkg.stdout_file_name;
-
 package body print_pkg is
 
   procedure print(constant str : in string; file f : text) is

@@ -10,11 +10,10 @@
 -- into a singleton datastructure of integer vector access types.
 --
 
-use work.types_pkg.all;
-use work.external_integer_vector_pkg.all;
-
-use work.codec_pkg.all;
 use work.codec_builder_pkg.all;
+use work.codec_pkg.all;
+use work.external_integer_vector_pkg.all;
+use work.types_pkg.all;
 
 package integer_vector_ptr_pkg is
 

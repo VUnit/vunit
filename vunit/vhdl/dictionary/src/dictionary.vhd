@@ -6,9 +6,10 @@
 --
 -- Copyright (c) 2014-2024, Lars Asplund lars.anders.asplund@gmail.com
 
+use std.textio.all;
+
 use work.string_ops.all;
 use work.logger_pkg.all;
-use std.textio.all;
 
 package dictionary is
   subtype frozen_dictionary_t is string;

@@ -4,10 +4,6 @@
 --
 -- Copyright (c) 2014-2024, Lars Asplund lars.anders.asplund@gmail.com
 
-use std.textio.all;
-use work.codec_pkg.all;
-use work.codec_builder_pkg.all;
-
 package body integer_array_pkg is
   type binary_file_t is file of character;
 

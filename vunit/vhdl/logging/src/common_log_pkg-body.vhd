@@ -4,10 +4,6 @@
 --
 -- Copyright (c) 2014-2024, Lars Asplund lars.anders.asplund@gmail.com
 
-use work.ansi_pkg.all;
-use work.log_levels_pkg.all;
-use work.string_ops.upper;
-
 package body common_log_pkg is
   constant is_original_pkg : boolean := true;
 

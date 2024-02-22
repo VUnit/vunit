@@ -11,13 +11,13 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-context work.vunit_context;
-context work.com_context;
-use work.memory_pkg.all;
-use work.avalon_pkg.all;
-
 library osvvm;
-use osvvm.RandomPkg.all;
+use osvvm.RandomPkg.RandomPType;
+
+use work.avalon_pkg.avalon_slave_t;
+use work.com_pkg.all;
+use work.com_types_pkg.all;
+use work.memory_pkg.all;
 
 entity avalon_slave is
   generic (

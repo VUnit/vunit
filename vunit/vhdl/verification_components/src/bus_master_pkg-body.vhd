@@ -4,15 +4,6 @@
 --
 -- Copyright (c) 2014-2024, Lars Asplund lars.anders.asplund@gmail.com
 
-library ieee;
-use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
-
-use work.queue_pkg.all;
-use work.sync_pkg.all;
-use work.queue_pkg.all;
-use work.check_pkg.all;
-
 package body bus_master_pkg is
 
   impure function new_bus(data_length : natural;

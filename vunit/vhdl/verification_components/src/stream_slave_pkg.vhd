@@ -9,8 +9,9 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-context work.vunit_context;
-context work.com_context;
+use work.check_pkg.all;
+use work.com_pkg.all;
+use work.com_types_pkg.all;
 
 package stream_slave_pkg is
   -- Stream slave handle

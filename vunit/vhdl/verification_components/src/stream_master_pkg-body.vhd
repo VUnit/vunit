@@ -4,12 +4,6 @@
 --
 -- Copyright (c) 2014-2024, Lars Asplund lars.anders.asplund@gmail.com
 
-library ieee;
-use ieee.std_logic_1164.all;
-
-context work.vunit_context;
-context work.com_context;
-
 package body stream_master_pkg is
   impure function new_stream_master return stream_master_t is
   begin

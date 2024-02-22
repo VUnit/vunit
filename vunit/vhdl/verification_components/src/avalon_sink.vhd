@@ -11,13 +11,13 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-context work.vunit_context;
-context work.com_context;
-use work.stream_slave_pkg.all;
-use work.avalon_stream_pkg.all;
-
 library osvvm;
-use osvvm.RandomPkg.all;
+use osvvm.RandomPkg.RandomPType;
+
+use work.avalon_stream_pkg.all;
+use work.com_pkg.all;
+use work.com_types_pkg.all;
+use work.stream_slave_pkg.stream_pop_msg;
 
 entity avalon_sink is
   generic (

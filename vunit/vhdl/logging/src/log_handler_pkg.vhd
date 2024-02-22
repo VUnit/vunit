@@ -4,8 +4,15 @@
 --
 -- Copyright (c) 2014-2024, Lars Asplund lars.anders.asplund@gmail.com
 
+use std.textio.all;
+
+use work.ansi_pkg.all;
+use work.common_log_pkg.all;
+use work.file_pkg.all;
 use work.integer_vector_ptr_pkg.all;
 use work.log_levels_pkg.all;
+use work.string_ops.upper;
+use work.string_ptr_pkg.all;
 
 package log_handler_pkg is
   type deprecated_log_format_t is (

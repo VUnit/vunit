@@ -9,10 +9,11 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-use work.com_messenger_pkg.all;
-use work.com_types_pkg.all;
-use work.event_common_pkg.all;
-use work.event_private_pkg.all;
+use work.com_messenger_pkg.messenger_t;
+use work.com_types_pkg.com_status_t;
+use work.event_common_pkg.notify;
+use work.event_common_pkg.is_active;
+use work.event_private_pkg.basic_event_t;
 
 package com_common_pkg is
   shared variable messenger :       messenger_t;

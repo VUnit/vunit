@@ -7,12 +7,13 @@
 -- Model of a memory address space
 
 library ieee;
+use ieee.numeric_std.all;
 use ieee.std_logic_1164.all;
 
-use work.types_pkg.all;
-use work.string_ptr_pkg.all;
 use work.integer_vector_ptr_pkg.all;
 use work.logger_pkg.all;
+use work.string_ptr_pkg.all;
+use work.types_pkg.byte_t;
 
 package memory_pkg is
 

@@ -7,11 +7,13 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-use work.queue_pkg.all;
+use work.axi_statistics_pkg.axi_statistics_t;
+use work.axi_statistics_pkg.deallocate;
+use work.com_pkg.all;
+use work.com_types_pkg.all;
 use work.logger_pkg.all;
-use work.memory_pkg.all;
-context work.com_context;
-use work.axi_statistics_pkg.all;
+use work.memory_pkg.memory_t;
+use work.memory_pkg.to_vc_interface;
 
 package axi_slave_pkg is
   subtype probability_t is real range 0.0 to 1.0;

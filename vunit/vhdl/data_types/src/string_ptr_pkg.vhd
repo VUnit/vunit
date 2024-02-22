@@ -11,10 +11,10 @@
 --
 
 use work.types_pkg.all;
+use work.codec_builder_pkg.decode;
+use work.codec_builder_pkg.integer_code_length;
+use work.codec_pkg.encode;
 use work.external_string_pkg.all;
-
-use work.codec_pkg.all;
-use work.codec_builder_pkg.all;
 
 package string_ptr_pkg is
 

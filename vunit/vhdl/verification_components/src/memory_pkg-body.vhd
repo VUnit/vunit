@@ -4,9 +4,6 @@
 --
 -- Copyright (c) 2014-2024, Lars Asplund lars.anders.asplund@gmail.com
 
-library ieee;
-use ieee.numeric_std.all;
-
 package body memory_pkg is
 
   constant num_bytes_idx : natural := 0;

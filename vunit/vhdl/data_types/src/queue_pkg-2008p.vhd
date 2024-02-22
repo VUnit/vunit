@@ -8,10 +8,9 @@ library ieee;
 use ieee.fixed_pkg.all;
 use ieee.float_pkg.all;
 
-use work.queue_pkg.all;
 use work.codec_2008p_pkg.all;
-use work.codec_builder_2008p_pkg.all;
 use work.data_types_private_pkg.all;
+use work.queue_pkg.all;
 
 package queue_2008p_pkg is
   procedure push (

@@ -4,17 +4,6 @@
 --
 -- Copyright (c) 2014-2024, Lars Asplund lars.anders.asplund@gmail.com
 
-use work.string_ptr_pkg.all;
-use work.integer_vector_ptr_pkg.all;
-use work.queue_pkg.all;
-use work.core_pkg.core_failure;
-use std.textio.all;
-use work.string_ops.all;
-use work.print_pkg.print;
-use work.ansi_pkg.all;
-use work.location_pkg.all;
-use work.id_pkg.all;
-
 package body logger_pkg is
   constant global_log_count : integer_vector_ptr_t := new_integer_vector_ptr(1, value => 0);
   constant p_mock_queue_length : integer_vector_ptr_t := new_integer_vector_ptr(1, value => 0);

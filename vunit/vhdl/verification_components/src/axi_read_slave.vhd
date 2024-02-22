@@ -9,10 +9,10 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 use work.axi_pkg.all;
+use work.axi_slave_pkg.axi_slave_t;
 use work.axi_slave_private_pkg.all;
-use work.queue_pkg.all;
-context work.com_context;
-context work.vc_context;
+use work.com_pkg.net;
+use work.memory_pkg.read_byte;
 
 entity axi_read_slave is
   generic (

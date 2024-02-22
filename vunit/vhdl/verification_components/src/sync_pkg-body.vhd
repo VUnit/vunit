@@ -4,10 +4,6 @@
 --
 -- Copyright (c) 2014-2024, Lars Asplund lars.anders.asplund@gmail.com
 
-context work.vunit_context;
-use work.queue_pkg.all;
-context work.com_context;
-
 package body sync_pkg is
   procedure wait_until_idle(signal net : inout network_t;
                             handle     :       sync_handle_t) is

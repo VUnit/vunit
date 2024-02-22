@@ -6,8 +6,10 @@
 
 -- Defines synchronization verification component interface VCI
 
-context work.vunit_context;
-context work.com_context;
+use work.com_pkg.request;
+use work.com_pkg.send;
+use work.com_pkg.reply;
+use work.com_types_pkg.all;
 
 package sync_pkg is
 

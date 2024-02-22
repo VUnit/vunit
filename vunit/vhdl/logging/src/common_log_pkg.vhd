@@ -6,6 +6,10 @@
 
 use std.textio.all;
 
+use work.ansi_pkg.all;
+use work.log_levels_pkg.all;
+use work.string_ops.upper;
+
 package common_log_pkg is
   -- Deferred constant set to true in the native implementation of the package.
   -- Must be set to false in alternative implementations.

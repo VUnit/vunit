@@ -7,18 +7,22 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-context work.vunit_context;
-context work.com_context;
-use work.stream_slave_pkg.all;
-use work.axi_stream_pkg.all;
-use work.axi_stream_private_pkg.all;
-use work.sync_pkg.all;
-use work.string_ptr_pkg.all;
-use work.event_common_pkg.all;
-use work.event_pkg.all;
-
 library osvvm;
 use osvvm.RandomPkg.RandomPType;
+
+use work.check_pkg.all;
+use work.com_pkg.all;
+use work.com_types_pkg.all;
+use work.id_pkg.all;
+use work.queue_pkg.all;
+use work.stream_slave_pkg.stream_pop_msg;
+use work.axi_stream_pkg.all;
+use work.axi_stream_private_pkg.probability_stall_axi_stream;
+use work.sync_pkg.all;
+use work.string_ptr_pkg.all;
+use work.event_common_pkg.is_active;
+use work.event_common_pkg.notify;
+use work.event_pkg.all;
 
 entity axi_stream_slave is
   generic (

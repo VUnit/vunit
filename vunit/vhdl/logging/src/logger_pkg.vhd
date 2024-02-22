@@ -4,10 +4,18 @@
 --
 -- Copyright (c) 2014-2024, Lars Asplund lars.anders.asplund@gmail.com
 
-use work.log_levels_pkg.all;
-use work.log_handler_pkg.all;
-use work.integer_vector_ptr_pkg.all;
+use std.textio.all;
+
+use work.ansi_pkg.all;
+use work.core_pkg.core_failure;
 use work.id_pkg.all;
+use work.integer_vector_ptr_pkg.all;
+use work.location_pkg.all;
+use work.log_handler_pkg.all;
+use work.log_levels_pkg.all;
+use work.print_pkg.print;
+use work.queue_pkg.all;
+use work.string_ops.all;
 
 package logger_pkg is
 

@@ -7,12 +7,12 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-context work.com_context;
-use work.stream_master_pkg.all;
-use work.stream_slave_pkg.all;
-use work.sync_pkg.all;
-use work.integer_vector_ptr_pkg.all;
-use work.queue_pkg.all;
+use work.com_pkg.new_actor;
+use work.com_pkg.send;
+use work.com_types_pkg.all;
+use work.stream_master_pkg.stream_master_t;
+use work.stream_slave_pkg.stream_slave_t;
+use work.sync_pkg.sync_handle_t;
 
 package uart_pkg is
   type uart_master_t is record

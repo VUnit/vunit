@@ -10,12 +10,11 @@ use ieee.std_logic_1164.all;
 use work.logger_pkg.all;
 use work.checker_pkg.all;
 use work.check_pkg.all;
-use work.stream_master_pkg.all;
-use work.stream_slave_pkg.all;
-use work.sync_pkg.all;
-context work.vunit_context;
-context work.com_context;
-context work.data_types_context;
+use work.stream_master_pkg.stream_master_t;
+use work.stream_slave_pkg.stream_slave_t;
+use work.sync_pkg.sync_handle_t;
+use work.com_pkg.all;
+use work.com_types_pkg.all;
 
 package axi_stream_pkg is
 

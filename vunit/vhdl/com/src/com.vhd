@@ -9,18 +9,12 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-context work.vunit_context;
-
-use work.queue_pkg.all;
-use work.queue_2008p_pkg.all;
-use work.queue_pool_pkg.all;
-use work.integer_vector_ptr_pkg.all;
-use work.string_ptr_pkg.all;
-use work.codec_pkg.all;
-use work.com_support_pkg.all;
-use work.com_messenger_pkg.all;
 use work.com_common_pkg.all;
+use work.com_messenger_pkg.all;
+use work.com_support_pkg.all;
 use work.logger_pkg.all;
+use work.queue_pkg.all;
+use work.queue_pool_pkg.all;
 
 use std.textio.all;
 

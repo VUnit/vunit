@@ -4,8 +4,10 @@
 --
 -- Copyright (c) 2014-2024, Lars Asplund lars.anders.asplund@gmail.com
 
-use work.string_ptr_pkg.all;
 use work.ansi_pkg.all;
+use work.core_pkg.all;
+use work.integer_vector_ptr_pkg.all;
+use work.string_ptr_pkg.all;
 
 package log_levels_pkg is
 
