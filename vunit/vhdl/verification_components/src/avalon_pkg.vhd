@@ -4,13 +4,15 @@
 --
 -- Copyright (c) 2014-2024, Lars Asplund lars.anders.asplund@gmail.com
 -- Author Slawomir Siluk slaweksiluk@gazeta.pl
+
 library ieee;
 use ieee.std_logic_1164.all;
 
-use work.queue_pkg.all;
+use work.com_pkg.new_actor;
+use work.com_types_pkg.actor_t;
 use work.logger_pkg.all;
-use work.memory_pkg.all;
-context work.com_context;
+use work.memory_pkg.memory_t;
+use work.memory_pkg.to_vc_interface;
 
 package avalon_pkg is
 

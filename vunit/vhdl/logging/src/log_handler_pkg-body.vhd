@@ -4,17 +4,6 @@
 --
 -- Copyright (c) 2014-2024, Lars Asplund lars.anders.asplund@gmail.com
 
-use std.textio.all;
-
-library vunit_lib;
-use vunit_lib.string_ptr_pkg.all;
-use vunit_lib.integer_vector_ptr_pkg.all;
-
-use work.ansi_pkg.all;
-use work.string_ops.upper;
-use work.file_pkg.all;
-use work.common_log_pkg.all;
-
 package body log_handler_pkg is
 
   constant display_handler_id_number : natural := 0;

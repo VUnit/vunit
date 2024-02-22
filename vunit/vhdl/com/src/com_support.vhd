@@ -4,8 +4,9 @@
 --
 -- Copyright (c) 2014-2024, Lars Asplund lars.anders.asplund@gmail.com
 
-context work.vunit_context;
 use work.com_types_pkg.all;
+use work.logger_pkg.all;
+use work.string_ops.all;
 
 package com_support_pkg is
 

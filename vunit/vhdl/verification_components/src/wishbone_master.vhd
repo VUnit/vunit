@@ -9,17 +9,16 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-use work.queue_pkg.all;
+library osvvm;
+use osvvm.RandomPkg.RandomPType;
+
 use work.bus_master_pkg.all;
-context work.com_context;
+use work.com_pkg.all;
+use work.queue_pkg.all;
 use work.com_types_pkg.all;
-use work.logger_pkg.all;
 use work.check_pkg.all;
 use work.log_levels_pkg.all;
 use work.sync_pkg.all;
-
-library osvvm;
-use osvvm.RandomPkg.all;
 
 entity wishbone_master is
   generic (

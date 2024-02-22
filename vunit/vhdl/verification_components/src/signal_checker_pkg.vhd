@@ -7,10 +7,11 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-context work.vunit_context;
-context work.com_context;
-
-use work.sync_pkg.all;
+use work.com_pkg.new_actor;
+use work.com_pkg.send;
+use work.com_types_pkg.all;
+use work.logger_pkg.all;
+use work.sync_pkg.wait_until_idle;
 
 package signal_checker_pkg is
   type signal_checker_t is record

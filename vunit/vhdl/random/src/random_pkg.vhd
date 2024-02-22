@@ -7,13 +7,11 @@
 -- Optional package that includes random functions for the data_types based on
 -- OSVVM
 
-library vunit_lib;
-context vunit_lib.vunit_context;
-use vunit_lib.integer_vector_ptr_pkg.all;
-use vunit_lib.integer_array_pkg.all;
-
 library osvvm;
-use osvvm.RandomPkg.all;
+use osvvm.RandomPkg.RandomPType;
+
+use work.integer_vector_ptr_pkg.all;
+use work.integer_array_pkg.all;
 
 package random_pkg is
   procedure random_integer_vector_ptr(variable rnd : inout RandomPType;

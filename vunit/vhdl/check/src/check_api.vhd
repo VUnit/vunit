@@ -10,12 +10,16 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+
 use std.textio.all;
+
 use work.checker_pkg.all;
-use work.logger_pkg.all;
+use work.event_common_pkg.any_event_t;
+use work.event_common_pkg.notify;
+use work.integer_vector_ptr_pkg.all;
 use work.log_levels_pkg.all;
+use work.logger_pkg.logger_t;
 use work.string_ops.all;
-use work.event_common_pkg.all;
 use work.string_ptr_pkg.all;
 
 package check_pkg is

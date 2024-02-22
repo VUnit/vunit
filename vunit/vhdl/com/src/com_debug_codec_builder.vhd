@@ -6,10 +6,9 @@
 --
 -- Copyright (c) 2014-2024, Lars Asplund lars.anders.asplund@gmail.com
 
-library vunit_lib;
-context vunit_lib.vunit_context;
-
 use std.textio.all;
+
+use work.string_ops.all;
 
 package com_debug_codec_builder_pkg is
   -----------------------------------------------------------------------------

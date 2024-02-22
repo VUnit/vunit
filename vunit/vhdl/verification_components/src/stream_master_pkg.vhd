@@ -9,8 +9,9 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-context work.vunit_context;
-context work.com_context;
+use work.com_pkg.new_actor;
+use work.com_pkg.send;
+use work.com_types_pkg.all;
 
 package stream_master_pkg is
   -- Stream master handle

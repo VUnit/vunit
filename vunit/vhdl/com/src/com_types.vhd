@@ -24,7 +24,7 @@ use work.queue_pkg.all;
 use work.queue_2008p_pkg.all;
 use work.queue_pool_pkg.all;
 use work.dict_pkg.all;
-use work.event_private_pkg.all;
+use work.event_private_pkg.basic_event_t;
 
 package com_types_pkg is
 

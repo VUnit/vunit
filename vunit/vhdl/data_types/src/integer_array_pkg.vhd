@@ -4,6 +4,10 @@
 --
 -- Copyright (c) 2014-2024, Lars Asplund lars.anders.asplund@gmail.com
 
+use std.textio.all;
+
+use work.codec_builder_pkg.all;
+use work.codec_pkg.all;
 use work.integer_vector_ptr_pkg.all;
 
 package integer_array_pkg is

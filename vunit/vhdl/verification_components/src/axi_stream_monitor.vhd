@@ -7,9 +7,13 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-context work.vunit_context;
-context work.com_context;
 use work.axi_stream_pkg.all;
+use work.com_pkg.net;
+use work.com_pkg.publish;
+use work.com_types_pkg.msg_t;
+use work.log_levels_pkg.all;
+use work.logger_pkg.all;
+use work.string_ops.all;
 
 entity axi_stream_monitor is
   generic (

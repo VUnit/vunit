@@ -5,14 +5,19 @@
 -- Copyright (c) 2014-2024, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
-use ieee.std_logic_1164.all;
 use ieee.math_complex.all;
+use ieee.math_real.all;
 use ieee.numeric_bit.all;
 use ieee.numeric_std.all;
+use ieee.std_logic_1164.all;
+
+use work.codec_builder_pkg.all;
+use work.codec_pkg.all;
+use work.data_types_private_pkg.all;
+use work.integer_array_pkg.integer_array_t;
+use work.integer_array_pkg.null_integer_array;
 use work.integer_vector_ptr_pkg.all;
 use work.string_ptr_pkg.all;
-use work.integer_array_pkg.all;
-use work.data_types_private_pkg.all;
 
 package queue_pkg is
   type queue_t is record

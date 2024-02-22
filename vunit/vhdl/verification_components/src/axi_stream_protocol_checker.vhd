@@ -10,9 +10,15 @@ use ieee.numeric_std_unsigned.all;
 
 use std.textio.all;
 
-context work.vunit_context;
-context work.com_context;
 use work.axi_stream_pkg.all;
+use work.check_pkg.all;
+use work.checker_pkg.all;
+use work.event_common_pkg.is_active;
+use work.integer_array_pkg.all;
+use work.log_levels_pkg.all;
+use work.logger_pkg.all;
+use work.run_pkg.all;
+use work.run_types_pkg.all;
 
 entity axi_stream_protocol_checker is
   generic (

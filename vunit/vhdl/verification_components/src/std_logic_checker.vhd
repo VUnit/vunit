@@ -7,11 +7,15 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-context work.vunit_context;
-context work.data_types_context;
-context work.com_context;
+use work.com_pkg.net;
+use work.com_pkg.receive;
+use work.com_pkg.reply;
+use work.com_types_pkg.all;
+use work.logger_pkg.all;
+use work.queue_pkg.all;
 use work.signal_checker_pkg.all;
-use work.sync_pkg.all;
+use work.sync_pkg.wait_until_idle_msg;
+use work.sync_pkg.wait_until_idle_reply_msg;
 
 entity std_logic_checker is
   generic (

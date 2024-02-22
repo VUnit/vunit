@@ -13,13 +13,16 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-context work.vunit_context;
-context work.com_context;
-use work.memory_pkg.all;
-use work.wishbone_pkg.all;
-
 library osvvm;
-use osvvm.RandomPkg.all;
+use osvvm.RandomPkg.RandomPType;
+
+use work.com_pkg.net;
+use work.com_pkg.receive;
+use work.com_pkg.send;
+use work.com_types_pkg.all;
+use work.memory_pkg.read_word;
+use work.memory_pkg.write_word;
+use work.wishbone_pkg.all;
 
 entity wishbone_slave is
   generic (

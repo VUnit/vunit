@@ -6,6 +6,8 @@
 
 use std.textio.all;
 
+use work.log_handler_pkg.stdout_file_name;
+
 package print_pkg is
 
   -- Print to an open file object. No internal flushing.

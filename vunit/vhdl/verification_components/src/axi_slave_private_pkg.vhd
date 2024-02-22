@@ -12,15 +12,21 @@ use ieee.numeric_std.all;
 
 use std.textio.all;
 
-use work.axi_pkg.all;
-use work.queue_pkg.all;
-use work.integer_vector_ptr_pkg.all;
-context work.vunit_context;
-context work.com_context;
-context work.vc_context;
-
 library osvvm;
-use osvvm.RandomPkg.all;
+use osvvm.RandomPkg.RandomPType;
+
+use work.axi_pkg.all;
+use work.axi_slave_pkg.all;
+use work.axi_statistics_pkg.all;
+use work.bus_master_pkg.bus_master_t;
+use work.com_pkg.receive;
+use work.com_pkg.reply;
+use work.com_pkg.acknowledge;
+use work.com_types_pkg.all;
+use work.integer_vector_ptr_pkg.all;
+use work.log_levels_pkg.all;
+use work.logger_pkg.all;
+use work.queue_pkg.all;
 
 package axi_slave_private_pkg is
 

@@ -8,15 +8,21 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-use work.queue_pkg.all;
-use work.bus_master_pkg.all;
-use work.sync_pkg.all;
-use work.axi_pkg.all;
-use work.axi_slave_pkg.all;
-use work.axi_slave_private_pkg.all;
 use work.axi_lite_master_pkg.all;
-context work.com_context;
-context work.vunit_context;
+use work.axi_pkg.all;
+use work.axi_slave_private_pkg.check_axi_resp;
+use work.bus_master_pkg.address_length;
+use work.bus_master_pkg.bus_master_t;
+use work.bus_master_pkg.byte_enable_length;
+use work.bus_master_pkg.data_length;
+use work.com_pkg.net;
+use work.com_pkg.receive;
+use work.com_pkg.reply;
+use work.com_types_pkg.all;
+use work.log_levels_pkg.all;
+use work.logger_pkg.all;
+use work.queue_pkg.all;
+use work.sync_pkg.all;
 
 entity axi_lite_master is
   generic(

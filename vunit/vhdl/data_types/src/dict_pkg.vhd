@@ -14,15 +14,14 @@ use ieee.math_complex.all;
 use ieee.numeric_bit.all;
 use ieee.numeric_std.all;
 
-use work.string_ptr_pkg.all;
-use work.string_ptr_pool_pkg.all;
-use work.integer_vector_ptr_pkg.all;
-use work.integer_vector_ptr_pool_pkg.all;
 use work.codec_pkg.all;
 use work.data_types_private_pkg.all;
-use work.queue_pkg.all;
 use work.integer_array_pkg.all;
-use work.byte_vector_ptr_pkg.all;
+use work.integer_vector_ptr_pkg.all;
+use work.integer_vector_ptr_pool_pkg.all;
+use work.queue_pkg.all;
+use work.string_ptr_pkg.all;
+use work.string_ptr_pool_pkg.all;
 
 package dict_pkg is
   type dict_t is record

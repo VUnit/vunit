@@ -11,8 +11,9 @@ use ieee.numeric_std.all;
 
 use work.axi_pkg.all;
 use work.bus_master_pkg.all;
-context work.com_context;
-context work.vunit_context;
+use work.com_pkg.send;
+use work.com_types_pkg.all;
+use work.logger_pkg.all;
 
 package axi_lite_master_pkg is
 
