@@ -11,9 +11,11 @@ from vunit.check_preprocessor import CheckPreprocessor
 
 import vunit.vhdl.check.tools.generate_check_equal as generate_check_equal
 import vunit.vhdl.check.tools.generate_check_match as generate_check_match
+import vunit.vhdl.check.tools.generate_check_equal_2008p as generate_check_equal_2008p
 
 generate_check_equal.main()
 generate_check_match.main()
+generate_check_equal_2008p.main()
 
 VU = VUnit.from_argv()
 VU.add_vhdl_builtins()
