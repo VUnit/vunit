@@ -2,11 +2,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2024, Lars Asplund lars.anders.asplund@gmail.com
 
+import sys
+from os import environ
 from pathlib import Path
 from vunit import VUnit
-from vunit.python_pkg import compile_vhpi_application, compile_fli_application, compile_vhpidirect_nvc_application
+from vunit.python_pkg import (
+    compile_vhpi_application,
+    compile_fli_application,
+    compile_vhpidirect_nvc_application,
+    compile_vhpidirect_ghdl_application,
+)
 
 
 def remote_test():
@@ -15,7 +22,6 @@ def remote_test():
 
 def main():
     root = Path(__file__).parent
-
     vu = VUnit.from_argv()
     vu.add_vhdl_builtins()
     vu.add_python()
@@ -29,6 +35,8 @@ def main():
         compile_fli_application(root, vu)
     elif simulator_name == "nvc":
         compile_vhpidirect_nvc_application(root, vu)
+    elif simulator_name == "ghdl":
+        compile_vhpidirect_ghdl_application(root, vu)
 
     lib = vu.add_library("lib")
     lib.add_source_files(root / "test" / "*.vhd")

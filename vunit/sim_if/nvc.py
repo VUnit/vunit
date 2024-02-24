@@ -149,7 +149,7 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         """
         Returns set of supported foreign interfaces
         """
-        return set(["VHPIDIRECT"])
+        return set(["VHPIDIRECT_NVC"])
 
     def setup_library_mapping(self, project):
         """

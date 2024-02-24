@@ -4,22 +4,22 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2024, Lars Asplund lars.anders.asplund@gmail.com
 
 use std.textio.all;
 
 package python_ffi_pkg is
   procedure python_setup;
-  attribute foreign of python_setup: procedure is "VHPIDIRECT python_setup";
+  attribute foreign of python_setup: procedure is "VHPIDIRECT python.so python_setup";
   procedure python_cleanup;
-  attribute foreign of python_cleanup: procedure is "VHPIDIRECT python_cleanup";
+  attribute foreign of python_cleanup: procedure is "VHPIDIRECT python.so python_cleanup";
 
   function eval_integer(expr : string) return integer;
-  attribute foreign of eval_integer : function is "VHPIDIRECT eval_integer";
+  attribute foreign of eval_integer : function is "VHPIDIRECT python.so eval_integer";
   alias eval is eval_integer[string return integer];
 
   function eval_real(expr : string) return real;
-  attribute foreign of eval_real : function is "VHPIDIRECT eval_real";
+  attribute foreign of eval_real : function is "VHPIDIRECT python.so eval_real";
   alias eval is eval_real[string return real];
 
   function eval_integer_vector(expr : string) return integer_vector;
@@ -32,7 +32,17 @@ package python_ffi_pkg is
   alias eval is eval_string[string return string];
 
   procedure exec(code : string);
-  attribute foreign of exec : procedure is "VHPIDIRECT exec";
+  attribute foreign of exec : procedure is "VHPIDIRECT python.so exec";
+
+  procedure get_integer_vector(vec : out integer_vector);
+  attribute foreign of get_integer_vector : procedure is "VHPIDIRECT python.so get_integer_vector";
+
+  procedure get_real_vector(vec : out real_vector);
+  attribute foreign of get_real_vector : procedure is "VHPIDIRECT python.so get_real_vector";
+
+  procedure get_py_string(vec : out string);
+  attribute foreign of get_py_string : procedure is "VHPIDIRECT python.so get_py_string";
+
 end package;
 
 package body python_ffi_pkg is
@@ -57,7 +67,6 @@ package body python_ffi_pkg is
   end;
 
   procedure get_integer_vector(vec : out integer_vector) is
-    attribute foreign of get_integer_vector : procedure is "VHPIDIRECT get_integer_vector";
   begin
     report "ERROR: Failed to call foreign subprogram" severity failure;
   end;
@@ -72,7 +81,6 @@ package body python_ffi_pkg is
   end;
 
   procedure get_real_vector(vec : out real_vector) is
-    attribute foreign of get_real_vector : procedure is "VHPIDIRECT get_real_vector";
   begin
     report "ERROR: Failed to call foreign subprogram" severity failure;
   end;
@@ -87,7 +95,6 @@ package body python_ffi_pkg is
   end;
 
   procedure get_py_string(vec : out string) is
-    attribute foreign of get_py_string : procedure is "VHPIDIRECT get_py_string";
   begin
     report "ERROR: Failed to call foreign subprogram" severity failure;
   end;

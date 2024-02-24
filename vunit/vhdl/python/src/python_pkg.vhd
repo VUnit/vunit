@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2024, Lars Asplund lars.anders.asplund@gmail.com
 
 use work.python_ffi_pkg.all;
 use work.path.all;
@@ -49,11 +49,6 @@ package python_pkg is
 end package;
 
 package body python_pkg is
-  function ssin (v : real) return real is
-  begin
-    assert false severity failure;
-  end;
-
   -- @formatter:off
   procedure import_module_from_file(module_path, as_module_name : string) is
     constant spec_name : string := "__" & as_module_name & "_spec";
@@ -64,7 +59,7 @@ package body python_pkg is
     spec_name & " = spec_from_file_location('" & as_module_name & "', str(Path('" & module_path & "')))" & LF &
     as_module_name & " = module_from_spec(" & spec_name & ")" & LF &
     "sys.modules['" & as_module_name & "'] = " & as_module_name & LF &
-    spec_name & ".loader.exec_module(" & as_module_name & ")";
+     spec_name & ".loader.exec_module(" & as_module_name & ")";
   begin
     exec(code);
   end;

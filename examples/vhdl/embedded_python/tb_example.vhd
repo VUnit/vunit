@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2024, Lars Asplund lars.anders.asplund@gmail.com
 
 library vunit_lib;
 context vunit_lib.vunit_context;
@@ -51,8 +51,18 @@ begin
       exec("from sys import prefix");
       exec("from pathlib import Path");
       exec("old_environ = environ");
-      exec("environ['TCL_LIBRARY'] = str(Path(prefix) / 'tcl' / 'tcl8.6')");
-      exec("environ['TK_LIBRARY'] = str(Path(prefix) / 'tcl' / 'tk8.6')");
+      exec(
+        "if (Path(prefix) / 'lib' / 'tcl8.6').exists():" +
+        "    environ['TCL_LIBRARY'] = str(Path(prefix) / 'lib' / 'tcl8.6')" +
+        "else:" +
+        "    environ['TCL_LIBRARY'] = str(Path(prefix) / 'tcl' / 'tcl8.6')"
+      );
+      exec(
+        "if (Path(prefix) / 'lib' / 'tk8.6').exists():" +
+        "    environ['TK_LIBRARY'] = str(Path(prefix) / 'lib' / 'tk8.6')" +
+        "else:" +
+        "    environ['TK_LIBRARY'] = str(Path(prefix) / 'tcl' / 'tk8.6')"
+      );
     end;
 
     procedure unset_tcl_installation is
@@ -209,7 +219,7 @@ begin
         test_input := eval("test_input"); -- test_input is a variable of integer_vector_ptr_t type
         check(length(test_input) >= 1);
         check(length(test_input) <= 100);
---
+
       elsif run("Test run script functions") then
         -- As we've seen we can define Python functions with exec (fibonacci) and we can import functions from
         -- Python packages. Writing large functions in exec strings is not optimal since we don't

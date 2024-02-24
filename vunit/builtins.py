@@ -219,7 +219,7 @@ in your VUnit Git repository? You have to do this first if installing using setu
         if not self._vhdl_standard >= VHDL.STD_2008:
             raise RuntimeError("Python package only supports vhdl 2008 and later")
 
-        python_package_supported_flis = set(["VHPI", "FLI", "VHPIDIRECT"])
+        python_package_supported_flis = set(["VHPI", "FLI", "VHPIDIRECT_NVC", "VHPIDIRECT_GHDL"])
         simulator_supported_flis = self._simulator_class.supported_foreign_language_interfaces()
         if not python_package_supported_flis & simulator_supported_flis:
             raise RuntimeError(f"Python package requires support for one of {', '.join(python_package_supported_flis)}")
@@ -230,8 +230,10 @@ in your VUnit Git repository? You have to do this first if installing using setu
             self._vunit_lib.add_source_files(VHDL_PATH / "python" / "src" / "python_pkg_vhpi.vhd")
         elif "FLI" in simulator_supported_flis:
             self._vunit_lib.add_source_files(VHDL_PATH / "python" / "src" / "python_pkg_fli.vhd")
-        elif "VHPIDIRECT" in simulator_supported_flis:
-            self._vunit_lib.add_source_files(VHDL_PATH / "python" / "src" / "python_pkg_vhpidirect.vhd")
+        elif "VHPIDIRECT_NVC" in simulator_supported_flis:
+            self._vunit_lib.add_source_files(VHDL_PATH / "python" / "src" / "python_pkg_vhpidirect_nvc.vhd")
+        elif "VHPIDIRECT_GHDL" in simulator_supported_flis:
+            self._vunit_lib.add_source_files(VHDL_PATH / "python" / "src" / "python_pkg_vhpidirect_ghdl.vhd")
 
     def _add_vhdl_logging(self):
         """

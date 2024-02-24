@@ -56,6 +56,9 @@ static void ffi_error_handler(const char* context, bool cleanup) {
 }
 
 void python_setup(void) {
+  // See https://github.com/msys2/MINGW-packages/issues/18984
+  putenv("PYTHONLEGACYWINDOWSDLLLOADING=1");
+  Py_SetPythonHome(L"c:\\msys64\\mingw64");
   Py_Initialize();
   if (!Py_IsInitialized()) {
     ffi_error_handler("Failed to initialize Python", false);
@@ -95,35 +98,51 @@ class __EvalResult__():\n\
         return self._result\n\
 __eval_result__=__EvalResult__()\n";
 
-
   if (PyRun_String(code, Py_file_input, globals, locals) == NULL) {
     ffi_error_handler("Failed to initialize predefined Python objects", true);
   }
 }
 
 void python_cleanup(void) {
+
   if (locals != NULL) {
     Py_DECREF(locals);
   }
-
 
   if (Py_FinalizeEx()) {
     printf("WARNING: Failed to finalize Python\n");
   }
 }
 
-static const char* get_parameter(const char* expr, int64_t length) {
-  static char vhdl_parameter_string[MAX_VHDL_PARAMETER_STRING_LENGTH];
+typedef struct {
+  int32_t left;
+  int32_t right;
+  int32_t dir;
+  int32_t len;
+} range_t;
 
-  memcpy(vhdl_parameter_string, expr, sizeof(char) * length);
+typedef struct {
+  range_t dim_1;
+} bounds_t;
+
+typedef struct {
+  void* arr;
+  bounds_t* bounds;
+} ghdl_arr_t;
+
+static const char* get_parameter(ghdl_arr_t* expr) {
+  static char vhdl_parameter_string[MAX_VHDL_PARAMETER_STRING_LENGTH];
+  int length = expr->bounds->dim_1.len;
+
+  strncpy(vhdl_parameter_string, expr->arr, length);
   vhdl_parameter_string[length] = '\0';
 
   return vhdl_parameter_string;
 }
 
-int eval_integer(const char* expr, int64_t length) {
+int eval_integer(ghdl_arr_t* expr) {
   // Get null-terminated expression parameter from VHDL function call
-  const char *param = get_parameter(expr, length);
+  const char *param = get_parameter(expr);
 
   // Eval(uate) expression in Python
   PyObject* eval_result = eval(param);
@@ -132,9 +151,9 @@ int eval_integer(const char* expr, int64_t length) {
   return get_integer(eval_result, param, true);
 }
 
-double eval_real(const char* expr, int64_t length) {
+double eval_real(ghdl_arr_t* expr) {
   // Get null-terminated expression parameter from VHDL function call
-  const char *param = get_parameter(expr, length);
+  const char *param = get_parameter(expr);
 
   // Eval(uate) expression in Python
   PyObject* eval_result = eval(param);
@@ -143,7 +162,7 @@ double eval_real(const char* expr, int64_t length) {
   return get_real(eval_result, param, true);
 }
 
-void get_integer_vector(int* vec, int64_t length) {
+void get_integer_vector(ghdl_arr_t* vec) {
   // Get evaluation result from Python
   PyObject* eval_result = eval("__eval_result__.get()");
 
@@ -154,14 +173,15 @@ void get_integer_vector(int* vec, int64_t length) {
                             "__eval_result__.get()");
   }
 
-  for (int idx = 0; idx < length; idx++) {
-    vec[idx] = get_integer(PyList_GetItem(eval_result, idx),
-                           "__eval_result__.get()", false);
+  for (int idx = 0; idx < PyList_Size(eval_result); idx++) {
+    ((int *)vec->arr)[idx] = get_integer(PyList_GetItem(eval_result, idx),
+                             "__eval_result__.get()", false);
   }
+
   Py_DECREF(eval_result);
 }
 
-void get_real_vector(double* vec, int64_t length) {
+void get_real_vector(ghdl_arr_t* vec) {
   // Get evaluation result from Python
   PyObject* eval_result = eval("__eval_result__.get()");
 
@@ -172,33 +192,29 @@ void get_real_vector(double* vec, int64_t length) {
                             "__eval_result__.get()");
   }
 
-  for (int idx = 0; idx < length; idx++) {
-    vec[idx] = get_real(PyList_GetItem(eval_result, idx),
+  for (int idx = 0; idx < PyList_Size(eval_result); idx++) {
+    ((double *)vec->arr)[idx] = get_real(PyList_GetItem(eval_result, idx),
                            "__eval_result__.get()", false);
   }
   Py_DECREF(eval_result);
 }
 
-void get_py_string(char* vec, int64_t length) {
+void get_py_string(ghdl_arr_t* vec) {
   // Get evaluation result from Python
   PyObject* eval_result = eval("__eval_result__.get()");
 
   const char* py_str = get_string(eval_result);
-  strcpy(vec, py_str);
+  strcpy((char *)vec->arr, py_str);
 
   Py_DECREF(eval_result);
 }
 
-void exec(const char* code, int64_t length) {
+void exec(ghdl_arr_t* code) {
   // Get null-terminated code parameter from VHDL function call
-  const char *param = get_parameter(code, length);
+  const char *param = get_parameter(code);
 
   // Exec(ute) Python code
   if (PyRun_String(param, Py_file_input, globals, locals) == NULL) {
     py_error_handler("executing", param, NULL, true);
   }
 }
-
-void (*vhpi_startup_routines[])() = {
-   NULL
-};

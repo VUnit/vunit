@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2024, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Temporary helper module to compile C-code used by python_pkg.
@@ -212,3 +212,59 @@ def compile_vhpidirect_nvc_application(run_script_root, vu):
         print(proc.stdout)
         print(proc.stderr)
         raise RuntimeError("Failed to link NVC VHPIDIRECT application")
+
+
+def compile_vhpidirect_ghdl_application(run_script_root, vu):  # pylint: disable=unused-argument
+    """
+    Compile VHPIDIRECT application for GHDL.
+    """
+    # TODO: Avoid putting in root  # pylint: disable=fixme
+    path_to_shared_lib = (run_script_root).resolve()
+    if not path_to_shared_lib.exists():
+        path_to_shared_lib.mkdir(parents=True, exist_ok=True)
+    shared_lib = path_to_shared_lib / "python.so"
+    path_to_python_include = (
+        Path(sys.executable).parent.parent.resolve() / "include" / f"python{sys.version_info[0]}.{sys.version_info[1]}"
+    )
+    path_to_python_libs = Path(sys.executable).parent.parent.resolve() / "bin"
+    python_shared_lib = f"libpython{sys.version_info[0]}.{sys.version_info[1]}"
+    path_to_python_pkg = Path(__file__).parent.resolve() / "vhdl" / "python" / "src"
+
+    c_file_names = ["python_pkg_vhpidirect_ghdl.c", "python_pkg.c"]
+
+    for c_file_name in c_file_names:
+        args = [
+            "gcc",
+            "-c",
+            "-I",
+            str(path_to_python_include),
+            str(path_to_python_pkg / c_file_name),
+            "-o",
+            str(path_to_shared_lib / (c_file_name[:-1] + "o")),
+        ]
+
+        proc = subprocess.run(args, capture_output=True, text=True, check=False, cwd=str(path_to_shared_lib / ".."))
+        if proc.returncode != 0:
+            print(proc.stdout)
+            print(proc.stderr)
+            raise RuntimeError("Failed to compile GHDL VHPIDIRECT application")
+
+    args = [
+        "gcc",
+        "-shared",
+        "-fPIC",
+        "-o",
+        str(shared_lib),
+        str(path_to_shared_lib / "python_pkg.o"),
+        str(path_to_shared_lib / "python_pkg_vhpidirect_ghdl.o"),
+        "-l",
+        python_shared_lib,
+        "-L",
+        str(path_to_python_libs),
+    ]
+
+    proc = subprocess.run(args, capture_output=True, text=True, check=False, cwd=str(path_to_shared_lib / ".."))
+    if proc.returncode != 0:
+        print(proc.stdout)
+        print(proc.stderr)
+        raise RuntimeError("Failed to link GHDL VHPIDIRECT application")
