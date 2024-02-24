@@ -12,11 +12,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
 
-    - uses: actions/setup-python@v4
+    - uses: actions/setup-python@v5
       with:
         python-version: '3.12'
 
@@ -28,7 +28,7 @@ jobs:
     - name: Report coverage
       run: ./.github/run.sh coverage report -m --skip-covered
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: VUnit_coverage
         path: htmlcov
