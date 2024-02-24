@@ -88,9 +88,11 @@ class Builtins(object):
 
         for key in ["string", "integer_vector"]:
             self._add_files(
-                pattern=str(VHDL_PATH / "data_types" / "src" / "api" / f"external_{key!s}_pkg.vhd")
-                if external is None or key not in external or not external[key] or external[key] is True
-                else external[key],
+                pattern=(
+                    str(VHDL_PATH / "data_types" / "src" / "api" / f"external_{key!s}_pkg.vhd")
+                    if external is None or key not in external or not external[key] or external[key] is True
+                    else external[key]
+                ),
                 allow_empty=False,
             )
 
