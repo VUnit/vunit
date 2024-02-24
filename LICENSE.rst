@@ -1,5 +1,5 @@
 **VUnit**, except for the projects below, is released under the terms of `Mozilla Public License, v. 2.0`_.
-|copy| 2014-2023 Lars Asplund, lars.anders.asplund@gmail.com.
+|copy| 2014-2024 Lars Asplund, lars.anders.asplund@gmail.com.
 
 The following libraries are `redistributed`_ with VUnit for convenience:
 
@@ -7,7 +7,7 @@ The following libraries are `redistributed`_ with VUnit for convenience:
   |copy| 2010 - 2023 by `SynthWorks Design Inc`_. All rights reserved.
 
 * **JSON-for-VHDL** (``vunit/vhdl/JSON-for-VHDL``): these files are licensed under the terms of `Apache License,
-  v 2.0`_, |copy| 2015 - 2023 Patrick Lehmann.
+  v 2.0`_, |copy| 2015 - 2022 Patrick Lehmann.
 
 The font used in VUnit's logo and illustrations is 'Tratex', the traffic sign typeface used on swedish road signs:
 
