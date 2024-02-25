@@ -421,9 +421,9 @@ combinations = [
         "to_ufixed(natural'right,30)",
         "to_ufixed(natural'right,30)",
         """ufixed'(from_hstring("5A", 3, -4))""",
-        "1010.0101 (10.3125)",
-        "1010.0101 (10.3125)",
-        "0101.1010 (5.625)",
+        "1010.0101 (10.312500)",
+        "1010.0101 (10.312500)",
+        "0101.1010 (5.625000)",
     ),
     (
         "ufixed",
@@ -435,9 +435,9 @@ combinations = [
         "to_ufixed(natural'right,30)",
         "real(natural'right)",
         "5.625",
-        "1010.0101 (10.3125)",
-        "10.3125",
-        "5.625",
+        "1010.0101 (10.312500)",
+        "10.312500",
+        "5.625000",
     ),
     (
         "sfixed",
@@ -449,9 +449,9 @@ combinations = [
         "to_sfixed(integer'right,31)",
         "to_sfixed(integer'right,31)",
         """sfixed'(from_hstring("5A", 3, -4))""",
-        "1010.0101 (-5.6875)",
-        "1010.0101 (-5.6875)",
-        "0101.1010 (5.625)",
+        "1010.0101 (-5.687500)",
+        "1010.0101 (-5.687500)",
+        "0101.1010 (5.625000)",
     ),
     (
         "sfixed",
@@ -463,9 +463,9 @@ combinations = [
         "to_sfixed(integer'right,31)",
         "real(integer'right)",
         "-7.25",
-        "1010.0101 (-5.6875)",
-        "1010.0101 (-5.6875)",
-        "-7.25",
+        "1010.0101 (-5.687500)",
+        "1010.0101 (-5.687500)",
+        "-7.250000",
     ),
 ]
 
@@ -482,11 +482,11 @@ def generate_impl():
     impl = ""
     for c in combinations:
         t = Template(impl_template)
-        got_str = 'to_string(got) & " (" & to_string(to_real(got)) & ")"'
+        got_str = 'to_string(got) & " (" & to_string(to_real(got), "%f") & ")"'
         if c[1] in ["ufixed", "sfixed"]:
-            expected_str = 'to_string(expected) & " (" & to_string(to_real(expected)) & ")"'
+            expected_str = 'to_string(expected) & " (" & to_string(to_real(expected), "%f") & ")"'
         else:
-            expected_str = "to_string(expected)"
+            expected_str = 'to_string(expected, "%f")'
         impl += t.substitute(
             got_type=c[0],
             expected_type=c[1],
@@ -552,23 +552,23 @@ begin
         mock(check_logger);
         check_equal(ufixed'(from_hstring("A5A5A5A5A", 31, -4)), ufixed'(from_hstring("B5A5A5A5A", 31, -4)));
         check_only_log(check_logger, "\
-Equality check failed - Got 10100101101001011010010110100101.1010 (2.7791e+09). \
-Expected 10110101101001011010010110100101.1010 (3.04753e+09).", default_level);
+Equality check failed - Got 10100101101001011010010110100101.1010 (2779096485.625000). \
+Expected 10110101101001011010010110100101.1010 (3047531941.625000).", default_level);
 
-        check_equal(ufixed'(from_hstring("A5A5A5A5A", 31, -4)), 3.04753e+09);
+        check_equal(ufixed'(from_hstring("A5A5A5A5A", 31, -4)), 3047531941.625);
         check_only_log(check_logger, "\
-Equality check failed - Got 10100101101001011010010110100101.1010 (2.7791e+09). \
-Expected 3.04753e+09.", default_level);
+Equality check failed - Got 10100101101001011010010110100101.1010 (2779096485.625000). \
+Expected 3047531941.625000.", default_level);
 
         check_equal(sfixed'(from_hstring("A5A5A5A5A", 31, -4)), sfixed'(from_hstring("B5A5A5A5A", 31, -4)));
         check_only_log(check_logger, "\
-Equality check failed - Got 10100101101001011010010110100101.1010 (-1.51587e+09). \
-Expected 10110101101001011010010110100101.1010 (-1.24744e+09).", default_level);
+Equality check failed - Got 10100101101001011010010110100101.1010 (-1515870810.375000). \
+Expected 10110101101001011010010110100101.1010 (-1247435354.375000).", default_level);
 
-        check_equal(sfixed'(from_hstring("A5A5A5A5A", 31, -4)), -1.24744e+09);
+        check_equal(sfixed'(from_hstring("A5A5A5A5A", 31, -4)), -1247435354.375);
         check_only_log(check_logger, "\
-Equality check failed - Got 10100101101001011010010110100101.1010 (-1.51587e+09). \
-Expected -1.24744e+09.", default_level);
+Equality check failed - Got 10100101101001011010010110100101.1010 (-1515870810.375000). \
+Expected -1247435354.375000.", default_level);
         unmock(check_logger);
         verify_passed_checks(stat, 2);
         verify_failed_checks(stat, 4);

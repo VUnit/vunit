@@ -51,16 +51,16 @@ begin
 
         mock(check_logger);
         check_equal(ufixed'(from_hstring("A5A5A5A5A", 31, -4)), ufixed'(from_hstring("B5A5A5A5A", 31, -4)));
-        check_only_log(check_logger, "Equality check failed - Got 10100101101001011010010110100101.1010 (2.7791e+09). Expected 10110101101001011010010110100101.1010 (3.04753e+09).", default_level);
+        check_only_log(check_logger, "Equality check failed - Got 10100101101001011010010110100101.1010 (2779096485.625000). Expected 10110101101001011010010110100101.1010 (3047531941.625000).", default_level);
 
-        check_equal(ufixed'(from_hstring("A5A5A5A5A", 31, -4)), 3.04753e+09);
-        check_only_log(check_logger, "Equality check failed - Got 10100101101001011010010110100101.1010 (2.7791e+09). Expected 3.04753e+09.", default_level);
+        check_equal(ufixed'(from_hstring("A5A5A5A5A", 31, -4)), 3047531941.625);
+        check_only_log(check_logger, "Equality check failed - Got 10100101101001011010010110100101.1010 (2779096485.625000). Expected 3047531941.625000.", default_level);
 
         check_equal(sfixed'(from_hstring("A5A5A5A5A", 31, -4)), sfixed'(from_hstring("B5A5A5A5A", 31, -4)));
-        check_only_log(check_logger, "Equality check failed - Got 10100101101001011010010110100101.1010 (-1.51587e+09). Expected 10110101101001011010010110100101.1010 (-1.24744e+09).", default_level);
+        check_only_log(check_logger, "Equality check failed - Got 10100101101001011010010110100101.1010 (-1515870810.375000). Expected 10110101101001011010010110100101.1010 (-1247435354.375000).", default_level);
 
-        check_equal(sfixed'(from_hstring("A5A5A5A5A", 31, -4)), -1.24744e+09);
-        check_only_log(check_logger, "Equality check failed - Got 10100101101001011010010110100101.1010 (-1.51587e+09). Expected -1.24744e+09.", default_level);
+        check_equal(sfixed'(from_hstring("A5A5A5A5A", 31, -4)), -1247435354.375);
+        check_only_log(check_logger, "Equality check failed - Got 10100101101001011010010110100101.1010 (-1515870810.375000). Expected -1247435354.375000.", default_level);
         unmock(check_logger);
         verify_passed_checks(stat, 2);
         verify_failed_checks(stat, 4);
@@ -95,30 +95,30 @@ begin
       elsif run("Test pass message on ufixed equal ufixed") then
         mock(check_logger);
         check_equal(ufixed'(from_hstring("A5", 3, -4)), ufixed'(from_hstring("A5", 3, -4)));
-        check_only_log(check_logger, "Equality check passed - Got 1010.0101 (10.3125).", pass);
+        check_only_log(check_logger, "Equality check passed - Got 1010.0101 (10.312500).", pass);
         check_result := check_equal(ufixed'(from_hstring("A5", 3, -4)), ufixed'(from_hstring("A5", 3, -4)));
         assert_true(
-          to_string(check_result.p_msg) = "Equality check passed - Got 1010.0101 (10.3125).",
+          to_string(check_result.p_msg) = "Equality check passed - Got 1010.0101 (10.312500).",
           "Got: " & to_string(check_result.p_msg)
         );
         assert_true(check_result.p_level = pass);
 
         check_equal(ufixed'(from_hstring("A5", 3, -4)), ufixed'(from_hstring("A5", 3, -4)), "");
-        check_only_log(check_logger, "Got 1010.0101 (10.3125).", pass);
+        check_only_log(check_logger, "Got 1010.0101 (10.312500).", pass);
         check_result := check_equal(ufixed'(from_hstring("A5", 3, -4)), ufixed'(from_hstring("A5", 3, -4)), "");
-        assert_true(to_string(check_result.p_msg) = "Got 1010.0101 (10.3125).");
+        assert_true(to_string(check_result.p_msg) = "Got 1010.0101 (10.312500).");
         assert_true(check_result.p_level = pass);
 
         check_equal(ufixed'(from_hstring("A5", 3, -4)), ufixed'(from_hstring("A5", 3, -4)), "Checking my data");
-        check_only_log(check_logger, "Checking my data - Got 1010.0101 (10.3125).", pass);
+        check_only_log(check_logger, "Checking my data - Got 1010.0101 (10.312500).", pass);
         check_result := check_equal(ufixed'(from_hstring("A5", 3, -4)), ufixed'(from_hstring("A5", 3, -4)), "Checking my data");
-        assert_true(to_string(check_result.p_msg) = "Checking my data - Got 1010.0101 (10.3125).");
+        assert_true(to_string(check_result.p_msg) = "Checking my data - Got 1010.0101 (10.312500).");
         assert_true(check_result.p_level = pass);
 
         check_equal(ufixed'(from_hstring("A5", 3, -4)), ufixed'(from_hstring("A5", 3, -4)), result("for my data"));
-        check_only_log(check_logger, "Equality check passed for my data - Got 1010.0101 (10.3125).", pass);
+        check_only_log(check_logger, "Equality check passed for my data - Got 1010.0101 (10.312500).", pass);
         check_result := check_equal(ufixed'(from_hstring("A5", 3, -4)), ufixed'(from_hstring("A5", 3, -4)), result("for my data"));
-        assert_true(to_string(check_result.p_msg) = "Equality check passed for my data - Got 1010.0101 (10.3125).");
+        assert_true(to_string(check_result.p_msg) = "Equality check passed for my data - Got 1010.0101 (10.312500).");
         assert_true(check_result.p_level = pass);
         unmock(check_logger);
 
@@ -126,51 +126,51 @@ begin
         get_checker_stat(stat);
         mock(check_logger);
         check_equal(ufixed'(from_hstring("A5", 3, -4)), ufixed'(from_hstring("5A", 3, -4)));
-        check_only_log(check_logger, "Equality check failed - Got 1010.0101 (10.3125). Expected 0101.1010 (5.625).",
+        check_only_log(check_logger, "Equality check failed - Got 1010.0101 (10.312500). Expected 0101.1010 (5.625000).",
                        default_level);
         check_result := check_equal(ufixed'(from_hstring("A5", 3, -4)), ufixed'(from_hstring("5A", 3, -4)));
         assert_true(not check_result.p_is_pass);
         assert_true(check_result.p_checker = default_checker);
-        assert_true(to_string(check_result.p_msg) = "Equality check failed - Got 1010.0101 (10.3125). Expected 0101.1010 (5.625).");
+        assert_true(to_string(check_result.p_msg) = "Equality check failed - Got 1010.0101 (10.312500). Expected 0101.1010 (5.625000).");
         assert_true(check_result.p_level = default_level);
         p_handle(check_result);
 
         check_equal(ufixed'(from_hstring("A5", 3, -4)), ufixed'(from_hstring("5A", 3, -4)), "");
-        check_only_log(check_logger, "Got 1010.0101 (10.3125). Expected 0101.1010 (5.625).", default_level);
+        check_only_log(check_logger, "Got 1010.0101 (10.312500). Expected 0101.1010 (5.625000).", default_level);
         check_result := check_equal(ufixed'(from_hstring("A5", 3, -4)), ufixed'(from_hstring("5A", 3, -4)), "");
         assert_true(not check_result.p_is_pass);
         assert_true(check_result.p_checker = default_checker);
-        assert_true(to_string(check_result.p_msg) = "Got 1010.0101 (10.3125). Expected 0101.1010 (5.625).");
+        assert_true(to_string(check_result.p_msg) = "Got 1010.0101 (10.312500). Expected 0101.1010 (5.625000).");
         assert_true(check_result.p_level = default_level);
         p_handle(check_result);
 
         check_equal(ufixed'(from_hstring("A5", 3, -4)), ufixed'(from_hstring("5A", 3, -4)), "Checking my data");
-        check_only_log(check_logger, "Checking my data - Got 1010.0101 (10.3125). Expected 0101.1010 (5.625).", default_level);
+        check_only_log(check_logger, "Checking my data - Got 1010.0101 (10.312500). Expected 0101.1010 (5.625000).", default_level);
         check_result := check_equal(ufixed'(from_hstring("A5", 3, -4)), ufixed'(from_hstring("5A", 3, -4)), "Checking my data");
         assert_true(not check_result.p_is_pass);
         assert_true(check_result.p_checker = default_checker);
-        assert_true(to_string(check_result.p_msg) = "Checking my data - Got 1010.0101 (10.3125). Expected 0101.1010 (5.625).");
+        assert_true(to_string(check_result.p_msg) = "Checking my data - Got 1010.0101 (10.312500). Expected 0101.1010 (5.625000).");
         assert_true(check_result.p_level = default_level);
         p_handle(check_result);
 
         check_equal(ufixed'(from_hstring("A5", 3, -4)), ufixed'(from_hstring("5A", 3, -4)), result("for my data"));
-        check_only_log(check_logger, "Equality check failed for my data - Got 1010.0101 (10.3125). Expected 0101.1010 (5.625).",
+        check_only_log(check_logger, "Equality check failed for my data - Got 1010.0101 (10.312500). Expected 0101.1010 (5.625000).",
                        default_level);
         check_result := check_equal(ufixed'(from_hstring("A5", 3, -4)), ufixed'(from_hstring("5A", 3, -4)), result("for my data"));
         assert_true(not check_result.p_is_pass);
         assert_true(check_result.p_checker = default_checker);
-        assert_true(to_string(check_result.p_msg) = "Equality check failed for my data - Got 1010.0101 (10.3125). Expected 0101.1010 (5.625).");
+        assert_true(to_string(check_result.p_msg) = "Equality check failed for my data - Got 1010.0101 (10.312500). Expected 0101.1010 (5.625000).");
         assert_true(check_result.p_level = default_level);
         p_handle(check_result);
 
         check_equal(passed, ufixed'(from_hstring("A5", 3, -4)), ufixed'(from_hstring("5A", 3, -4)));
         assert_true(not passed, "Should return pass = false on failing check");
-        check_only_log(check_logger, "Equality check failed - Got 1010.0101 (10.3125). Expected 0101.1010 (5.625).",
+        check_only_log(check_logger, "Equality check failed - Got 1010.0101 (10.312500). Expected 0101.1010 (5.625000).",
                        default_level);
 
         passed := check_equal(ufixed'(from_hstring("A5", 3, -4)), ufixed'(from_hstring("5A", 3, -4)));
         assert_true(not passed, "Should return pass = false on failing check");
-        check_only_log(check_logger, "Equality check failed - Got 1010.0101 (10.3125). Expected 0101.1010 (5.625).",
+        check_only_log(check_logger, "Equality check failed - Got 1010.0101 (10.312500). Expected 0101.1010 (5.625000).",
                        default_level);
         unmock(check_logger);
         verify_passed_checks(stat, 0);
@@ -180,21 +180,21 @@ begin
         get_checker_stat(my_checker, stat);
         mock(my_logger);
         check_equal(my_checker, ufixed'(from_hstring("A5", 3, -4)), ufixed'(from_hstring("5A", 3, -4)));
-        check_only_log(my_logger, "Equality check failed - Got 1010.0101 (10.3125). Expected 0101.1010 (5.625).", default_level);
+        check_only_log(my_logger, "Equality check failed - Got 1010.0101 (10.312500). Expected 0101.1010 (5.625000).", default_level);
         check_result := check_equal(my_checker, ufixed'(from_hstring("A5", 3, -4)), ufixed'(from_hstring("5A", 3, -4)));
         assert_true(not check_result.p_is_pass);
         assert_true(check_result.p_checker = my_checker);
-        assert_true(to_string(check_result.p_msg) = "Equality check failed - Got 1010.0101 (10.3125). Expected 0101.1010 (5.625).");
+        assert_true(to_string(check_result.p_msg) = "Equality check failed - Got 1010.0101 (10.312500). Expected 0101.1010 (5.625000).");
         assert_true(check_result.p_level = default_level);
         p_handle(check_result);
 
         check_equal(my_checker, passed, ufixed'(from_hstring("A5", 3, -4)), ufixed'(from_hstring("5A", 3, -4)));
         assert_true(not passed, "Should return pass = false on failing check");
-        check_only_log(my_logger, "Equality check failed - Got 1010.0101 (10.3125). Expected 0101.1010 (5.625).", default_level);
+        check_only_log(my_logger, "Equality check failed - Got 1010.0101 (10.312500). Expected 0101.1010 (5.625000).", default_level);
 
         passed := check_equal(my_checker, ufixed'(from_hstring("A5", 3, -4)), ufixed'(from_hstring("5A", 3, -4)));
         assert_true(not passed, "Should return pass = false on failing check");
-        check_only_log(my_logger, "Equality check failed - Got 1010.0101 (10.3125). Expected 0101.1010 (5.625).", default_level);
+        check_only_log(my_logger, "Equality check failed - Got 1010.0101 (10.312500). Expected 0101.1010 (5.625000).", default_level);
 
         unmock(my_logger);
         verify_passed_checks(my_checker, stat, 0);
@@ -243,30 +243,30 @@ begin
       elsif run("Test pass message on ufixed equal real") then
         mock(check_logger);
         check_equal(ufixed'(from_hstring("A5", 3, -4)), 10.3125);
-        check_only_log(check_logger, "Equality check passed - Got 1010.0101 (10.3125).", pass);
+        check_only_log(check_logger, "Equality check passed - Got 1010.0101 (10.312500).", pass);
         check_result := check_equal(ufixed'(from_hstring("A5", 3, -4)), 10.3125);
         assert_true(
-          to_string(check_result.p_msg) = "Equality check passed - Got 1010.0101 (10.3125).",
+          to_string(check_result.p_msg) = "Equality check passed - Got 1010.0101 (10.312500).",
           "Got: " & to_string(check_result.p_msg)
         );
         assert_true(check_result.p_level = pass);
 
         check_equal(ufixed'(from_hstring("A5", 3, -4)), 10.3125, "");
-        check_only_log(check_logger, "Got 1010.0101 (10.3125).", pass);
+        check_only_log(check_logger, "Got 1010.0101 (10.312500).", pass);
         check_result := check_equal(ufixed'(from_hstring("A5", 3, -4)), 10.3125, "");
-        assert_true(to_string(check_result.p_msg) = "Got 1010.0101 (10.3125).");
+        assert_true(to_string(check_result.p_msg) = "Got 1010.0101 (10.312500).");
         assert_true(check_result.p_level = pass);
 
         check_equal(ufixed'(from_hstring("A5", 3, -4)), 10.3125, "Checking my data");
-        check_only_log(check_logger, "Checking my data - Got 1010.0101 (10.3125).", pass);
+        check_only_log(check_logger, "Checking my data - Got 1010.0101 (10.312500).", pass);
         check_result := check_equal(ufixed'(from_hstring("A5", 3, -4)), 10.3125, "Checking my data");
-        assert_true(to_string(check_result.p_msg) = "Checking my data - Got 1010.0101 (10.3125).");
+        assert_true(to_string(check_result.p_msg) = "Checking my data - Got 1010.0101 (10.312500).");
         assert_true(check_result.p_level = pass);
 
         check_equal(ufixed'(from_hstring("A5", 3, -4)), 10.3125, result("for my data"));
-        check_only_log(check_logger, "Equality check passed for my data - Got 1010.0101 (10.3125).", pass);
+        check_only_log(check_logger, "Equality check passed for my data - Got 1010.0101 (10.312500).", pass);
         check_result := check_equal(ufixed'(from_hstring("A5", 3, -4)), 10.3125, result("for my data"));
-        assert_true(to_string(check_result.p_msg) = "Equality check passed for my data - Got 1010.0101 (10.3125).");
+        assert_true(to_string(check_result.p_msg) = "Equality check passed for my data - Got 1010.0101 (10.312500).");
         assert_true(check_result.p_level = pass);
         unmock(check_logger);
 
@@ -274,51 +274,51 @@ begin
         get_checker_stat(stat);
         mock(check_logger);
         check_equal(ufixed'(from_hstring("A5", 3, -4)), 5.625);
-        check_only_log(check_logger, "Equality check failed - Got 1010.0101 (10.3125). Expected 5.625.",
+        check_only_log(check_logger, "Equality check failed - Got 1010.0101 (10.312500). Expected 5.625000.",
                        default_level);
         check_result := check_equal(ufixed'(from_hstring("A5", 3, -4)), 5.625);
         assert_true(not check_result.p_is_pass);
         assert_true(check_result.p_checker = default_checker);
-        assert_true(to_string(check_result.p_msg) = "Equality check failed - Got 1010.0101 (10.3125). Expected 5.625.");
+        assert_true(to_string(check_result.p_msg) = "Equality check failed - Got 1010.0101 (10.312500). Expected 5.625000.");
         assert_true(check_result.p_level = default_level);
         p_handle(check_result);
 
         check_equal(ufixed'(from_hstring("A5", 3, -4)), 5.625, "");
-        check_only_log(check_logger, "Got 1010.0101 (10.3125). Expected 5.625.", default_level);
+        check_only_log(check_logger, "Got 1010.0101 (10.312500). Expected 5.625000.", default_level);
         check_result := check_equal(ufixed'(from_hstring("A5", 3, -4)), 5.625, "");
         assert_true(not check_result.p_is_pass);
         assert_true(check_result.p_checker = default_checker);
-        assert_true(to_string(check_result.p_msg) = "Got 1010.0101 (10.3125). Expected 5.625.");
+        assert_true(to_string(check_result.p_msg) = "Got 1010.0101 (10.312500). Expected 5.625000.");
         assert_true(check_result.p_level = default_level);
         p_handle(check_result);
 
         check_equal(ufixed'(from_hstring("A5", 3, -4)), 5.625, "Checking my data");
-        check_only_log(check_logger, "Checking my data - Got 1010.0101 (10.3125). Expected 5.625.", default_level);
+        check_only_log(check_logger, "Checking my data - Got 1010.0101 (10.312500). Expected 5.625000.", default_level);
         check_result := check_equal(ufixed'(from_hstring("A5", 3, -4)), 5.625, "Checking my data");
         assert_true(not check_result.p_is_pass);
         assert_true(check_result.p_checker = default_checker);
-        assert_true(to_string(check_result.p_msg) = "Checking my data - Got 1010.0101 (10.3125). Expected 5.625.");
+        assert_true(to_string(check_result.p_msg) = "Checking my data - Got 1010.0101 (10.312500). Expected 5.625000.");
         assert_true(check_result.p_level = default_level);
         p_handle(check_result);
 
         check_equal(ufixed'(from_hstring("A5", 3, -4)), 5.625, result("for my data"));
-        check_only_log(check_logger, "Equality check failed for my data - Got 1010.0101 (10.3125). Expected 5.625.",
+        check_only_log(check_logger, "Equality check failed for my data - Got 1010.0101 (10.312500). Expected 5.625000.",
                        default_level);
         check_result := check_equal(ufixed'(from_hstring("A5", 3, -4)), 5.625, result("for my data"));
         assert_true(not check_result.p_is_pass);
         assert_true(check_result.p_checker = default_checker);
-        assert_true(to_string(check_result.p_msg) = "Equality check failed for my data - Got 1010.0101 (10.3125). Expected 5.625.");
+        assert_true(to_string(check_result.p_msg) = "Equality check failed for my data - Got 1010.0101 (10.312500). Expected 5.625000.");
         assert_true(check_result.p_level = default_level);
         p_handle(check_result);
 
         check_equal(passed, ufixed'(from_hstring("A5", 3, -4)), 5.625);
         assert_true(not passed, "Should return pass = false on failing check");
-        check_only_log(check_logger, "Equality check failed - Got 1010.0101 (10.3125). Expected 5.625.",
+        check_only_log(check_logger, "Equality check failed - Got 1010.0101 (10.312500). Expected 5.625000.",
                        default_level);
 
         passed := check_equal(ufixed'(from_hstring("A5", 3, -4)), 5.625);
         assert_true(not passed, "Should return pass = false on failing check");
-        check_only_log(check_logger, "Equality check failed - Got 1010.0101 (10.3125). Expected 5.625.",
+        check_only_log(check_logger, "Equality check failed - Got 1010.0101 (10.312500). Expected 5.625000.",
                        default_level);
         unmock(check_logger);
         verify_passed_checks(stat, 0);
@@ -328,21 +328,21 @@ begin
         get_checker_stat(my_checker, stat);
         mock(my_logger);
         check_equal(my_checker, ufixed'(from_hstring("A5", 3, -4)), 5.625);
-        check_only_log(my_logger, "Equality check failed - Got 1010.0101 (10.3125). Expected 5.625.", default_level);
+        check_only_log(my_logger, "Equality check failed - Got 1010.0101 (10.312500). Expected 5.625000.", default_level);
         check_result := check_equal(my_checker, ufixed'(from_hstring("A5", 3, -4)), 5.625);
         assert_true(not check_result.p_is_pass);
         assert_true(check_result.p_checker = my_checker);
-        assert_true(to_string(check_result.p_msg) = "Equality check failed - Got 1010.0101 (10.3125). Expected 5.625.");
+        assert_true(to_string(check_result.p_msg) = "Equality check failed - Got 1010.0101 (10.312500). Expected 5.625000.");
         assert_true(check_result.p_level = default_level);
         p_handle(check_result);
 
         check_equal(my_checker, passed, ufixed'(from_hstring("A5", 3, -4)), 5.625);
         assert_true(not passed, "Should return pass = false on failing check");
-        check_only_log(my_logger, "Equality check failed - Got 1010.0101 (10.3125). Expected 5.625.", default_level);
+        check_only_log(my_logger, "Equality check failed - Got 1010.0101 (10.312500). Expected 5.625000.", default_level);
 
         passed := check_equal(my_checker, ufixed'(from_hstring("A5", 3, -4)), 5.625);
         assert_true(not passed, "Should return pass = false on failing check");
-        check_only_log(my_logger, "Equality check failed - Got 1010.0101 (10.3125). Expected 5.625.", default_level);
+        check_only_log(my_logger, "Equality check failed - Got 1010.0101 (10.312500). Expected 5.625000.", default_level);
 
         unmock(my_logger);
         verify_passed_checks(my_checker, stat, 0);
@@ -391,30 +391,30 @@ begin
       elsif run("Test pass message on sfixed equal sfixed") then
         mock(check_logger);
         check_equal(sfixed'(from_hstring("A5", 3, -4)), sfixed'(from_hstring("A5", 3, -4)));
-        check_only_log(check_logger, "Equality check passed - Got 1010.0101 (-5.6875).", pass);
+        check_only_log(check_logger, "Equality check passed - Got 1010.0101 (-5.687500).", pass);
         check_result := check_equal(sfixed'(from_hstring("A5", 3, -4)), sfixed'(from_hstring("A5", 3, -4)));
         assert_true(
-          to_string(check_result.p_msg) = "Equality check passed - Got 1010.0101 (-5.6875).",
+          to_string(check_result.p_msg) = "Equality check passed - Got 1010.0101 (-5.687500).",
           "Got: " & to_string(check_result.p_msg)
         );
         assert_true(check_result.p_level = pass);
 
         check_equal(sfixed'(from_hstring("A5", 3, -4)), sfixed'(from_hstring("A5", 3, -4)), "");
-        check_only_log(check_logger, "Got 1010.0101 (-5.6875).", pass);
+        check_only_log(check_logger, "Got 1010.0101 (-5.687500).", pass);
         check_result := check_equal(sfixed'(from_hstring("A5", 3, -4)), sfixed'(from_hstring("A5", 3, -4)), "");
-        assert_true(to_string(check_result.p_msg) = "Got 1010.0101 (-5.6875).");
+        assert_true(to_string(check_result.p_msg) = "Got 1010.0101 (-5.687500).");
         assert_true(check_result.p_level = pass);
 
         check_equal(sfixed'(from_hstring("A5", 3, -4)), sfixed'(from_hstring("A5", 3, -4)), "Checking my data");
-        check_only_log(check_logger, "Checking my data - Got 1010.0101 (-5.6875).", pass);
+        check_only_log(check_logger, "Checking my data - Got 1010.0101 (-5.687500).", pass);
         check_result := check_equal(sfixed'(from_hstring("A5", 3, -4)), sfixed'(from_hstring("A5", 3, -4)), "Checking my data");
-        assert_true(to_string(check_result.p_msg) = "Checking my data - Got 1010.0101 (-5.6875).");
+        assert_true(to_string(check_result.p_msg) = "Checking my data - Got 1010.0101 (-5.687500).");
         assert_true(check_result.p_level = pass);
 
         check_equal(sfixed'(from_hstring("A5", 3, -4)), sfixed'(from_hstring("A5", 3, -4)), result("for my data"));
-        check_only_log(check_logger, "Equality check passed for my data - Got 1010.0101 (-5.6875).", pass);
+        check_only_log(check_logger, "Equality check passed for my data - Got 1010.0101 (-5.687500).", pass);
         check_result := check_equal(sfixed'(from_hstring("A5", 3, -4)), sfixed'(from_hstring("A5", 3, -4)), result("for my data"));
-        assert_true(to_string(check_result.p_msg) = "Equality check passed for my data - Got 1010.0101 (-5.6875).");
+        assert_true(to_string(check_result.p_msg) = "Equality check passed for my data - Got 1010.0101 (-5.687500).");
         assert_true(check_result.p_level = pass);
         unmock(check_logger);
 
@@ -422,51 +422,51 @@ begin
         get_checker_stat(stat);
         mock(check_logger);
         check_equal(sfixed'(from_hstring("A5", 3, -4)), sfixed'(from_hstring("5A", 3, -4)));
-        check_only_log(check_logger, "Equality check failed - Got 1010.0101 (-5.6875). Expected 0101.1010 (5.625).",
+        check_only_log(check_logger, "Equality check failed - Got 1010.0101 (-5.687500). Expected 0101.1010 (5.625000).",
                        default_level);
         check_result := check_equal(sfixed'(from_hstring("A5", 3, -4)), sfixed'(from_hstring("5A", 3, -4)));
         assert_true(not check_result.p_is_pass);
         assert_true(check_result.p_checker = default_checker);
-        assert_true(to_string(check_result.p_msg) = "Equality check failed - Got 1010.0101 (-5.6875). Expected 0101.1010 (5.625).");
+        assert_true(to_string(check_result.p_msg) = "Equality check failed - Got 1010.0101 (-5.687500). Expected 0101.1010 (5.625000).");
         assert_true(check_result.p_level = default_level);
         p_handle(check_result);
 
         check_equal(sfixed'(from_hstring("A5", 3, -4)), sfixed'(from_hstring("5A", 3, -4)), "");
-        check_only_log(check_logger, "Got 1010.0101 (-5.6875). Expected 0101.1010 (5.625).", default_level);
+        check_only_log(check_logger, "Got 1010.0101 (-5.687500). Expected 0101.1010 (5.625000).", default_level);
         check_result := check_equal(sfixed'(from_hstring("A5", 3, -4)), sfixed'(from_hstring("5A", 3, -4)), "");
         assert_true(not check_result.p_is_pass);
         assert_true(check_result.p_checker = default_checker);
-        assert_true(to_string(check_result.p_msg) = "Got 1010.0101 (-5.6875). Expected 0101.1010 (5.625).");
+        assert_true(to_string(check_result.p_msg) = "Got 1010.0101 (-5.687500). Expected 0101.1010 (5.625000).");
         assert_true(check_result.p_level = default_level);
         p_handle(check_result);
 
         check_equal(sfixed'(from_hstring("A5", 3, -4)), sfixed'(from_hstring("5A", 3, -4)), "Checking my data");
-        check_only_log(check_logger, "Checking my data - Got 1010.0101 (-5.6875). Expected 0101.1010 (5.625).", default_level);
+        check_only_log(check_logger, "Checking my data - Got 1010.0101 (-5.687500). Expected 0101.1010 (5.625000).", default_level);
         check_result := check_equal(sfixed'(from_hstring("A5", 3, -4)), sfixed'(from_hstring("5A", 3, -4)), "Checking my data");
         assert_true(not check_result.p_is_pass);
         assert_true(check_result.p_checker = default_checker);
-        assert_true(to_string(check_result.p_msg) = "Checking my data - Got 1010.0101 (-5.6875). Expected 0101.1010 (5.625).");
+        assert_true(to_string(check_result.p_msg) = "Checking my data - Got 1010.0101 (-5.687500). Expected 0101.1010 (5.625000).");
         assert_true(check_result.p_level = default_level);
         p_handle(check_result);
 
         check_equal(sfixed'(from_hstring("A5", 3, -4)), sfixed'(from_hstring("5A", 3, -4)), result("for my data"));
-        check_only_log(check_logger, "Equality check failed for my data - Got 1010.0101 (-5.6875). Expected 0101.1010 (5.625).",
+        check_only_log(check_logger, "Equality check failed for my data - Got 1010.0101 (-5.687500). Expected 0101.1010 (5.625000).",
                        default_level);
         check_result := check_equal(sfixed'(from_hstring("A5", 3, -4)), sfixed'(from_hstring("5A", 3, -4)), result("for my data"));
         assert_true(not check_result.p_is_pass);
         assert_true(check_result.p_checker = default_checker);
-        assert_true(to_string(check_result.p_msg) = "Equality check failed for my data - Got 1010.0101 (-5.6875). Expected 0101.1010 (5.625).");
+        assert_true(to_string(check_result.p_msg) = "Equality check failed for my data - Got 1010.0101 (-5.687500). Expected 0101.1010 (5.625000).");
         assert_true(check_result.p_level = default_level);
         p_handle(check_result);
 
         check_equal(passed, sfixed'(from_hstring("A5", 3, -4)), sfixed'(from_hstring("5A", 3, -4)));
         assert_true(not passed, "Should return pass = false on failing check");
-        check_only_log(check_logger, "Equality check failed - Got 1010.0101 (-5.6875). Expected 0101.1010 (5.625).",
+        check_only_log(check_logger, "Equality check failed - Got 1010.0101 (-5.687500). Expected 0101.1010 (5.625000).",
                        default_level);
 
         passed := check_equal(sfixed'(from_hstring("A5", 3, -4)), sfixed'(from_hstring("5A", 3, -4)));
         assert_true(not passed, "Should return pass = false on failing check");
-        check_only_log(check_logger, "Equality check failed - Got 1010.0101 (-5.6875). Expected 0101.1010 (5.625).",
+        check_only_log(check_logger, "Equality check failed - Got 1010.0101 (-5.687500). Expected 0101.1010 (5.625000).",
                        default_level);
         unmock(check_logger);
         verify_passed_checks(stat, 0);
@@ -476,21 +476,21 @@ begin
         get_checker_stat(my_checker, stat);
         mock(my_logger);
         check_equal(my_checker, sfixed'(from_hstring("A5", 3, -4)), sfixed'(from_hstring("5A", 3, -4)));
-        check_only_log(my_logger, "Equality check failed - Got 1010.0101 (-5.6875). Expected 0101.1010 (5.625).", default_level);
+        check_only_log(my_logger, "Equality check failed - Got 1010.0101 (-5.687500). Expected 0101.1010 (5.625000).", default_level);
         check_result := check_equal(my_checker, sfixed'(from_hstring("A5", 3, -4)), sfixed'(from_hstring("5A", 3, -4)));
         assert_true(not check_result.p_is_pass);
         assert_true(check_result.p_checker = my_checker);
-        assert_true(to_string(check_result.p_msg) = "Equality check failed - Got 1010.0101 (-5.6875). Expected 0101.1010 (5.625).");
+        assert_true(to_string(check_result.p_msg) = "Equality check failed - Got 1010.0101 (-5.687500). Expected 0101.1010 (5.625000).");
         assert_true(check_result.p_level = default_level);
         p_handle(check_result);
 
         check_equal(my_checker, passed, sfixed'(from_hstring("A5", 3, -4)), sfixed'(from_hstring("5A", 3, -4)));
         assert_true(not passed, "Should return pass = false on failing check");
-        check_only_log(my_logger, "Equality check failed - Got 1010.0101 (-5.6875). Expected 0101.1010 (5.625).", default_level);
+        check_only_log(my_logger, "Equality check failed - Got 1010.0101 (-5.687500). Expected 0101.1010 (5.625000).", default_level);
 
         passed := check_equal(my_checker, sfixed'(from_hstring("A5", 3, -4)), sfixed'(from_hstring("5A", 3, -4)));
         assert_true(not passed, "Should return pass = false on failing check");
-        check_only_log(my_logger, "Equality check failed - Got 1010.0101 (-5.6875). Expected 0101.1010 (5.625).", default_level);
+        check_only_log(my_logger, "Equality check failed - Got 1010.0101 (-5.687500). Expected 0101.1010 (5.625000).", default_level);
 
         unmock(my_logger);
         verify_passed_checks(my_checker, stat, 0);
@@ -539,30 +539,30 @@ begin
       elsif run("Test pass message on sfixed equal real") then
         mock(check_logger);
         check_equal(sfixed'(from_hstring("A5", 3, -4)), -5.6875);
-        check_only_log(check_logger, "Equality check passed - Got 1010.0101 (-5.6875).", pass);
+        check_only_log(check_logger, "Equality check passed - Got 1010.0101 (-5.687500).", pass);
         check_result := check_equal(sfixed'(from_hstring("A5", 3, -4)), -5.6875);
         assert_true(
-          to_string(check_result.p_msg) = "Equality check passed - Got 1010.0101 (-5.6875).",
+          to_string(check_result.p_msg) = "Equality check passed - Got 1010.0101 (-5.687500).",
           "Got: " & to_string(check_result.p_msg)
         );
         assert_true(check_result.p_level = pass);
 
         check_equal(sfixed'(from_hstring("A5", 3, -4)), -5.6875, "");
-        check_only_log(check_logger, "Got 1010.0101 (-5.6875).", pass);
+        check_only_log(check_logger, "Got 1010.0101 (-5.687500).", pass);
         check_result := check_equal(sfixed'(from_hstring("A5", 3, -4)), -5.6875, "");
-        assert_true(to_string(check_result.p_msg) = "Got 1010.0101 (-5.6875).");
+        assert_true(to_string(check_result.p_msg) = "Got 1010.0101 (-5.687500).");
         assert_true(check_result.p_level = pass);
 
         check_equal(sfixed'(from_hstring("A5", 3, -4)), -5.6875, "Checking my data");
-        check_only_log(check_logger, "Checking my data - Got 1010.0101 (-5.6875).", pass);
+        check_only_log(check_logger, "Checking my data - Got 1010.0101 (-5.687500).", pass);
         check_result := check_equal(sfixed'(from_hstring("A5", 3, -4)), -5.6875, "Checking my data");
-        assert_true(to_string(check_result.p_msg) = "Checking my data - Got 1010.0101 (-5.6875).");
+        assert_true(to_string(check_result.p_msg) = "Checking my data - Got 1010.0101 (-5.687500).");
         assert_true(check_result.p_level = pass);
 
         check_equal(sfixed'(from_hstring("A5", 3, -4)), -5.6875, result("for my data"));
-        check_only_log(check_logger, "Equality check passed for my data - Got 1010.0101 (-5.6875).", pass);
+        check_only_log(check_logger, "Equality check passed for my data - Got 1010.0101 (-5.687500).", pass);
         check_result := check_equal(sfixed'(from_hstring("A5", 3, -4)), -5.6875, result("for my data"));
-        assert_true(to_string(check_result.p_msg) = "Equality check passed for my data - Got 1010.0101 (-5.6875).");
+        assert_true(to_string(check_result.p_msg) = "Equality check passed for my data - Got 1010.0101 (-5.687500).");
         assert_true(check_result.p_level = pass);
         unmock(check_logger);
 
@@ -570,51 +570,51 @@ begin
         get_checker_stat(stat);
         mock(check_logger);
         check_equal(sfixed'(from_hstring("A5", 3, -4)), -7.25);
-        check_only_log(check_logger, "Equality check failed - Got 1010.0101 (-5.6875). Expected -7.25.",
+        check_only_log(check_logger, "Equality check failed - Got 1010.0101 (-5.687500). Expected -7.250000.",
                        default_level);
         check_result := check_equal(sfixed'(from_hstring("A5", 3, -4)), -7.25);
         assert_true(not check_result.p_is_pass);
         assert_true(check_result.p_checker = default_checker);
-        assert_true(to_string(check_result.p_msg) = "Equality check failed - Got 1010.0101 (-5.6875). Expected -7.25.");
+        assert_true(to_string(check_result.p_msg) = "Equality check failed - Got 1010.0101 (-5.687500). Expected -7.250000.");
         assert_true(check_result.p_level = default_level);
         p_handle(check_result);
 
         check_equal(sfixed'(from_hstring("A5", 3, -4)), -7.25, "");
-        check_only_log(check_logger, "Got 1010.0101 (-5.6875). Expected -7.25.", default_level);
+        check_only_log(check_logger, "Got 1010.0101 (-5.687500). Expected -7.250000.", default_level);
         check_result := check_equal(sfixed'(from_hstring("A5", 3, -4)), -7.25, "");
         assert_true(not check_result.p_is_pass);
         assert_true(check_result.p_checker = default_checker);
-        assert_true(to_string(check_result.p_msg) = "Got 1010.0101 (-5.6875). Expected -7.25.");
+        assert_true(to_string(check_result.p_msg) = "Got 1010.0101 (-5.687500). Expected -7.250000.");
         assert_true(check_result.p_level = default_level);
         p_handle(check_result);
 
         check_equal(sfixed'(from_hstring("A5", 3, -4)), -7.25, "Checking my data");
-        check_only_log(check_logger, "Checking my data - Got 1010.0101 (-5.6875). Expected -7.25.", default_level);
+        check_only_log(check_logger, "Checking my data - Got 1010.0101 (-5.687500). Expected -7.250000.", default_level);
         check_result := check_equal(sfixed'(from_hstring("A5", 3, -4)), -7.25, "Checking my data");
         assert_true(not check_result.p_is_pass);
         assert_true(check_result.p_checker = default_checker);
-        assert_true(to_string(check_result.p_msg) = "Checking my data - Got 1010.0101 (-5.6875). Expected -7.25.");
+        assert_true(to_string(check_result.p_msg) = "Checking my data - Got 1010.0101 (-5.687500). Expected -7.250000.");
         assert_true(check_result.p_level = default_level);
         p_handle(check_result);
 
         check_equal(sfixed'(from_hstring("A5", 3, -4)), -7.25, result("for my data"));
-        check_only_log(check_logger, "Equality check failed for my data - Got 1010.0101 (-5.6875). Expected -7.25.",
+        check_only_log(check_logger, "Equality check failed for my data - Got 1010.0101 (-5.687500). Expected -7.250000.",
                        default_level);
         check_result := check_equal(sfixed'(from_hstring("A5", 3, -4)), -7.25, result("for my data"));
         assert_true(not check_result.p_is_pass);
         assert_true(check_result.p_checker = default_checker);
-        assert_true(to_string(check_result.p_msg) = "Equality check failed for my data - Got 1010.0101 (-5.6875). Expected -7.25.");
+        assert_true(to_string(check_result.p_msg) = "Equality check failed for my data - Got 1010.0101 (-5.687500). Expected -7.250000.");
         assert_true(check_result.p_level = default_level);
         p_handle(check_result);
 
         check_equal(passed, sfixed'(from_hstring("A5", 3, -4)), -7.25);
         assert_true(not passed, "Should return pass = false on failing check");
-        check_only_log(check_logger, "Equality check failed - Got 1010.0101 (-5.6875). Expected -7.25.",
+        check_only_log(check_logger, "Equality check failed - Got 1010.0101 (-5.687500). Expected -7.250000.",
                        default_level);
 
         passed := check_equal(sfixed'(from_hstring("A5", 3, -4)), -7.25);
         assert_true(not passed, "Should return pass = false on failing check");
-        check_only_log(check_logger, "Equality check failed - Got 1010.0101 (-5.6875). Expected -7.25.",
+        check_only_log(check_logger, "Equality check failed - Got 1010.0101 (-5.687500). Expected -7.250000.",
                        default_level);
         unmock(check_logger);
         verify_passed_checks(stat, 0);
@@ -624,21 +624,21 @@ begin
         get_checker_stat(my_checker, stat);
         mock(my_logger);
         check_equal(my_checker, sfixed'(from_hstring("A5", 3, -4)), -7.25);
-        check_only_log(my_logger, "Equality check failed - Got 1010.0101 (-5.6875). Expected -7.25.", default_level);
+        check_only_log(my_logger, "Equality check failed - Got 1010.0101 (-5.687500). Expected -7.250000.", default_level);
         check_result := check_equal(my_checker, sfixed'(from_hstring("A5", 3, -4)), -7.25);
         assert_true(not check_result.p_is_pass);
         assert_true(check_result.p_checker = my_checker);
-        assert_true(to_string(check_result.p_msg) = "Equality check failed - Got 1010.0101 (-5.6875). Expected -7.25.");
+        assert_true(to_string(check_result.p_msg) = "Equality check failed - Got 1010.0101 (-5.687500). Expected -7.250000.");
         assert_true(check_result.p_level = default_level);
         p_handle(check_result);
 
         check_equal(my_checker, passed, sfixed'(from_hstring("A5", 3, -4)), -7.25);
         assert_true(not passed, "Should return pass = false on failing check");
-        check_only_log(my_logger, "Equality check failed - Got 1010.0101 (-5.6875). Expected -7.25.", default_level);
+        check_only_log(my_logger, "Equality check failed - Got 1010.0101 (-5.687500). Expected -7.250000.", default_level);
 
         passed := check_equal(my_checker, sfixed'(from_hstring("A5", 3, -4)), -7.25);
         assert_true(not passed, "Should return pass = false on failing check");
-        check_only_log(my_logger, "Equality check failed - Got 1010.0101 (-5.6875). Expected -7.25.", default_level);
+        check_only_log(my_logger, "Equality check failed - Got 1010.0101 (-5.687500). Expected -7.250000.", default_level);
 
         unmock(my_logger);
         verify_passed_checks(my_checker, stat, 0);
