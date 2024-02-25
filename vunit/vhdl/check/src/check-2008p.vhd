@@ -69,7 +69,7 @@ package body check_2008p_pkg is
           checker,
           p_std_msg(
             "Equality check passed", msg,
-            "Got " & to_string(got) & " (" & to_string(to_real(got)) & ")" & "."),
+            "Got " & to_string(got) & " (" & to_string(to_real(got), "%f") & ")" & "."),
           path_offset + 1, line_num, file_name);
       else
         passing_check(checker);
@@ -80,8 +80,8 @@ package body check_2008p_pkg is
         checker,
         p_std_msg(
           "Equality check failed", msg,
-          "Got " & to_string(got) & " (" & to_string(to_real(got)) & ")" & ". " &
-          "Expected " & to_string(expected) & " (" & to_string(to_real(expected)) & ")" & "."),
+          "Got " & to_string(got) & " (" & to_string(to_real(got), "%f") & ")" & ". " &
+          "Expected " & to_string(expected) & " (" & to_string(to_real(expected), "%f") & ")" & "."),
         level, path_offset + 1, line_num, file_name);
     end if;
     -- pragma translate_on
@@ -157,8 +157,8 @@ package body check_2008p_pkg is
       msg => msg,
       std_pass_msg => "Equality check passed",
       std_fail_msg => "Equality check failed",
-      std_pass_ctx => "Got " & to_string(got) & " (" & to_string(to_real(got)) & ")" & ".",
-      std_fail_ctx => "Got " & to_string(got) & " (" & to_string(to_real(got)) & ")" & ". Expected " & to_string(expected) & " (" & to_string(to_real(expected)) & ")" & ".",
+      std_pass_ctx => "Got " & to_string(got) & " (" & to_string(to_real(got), "%f") & ")" & ".",
+      std_fail_ctx => "Got " & to_string(got) & " (" & to_string(to_real(got), "%f") & ")" & ". Expected " & to_string(expected) & " (" & to_string(to_real(expected), "%f") & ")" & ".",
       level => level,
       path_offset => path_offset + 1,
       line_num => line_num,
@@ -234,7 +234,7 @@ package body check_2008p_pkg is
           checker,
           p_std_msg(
             "Equality check passed", msg,
-            "Got " & to_string(got) & " (" & to_string(to_real(got)) & ")" & "."),
+            "Got " & to_string(got) & " (" & to_string(to_real(got), "%f") & ")" & "."),
           path_offset + 1, line_num, file_name);
       else
         passing_check(checker);
@@ -245,8 +245,8 @@ package body check_2008p_pkg is
         checker,
         p_std_msg(
           "Equality check failed", msg,
-          "Got " & to_string(got) & " (" & to_string(to_real(got)) & ")" & ". " &
-          "Expected " & to_string(expected) & "."),
+          "Got " & to_string(got) & " (" & to_string(to_real(got), "%f") & ")" & ". " &
+          "Expected " & to_string(expected, "%f") & "."),
         level, path_offset + 1, line_num, file_name);
     end if;
     -- pragma translate_on
@@ -322,8 +322,8 @@ package body check_2008p_pkg is
       msg => msg,
       std_pass_msg => "Equality check passed",
       std_fail_msg => "Equality check failed",
-      std_pass_ctx => "Got " & to_string(got) & " (" & to_string(to_real(got)) & ")" & ".",
-      std_fail_ctx => "Got " & to_string(got) & " (" & to_string(to_real(got)) & ")" & ". Expected " & to_string(expected) & ".",
+      std_pass_ctx => "Got " & to_string(got) & " (" & to_string(to_real(got), "%f") & ")" & ".",
+      std_fail_ctx => "Got " & to_string(got) & " (" & to_string(to_real(got), "%f") & ")" & ". Expected " & to_string(expected, "%f") & ".",
       level => level,
       path_offset => path_offset + 1,
       line_num => line_num,
@@ -399,7 +399,7 @@ package body check_2008p_pkg is
           checker,
           p_std_msg(
             "Equality check passed", msg,
-            "Got " & to_string(got) & " (" & to_string(to_real(got)) & ")" & "."),
+            "Got " & to_string(got) & " (" & to_string(to_real(got), "%f") & ")" & "."),
           path_offset + 1, line_num, file_name);
       else
         passing_check(checker);
@@ -410,8 +410,8 @@ package body check_2008p_pkg is
         checker,
         p_std_msg(
           "Equality check failed", msg,
-          "Got " & to_string(got) & " (" & to_string(to_real(got)) & ")" & ". " &
-          "Expected " & to_string(expected) & " (" & to_string(to_real(expected)) & ")" & "."),
+          "Got " & to_string(got) & " (" & to_string(to_real(got), "%f") & ")" & ". " &
+          "Expected " & to_string(expected) & " (" & to_string(to_real(expected), "%f") & ")" & "."),
         level, path_offset + 1, line_num, file_name);
     end if;
     -- pragma translate_on
@@ -487,8 +487,8 @@ package body check_2008p_pkg is
       msg => msg,
       std_pass_msg => "Equality check passed",
       std_fail_msg => "Equality check failed",
-      std_pass_ctx => "Got " & to_string(got) & " (" & to_string(to_real(got)) & ")" & ".",
-      std_fail_ctx => "Got " & to_string(got) & " (" & to_string(to_real(got)) & ")" & ". Expected " & to_string(expected) & " (" & to_string(to_real(expected)) & ")" & ".",
+      std_pass_ctx => "Got " & to_string(got) & " (" & to_string(to_real(got), "%f") & ")" & ".",
+      std_fail_ctx => "Got " & to_string(got) & " (" & to_string(to_real(got), "%f") & ")" & ". Expected " & to_string(expected) & " (" & to_string(to_real(expected), "%f") & ")" & ".",
       level => level,
       path_offset => path_offset + 1,
       line_num => line_num,
@@ -564,7 +564,7 @@ package body check_2008p_pkg is
           checker,
           p_std_msg(
             "Equality check passed", msg,
-            "Got " & to_string(got) & " (" & to_string(to_real(got)) & ")" & "."),
+            "Got " & to_string(got) & " (" & to_string(to_real(got), "%f") & ")" & "."),
           path_offset + 1, line_num, file_name);
       else
         passing_check(checker);
@@ -575,8 +575,8 @@ package body check_2008p_pkg is
         checker,
         p_std_msg(
           "Equality check failed", msg,
-          "Got " & to_string(got) & " (" & to_string(to_real(got)) & ")" & ". " &
-          "Expected " & to_string(expected) & "."),
+          "Got " & to_string(got) & " (" & to_string(to_real(got), "%f") & ")" & ". " &
+          "Expected " & to_string(expected, "%f") & "."),
         level, path_offset + 1, line_num, file_name);
     end if;
     -- pragma translate_on
@@ -652,8 +652,8 @@ package body check_2008p_pkg is
       msg => msg,
       std_pass_msg => "Equality check passed",
       std_fail_msg => "Equality check failed",
-      std_pass_ctx => "Got " & to_string(got) & " (" & to_string(to_real(got)) & ")" & ".",
-      std_fail_ctx => "Got " & to_string(got) & " (" & to_string(to_real(got)) & ")" & ". Expected " & to_string(expected) & ".",
+      std_pass_ctx => "Got " & to_string(got) & " (" & to_string(to_real(got), "%f") & ")" & ".",
+      std_fail_ctx => "Got " & to_string(got) & " (" & to_string(to_real(got), "%f") & ")" & ". Expected " & to_string(expected, "%f") & ".",
       level => level,
       path_offset => path_offset + 1,
       line_num => line_num,
