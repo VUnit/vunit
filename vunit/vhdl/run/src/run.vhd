@@ -456,7 +456,7 @@ package body run_pkg is
   begin
     if entry_is_locked(runner_state, get_phase(runner_state)) then
       trace(runner_trace_logger, "Halting on " & replace(runner_phase_t'image(get_phase(runner_state)), "_", " ") & " phase entry gate.");
-      wait on runner until not entry_is_locked(runner_state, get_phase(runner_state)) for max_locked_time;
+      wait on runner until not entry_is_locked(runner_state, get_phase(runner_state));
     end if;
     set_gate_status(runner_state, true);
     trace(runner_trace_logger, "Passed " & replace(runner_phase_t'image(get_phase(runner_state)), "_", " ") & " phase entry gate.");
@@ -468,7 +468,7 @@ package body run_pkg is
   begin
     if exit_is_locked(runner_state, get_phase(runner_state)) then
       trace(runner_trace_logger, "Halting on " & replace(runner_phase_t'image(get_phase(runner_state)), "_", " ") & " phase exit gate.");
-      wait on runner until not exit_is_locked(runner_state, get_phase(runner_state)) for max_locked_time;
+      wait on runner until not exit_is_locked(runner_state, get_phase(runner_state));
     end if;
     set_gate_status(runner_state, false);
     trace(runner_trace_logger, "Passed " & replace(runner_phase_t'image(get_phase(runner_state)), "_", " ") & " phase exit gate.");

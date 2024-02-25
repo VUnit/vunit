@@ -14,11 +14,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 package run_types_pkg is
-  constant max_locked_time : time := 1 ms;
   constant max_n_test_cases : natural := 1024;
 
   -- Deprecated
-  constant max_locked_time_c : time := max_locked_time;
   constant max_n_test_cases_c : natural := max_n_test_cases;
 
   subtype runner_cfg_t is string; -- Subtype deprecated, use string instead
