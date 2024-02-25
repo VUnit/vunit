@@ -390,7 +390,8 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         """
         Merge coverage from all test cases
         """
-        output_dir = file_name
+        output_dir = Path(file_name)
+        output_dir.mkdir(parents=True, exist_ok=True)
 
         # Loop over each .gcda output folder and merge them two at a time
         first_input = True
@@ -400,8 +401,8 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
                     "gcov-tool",
                     "merge",
                     "-o",
-                    output_dir,
-                    coverage_dir if first_input else output_dir,
+                    str(output_dir),
+                    coverage_dir if first_input else str(output_dir),
                     coverage_dir,
                 ]
                 subprocess.call(merge_command)
@@ -410,8 +411,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
                 LOGGER.warning("Missing coverage directory: %s", coverage_dir)
 
         # Find actual output path of the .gcda files (they are deep in hierarchy)
-        dir_path = Path(output_dir)
-        gcda_dirs = {x.parent for x in dir_path.glob("**/*.gcda")}
+        gcda_dirs = {x.parent for x in output_dir.glob("**/*.gcda")}
         assert len(gcda_dirs) == 1, "Expected exactly one folder with gcda files"
         gcda_dir = gcda_dirs.pop()
 
