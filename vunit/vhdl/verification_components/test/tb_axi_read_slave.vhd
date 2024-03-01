@@ -71,13 +71,19 @@ begin
 
     procedure read_data(id : std_logic_vector; address : natural; size : natural; resp : axi_resp_t; last : boolean) is
       variable idx : integer;
+      variable addr : integer;
+      variable logger : logger_t := get_logger("read_data");
     begin
       rready <= '1';
       wait until (rvalid and rready) = '1' and rising_edge(clk);
       rready <= '0';
+      addr := address - (address mod size); --align address to transfer size
       for i in 0 to size-1 loop
-        idx := (address + i) mod data_size; -- Align data bus
-        check_equal(rdata(8*idx+7 downto 8*idx), read_byte(memory, address+i));
+        idx := ((addr mod data_size) + i); --idx is the byte lane for this value
+        if addr >= address then
+          debug(logger, "RD addr " & integer'image(addr+i) & ", got " & integer'image(read_byte(memory, addr+i)) & ", compare to rdata byte lane " & integer'image(idx));
+          check_equal(rdata(8*idx+7 downto 8*idx), read_byte(memory, addr+i), result("for rdata in byte lane " & integer'image(idx)));
+        end if;
       end loop;
       check_equal(rid, id, "rid");
       check_equal(rresp, resp, "rresp");
@@ -86,7 +92,8 @@ begin
 
     procedure transfer(log_size, len : natural;
                        id : std_logic_vector;
-                       burst : std_logic_vector) is
+                       burst : std_logic_vector;
+                       alignment : positive := 4096) is
       variable buf : buffer_t;
       variable size : natural;
       variable data : integer_vector_ptr_t;
@@ -94,7 +101,7 @@ begin
       size := 2**log_size;
       random_integer_vector_ptr(rnd, data, size * len, 0, 255);
 
-      buf := allocate(memory, 8 * len, alignment => 4096);
+      buf := allocate(memory, length(data), alignment => alignment);
       for i in 0 to length(data)-1 loop
         write_byte(memory, base_address(buf)+i, get(data, i));
       end loop;
@@ -109,7 +116,7 @@ begin
     variable log_size : natural;
     variable buf : buffer_t;
     variable id : std_logic_vector(arid'range);
-    variable len : natural;
+    variable len : positive;
     variable burst : axi_burst_type_t;
     variable start_time, diff_time : time;
   begin
@@ -131,8 +138,38 @@ begin
             assert false;
         end case;
 
-        log_size := rnd.RandInt(0, 3);
-        transfer(log_size, len, id, burst);
+        log_size := rnd.RandInt(0, log_data_size);
+        transfer(log_size, len, id, burst, alignment => 4096);
+      end loop;
+
+    elsif run("Test unaligned read") then
+      for test_idx in 0 to 32-1 loop
+
+        id := rnd.RandSlv(arid'length);
+        case rnd.RandInt(1) is
+          when 0 =>
+            burst := axi_burst_type_fixed;
+            len := 1;
+          when 1 =>
+            burst := axi_burst_type_incr;
+            len := rnd.RandInt(1, 2**arlen'length);
+          when others =>
+            assert false;
+        end case;
+
+        log_size := rnd.RandInt(0, log_data_size);
+
+        --If the burst will cross a 4KB boundary, lower the length
+        --If the min length is reached and still crossing, lower the size
+        while (2**log_size * len) > (4096 - (num_bytes(memory) mod 4096)) loop
+          debug("total size = " & integer'image(2**log_size * len) & ", num_bytes = " & integer'image(num_bytes(memory)));
+          if len = 1 then
+            log_size := log_size - 1;
+          else
+            len := len - 1;
+          end if;
+        end loop;
+        transfer(log_size, len, id, burst, alignment => rnd.RandInt(1, log_data_size));
       end loop;
 
     elsif run("Test random data stall") then
