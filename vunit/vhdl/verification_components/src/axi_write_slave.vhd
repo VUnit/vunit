@@ -143,7 +143,7 @@ begin
     variable response_time : time;
     variable has_response_time : boolean := false;
   begin
-    assert awid'length = bid'length report "arwid vs wid data width mismatch";
+    assert awid'length = bid'length report "awid vs wid data width mismatch";
     assert (awlen'length = 4 or
             awlen'length = 8) report "awlen must be either 4 (AXI3) or 8 (AXI4)";
 
@@ -256,7 +256,7 @@ begin
       end if;
 
       if self.should_check_well_behaved and num_beats_now > 0 and wvalid /= '1' then
-        self.fail("Burst not well behaved, vwalid was not high during active burst");
+        self.fail("Burst not well behaved, wvalid was not high during active burst");
       end if;
 
       if self.should_check_well_behaved and num_beats_now > 0 and bready /= '1' then
