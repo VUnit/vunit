@@ -132,9 +132,8 @@ begin
         expected_resp := pop_std_ulogic_vector(request_msg) when is_axi_lite_msg(msg_type) else axi_resp_okay;
         push(reply_queue, request_msg);
 
-        araddr <= addr_this_transaction;
-
         arvalid <= '1';
+        araddr <= addr_this_transaction;
         wait until (arvalid and arready) = '1' and rising_edge(aclk);
         arvalid <= '0';
         drive_ar_invalid;
