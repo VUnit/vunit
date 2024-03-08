@@ -201,9 +201,15 @@ The following simulation options are known.
    With ``--elaborate``, execute ``ghdl -e`` instead of ``ghdl --elab-run --no-run``.
    Must be a boolean.
 
-``ghdl.gtkwave_script.gui``
-   A user defined TCL-file that is sourced after the design has been loaded in the GUI.
+``ghdl.viewer.gui``
+   Name of waveform viewer to use. The command line argument ``--viewer`` will have
+   precedence if provided. If neither is provided, ``gtkwave`` or ``surfer`` will be
+   used.
+
+``ghdl.viewer_script.gui``
+   A user defined file that is sourced after the design has been loaded in the GUI.
    For example this can be used to configure the waveform viewer. Must be a string.
+
    There are currently limitations in the HEAD revision of GTKWave that prevent the
    user from sourcing a list of scripts directly. The following is the current work
    around to sourcing multiple user TCL-files:
@@ -225,3 +231,17 @@ The following simulation options are known.
 ``nvc.sim_flags``
    Extra simulation flags passed to ``nvc -r``.
    Must be a list of strings.
+
+``nvc.viewer.gui``
+   Name of waveform viewer to use. The command line argument ``--viewer`` will have
+   precedence if provided. If neither is provided, ``gtkwave`` or ``surfer`` will be
+   used.
+
+``nvc.viewer_script.gui``
+   A user defined file that is sourced after the design has been loaded in the GUI.
+   For example this can be used to configure the waveform viewer. Must be a string.
+
+   There are currently limitations in the HEAD revision of GTKWave that prevent the
+   user from sourcing a list of scripts directly. The following is the current work
+   around to sourcing multiple user TCL-files:
+   ``source <path/to/script.tcl>``

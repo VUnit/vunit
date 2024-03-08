@@ -166,9 +166,9 @@ VUnit automatically detects which simulators are available on the
 ``PATH`` environment variable and by default selects the first one
 found. For people who have multiple simulators installed the
 ``VUNIT_SIMULATOR`` environment variable can be set to one of
-``activehdl``, ``rivierapro``, ``ghdl`` or ``modelsim`` to specify
-which simulator to use. ``modelsim`` is used for both ModelSim and
-Questa as VUnit handles these simulators identically.
+``activehdl``, ``rivierapro``, ``ghdl``, ``nvc```, or ``modelsim`` to
+specify which simulator to use. ``modelsim`` is used for both ModelSim
+and Questa as VUnit handles these simulators identically.
 
 In addition to VUnit scanning the ``PATH`` the simulator executable
 path can be explicitly configured by setting a
