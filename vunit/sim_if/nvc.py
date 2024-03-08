@@ -20,12 +20,13 @@ from ..exceptions import CompileError
 from ..ostools import Process
 from . import SimulatorInterface, ListOfStringOption, StringOption
 from . import run_command
+from ._ossmixin import OSSMixin
 from ..vhdl_standard import VHDL
 
 LOGGER = logging.getLogger(__name__)
 
 
-class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-attributes
+class NVCInterface(SimulatorInterface, OSSMixin):  # pylint: disable=too-many-instance-attributes
     """
     Interface for NVC simulator
     """
@@ -45,7 +46,8 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         ListOfStringOption("nvc.sim_flags"),
         ListOfStringOption("nvc.elab_flags"),
         StringOption("nvc.heap_size"),
-        StringOption("nvc.gtkwave_script.gui"),
+        StringOption("nvc.viewer_script.gui"),
+        StringOption("nvc.viewer.gui"),
     ]
 
     @classmethod
@@ -59,6 +61,9 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
             prefix=prefix,
             gui=args.gui,
             num_threads=args.num_threads,
+            viewer_fmt=args.viewer_fmt,
+            viewer_args=args.viewer_args,
+            viewer=args.viewer,
         )
 
     @classmethod
@@ -69,25 +74,19 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         return cls.find_toolchain([cls.executable])
 
     def __init__(  # pylint: disable=too-many-arguments
-        self,
-        output_path,
-        prefix,
-        num_threads,
-        gui=False,
-        gtkwave_args="",
+        self, output_path, prefix, num_threads, gui=False, viewer_fmt=None, viewer_args="", viewer=None
     ):
         SimulatorInterface.__init__(self, output_path, gui)
+        if viewer_fmt == "ghw":
+            LOGGER.warning("NVC does not support ghw, defaulting to fst")
+            viewer_fmt = None  # Defaults to FST later
+        OSSMixin.__init__(self, gui=gui, viewer=viewer, viewer_fmt=viewer_fmt, viewer_args=viewer_args)
+
         self._prefix = prefix
         self._project = None
 
-        if gui and (not self.find_executable("gtkwave")):
-            raise RuntimeError("Cannot find the gtkwave executable in the PATH environment variable. GUI not possible")
-
-        self._gui = gui
-        self._gtkwave_args = gtkwave_args
         self._vhdl_standard = None
         self._coverage_test_dirs = set()
-
         (major, minor) = self.determine_version(prefix)
         self._supports_jit = major > 1 or (major == 1 and minor >= 9)
 
@@ -242,7 +241,9 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         cmd += [source_file.name]
         return cmd
 
-    def simulate(self, output_path, test_suite_name, config, elaborate_only):  # pylint: disable=too-many-branches
+    def simulate(
+        self, output_path, test_suite_name, config, elaborate_only
+    ):  # pylint: disable=too-many-branches, disable=too-many-statements
         """
         Simulate with entity as top level using generics
         """
@@ -252,15 +253,15 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         if not script_path.exists():
             makedirs(script_path)
 
+        libdir = self._project.get_library(config.library_name).directory
+        cmd = self._get_command(self._vhdl_standard, config.library_name, libdir)
+
         if self._gui:
-            wave_file = script_path / (f"{config.entity_name}.fst")
+            wave_file = script_path / (f"{config.entity_name}.{self._viewer_fmt or 'fst'}")
             if wave_file.exists():
                 remove(wave_file)
         else:
             wave_file = None
-
-        libdir = self._project.get_library(config.library_name).directory
-        cmd = self._get_command(self._vhdl_standard, config.library_name, libdir)
 
         cmd += ["-H", config.sim_options.get("nvc.heap_size", "64m")]
         cmd += config.sim_options.get("nvc.global_flags", [])
@@ -290,6 +291,9 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
             if wave_file:
                 cmd += [f"--wave={wave_file}"]
 
+            if self._viewer_fmt:
+                cmd += [f"--format={self._viewer_fmt}"]
+
         print(" ".join([f"'{word}'" if " " in word else word for word in cmd]))
 
         status = True
@@ -300,10 +304,19 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         except Process.NonZeroExitCode:
             status = False
 
-        if self._gui and not elaborate_only:
-            cmd = ["gtkwave"] + shlex.split(self._gtkwave_args) + [str(wave_file)]
+        if config.sim_options.get(self.name + ".gtkwave_script.gui", None):
+            warn_str = (
+                "%s.gtkwave_script.gui is deprecated and will be removed " % self.name  # pylint: disable=C0209
+                + "in a future version, use %s.viewer_script.gui instead" % self.name   # pylint: disable=C0209
+            )
+            LOGGER.warning(warn_str)
 
-            init_file = config.sim_options.get(self.name + ".gtkwave_script.gui", None)
+        if self._gui and not elaborate_only:
+            cmd = [self._get_viewer(config)] + shlex.split(self._viewer_args) + [str(wave_file)]
+
+            init_file = config.sim_options.get(
+                self.name + ".viewer_script.gui", config.sim_options.get(self.name + ".gtkwave_script.gui", None)
+            )
             if init_file is not None:
                 cmd += ["--script", str(Path(init_file).resolve())]
 
