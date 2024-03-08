@@ -44,7 +44,7 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         ListOfStringOption("nvc.sim_flags"),
         ListOfStringOption("nvc.elab_flags"),
         StringOption("nvc.heap_size"),
-        StringOption("nvc.gtkwave_script.gui"),
+        StringOption("nvc.viewer_script.gui"),
     ]
 
     @classmethod
@@ -67,21 +67,20 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         return cls.find_toolchain([cls.executable])
 
     def __init__(  # pylint: disable=too-many-arguments
-        self,
-        output_path,
-        prefix,
-        gui=False,
-        gtkwave_args="",
+        self, output_path, prefix, gui=False, viewer_args="", viewer="gtkwave"
     ):
         SimulatorInterface.__init__(self, output_path, gui)
         self._prefix = prefix
         self._project = None
 
-        if gui and (not self.find_executable("gtkwave")):
-            raise RuntimeError("Cannot find the gtkwave executable in the PATH environment variable. GUI not possible")
+        if gui and (not self.find_executable(viewer)):
+            raise RuntimeError(
+                f"Cannot find the {viewer} executable in the PATH environment variable. GUI not possible."
+            )
 
         self._gui = gui
-        self._gtkwave_args = gtkwave_args
+        self._viewer_args = viewer_args
+        self._viewer = viewer
         self._vhdl_standard = None
         self._coverage_test_dirs = set()
 
@@ -294,9 +293,9 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
             status = False
 
         if self._gui and not elaborate_only:
-            cmd = ["gtkwave"] + shlex.split(self._gtkwave_args) + [str(wave_file)]
+            cmd = [self._viewer] + shlex.split(self._viewer_args) + [str(wave_file)]
 
-            init_file = config.sim_options.get(self.name + ".gtkwave_script.gui", None)
+            init_file = config.sim_options.get(self.name + ".viewer_script.gui", None)
             if init_file is not None:
                 cmd += ["--script", str(Path(init_file).resolve())]
 
