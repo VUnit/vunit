@@ -562,7 +562,7 @@ package body string_ops is
       stop_pos := stop;
     end if;
 
-    if substring = "" then
+    if substring'length = 0 then
       return start_pos;
     end if;
 
