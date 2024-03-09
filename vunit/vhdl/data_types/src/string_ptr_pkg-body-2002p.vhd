@@ -285,6 +285,7 @@ package body string_ptr_pkg is
         when others =>
           -- @TODO Implement to_string for external models
           check_external(ref, "to_string");
+          return "";
       end case;
     end;
 
