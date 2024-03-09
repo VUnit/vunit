@@ -37,11 +37,13 @@ package body external_integer_vector_pkg is
     i  : integer
   ) return integer is begin
     assert false report "EXTERNAL read_integer" severity failure;
+    return integer'low;
   end;
 
   impure function get_ptr (
     id : integer
   ) return extintvec_access_t is begin
     assert false report "EXTERNAL get_intvec_ptr" severity failure;
+    return null;
   end;
 end package body;

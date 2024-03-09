@@ -37,11 +37,13 @@ package body external_string_pkg is
     i  : integer
   ) return character is begin
     assert false report "EXTERNAL read_char" severity failure;
+    return NUL;
   end;
 
   impure function get_ptr (
     id : integer
   ) return extstring_access_t is begin
     assert false report "EXTERNAL get_string_ptr" severity failure;
+    return null;
   end;
 end package body;
