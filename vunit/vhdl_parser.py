@@ -85,9 +85,16 @@ class VHDLDesignFile(object):  # pylint: disable=too-many-instance-attributes
         )
 
     _component_re = re.compile(
-        r"[a-zA-Z]\w*\s*\:\s*(?:component)?\s*(?:(?:[a-zA-Z]\w*)\.)?([a-zA-Z]\w*)\s*"
-        r"(?:generic|port) map\s*\([\s\w\=\>\,\.\)\(\+\-\'\"]*\);",
-        re.IGNORECASE,
+        r"""
+        [a-zA-Z]\w*               # Label
+        \s*\:\s*                  # Semicolon
+        (?:component)?\s*         # Optional component keyword
+        (?:(?:[a-zA-Z]\w*)\.)?    # Optional library name
+        ([a-zA-Z]\w*)\s*          # Capture component name
+        (?:generic|port)\s+map\s* # Generic/port map
+        \(.*?\)\s*;               # Open and closing brackets
+        """,
+        re.MULTILINE | re.IGNORECASE | re.VERBOSE | re.DOTALL,
     )
 
 

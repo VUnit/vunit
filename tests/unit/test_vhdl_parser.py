@@ -568,15 +568,27 @@ begin
 
     label3Foo : foo3 port map (clk, rst, X"A");
 
+    label4Foo : foo4
+        generic map (
+            g_POWER  => 2 ** 10,
+            g_DIVIDE => 10 / 5
+        )
+        port map(
+            clk => '1',
+            rst => '0',
+            output => "00"
+        ) ;
+
 end architecture;
 
 """
         )
         component_instantiations = design_file.component_instantiations
-        self.assertEqual(len(component_instantiations), 3)
+        self.assertEqual(len(component_instantiations), 4)
         self.assertEqual(component_instantiations[0], "foo")
         self.assertEqual(component_instantiations[1], "foo2")
         self.assertEqual(component_instantiations[2], "foo3")
+        self.assertEqual(component_instantiations[3], "foo4")
 
     def test_adding_generics_to_entity(self):
         entity = VHDLEntity("name")
