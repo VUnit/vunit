@@ -1,0 +1,1 @@
+Fixed memory leak in check/log functions.
