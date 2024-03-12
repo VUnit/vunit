@@ -26,6 +26,7 @@ class CodecVHDLEnumerationType(VHDLEnumerationType):
         if len(self.literals) > 256:
             raise NotImplementedError("Support for enums with more than 256 values are yet to be implemented")
 
+        declarations += template.codec_length_declarations.substitute(type=self.identifier)
         declarations += template.codec_declarations.substitute(type=self.identifier)
         definitions += template.enumeration_codec_definitions.substitute(type=self.identifier, offset=offset)
         declarations += template.to_string_declarations.substitute(type=self.identifier)
@@ -37,48 +38,81 @@ class CodecVHDLEnumerationType(VHDLEnumerationType):
 class EnumerationCodecTemplate(DatatypeCodecTemplate):
     """This class contains enumeration codec templates."""
 
+    codec_length_declarations = Template(
+        """\
+  -- Codec package extension for the type $type
+
+  function code_length_$type(data : $type := $type'left) return natural;
+  alias code_length is code_length_$type[$type return natural];
+"""
+    )
+
     enumeration_to_string_definitions = Template(
         """\
-  function to_string (
-    constant data : $type)
-    return string is
+  -- Printing function for the type $type
+  function to_string(data : $type) return string is
   begin
     return $type'image(data);
-  end function to_string;
+  end function;
 
 """
     )
 
     enumeration_codec_definitions = Template(
         """\
-  function encode (
-    constant data : $type)
-    return string is
-    constant offset : natural := $offset;
-  begin
-    return (1 => character'val($type'pos(data) + offset));
-  end function encode;
+  -----------------------------------------------------------------------------
+  -- Codec package extension for the type $type
+  -----------------------------------------------------------------------------
 
-  procedure decode (
-    constant code   : string;
-    variable index : inout   positive;
-    variable result : out $type) is
-    constant offset : natural := $offset;
-  begin
-    result := $type'val(character'pos(code(index)) - offset);
-    index := index + 1;
-  end procedure decode;
+  -- The formulation "type'pos(type'right) + 1" gives the number of literals defined by the enumerated type
+  constant length_$type : positive := $type'pos($type'right) + 1;
+  constant static_code_length_$type : positive := ceil_div(length_$type, basic_code_nb_values);
 
-  function decode (
-    constant code : string)
-    return $type is
-    variable ret_val : $type;
-    variable index : positive := code'left;
+  function code_length_$type(data : $type := $type'left) return natural is
   begin
-    decode(code, index, ret_val);
+    return static_code_length_$type;
+  end function;
 
+  procedure encode_$type(
+    constant data  : in    $type;
+    variable index : inout code_index_t;
+    variable code  : inout code_t
+  ) is
+  begin
+    code(index) := character'val($type'pos(data) + $offset);
+    index       := index + code_length_$type;
+  end procedure;
+
+  procedure decode_$type(
+    constant code   : in    code_t;
+    variable index  : inout code_index_t;
+    variable result : out   $type
+  ) is
+  begin
+    result := $type'val(character'pos(code(index)) - $offset);
+    index  := index + code_length_$type;
+  end procedure;
+
+  function encode_$type(data : $type) return code_t is
+    variable ret_val : code_t(1 to code_length_$type);
+    variable index   : code_index_t := ret_val'left;
+  begin
+    encode_$type(data, index, ret_val);
     return ret_val;
-  end function decode;
+  end function;
+
+  function decode_$type(code : code_t) return $type is
+    variable ret_val : $type;
+    variable index   : code_index_t := code'left;
+  begin
+    decode_$type(code, index, ret_val);
+    return ret_val;
+  end function;
+
+
+  -----------------------------------------------------------------------------
+  -- Queue package extension for the type $type
+  -----------------------------------------------------------------------------
 
   procedure push(queue : queue_t; value : $type) is
   begin
