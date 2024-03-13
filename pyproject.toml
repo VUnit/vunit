@@ -97,3 +97,6 @@ commands=
     vcomponents: {envpython} vunit/vhdl/verification_components/run.py --clean
     coverage:    {envpython} -m coverage run --branch --source vunit/ -m pytest tests/
 """
+[[tool.mypy.overrides]]
+module = "vunit.ui.*"
+disallow_untyped_defs = true

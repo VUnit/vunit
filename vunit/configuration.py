@@ -197,7 +197,7 @@ class ConfigurationVisitor(object):
     def _check_enabled(self):
         pass
 
-    def get_configuration_dicts(self) -> List[OrderedDict[Any, Configuration]]:
+    def get_configuration_dicts(self) -> "List[OrderedDict[Any, Configuration]]":
         raise NotImplementedError
 
     def set_attribute(self, name: str, value: Any):
