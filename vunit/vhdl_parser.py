@@ -86,7 +86,7 @@ class VHDLDesignFile(object):  # pylint: disable=too-many-instance-attributes
 
     _component_re = re.compile(
         r"[a-zA-Z]\w*\s*\:\s*(?:component)?\s*(?:(?:[a-zA-Z]\w*)\.)?([a-zA-Z]\w*)\s*"
-        r"(?:generic|port) map\s*\([\s\w\=\>\,\.\)\(\+\-\'\"]*\);",
+        r"(?:generic|port) map\s*\([\s\w\=\>\,\.\)\(\+\-\*\/\'\"]*\);",
         re.IGNORECASE,
     )
 
