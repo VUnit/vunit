@@ -1,0 +1,1 @@
+Minimize imports in VHDL packages and VCs in an effort to reduce simulator startup time.

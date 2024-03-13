@@ -1,0 +1,2 @@
+Take ``tkeep`` and ``tstrb`` into account when checking for invalid ``tdata``
+in ``axi_stream_protocol_checker``.
