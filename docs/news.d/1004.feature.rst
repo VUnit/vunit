@@ -1,0 +1,1 @@
+[GHDL] Support selecting FST format for waveform files.
