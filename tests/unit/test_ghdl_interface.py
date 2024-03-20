@@ -87,6 +87,19 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
         check_output.return_value = version
         self.assertEqual(GHDLInterface.determine_backend("prefix"), "mcode")
 
+        version = b"""\
+GHDL 5.0.0-dev (4.0.0.r9.g77785e49e) [Dunoon edition]
+ Compiled with GNAT Version: 10.5.0
+ static elaboration, mcode JIT code generator
+Written by Tristan Gingold.
+
+Copyright (C) 2003 - 2024 Tristan Gingold.
+GHDL is free software, covered by the GNU General Public License.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+"""
+        check_output.return_value = version
+        self.assertEqual(GHDLInterface.determine_backend("prefix"), "mcode")
+
     @mock.patch("subprocess.check_output", autospec=True)
     def test_parses_gcc_backend(self, check_output):
         version = b"""\

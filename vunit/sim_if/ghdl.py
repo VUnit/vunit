@@ -126,7 +126,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         Determine the GHDL backend
         """
         mapping = {
-            r"mcode code generator": "mcode",
+            r"mcode (JIT )?code generator": "mcode",
             r"llvm (\d+\.\d+\.\d+ )?code generator": "llvm",
             r"GCC (back-end|\d+\.\d+\.\d+) code generator": "gcc",
         }
