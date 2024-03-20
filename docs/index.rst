@@ -49,6 +49,7 @@ often"* approach through automation. :ref:`Read more <about>`
    py/ui
    hdl_libraries
    examples
+   tool_integration/index
 
 .. toctree::
    :caption: Continuous Integration

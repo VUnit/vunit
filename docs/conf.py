@@ -30,6 +30,7 @@ needs_sphinx = "3.0"
 
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
     "sphinx.ext.extlinks",
     "sphinx.ext.intersphinx",
     "sphinx.ext.todo",
@@ -113,7 +114,7 @@ htmlhelp_basename = "VUnitDoc"
 # -- InterSphinx --------------------------------------------------------------
 
 intersphinx_mapping = {
-    "python": ("https://docs.python.org/3.8/", None),
+    "python": ("https://docs.python.org/3/", None),
     "pytest": ("https://docs.pytest.org/en/latest/", None),
     "osvb": ("https://umarcor.github.io/osvb", None),
 }
