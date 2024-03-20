@@ -43,7 +43,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
     sim_options = [
         ListOfStringOption("ghdl.sim_flags"),
         ListOfStringOption("ghdl.elab_flags"),
-        StringOption("ghdl.gtkwave_script.gui"),
+        StringOption("ghdl.viewer_script.gui"),
         BooleanOption("ghdl.elab_e"),
     ]
 
@@ -54,12 +54,14 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         """
         group = parser.add_argument_group("ghdl", description="GHDL specific flags")
         group.add_argument(
+            "--viewer-fmt",
             "--gtkwave-fmt",
             choices=["vcd", "fst", "ghw"],
             default=None,
-            help="Save .vcd, .fst, or .ghw to open in gtkwave",
+            help="Save .vcd, .fst, or .ghw to open in waveform viewer",
         )
-        group.add_argument("--gtkwave-args", default="", help="Arguments to pass to gtkwave")
+        group.add_argument("--viewer-args", "--gtkwave-args", default="", help="Arguments to pass to waveform viewer")
+        group.add_argument("--viewer", default="gtkwave", help="Waveform viewer to use")
 
     @classmethod
     def from_args(cls, args, output_path, **kwargs):
@@ -71,8 +73,8 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
             output_path=output_path,
             prefix=prefix,
             gui=args.gui,
-            gtkwave_fmt=args.gtkwave_fmt,
-            gtkwave_args=args.gtkwave_args,
+            viewer_fmt=args.viewer_fmt,
+            viewer_args=args.viewer_args,
             backend=cls.determine_backend(prefix),
         )
 
@@ -88,20 +90,24 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         output_path,
         prefix,
         gui=False,
-        gtkwave_fmt=None,
-        gtkwave_args="",
+        viewer_fmt=None,
+        viewer_args="",
+        viewer="gtkwave",
         backend="llvm",
     ):
         SimulatorInterface.__init__(self, output_path, gui)
         self._prefix = prefix
         self._project = None
 
-        if gui and (not self.find_executable("gtkwave")):
-            raise RuntimeError("Cannot find the gtkwave executable in the PATH environment variable. GUI not possible")
+        if gui and (not self.find_executable(viewer)):
+            raise RuntimeError(
+                f"Cannot find the {viewer} executable in the PATH environment variable. GUI not possible"
+            )
 
         self._gui = gui
-        self._gtkwave_fmt = "ghw" if gui and gtkwave_fmt is None else gtkwave_fmt
-        self._gtkwave_args = gtkwave_args
+        self._viewer_fmt = "ghw" if gui and viewer_fmt is None else viewer_fmt
+        self._viewer_args = viewer_args
+        self._viewer = viewer
         self._backend = backend
         self._vhdl_standard = None
         self._coverage_test_dirs = set()
@@ -293,11 +299,11 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
             sim += ["--ieee-asserts=disable"]
 
         if wave_file:
-            if self._gtkwave_fmt == "ghw":
+            if self._viewer_fmt == "ghw":
                 sim += [f"--wave={wave_file!s}"]
-            elif self._gtkwave_fmt == "vcd":
+            elif self._viewer_fmt == "vcd":
                 sim += [f"--vcd={wave_file!s}"]
-            elif self._gtkwave_fmt == "fst":
+            elif self._viewer_fmt == "fst":
                 sim += [f"--fst={wave_file!s}"]
 
         if not ghdl_e:
@@ -333,8 +339,8 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
 
         ghdl_e = elaborate_only and config.sim_options.get("ghdl.elab_e", False)
 
-        if self._gtkwave_fmt is not None:
-            data_file_name = str(Path(script_path) / f"wave.{self._gtkwave_fmt!s}")
+        if self._viewer_fmt is not None:
+            data_file_name = str(Path(script_path) / f"wave.{self._viewer_fmt!s}")
             if Path(data_file_name).exists():
                 remove(data_file_name)
         else:
@@ -358,9 +364,9 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
             status = False
 
         if self._gui and not elaborate_only:
-            cmd = ["gtkwave"] + shlex.split(self._gtkwave_args) + [data_file_name]
+            cmd = [self._viewer] + shlex.split(self._viewer_args) + [data_file_name]
 
-            init_file = config.sim_options.get(self.name + ".gtkwave_script.gui", None)
+            init_file = config.sim_options.get(self.name + ".viewer_script.gui", None)
             if init_file is not None:
                 cmd += ["--script", str(Path(init_file).resolve())]
 
