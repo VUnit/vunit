@@ -13,50 +13,45 @@ Verilog parsing functionality
 
 import logging
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+from typing_extensions import Self
 from vunit.ostools import read_file
 from vunit.parsing.encodings import HDL_FILE_ENCODING
-from vunit.parsing.tokenizer import TokenStream, EOFException, LocationException
+from vunit.parsing.tokenizer import Token, TokenStream, EOFException, LocationException
 from vunit.parsing.verilog.tokenizer import VerilogTokenizer
 from vunit.parsing.verilog.preprocess import (
+    Defines,
+    IncludePaths,
+    IncludedFiles,
     VerilogPreprocessor,
     find_included_file,
     Macro,
 )
-from vunit.parsing.verilog.tokens import (
-    BEGIN,
-    COLON,
-    COMMENT,
-    END,
-    ENDMODULE,
-    DOUBLE_COLON,
-    HASH,
-    IDENTIFIER,
-    IMPORT,
-    MODULE,
-    MULTI_COMMENT,
-    NEWLINE,
-    PACKAGE,
-    PARAMETER,
-    SEMI_COLON,
-    WHITESPACE,
-)
+from vunit.parsing.verilog.tokens import KeywordKind, TokenKind
 from vunit.cached import file_content_hash
 
 LOGGER = logging.getLogger(__name__)
 
 
-class VerilogParser(object):
+class VerilogParser:
     """
     Parse a single Verilog file
     """
 
-    def __init__(self, database=None):
+    _tokenizer: VerilogTokenizer
+    _preprocessor: VerilogPreprocessor
+    _database: Any
+    _content_cache: Dict[str, str]
+
+    def __init__(self, database: Optional[Any] = None):
         self._tokenizer = VerilogTokenizer()
         self._preprocessor = VerilogPreprocessor(self._tokenizer)
         self._database = database
         self._content_cache = {}
 
-    def parse(self, file_name, include_paths=None, defines=None):
+    def parse(
+        self, file_name: str, include_paths: Optional[List[str]] = None, defines: Optional[Dict[str, Macro]] = None
+    ) -> "VerilogDesignFile":
         """
         Parse verilog code
         """
@@ -90,13 +85,15 @@ class VerilogParser(object):
         return result
 
     @staticmethod
-    def _key(file_name):
+    def _key(file_name: str) -> bytes:
         """
         Returns the database key for parse results of file_name
         """
         return f"CachedVerilogParser.parse({str(Path(file_name).resolve)})".encode()
 
-    def _store_result(self, file_name, result, included_files, defines):
+    def _store_result(
+        self, file_name: str, result: "VerilogDesignFile", included_files: List[Tuple[str, str]], defines: Defines
+    ) -> "VerilogDesignFile":
         """
         Store parse result into back into cache
         """
@@ -113,7 +110,7 @@ class VerilogParser(object):
         )
         return result
 
-    def _content_hash(self, file_name):
+    def _content_hash(self, file_name: Optional[str]) -> Optional[str]:
         """
         Hash the contents of the file
         """
@@ -125,7 +122,9 @@ class VerilogParser(object):
             )
         return self._content_cache[file_name]
 
-    def _lookup_parse_cache(self, file_name, include_paths, defines):
+    def _lookup_parse_cache(
+        self, file_name: str, include_paths: IncludePaths, defines: Defines
+    ) -> "Optional[VerilogDesignFile]":
         """
         Use verilog code from cache
         """
@@ -157,19 +156,26 @@ class VerilogParser(object):
         return old_result
 
 
-class VerilogDesignFile(object):
+class VerilogDesignFile:
     """
-    Contains Verilog objecs found within a file
+    Contains Verilog objects found within a file
     """
+
+    modules: "List[VerilogModule]"
+    packages: "List[VerilogPackage]"
+    imports: List[str]
+    package_references: List[str]
+    instances: List[str]
+    included_files: IncludedFiles
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
-        modules=None,
-        packages=None,
-        imports=None,
-        package_references=None,
-        instances=None,
-        included_files=None,
+        modules: "Optional[List[VerilogModule]]" = None,
+        packages: "Optional[List[VerilogPackage]]" = None,
+        imports: Optional[List[str]] = None,
+        package_references: Optional[List[str]] = None,
+        instances: Optional[List[str]] = None,
+        included_files: Optional[IncludedFiles] = None,
     ):
         self.modules = [] if modules is None else modules
         self.packages = [] if packages is None else packages
@@ -179,11 +185,15 @@ class VerilogDesignFile(object):
         self.included_files = [] if included_files is None else included_files
 
     @classmethod
-    def parse(cls, tokens, included_files):
+    def parse(cls, tokens: List[Token], included_files: IncludedFiles) -> Self:
         """
         Parse verilog file
         """
-        tokens = [token for token in tokens if token.kind not in (WHITESPACE, COMMENT, NEWLINE, MULTI_COMMENT)]
+        tokens = [
+            token
+            for token in tokens
+            if token.kind not in (TokenKind.WHITESPACE, TokenKind.COMMENT, TokenKind.NEWLINE, TokenKind.MULTI_COMMENT)
+        ]
         return cls(
             modules=VerilogModule.find(tokens),
             packages=VerilogPackage.find(tokens),
@@ -194,21 +204,21 @@ class VerilogDesignFile(object):
         )
 
     @staticmethod
-    def find_imports(tokens):
+    def find_imports(tokens: List[Token]) -> List[str]:
         """
         Find imports
         """
-        results = []
+        results: List[str] = []
         stream = TokenStream(tokens)
         while not stream.eof:
             token = stream.pop()
 
-            if token.kind != IMPORT:
+            if token.kind != KeywordKind.IMPORT:
                 continue
             import_token = token
             try:
                 token = stream.pop()
-                if token.kind == IDENTIFIER:
+                if token.kind == TokenKind.IDENTIFIER:
                     results.append(token.value)
                 else:
                     LocationException.warning("import bad argument", token.location).log(LOGGER)
@@ -217,41 +227,41 @@ class VerilogDesignFile(object):
         return results
 
     @staticmethod
-    def find_package_references(tokens):
+    def find_package_references(tokens: List[Token]) -> List[str]:
         """
         Find package_references pkg::func
         """
-        results = []
+        results: List[str] = []
         stream = TokenStream(tokens)
         while not stream.eof:
             token = stream.pop()
-            if token.kind == IMPORT:
-                stream.skip_until(SEMI_COLON)
+            if token.kind == KeywordKind.IMPORT:
+                stream.skip_until(TokenKind.SEMI_COLON)
                 if not stream.eof:
                     stream.pop()
 
-            elif token.kind == IDENTIFIER and not stream.eof:
+            elif token.kind == TokenKind.IDENTIFIER and not stream.eof:
                 kind = stream.pop().kind
-                if kind == DOUBLE_COLON:
+                if kind == TokenKind.DOUBLE_COLON:
                     results.append(token.value)
-                    stream.skip_while(IDENTIFIER, DOUBLE_COLON)
+                    stream.skip_while(TokenKind.IDENTIFIER, TokenKind.DOUBLE_COLON)
         return results
 
     @staticmethod
-    def find_instances(tokens):
+    def find_instances(tokens: List[Token]) -> List[str]:
         """
         Find module instances
         """
-        results = []
+        results: List[str] = []
         stream = TokenStream(tokens)
         while not stream.eof:
             token = stream.pop()
 
-            if token.kind in (BEGIN, END):
+            if token.kind in (KeywordKind.BEGIN, KeywordKind.END):
                 _parse_block_label(stream)
                 continue
 
-            if not token.kind == IDENTIFIER:
+            if not token.kind == TokenKind.IDENTIFIER:
                 continue
             modulename = token.value
 
@@ -260,72 +270,75 @@ class VerilogDesignFile(object):
             except EOFException:
                 continue
 
-            if token.kind == HASH:
+            if token.kind == TokenKind.HASH:
                 results.append(modulename)
-            elif token.kind == IDENTIFIER:
+            elif token.kind == TokenKind.IDENTIFIER:
                 results.append(modulename)
 
         return results
 
 
-def _parse_block_label(stream):
+def _parse_block_label(stream: TokenStream) -> None:
     """
     Parse a optional block label after begin|end keyword
     """
     try:
         token = stream.peek()
 
-        if token.kind != COLON:
+        if token.kind != TokenKind.COLON:
             # Is not block label
             return
 
         stream.pop()
-        stream.expect(IDENTIFIER)
+        stream.expect(TokenKind.IDENTIFIER)
 
     except EOFException:
         return
 
 
-class VerilogModule(object):
+class VerilogModule:
     """
     A verilog module
     """
 
-    def __init__(self, name, parameters):
+    name: str
+    parameters: List[str]
+
+    def __init__(self, name: str, parameters: List[str]):
         self.name = name
         self.parameters = parameters
 
     @classmethod
-    def parse_parameter(cls, idx, tokens):
+    def parse_parameter(cls, idx: int, tokens: List[Token]) -> Optional[str]:
         """
         Parse parameter at point
         """
-        if not tokens[idx].kind == PARAMETER:
+        if not tokens[idx].kind == KeywordKind.PARAMETER:
             return None
 
-        if tokens[idx + 2].kind == IDENTIFIER:
+        if tokens[idx + 2].kind == TokenKind.IDENTIFIER:
             return tokens[idx + 2].value
 
         return tokens[idx + 1].value
 
     @classmethod
-    def find(cls, tokens):
+    def find(cls, tokens: List[Token]) -> List[Self]:
         """
         Find all modules within code, nested modules are ignored
         """
         idx = 0
-        name = None
+        name = ""
         balance = 0
-        results = []
-        parameters = []
+        results: List[Self] = []
+        parameters: List[str] = []
         while idx < len(tokens):
-            if tokens[idx].kind == MODULE:
+            if tokens[idx].kind == KeywordKind.MODULE:
                 if balance == 0:
                     name = tokens[idx + 1].value
                     parameters = []
                 balance += 1
 
-            elif tokens[idx].kind == ENDMODULE:
+            elif tokens[idx].kind == KeywordKind.ENDMODULE:
                 balance -= 1
                 if balance == 0:
                     results.append(cls(name, parameters))
@@ -339,23 +352,25 @@ class VerilogModule(object):
         return results
 
 
-class VerilogPackage(object):
+class VerilogPackage:
     """
     A verilog package
     """
 
-    def __init__(self, name):
+    name: str
+
+    def __init__(self, name: str):
         self.name = name
 
     @classmethod
-    def find(cls, tokens):
+    def find(cls, tokens: List[Token]) -> List[Self]:
         """
         Find all modules within code, nested modules are ignored
         """
         idx = 0
-        results = []
+        results: List[Self] = []
         while idx < len(tokens):
-            if tokens[idx].kind == PACKAGE:
+            if tokens[idx].kind == KeywordKind.PACKAGE:
                 idx += 1
                 name = tokens[idx].value
                 results.append(cls(name))

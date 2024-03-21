@@ -8,48 +8,41 @@
 A general tokenizer
 """
 
-import collections
+from dataclasses import dataclass
+import logging
 import re
+from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing_extensions import Self, Literal
 from vunit.ostools import read_file, file_exists, simplify_path
+from typing_extensions import TypeAlias
+
+from vunit.parsing.verilog.tokens import KeywordKind, TokenKind
+
+Location: TypeAlias = Tuple[Tuple[Optional[str], Tuple[int, int]], Optional["Location"]]
 
 
-TokenType = collections.namedtuple("TokenType", ["kind", "value", "location"])
+@dataclass(frozen=True)
+class Token:
+    kind: Union[TokenKind, KeywordKind]
+    value: str = ""
+    location: Optional[Location] = None
 
 
-def Token(kind, value="", location=None):  # pylint: disable=invalid-name
-    return TokenType(kind, value, location)
-
-
-class TokenKind:
-    pass
-
-
-def new_token_kind(name: str) -> TokenKind:
-    """
-    Create a new token kind with nice __repr__
-    """
-
-    def new_token(kind, value="", location=None):
-        """
-        Create new token of kind
-        """
-        return Token(kind, value, location)
-
-    cls = type(name, (object,), {"__repr__": lambda self: name, "__call__": new_token})
-    return cls()
-
-
-class Tokenizer(object):
+class Tokenizer:
     """
     Maintain a prioritized list of token regex
     """
+
+    _regexs: List[Tuple[str, str]]
+    _assoc: Dict[str, Tuple[TokenKind, Optional[Callable[[Token], Optional[Token]]]]]
+    _regex: Optional[re.Pattern[str]]
 
     def __init__(self):
         self._regexs = []
         self._assoc = {}
         self._regex = None
 
-    def add(self, kind, regex, func=None):
+    def add(self, kind: TokenKind, regex: str, func: Optional[Callable[[Token], Optional[Token]]] = None) -> TokenKind:
         """
         Add token type
         """
@@ -58,24 +51,33 @@ class Tokenizer(object):
         self._assoc[key] = (kind, func)
         return kind
 
-    def finalize(self):
+    def finalize(self) -> None:
         self._regex = re.compile(
             "|".join(f"(?P<{spec[0]!s}>{spec[1]!s})" for spec in self._regexs),
             re.VERBOSE | re.MULTILINE,
         )
 
-    def tokenize(self, code, file_name=None, previous_location=None, create_locations=False):
+    def tokenize(
+        self,
+        code: str,
+        file_name: Optional[str] = None,
+        previous_location: Optional[Location] = None,
+        create_locations: bool = False,
+    ) -> List[Token]:
         """
         Tokenize the code
         """
-        tokens = []
+        tokens: List[Token] = []
         start = 0
+
+        assert self._regex is not None
         while True:
             match = self._regex.search(code, pos=start)
             if match is None:
                 break
             lexpos = (start, match.end() - 1)
             start = match.end()
+            assert match.lastgroup is not None
             kind, func = self._assoc[match.lastgroup]
             value = match.group(match.lastgroup)
 
@@ -93,37 +95,40 @@ class Tokenizer(object):
         return tokens
 
 
-class TokenStream(object):
+class TokenStream:
     """
     Helper class for traversing a stream of tokens
     """
 
-    def __init__(self, tokens):
+    _tokens: List[Token]
+    _idx: int
+
+    def __init__(self, tokens: List[Token]):
         self._tokens = tokens
         self._idx = 0
 
     def __len__(self):
         return len(self._tokens)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int) -> Token:
         return self._tokens[index]
 
     @property
-    def eof(self):
+    def eof(self) -> bool:
         return not self._idx < len(self._tokens)
 
     @property
-    def idx(self):
+    def idx(self) -> int:
         return self._idx
 
     @property
-    def current(self):
+    def current(self) -> Token:
         return self._tokens[self._idx]
 
-    def peek(self, offset=0):
+    def peek(self, offset: int = 0) -> Token:
         return self._tokens[self._idx + offset]
 
-    def skip_while(self, *kinds):
+    def skip_while(self, *kinds: TokenKind) -> int:
         """
         Skip forward while token kind is present
         """
@@ -133,7 +138,7 @@ class TokenStream(object):
             self._idx += 1
         return self._idx
 
-    def skip_until(self, *kinds):
+    def skip_until(self, *kinds: TokenKind) -> int:
         """
         Skip forward until token kind is present
         """
@@ -143,7 +148,7 @@ class TokenStream(object):
             self._idx += 1
         return self._idx
 
-    def pop(self):
+    def pop(self) -> Token:
         """
         Return current token and advance stream
         """
@@ -153,7 +158,7 @@ class TokenStream(object):
         self._idx += 1
         return self._tokens[self._idx - 1]
 
-    def expect(self, *kinds):
+    def expect(self, *kinds: TokenKind) -> Token:
         """
         Expect to pop token with any of kinds
         """
@@ -163,11 +168,11 @@ class TokenStream(object):
             raise LocationException.error(f"Expected {expected!s} got {token.kind!s}", token.location)
         return token
 
-    def slice(self, start, end):
+    def slice(self, start: int, end: int) -> List[Token]:
         return self._tokens[start:end]
 
 
-def describe_location(location, first=True):
+def describe_location(location: Optional[Location], first: bool = True) -> str:
     """
     Describe the location as a string
     """
@@ -221,25 +226,25 @@ class LocationException(Exception):
     """
 
     @classmethod
-    def error(cls, message, location):
+    def error(cls, message: str, location: Optional[Location]) -> Self:
         return cls(message, location, "error")
 
     @classmethod
-    def warning(cls, message, location):
+    def warning(cls, message: str, location: Optional[Location]) -> Self:
         return cls(message, location, "warning")
 
     @classmethod
-    def debug(cls, message, location):
+    def debug(cls, message: str, location: Optional[Location]) -> Self:
         return cls(message, location, "debug")
 
-    def __init__(self, message, location, severity):
-        Exception.__init__(self)
+    def __init__(self, message: str, location: Optional[Location], severity: Literal["debug", "warning", "error"]):
+        super().__init__(self)
         assert severity in ("debug", "warning", "error")
         self._severtity = severity
         self._message = message
         self._location = location
 
-    def log(self, logger):
+    def log(self, logger: logging.Logger) -> None:
         """
         Log the exception
         """
@@ -253,7 +258,7 @@ class LocationException(Exception):
         method(self._message + "\n%s", describe_location(self._location))
 
 
-def add_previous(location, previous):
+def add_previous(location: Optional[Location], previous: Optional[Location]) -> Optional[Location]:
     """
     Add previous location
     """
@@ -264,7 +269,7 @@ def add_previous(location, previous):
     return (current, add_previous(old_previous, previous))
 
 
-def strip_previous(location):
+def strip_previous(location: Optional[Location]) -> Optional[Tuple[Optional[str], Tuple[int, int]]]:
     """
     Strip previous location
     """

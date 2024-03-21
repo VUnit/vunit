@@ -11,29 +11,11 @@
 Test of the Verilog tokenizer
 """
 
+from typing import List
 from unittest import TestCase
+from vunit.parsing.tokenizer import Token
 from vunit.parsing.verilog.tokenizer import VerilogTokenizer
-from vunit.parsing.verilog.tokens import (
-    COMMA,
-    COMMENT,
-    ENDMODULE,
-    ENDPACKAGE,
-    EQUAL,
-    HASH,
-    IDENTIFIER,
-    IMPORT,
-    LPAR,
-    MODULE,
-    MULTI_COMMENT,
-    NEWLINE,
-    PACKAGE,
-    PARAMETER,
-    PREPROCESSOR,
-    RPAR,
-    SEMI_COLON,
-    STRING,
-    WHITESPACE,
-)
+from vunit.parsing.verilog.tokens import TokenKind, KeywordKind
 
 
 class TestVerilogTokenizer(TestCase):
@@ -45,9 +27,9 @@ class TestVerilogTokenizer(TestCase):
         self.check(
             "`define name",
             [
-                PREPROCESSOR(value="define"),
-                WHITESPACE(value=" "),
-                IDENTIFIER(value="name"),
+                Token(TokenKind.PREPROCESSOR, value="define"),
+                Token(TokenKind.WHITESPACE, value=" "),
+                Token(TokenKind.IDENTIFIER, value="name"),
             ],
         )
 
@@ -55,93 +37,95 @@ class TestVerilogTokenizer(TestCase):
         self.check(
             " \n  \n\n",
             [
-                WHITESPACE(value=" "),
-                NEWLINE(),
-                WHITESPACE(value="  "),
-                NEWLINE(),
-                NEWLINE(),
+                Token(TokenKind.WHITESPACE, value=" "),
+                Token(TokenKind.NEWLINE),
+                Token(TokenKind.WHITESPACE, value="  "),
+                Token(TokenKind.NEWLINE),
+                Token(TokenKind.NEWLINE),
             ],
         )
 
     def test_tokenizes_string_literal(self):
-        self.check('"hello"', [STRING(value="hello")])
+        self.check('"hello"', [Token(TokenKind.STRING, value="hello")])
 
-        self.check('"hel""lo"', [STRING(value="hel"), STRING(value="lo")])
+        self.check('"hel""lo"', [Token(TokenKind.STRING, value="hel"), Token(TokenKind.STRING, value="lo")])
 
-        self.check(r'"h\"ello"', [STRING(value='h"ello')])
+        self.check(r'"h\"ello"', [Token(TokenKind.STRING, value='h"ello')])
 
-        self.check(r'"h\"ello"', [STRING(value='h"ello')])
+        self.check(r'"h\"ello"', [Token(TokenKind.STRING, value='h"ello')])
 
-        self.check(r'"\"ello"', [STRING(value='"ello')])
+        self.check(r'"\"ello"', [Token(TokenKind.STRING, value='"ello')])
 
-        self.check(r'"\"\""', [STRING(value='""')])
+        self.check(r'"\"\""', [Token(TokenKind.STRING, value='""')])
 
         self.check(
             r'''"hi
 there"''',
-            [STRING(value="hi\nthere")],
+            [Token(TokenKind.STRING, value="hi\nthere")],
         )
 
         self.check(
             r'''"hi\
 there"''',
-            [STRING(value="hithere")],
+            [Token(TokenKind.STRING, value="hithere")],
         )
 
     def test_tokenizes_single_line_comment(self):
-        self.check("// asd", [COMMENT(value=" asd")])
+        self.check("// asd", [Token(TokenKind.COMMENT, value=" asd")])
 
-        self.check("asd// asd", [IDENTIFIER(value="asd"), COMMENT(value=" asd")])
+        self.check("asd// asd", [Token(TokenKind.IDENTIFIER, value="asd"), Token(TokenKind.COMMENT, value=" asd")])
 
-        self.check("asd// asd //", [IDENTIFIER(value="asd"), COMMENT(value=" asd //")])
+        self.check(
+            "asd// asd //", [Token(TokenKind.IDENTIFIER, value="asd"), Token(TokenKind.COMMENT, value=" asd //")]
+        )
 
     def test_tokenizes_multi_line_comment(self):
-        self.check("/* asd */", [MULTI_COMMENT(value=" asd ")])
+        self.check("/* asd */", [Token(TokenKind.MULTI_COMMENT, value=" asd ")])
 
-        self.check("/* /* asd */", [MULTI_COMMENT(value=" /* asd ")])
+        self.check("/* /* asd */", [Token(TokenKind.MULTI_COMMENT, value=" /* asd ")])
 
-        self.check("/* /* asd */", [MULTI_COMMENT(value=" /* asd ")])
+        self.check("/* /* asd */", [Token(TokenKind.MULTI_COMMENT, value=" /* asd ")])
 
-        self.check("/* 1 \n 2 */", [MULTI_COMMENT(value=" 1 \n 2 ")])
+        self.check("/* 1 \n 2 */", [Token(TokenKind.MULTI_COMMENT, value=" 1 \n 2 ")])
 
-        self.check("/* 1 \r\n 2 */", [MULTI_COMMENT(value=" 1 \r\n 2 ")])
+        self.check("/* 1 \r\n 2 */", [Token(TokenKind.MULTI_COMMENT, value=" 1 \r\n 2 ")])
 
     def test_tokenizes_semi_colon(self):
-        self.check("asd;", [IDENTIFIER(value="asd"), SEMI_COLON(value="")])
+        self.check("asd;", [Token(TokenKind.IDENTIFIER, value="asd"), Token(TokenKind.SEMI_COLON, value="")])
 
     def test_tokenizes_newline(self):
-        self.check("asd\n", [IDENTIFIER(value="asd"), NEWLINE(value="")])
+        self.check("asd\n", [Token(TokenKind.IDENTIFIER, value="asd"), Token(TokenKind.NEWLINE, value="")])
 
     def test_tokenizes_comma(self):
-        self.check(",", [COMMA(value="")])
+        self.check(",", [Token(TokenKind.COMMA, value="")])
 
     def test_tokenizes_parenthesis(self):
-        self.check("()", [LPAR(value=""), RPAR(value="")])
+        self.check("()", [Token(TokenKind.LPAR, value=""), Token(TokenKind.RPAR, value="")])
 
     def test_tokenizes_hash(self):
-        self.check("#", [HASH(value="")])
+        self.check("#", [Token(TokenKind.HASH, value="")])
 
     def test_tokenizes_equal(self):
-        self.check("=", [EQUAL(value="")])
+        self.check("=", [Token(TokenKind.EQUAL, value="")])
 
     def test_escaped_newline_ignored(self):
-        self.check("a\\\nb", [IDENTIFIER(value="a"), IDENTIFIER(value="b")])
+        self.check("a\\\nb", [Token(TokenKind.IDENTIFIER, value="a"), Token(TokenKind.IDENTIFIER, value="b")])
 
     def test_tokenizes_keywords(self):
-        self.check("module", [MODULE(value="module")])
-        self.check("endmodule", [ENDMODULE(value="endmodule")])
-        self.check("package", [PACKAGE(value="package")])
-        self.check("endpackage", [ENDPACKAGE(value="endpackage")])
-        self.check("parameter", [PARAMETER(value="parameter")])
-        self.check("import", [IMPORT(value="import")])
+        self.check("module", [Token(KeywordKind.MODULE, value="module")])
+        self.check("endmodule", [Token(KeywordKind.ENDMODULE, value="endmodule")])
+        self.check("package", [Token(KeywordKind.PACKAGE, value="package")])
+        self.check("endpackage", [Token(KeywordKind.ENDPACKAGE, value="endpackage")])
+        self.check("parameter", [Token(KeywordKind.PARAMETER, value="parameter")])
+        self.check("import", [Token(KeywordKind.IMPORT, value="import")])
 
     def test_has_location_information(self):
         self.check(
             "`define foo",
             [
-                PREPROCESSOR(value="define", location=(("fn.v", (0, 6)), None)),
-                WHITESPACE(value=" ", location=(("fn.v", (7, 7)), None)),
-                IDENTIFIER(value="foo", location=(("fn.v", (8, 10)), None)),
+                Token(TokenKind.PREPROCESSOR, value="define", location=(("fn.v", (0, 6)), None)),
+                Token(TokenKind.WHITESPACE, value=" ", location=(("fn.v", (7, 7)), None)),
+                Token(TokenKind.IDENTIFIER, value="foo", location=(("fn.v", (8, 10)), None)),
             ],
             strip_loc=False,
         )
@@ -149,16 +133,16 @@ there"''',
     def setUp(self):
         self.tokenizer = VerilogTokenizer()
 
-    def check(self, code, tokens, strip_loc=True):
+    def check(self, code: str, tokens: List[Token], strip_loc: bool = True):
         """
         Helper method to test tokenizer
         Tokenize code and check that it matches tokens
         optionally strip location information in comparison
         """
 
-        def preprocess(tokens):  # pylint: disable=missing-docstring
+        def preprocess(tokens: List[Token]):  # pylint: disable=missing-docstring
             if strip_loc:
-                return [token.kind(token.value, None) for token in tokens]
+                return [Token(token.kind, token.value) for token in tokens]
 
             return tokens
 

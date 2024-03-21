@@ -14,10 +14,11 @@ Test of the Verilog preprocessor
 
 from pathlib import Path
 import os
+from typing import Dict, List, Optional
 from unittest import TestCase, mock
 import shutil
 from vunit.ostools import renew_path, write_file
-from vunit.parsing.verilog.preprocess import VerilogPreprocessor, Macro
+from vunit.parsing.verilog.preprocess import Defines, IncludePaths, IncludedFiles, VerilogPreprocessor, Macro
 from vunit.parsing.verilog.tokenizer import VerilogTokenizer
 from vunit.parsing.tokenizer import Token
 
@@ -811,7 +812,9 @@ keep_end"""
         result.assert_has_tokens("keep_before\n\nkeep_end")
         result.assert_no_log()
 
-    def preprocess(self, code, file_name="fn.v", include_paths=None):
+    def preprocess(
+        self, code: str, file_name: str = "fn.v", include_paths: Optional[IncludePaths] = None
+    ) -> "PreprocessResult":
         """
         Tokenize & Preprocess
         """
@@ -819,8 +822,8 @@ keep_end"""
         preprocessor = VerilogPreprocessor(tokenizer)
         write_file(file_name, code)
         tokens = tokenizer.tokenize(code, file_name=file_name)
-        defines = {}
-        included_files = []
+        defines: Defines = {}
+        included_files: IncludedFiles = []
         with mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True) as logger:
             tokens = preprocessor.preprocess(tokens, defines, include_paths, included_files)
         return PreprocessResult(
@@ -831,7 +834,7 @@ keep_end"""
             logger,
         )
 
-    def write_file(self, file_name, contents):
+    def write_file(self, file_name: str, contents: str) -> None:
         """
         Write file with contents into output path
         """
@@ -843,18 +846,24 @@ keep_end"""
             fptr.write(contents)
 
 
-class PreprocessResult(object):
+class PreprocessResult:
     """
     Helper object to test preprocessing
     """
 
+    test: TestCase
+    tokens: List[Token]
+    defines: Dict[str, Macro]
+    included_files: List[str]
+    logger: mock.Mock
+
     def __init__(
         self,  # pylint: disable=too-many-arguments
-        test,
-        tokens,
-        defines,
-        included_files,
-        logger,
+        test: TestCase,
+        tokens: List[Token],
+        defines: Defines,
+        included_files: List[str],
+        logger: mock.Mock,
     ):
         self.test = test
         self.tokens = tokens
@@ -862,7 +871,7 @@ class PreprocessResult(object):
         self.included_files = included_files
         self.logger = logger
 
-    def assert_has_tokens(self, code, noloc=True):
+    def assert_has_tokens(self, code: str, noloc: bool = True):
         """
         Check that tokens are the same as code
         """
@@ -880,19 +889,19 @@ class PreprocessResult(object):
         """
         self.test.assertEqual(self.defines, {})
 
-    def assert_included_files(self, included_files):
+    def assert_included_files(self, included_files: List[str]) -> None:
         """
         Assert that these files where included
         """
         self.test.assertEqual(self.included_files, included_files)
 
-    def assert_has_defines(self, defines):
+    def assert_has_defines(self, defines: Defines) -> None:
         """
         Assert that these defines were made
         """
         self.test.assertEqual(self.defines.keys(), defines.keys())
 
-        def macro_strip_loc(define):
+        def macro_strip_loc(define: Macro) -> None:
             """
             Strip location information from a Macro
             """
@@ -903,7 +912,7 @@ class PreprocessResult(object):
         for key in self.defines:
             self.test.assertEqual(macro_strip_loc(self.defines[key]), macro_strip_loc(defines[key]))
 
-    def assert_no_log(self):
+    def assert_no_log(self) -> None:
         """
         Assert that no log call were made
         """
@@ -913,7 +922,7 @@ class PreprocessResult(object):
         self.test.assertEqual(self.logger.error.mock_calls, [])
 
 
-def tokenize(code, file_name="fn.v"):
+def tokenize(code: str, file_name: str = "fn.v") -> List[Token]:
     """
     Tokenize
     """
@@ -921,7 +930,7 @@ def tokenize(code, file_name="fn.v"):
     return tokenizer.tokenize(code, file_name=file_name)
 
 
-def strip_loc(tokens):
+def strip_loc(tokens: List[Token]) -> List[Token]:
     """
     Strip location information
     """
