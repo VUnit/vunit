@@ -9,10 +9,10 @@
 """
 Functionality to represent and operate on a HDL code project
 """
-from typing import Optional, Union
+from collections import OrderedDict
+from typing import List, Optional, Union
 from pathlib import Path
 import logging
-from collections import OrderedDict
 from vunit.hashing import hash_string
 from vunit.dependency_graph import DependencyGraph, CircularDependencyException
 from vunit.vhdl_parser import VHDLParser
@@ -45,15 +45,15 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         self._database = database
         self._vhdl_parser = VHDLParser(database=self._database)
         self._verilog_parser = VerilogParser(database=self._database)
-        self._libraries = OrderedDict()
+        self._libraries: OrderedDict[str, Library] = OrderedDict()
         # Mapping between library lower case name and real library name
         self._lower_library_names_dict = {}
-        self._source_files_in_order = []
+        self._source_files_in_order: List[SourceFile] = []
         self._manual_dependencies = []
         self._depend_on_package_body = depend_on_package_body
         self._builtin_libraries = set(["ieee", "std"])
 
-    def _validate_new_library_name(self, library_name):
+    def _validate_new_library_name(self, library_name: str) -> None:
         """
         Check that the library_name is valid or raise RuntimeError
         """
@@ -74,7 +74,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
                 f"Library name {self._lower_library_names_dict[lower_name]!r} previously defined"
             )
 
-    def add_builtin_library(self, logical_name):
+    def add_builtin_library(self, logical_name: str) -> None:
         """
         Add a builtin library name that does not give missing dependency warnings
         """
@@ -82,7 +82,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
 
     def add_library(
         self,
-        logical_name,
+        logical_name: str,
         directory: Union[str, Path],
         vhdl_standard: VHDLStandard = VHDL.STD_2008,
         is_external=False,
@@ -118,7 +118,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         defines=None,
         vhdl_standard: Optional[VHDLStandard] = None,
         no_parse=False,
-    ):
+    ) -> SourceFile:
         """
         Add a file_name as a source file in library_name with file_type
 
@@ -515,7 +515,9 @@ See https://github.com/VUnit/vunit/issues/777 and http://vunit.github.io/hdl_lib
                 result_list.append(source_file)
         return result_list
 
-    def get_dependencies_in_compile_order(self, target_files=None, implementation_dependencies=False):
+    def get_dependencies_in_compile_order(
+        self, target_files=None, implementation_dependencies=False
+    ) -> List[SourceFile]:
         """
         Get a list of dependencies of target files including the
         target files.
@@ -591,7 +593,7 @@ See https://github.com/VUnit/vunit/issues/777 and http://vunit.github.io/hdl_lib
 
         return sorted(files, key=comparison_key)
 
-    def get_source_files_in_order(self):
+    def get_source_files_in_order(self) -> List[SourceFile]:
         """
         Get a list of source files in the order they were added to the project
         """

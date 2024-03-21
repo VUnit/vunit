@@ -12,8 +12,8 @@ from pathlib import Path
 from glob import glob
 from os import environ
 from logging import getLogger
-from typing import Optional, List
-from ..sim_if import is_string_not_iterable
+from typing import Dict, Iterable, Optional, List, TypeVar, Union
+
 from ..vhdl_standard import VHDL, VHDLStandard
 
 LOGGER = getLogger(__name__)
@@ -35,7 +35,10 @@ def select_vhdl_standard(vhdl_standard: Optional[str] = None) -> VHDLStandard:
         raise
 
 
-def lower_generics(generics):
+T = TypeVar("T")
+
+
+def lower_generics(generics: Dict[str, T]) -> Dict[str, T]:
     """
     Convert all generics names to lower case to match internal representation.
     @TODO Maybe warn in case of conflict. VHDL forbids this though so the user will notice anyway.
@@ -43,7 +46,7 @@ def lower_generics(generics):
     return dict((name.lower(), value) for name, value in generics.items())
 
 
-def check_not_empty(lst, allow_empty, error_msg):
+def check_not_empty(lst: List[T], allow_empty: bool, error_msg: str) -> List[T]:
     """
     Raise ValueError if the list is empty unless allow_empty is True
     Returns the list
@@ -53,12 +56,12 @@ def check_not_empty(lst, allow_empty, error_msg):
     return lst
 
 
-def get_checked_file_names_from_globs(pattern, allow_empty):
+def get_checked_file_names_from_globs(pattern: Union[Iterable[str], str, Path], allow_empty: bool) -> List[str]:
     """
     Get file names from globs and check that exist
     """
-    if is_string_not_iterable(pattern):
-        patterns = [pattern]
+    if isinstance(pattern, str):
+        patterns: Iterable[str] = [pattern]
     elif isinstance(pattern, Path):
         patterns = [str(pattern)]
     else:

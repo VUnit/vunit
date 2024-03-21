@@ -10,21 +10,26 @@
 Public VUnit User Interface (UI)
 """
 
+from __future__ import annotations
+from argparse import Namespace
 import csv
 import sys
 import traceback
 import logging
 import json
 import os
-from typing import Optional, Set, Union
+from typing import Any, Callable, Dict, List, Optional, Set, Union, cast, TYPE_CHECKING
 from pathlib import Path
 from fnmatch import fnmatch
+from vunit.test.list import TestList
+
+from vunit.ui.preprocessor import Preprocessor
 
 from ..database import PickledDataBase, DataBase
 from .. import ostools
 from ..vunit_cli import VUnitCLI
 from ..sim_if.factory import SIMULATOR_FACTORY
-from ..sim_if import SimulatorInterface
+from ..sim_if import OptionType, SimulatorInterface
 from ..color_printer import COLOR_PRINTER, NO_COLOR_PRINTER
 
 from ..project import Project
@@ -44,6 +49,10 @@ from .library import Library, LibraryList
 from .results import Results
 
 
+if TYPE_CHECKING:
+    from vunit.source_file import SourceFile as Source_File
+
+
 class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-public-methods
     """
     The public interface of VUnit
@@ -58,9 +67,9 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
     @classmethod
     def from_argv(
         cls,
-        argv=None,
+        argv: Optional[Namespace] = None,
         vhdl_standard: Optional[str] = None,
-    ):
+    ) -> VUnit:
         """
         Create VUnit instance from command line arguments.
 
@@ -89,9 +98,9 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
     @classmethod
     def from_args(
         cls,
-        args,
+        args: Namespace,
         vhdl_standard: Optional[str] = None,
-    ):
+    ) -> "VUnit":
         """
         Create VUnit instance from args namespace.
         Intended for users who adds custom command line options.
@@ -113,9 +122,9 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
     def __init__(
         self,
-        args,
+        args: Namespace,
         vhdl_standard: Optional[str] = None,
-    ):
+    ) -> None:
         self._args = args
         self._configure_logging(args.log_level)
         self._output_path = str(Path(args.output_path).resolve())
@@ -125,7 +134,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         else:
             self._printer = COLOR_PRINTER
 
-        def test_filter(name, attribute_names):
+        def test_filter(name: str, attribute_names: set) -> bool:
             keep = any(fnmatch(name, pattern) for pattern in args.test_patterns)
 
             if args.with_attributes is not None:
@@ -162,7 +171,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         self._builtins = Builtins(self, self._vhdl_standard, simulator_class)
 
-    def _create_database(self):
+    def _create_database(self) -> PickledDataBase:
         """
         Create a persistent database to store expensive parse results
 
@@ -185,12 +194,12 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         if create_new:
             database = DataBase(project_database_file_name, new=True)
-        database[key] = version
+        cast(DataBase, database)[key] = version
 
         return PickledDataBase(database)
 
     @staticmethod
-    def _configure_logging(log_level):
+    def _configure_logging(log_level: str) -> None:
         """
         Configure logging based on log_level string
         """
@@ -207,7 +216,9 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         return VHDL.standard(vhdl_standard)
 
-    def add_external_library(self, library_name, path: Union[str, Path], vhdl_standard: Optional[str] = None):
+    def add_external_library(
+        self, library_name: str, path: Union[str, Path], vhdl_standard: Optional[str] = None
+    ) -> Library:
         """
         Add an externally compiled library as a black-box
 
@@ -233,7 +244,9 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         )
         return self.library(library_name)
 
-    def add_source_files_from_csv(self, project_csv_path: Union[str, Path], vhdl_standard: Optional[str] = None):
+    def add_source_files_from_csv(
+        self, project_csv_path: Union[str, Path], vhdl_standard: Optional[str] = None
+    ) -> SourceFileList:
         """
         Add a project configuration, mapping all the libraries and files
 
@@ -269,8 +282,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self,
         library_name: str,
         vhdl_standard: Optional[str] = None,
-        allow_duplicate: Optional[bool] = False,
-    ):
+        allow_duplicate: bool = False,
+    ) -> Library:
         """
         Add a library managed by VUnit.
 
@@ -297,7 +310,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
             raise ValueError(f"Library {library_name!s} already added. Use allow_duplicate to ignore this error.")
         return self.library(library_name)
 
-    def library(self, library_name: str):
+    def library(self, library_name: str) -> Library:
         """
         Get a library
 
@@ -310,9 +323,9 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
     def get_libraries(
         self,
-        pattern="*",
-        allow_empty: Optional[bool] = False,
-    ):
+        pattern: str = "*",
+        allow_empty: bool = False,
+    ) -> LibraryList:
         """
         Get a list of libraries
 
@@ -320,7 +333,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         :param allow_empty: To disable an error if no labraries matched the pattern
         :returns: A :class:`.LibraryList` object
         """
-        results = []
+        results: List[Library] = []
 
         for library in self._project.get_libraries():
             if not fnmatch(library.name, pattern):
@@ -332,7 +345,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         return LibraryList(results)
 
-    def set_attribute(self, name: str, value: str, allow_empty: Optional[bool] = False):
+    def set_attribute(self, name: str, value: str, allow_empty: bool = False) -> None:
         """
         Set a value of attribute in all |configurations|
 
@@ -353,7 +366,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         for test_bench in check_not_empty(test_benches, allow_empty, "No test benches found"):
             test_bench.set_attribute(name, value)
 
-    def set_generic(self, name: str, value: str, allow_empty: Optional[bool] = False):
+    def set_generic(self, name: str, value: str, allow_empty: bool = False) -> None:
         """
         Set a value of generic in all |configurations|
 
@@ -374,7 +387,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         for test_bench in check_not_empty(test_benches, allow_empty, "No test benches found"):
             test_bench.set_generic(name.lower(), value)
 
-    def set_parameter(self, name: str, value: str, allow_empty: Optional[bool] = False):
+    def set_parameter(self, name: str, value: Union[str, int], allow_empty: bool = False) -> None:
         """
         Set value of parameter in all |configurations|
 
@@ -398,10 +411,10 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
     def set_sim_option(
         self,
         name: str,
-        value: str,
-        allow_empty: Optional[bool] = False,
-        overwrite: Optional[bool] = True,
-    ):
+        value: OptionType,
+        allow_empty: bool = False,
+        overwrite: bool = True,
+    ) -> None:
         """
         Set simulation option in all |configurations|
 
@@ -423,7 +436,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         for test_bench in check_not_empty(test_benches, allow_empty, "No test benches found"):
             test_bench.set_sim_option(name, value, overwrite)
 
-    def set_compile_option(self, name: str, value: str, allow_empty: Optional[bool] = False):
+    def set_compile_option(self, name: str, value: OptionType, allow_empty: bool = False) -> None:
         """
         Set compile option of all files
 
@@ -445,7 +458,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         for source_file in check_not_empty(source_files, allow_empty, "No source files found"):
             source_file.set_compile_option(name, value)
 
-    def add_compile_option(self, name: str, value: str, allow_empty: Optional[bool] = False):
+    def add_compile_option(self, name: str, value: OptionType, allow_empty: bool = False) -> None:
         """
         Add compile option to all files
 
@@ -460,7 +473,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         for source_file in check_not_empty(source_files, allow_empty, "No source files found"):
             source_file.add_compile_option(name, value)
 
-    def get_source_file(self, file_name: Union[str, Path], library_name: Optional[str] = None):
+    def get_source_file(self, file_name: Union[str, Path], library_name: Optional[str] = None) -> SourceFile:
         """
         Get a source file
 
@@ -483,10 +496,10 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
     def get_source_files(
         self,
-        pattern="*",
+        pattern: str = "*",
         library_name: Optional[str] = None,
-        allow_empty: Optional[bool] = False,
-    ):
+        allow_empty: bool = False,
+    ) -> SourceFileList:
         """
         Get a list of source files
 
@@ -520,16 +533,16 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
     def add_source_files(  # pylint: disable=too-many-arguments
         self,
-        pattern,
+        pattern: Union[str, Path],
         library_name: str,
-        preprocessors=None,
-        include_dirs=None,
-        defines=None,
-        allow_empty: Optional[bool] = False,
+        preprocessors: Optional[List[Preprocessor]] = None,
+        include_dirs: Optional[list] = None,
+        defines: Optional[dict] = None,
+        allow_empty: bool = False,
         vhdl_standard: Optional[str] = None,
-        no_parse: Optional[bool] = False,
-        file_type=None,
-    ):
+        no_parse: bool = False,
+        file_type: Optional[str] = None,
+    ) -> SourceFileList:
         """
         Add source files matching wildcard pattern to library
 
@@ -567,13 +580,13 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self,
         file_name: Union[str, Path],
         library_name: str,
-        preprocessors=None,
-        include_dirs=None,
-        defines=None,
+        preprocessors: Optional[List[Preprocessor]] = None,
+        include_dirs: Optional[List[Any]] = None,
+        defines: Optional[dict] = None,
         vhdl_standard: Optional[str] = None,
-        no_parse: Optional[bool] = False,
-        file_type=None,
-    ):
+        no_parse: bool = False,
+        file_type: Optional[str] = None,
+    ) -> SourceFile:
         """
         Add source file to library
 
@@ -605,7 +618,9 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
             file_type=file_type,
         )
 
-    def _preprocess(self, library_name: str, file_name: Union[str, Path], preprocessors):
+    def _preprocess(
+        self, library_name: str, file_name: Union[str, Path], preprocessors: Optional[List[Preprocessor]]
+    ) -> str:
         """
         Preprocess file_name within library_name using explicit preprocessors
         if preprocessors is None then use implicit globally defined preprocessors.
@@ -648,7 +663,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
             ostools.write_file(pp_file_name, code, encoding=HDL_FILE_ENCODING)
             return pp_file_name
 
-    def add_preprocessor(self, preprocessor):
+    def add_preprocessor(self, preprocessor: Preprocessor) -> None:
         """
         Adds a custom preprocessor to be used on all files. Must be called before adding any files.
 
@@ -656,7 +671,12 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         """
         self._preprocessors.append((preprocessor))
 
-    def enable_location_preprocessing(self, additional_subprograms=None, exclude_subprograms=None, order=100):
+    def enable_location_preprocessing(
+        self,
+        additional_subprograms: Optional[List[str]] = None,
+        exclude_subprograms: Optional[List[str]] = None,
+        order: int = 100,
+    ) -> None:
         """
         Inserts file name and line number information into VUnit check and log subprograms calls. Custom
         subprograms can also be added. Must be called before adding any files.
@@ -686,7 +706,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
 
         self.add_preprocessor(preprocessor)
 
-    def enable_check_preprocessing(self, order=200):
+    def enable_check_preprocessing(self, order: int = 200) -> None:
         """
         Inserts error context information into VUnit check_relation calls.
 
@@ -696,7 +716,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         """
         self.add_preprocessor(CheckPreprocessor(order))
 
-    def main(self, post_run=None):
+    def main(self, post_run: Optional[Callable[[Results], None]] = None) -> None:
         """
         Run vunit main function and exit
 
@@ -723,7 +743,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
 
         sys.exit(0)
 
-    def _create_tests(self, simulator_if: Union[None, SimulatorInterface]):
+    def _create_tests(self, simulator_if: Optional[SimulatorInterface]) -> TestList:
         """
         Create the test cases
         """
@@ -732,7 +752,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         test_list.keep_matches(self._test_filter)
         return test_list
 
-    def _main(self, post_run):
+    def _main(self, post_run: Optional[Callable[[Results], None]]) -> bool:
         """
         Base vunit main function without performing exit
         """
@@ -752,7 +772,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         all_ok = self._main_run(post_run)
         return all_ok
 
-    def _create_simulator_if(self):
+    def _create_simulator_if(self) -> SimulatorInterface:
         """
         Create new simulator instance
         """
@@ -770,7 +790,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
 
         return self._simulator_class.from_args(args=self._args, output_path=self._simulator_output_path)
 
-    def _main_run(self, post_run):
+    def _main_run(self, post_run: Optional[Callable[[Results], None]]) -> bool:
         """
         Main with running tests
         """
@@ -794,7 +814,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         report.print_str()
 
         if post_run is not None:
-            post_run(results=Results(self._output_path, simulator_if, report))
+            post_run(Results(self._output_path, simulator_if, report))
 
         del simulator_if
 
@@ -804,7 +824,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
 
         return report.all_ok()
 
-    def _main_list_only(self):
+    def _main_list_only(self) -> bool:
         """
         Main function when only listing test cases
         """
@@ -814,7 +834,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         print(f"Listed {test_list.num_tests} tests")
         return True
 
-    def _main_export_json(self, json_file_name: Union[str, Path]):  # pylint: disable=too-many-locals
+    def _main_export_json(self, json_file_name: Union[str, Path]) -> bool:  # pylint: disable=too-many-locals
         """
         Main function when exporting to JSON
         """
@@ -869,7 +889,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
 
         return True
 
-    def _main_list_files_only(self):
+    def _main_list_files_only(self) -> bool:
         """
         Main function when only listing files
         """
@@ -879,7 +899,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         print(f"Listed {len(files)} files")
         return True
 
-    def _main_compile_only(self):
+    def _main_compile_only(self) -> bool:
         """
         Main function when only compiling
         """
@@ -887,7 +907,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         self._compile(simulator_if)
         return True
 
-    def _create_output_path(self, clean: bool):
+    def _create_output_path(self, clean: bool) -> None:
         """
         Create or re-create the output path if necessary
         """
@@ -903,14 +923,14 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         return str(self._vhdl_standard)
 
     @property
-    def _preprocessed_path(self):
+    def _preprocessed_path(self) -> str:
         return str(Path(self._output_path) / "preprocessed")
 
     @property
-    def codecs_path(self):
+    def codecs_path(self) -> str:
         return str(Path(self._output_path) / "codecs")
 
-    def _compile(self, simulator_if: SimulatorInterface):
+    def _compile(self, simulator_if: SimulatorInterface) -> None:
         """
         Compile entire project
         """
@@ -927,7 +947,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
             target_files=target_files,
         )
 
-    def _get_testbench_files(self, simulator_if: Union[None, SimulatorInterface]):
+    def _get_testbench_files(self, simulator_if: Union[None, SimulatorInterface]) -> List["Source_File"]:
         """
         Return the list of all test bench files for the currently selected tests to run
         """
@@ -938,7 +958,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
             for file_name in tb_file_names
         ]
 
-    def _run_test(self, test_cases, report):
+    def _run_test(self, test_cases: TestList, report: TestReport) -> None:
         """
         Run the test suites and return the report
         """
@@ -961,7 +981,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         )
         runner.run(test_cases)
 
-    def add_verilog_builtins(self):
+    def add_verilog_builtins(self) -> None:
         """
         Add VUnit Verilog builtin libraries.
 
@@ -972,7 +992,9 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         """
         self._builtins.add_verilog_builtins()
 
-    def add_vhdl_builtins(self, external=None, use_external_log=None):
+    def add_vhdl_builtins(
+        self, external: Optional[Dict[str, List[str]]] = None, use_external_log: Optional[Union[str, Path]] = None
+    ) -> None:
         """
         Add VUnit VHDL builtin libraries.
 
@@ -996,43 +1018,43 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         """
         self._builtins.add_vhdl_builtins(external=external, use_external_log=use_external_log)
 
-    def add_com(self):
+    def add_com(self) -> None:
         """
         Add communication package
         """
         self._builtins.add("com")
 
-    def add_array_util(self):
+    def add_array_util(self) -> None:
         """
         Add array util
         """
         self._builtins.add("array_util")
 
-    def add_random(self):
+    def add_random(self) -> None:
         """
         Add random
         """
         self._builtins.add("random")
 
-    def add_verification_components(self):
+    def add_verification_components(self) -> None:
         """
         Add verification component library
         """
         self._builtins.add("verification_components")
 
-    def add_osvvm(self):
+    def add_osvvm(self) -> None:
         """
         Add osvvm library
         """
         self._builtins.add("osvvm")
 
-    def add_json4vhdl(self):
+    def add_json4vhdl(self) -> None:
         """
         Add JSON-for-VHDL library
         """
         self._builtins.add("json4vhdl")
 
-    def get_compile_order(self, source_files=None):
+    def get_compile_order(self, source_files: Optional[List[SourceFile]] = None) -> SourceFileList:
         """
         Get the compile order of all or specific source files and
         their dependencies.
@@ -1053,10 +1075,10 @@ other preprocessors. Lowest value first. The order between preprocessors with th
             source_files = self.get_source_files(allow_empty=True)
 
         target_files = [source_file._source_file for source_file in source_files]  # pylint: disable=protected-access
-        source_files = self._project.get_dependencies_in_compile_order(target_files)
-        return SourceFileList([SourceFile(source_file, self._project, self) for source_file in source_files])
+        source_files_ordered = self._project.get_dependencies_in_compile_order(target_files)
+        return SourceFileList([SourceFile(source_file, self._project, self) for source_file in source_files_ordered])
 
-    def get_implementation_subset(self, source_files):
+    def get_implementation_subset(self, source_files: List[SourceFile]) -> SourceFileList:
         """
         Get the subset of files which are required to successfully
         elaborate the list of input files without any missing
@@ -1066,10 +1088,12 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         :returns: A list of :class:`.SourceFile` objects which is the implementation subset.
         """
         target_files = [source_file._source_file for source_file in source_files]  # pylint: disable=protected-access
-        source_files = self._project.get_dependencies_in_compile_order(target_files, implementation_dependencies=True)
-        return SourceFileList([SourceFile(source_file, self._project, self) for source_file in source_files])
+        source_files_ordered = self._project.get_dependencies_in_compile_order(
+            target_files, implementation_dependencies=True
+        )
+        return SourceFileList([SourceFile(source_file, self._project, self) for source_file in source_files_ordered])
 
-    def get_simulator_name(self):
+    def get_simulator_name(self) -> Optional[str]:
         """
         Get the name of the simulator used.
 
@@ -1079,7 +1103,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
             return None
         return self._simulator_class.name
 
-    def simulator_supports_coverage(self):
+    def simulator_supports_coverage(self) -> Union[None, bool]:
         """
         Returns True when the simulator supports coverage
 

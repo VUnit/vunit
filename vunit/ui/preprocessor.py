@@ -22,7 +22,7 @@ is applied first. Preprocessors with the same value are applied in the order the
         """
         self.order = order
 
-    def run(self, code: str, file_name: str) -> str:  # pylint: disable=unused-argument
+    def run(self, code: str, file_name: str) -> str:  # pylint: disable=unused-argument,no-self-use
         """
         Preprocess code.
 
