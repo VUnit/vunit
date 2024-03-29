@@ -105,7 +105,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         self._backend = backend
         self._vhdl_standard = None
         self._coverage_test_dirs = set()  # For gcov
-        self._coverage_files = set()      # For --coverage
+        self._coverage_files = set()  # For --coverage
 
     def has_valid_exit_code(self):  # pylint: disable=arguments-differ
         """
@@ -192,8 +192,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         Returns True when the simulator supports coverage
         """
         prefix = cls.find_prefix_from_path()
-        return (cls.determine_backend(prefix) == "gcc"
-                or cls.determine_coverage(prefix))
+        return cls.determine_backend(prefix) == "gcc" or cls.determine_coverage(prefix)
 
     def _has_output_flag(self):
         """
@@ -268,8 +267,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
 
         cmd += source_file.compile_options.get("ghdl.a_flags", [])
 
-        if (source_file.compile_options.get("enable_coverage", False)
-           and self._backend == "gcc"):
+        if source_file.compile_options.get("enable_coverage", False) and self._backend == "gcc":
             # Add gcc compilation flags for coverage
             #   -ftest-coverages creates .gcno notes files needed by gcov
             #   -fprofile-arcs creates branch profiling in .gcda database files
@@ -277,7 +275,9 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         cmd += [source_file.name]
         return cmd
 
-    def _get_command(self, config, output_path, elaborate_only, ghdl_e, test_suite_name, wave_file):  # pylint: disable=too-many-branches,too-many-arguments
+    def _get_command(
+        self, config, output_path, elaborate_only, ghdl_e, test_suite_name, wave_file
+    ):  # pylint: disable=too-many-branches,too-many-arguments
         """
         Return GHDL simulation command
         """
@@ -452,7 +452,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
             "coverage",
             "--format=gcovr",
             "-o",
-            str(output_dir / "gcovr.json")
+            str(output_dir / "gcovr.json"),
         ]
         cmd.extend(list(self._coverage_files))
         subprocess.call(cmd)
