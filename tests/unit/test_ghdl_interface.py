@@ -248,7 +248,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
 
         self.assertEqual(
             simif._get_command(  # pylint: disable=protected-access
-                config, str(Path("output_path") / "ghdl"), True, True, None
+                config, str(Path("output_path") / "ghdl"), True, True, "tb_entity", None
             ),
             [
                 str(Path("prefix") / "ghdl"),
