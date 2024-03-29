@@ -14,7 +14,10 @@ from subprocess import call
 def post_run(results):
     results.merge_coverage(file_name="coverage_data")
     if VU.get_simulator_name() == "ghdl":
-        call(["gcovr", "coverage_data"])
+        if results._simulator_if._backend == "gcc":
+            call(["gcovr", "coverage_data"])
+        else:
+            call(["gcovr", "-a", "coverage_data/gcovr.json"])
 
 
 VU = VUnit.from_argv()
