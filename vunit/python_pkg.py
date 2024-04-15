@@ -7,8 +7,10 @@
 """
 Temporary helper module to compile C-code used by python_pkg.
 """
+
 from pathlib import Path
 from glob import glob
+import sysconfig
 import subprocess
 import sys
 
@@ -223,11 +225,12 @@ def compile_vhpidirect_ghdl_application(run_script_root, vu):  # pylint: disable
     if not path_to_shared_lib.exists():
         path_to_shared_lib.mkdir(parents=True, exist_ok=True)
     shared_lib = path_to_shared_lib / "python.so"
-    path_to_python_include = (
-        Path(sys.executable).parent.parent.resolve() / "include" / f"python{sys.version_info[0]}.{sys.version_info[1]}"
-    )
-    path_to_python_libs = Path(sys.executable).parent.parent.resolve() / "bin"
-    python_shared_lib = f"libpython{sys.version_info[0]}.{sys.version_info[1]}"
+
+    path_to_python_include = Path(sysconfig.get_config_var("INCLUDEPY"))
+    path_to_python_libs = Path(sysconfig.get_config_var("LIBDIR"))
+
+    # path_to_python_libs = Path(sys.executable).parent.parent.resolve() / "bin"
+    python_shared_lib = f"python{sys.version_info[0]}.{sys.version_info[1]}"
     path_to_python_pkg = Path(__file__).parent.resolve() / "vhdl" / "python" / "src"
 
     c_file_names = ["python_pkg_vhpidirect_ghdl.c", "python_pkg.c"]
@@ -237,11 +240,12 @@ def compile_vhpidirect_ghdl_application(run_script_root, vu):  # pylint: disable
             "gcc",
             "-c",
             "-I",
-            str(path_to_python_include),
-            str(path_to_python_pkg / c_file_name),
+            str(path_to_python_include.as_posix()),
+            str((path_to_python_pkg / c_file_name).as_posix()),
             "-o",
-            str(path_to_shared_lib / (c_file_name[:-1] + "o")),
+            str((path_to_shared_lib / (c_file_name[:-1] + "o")).as_posix()),
         ]
+        print(" ".join(args))
 
         proc = subprocess.run(args, capture_output=True, text=True, check=False, cwd=str(path_to_shared_lib / ".."))
         if proc.returncode != 0:
@@ -257,11 +261,12 @@ def compile_vhpidirect_ghdl_application(run_script_root, vu):  # pylint: disable
         str(shared_lib),
         str(path_to_shared_lib / "python_pkg.o"),
         str(path_to_shared_lib / "python_pkg_vhpidirect_ghdl.o"),
-        "-l",
-        python_shared_lib,
+        "-l" + python_shared_lib,
         "-L",
         str(path_to_python_libs),
     ]
+
+    print(" ".join(args))
 
     proc = subprocess.run(args, capture_output=True, text=True, check=False, cwd=str(path_to_shared_lib / ".."))
     if proc.returncode != 0:

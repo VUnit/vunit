@@ -36,15 +36,48 @@ package python_pkg is
     identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : string := ""
   ) return string;
 
+  type arg_t is record
+    name : string;
+    value : string;
+  end record;
+  constant p_positional_arg : string := ".";
+  constant p_ignore_arg : string := "-";
+  constant null_arg : arg_t := (name => p_ignore_arg, value => "");
+
+  function arg(value : integer) return arg_t;
+  function kwarg(kw : string; value : integer) return arg_t;
+  function arg(value : string) return arg_t;
+  function kwarg(kw : string; value : string) return arg_t;
+  function arg(value : integer_vector) return arg_t;
+  function kwarg(kw : string; value : integer_vector) return arg_t;
+  function arg(value : real) return arg_t;
+  function kwarg(kw : string; value : real) return arg_t;
+  function arg(value : boolean) return arg_t;
+  function kwarg(kw : string; value : boolean) return arg_t;
+
+  impure function call_integer_w_arg(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg
+  ) return integer;
+  alias call is call_integer_w_arg[
+    string, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t return integer];
+
   procedure call(
-    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : string := ""
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg
   );
 
-  impure function call_integer(
-    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : string := ""
-  ) return integer;
-  alias call is call_integer[string, string, string, string, string,
-                             string, string, string, string, string, string return integer];
+  impure function call_integer_vector(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg
+  ) return integer_vector;
+  alias call is call_integer_vector[
+    string, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t return integer_vector];
+
+  impure function call_real(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg
+  ) return real;
+  alias call is call_real[
+    string, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t return real];
+
+
 
 end package;
 
@@ -132,9 +165,9 @@ package body python_pkg is
   begin
     swrite(l, "[");
     for idx in vec'range loop
-      -- Inconsistency between simulators if to_string and/or real'image of 1.0 returns "1" or "1.0"
-      -- Enforce type with float()
-      swrite(l, "float(" & to_string(vec(idx)) & ")");
+      -- Use %.16e to ensure that the string representation of the real number is precise enough to avoid loss of
+      -- information when double-precision is used.
+      swrite(l, to_string(vec(idx), "%.16e"));
       if idx /= vec'right then
         swrite(l, ",");
       end if;
@@ -177,9 +210,108 @@ package body python_pkg is
     exec(to_call_str(identifier, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10));
   end;
 
-  impure function call_integer(
-    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : string := ""
+  function arg(value : integer) return arg_t is
+  begin
+    return (p_positional_arg, to_string(value));
+  end;
+
+  function kwarg(kw : string; value : integer) return arg_t is
+  begin
+    return (kw, to_string(value));
+  end;
+
+  function arg(value : string) return arg_t is
+  begin
+    return (p_positional_arg, '"' & value & '"');
+  end;
+
+  function kwarg(kw : string; value : string) return arg_t is
+  begin
+    return (kw, '"' & value & '"');
+  end;
+
+  function arg(value : integer_vector) return arg_t is
+  begin
+    return (p_positional_arg, to_py_list_str(value));
+  end;
+
+  function kwarg(kw : string; value : integer_vector) return arg_t is
+  begin
+    return (kw, to_py_list_str(value));
+  end;
+
+  function arg(value : real) return arg_t is
+  begin
+    return (p_positional_arg, to_string(value, "%.16e"));
+  end;
+
+  function kwarg(kw : string; value : real) return arg_t is
+  begin
+    return (kw, to_string(value, "%.16e"));
+  end;
+
+  function arg(value : boolean) return arg_t is
+  begin
+    if value then
+      return (p_positional_arg, "True");
+    else
+      return (p_positional_arg, "False");
+    end if;
+  end;
+
+  function kwarg(kw : string; value : boolean) return arg_t is
+  begin
+    if value then
+      return (kw, "True");
+    else
+      return (kw, "False");
+    end if;
+  end;
+
+  impure function to_call_str(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t
+  ) return string is
+
+    function arg_to_str(value : arg_t) return string is
+    begin
+      if value.name = p_ignore_arg then
+        return "";
+      elsif value.name = p_positional_arg then
+        return value.value;
+      else
+        return value.name & "=" & value.value;
+      end if;
+    end;
+
+    constant args : string := "('" & arg_to_str(arg1) & "','" & arg_to_str(arg2) & "','" & arg_to_str(arg3) & "','" & arg_to_str(arg4) & "','" & arg_to_str(arg5) & "','" & arg_to_str(arg6) & "','" & arg_to_str(arg7) & "','" & arg_to_str(arg8) & "','" & arg_to_str(arg9) & "','" & arg_to_str(arg10) & "')";
+  begin
+    return eval_string("'" & identifier & "(' + ', '.join((arg for arg in " & args & " if arg)) + ')'");
+  end;
+
+  impure function call_integer_w_arg(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg
   ) return integer is
+  begin
+    return eval(to_call_str(identifier, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10));
+  end;
+
+  procedure call(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg
+  ) is
+  begin
+    exec(to_call_str(identifier, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10));
+  end;
+
+  impure function call_integer_vector(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg
+  ) return integer_vector is
+  begin
+    return eval(to_call_str(identifier, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10));
+  end;
+
+  impure function call_real(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg
+  ) return real is
   begin
     return eval(to_call_str(identifier, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10));
   end;

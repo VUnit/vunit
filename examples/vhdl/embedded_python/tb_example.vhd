@@ -252,7 +252,7 @@ begin
         check_equal(gcd, 7);
 
         -- we can use the call function:
-        gcd := call("gcd", to_string(35), to_string(77), to_string(119));
+        gcd := call("gcd", arg(35), arg(77), arg(119));
         check_equal(gcd, 7);
 
         -- Calls within an exec string can also be simplified
@@ -260,7 +260,15 @@ begin
         check_equal(eval("gcd"), 7);
 
         -- Calls to functions without a return value can be simplified with the call procedure
-        call("print", to_string(35), to_string(77), to_string(119));
+        call("print", arg(35), arg(77), arg(119));
+
+        -- Keyword arguments are also suppored.
+        check_equal(call("round", arg(3.14159), kwarg("ndigits", 3)), 3.142);
+
+        exec("l = [1, 2]");
+        call("l.sort", kwarg("reverse", true));
+        check_equal(eval("l[0]"), 2);
+        check_equal(eval("l[1]"), 1);
 
       -------------------------------------------------------------------------------------
       -- Examples related to error management
@@ -493,7 +501,7 @@ begin
         for x in 0 to 359 loop
           y := sin(pi * real(x) / 180.0);
 
-          call("plot.update", to_string(x), to_string(y));
+          call("plot.update", arg(x), arg(y));
         end loop;
 
         exec("plot.close()");

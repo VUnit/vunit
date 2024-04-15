@@ -82,7 +82,10 @@ package body integer_vector_ptr_pkg is
         acc := new vav_t'(0 => null);
       elsif old'length <= length then
         -- Reallocate ptr pointers to larger ptr; use more size to trade size for speed
-        acc := new vav_t'(0 to acc'length + 2**16 => null);
+        acc := new vav_t(0 to acc'length + 2**16);
+        for idx in acc'range loop
+          acc(idx) := null;
+        end loop;
         for i in old'range loop acc(i) := old(i); end loop;
         deallocate(old);
       end if;
@@ -97,7 +100,10 @@ package body integer_vector_ptr_pkg is
       if old = null then
         acc := new evav_t'(0 => null);
       elsif old'length <= length then
-        acc := new evav_t'(0 to acc'length + 2**16 => null);
+        acc := new evav_t(0 to acc'length + 2**16);
+        for idx in acc'range loop
+          acc(idx) := null;
+        end loop;
         for i in old'range loop acc(i) := old(i); end loop;
         deallocate(old);
       end if;
@@ -138,7 +144,10 @@ package body integer_vector_ptr_pkg is
             length => 0
           );
           reallocate_ptrs(st.ptrs, st.ptr);
-          st.ptrs(st.ptr) := new vec_t'(0 to length-1 => value);
+          st.ptrs(st.ptr) := new vec_t(0 to length-1);
+          for idx in st.ptrs(st.ptr)'range loop
+            st.ptrs(st.ptr)(idx) := value;
+          end loop;
           st.ptr := st.ptr + 1;
         when extacc =>
           st.idxs(st.idx) := (
@@ -239,7 +248,10 @@ package body integer_vector_ptr_pkg is
           check_external(ref, "reallocate");
         when internal =>
           deallocate(st.ptrs(s.id));
-          st.ptrs(s.id) := new vec_t'(0 to length - 1 => value);
+          st.ptrs(s.id) := new vec_t(0 to length - 1);
+          for idx in st.ptrs(s.id)'range loop
+            st.ptrs(s.id)(idx) := value;
+          end loop;
       end case;
     end;
 
@@ -255,7 +267,10 @@ package body integer_vector_ptr_pkg is
     begin
       case s.mode is
         when internal =>
-          newp := new vec_t'(0 to length-1 => value);
+          newp := new vec_t(0 to length-1);
+          for idx in newp'range loop
+            newp(idx) := value;
+          end loop;
           oldp := st.ptrs(s.id);
           if min_len > oldp'length - drop then
             min_len := oldp'length - drop;

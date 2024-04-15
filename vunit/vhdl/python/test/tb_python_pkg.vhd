@@ -33,6 +33,15 @@ begin
     variable vhdl_real_vector : real_vector(test_real_vector'range);
     variable vhdl_integer_vector_ptr : integer_vector_ptr_t;
     variable vhdl_integer_vector : integer_vector(0 to 3);
+    variable arg_value2 : arg_t(name(1 to 2), value(1 to 2));
+    variable arg_value4 : arg_t(name(1 to 2), value(1 to 4));
+    variable arg_value22 : arg_t(name(1 to 2), value(1 to 22));
+
+    procedure print(a : arg_t) is
+    begin
+      print(a.name);
+      print(a.value);
+    end;
 
   begin
     test_runner_setup(runner, runner_cfg);
@@ -126,10 +135,9 @@ begin
 
       elsif run("Test converting real_vector to Python list string") then
         check_equal(to_py_list_str(empty_real_vector), "[]");
-        -- TODO: real'image creates a scientific notation with an arbitrary number of
-        -- digits that makes the string representation hard to predict/verify.
-        -- check_equal(to_py_list_str(real_vector'(0 => 1.1)), "[1.1]");
-        -- check_equal(to_py_list_str(real_vector'(-1.1, 0.0, 1.3)), "[-1.1,0.0,1.3]");
+        check_equal(to_py_list_str(real_vector'(0 => 1.05)), "[1.0500000000000000e+00]");
+        check_equal(to_py_list_str(real_vector'(-1.05, 0.0, 1.25)),
+          "[-1.0500000000000000e+00,0.0000000000000000e+00,1.2500000000000000e+00]");
 
       elsif run("Test eval of real_vector expression") then
         check(eval(to_py_list_str(empty_real_vector)) = empty_real_vector);
@@ -186,6 +194,40 @@ begin
         );
 
         check_equal(eval("local_test()"), 1);
+
+      elsif run("Test call functions") then
+        check_equal(call("len", arg("Hello")), 5);
+        check_equal(call("len", arg(integer_vector'(1, 2, 3))), 3);
+        check_equal(call("max", arg(1), arg(2)), 2);
+        check_equal(call("max", arg(2.1), arg(1.1)), 2.1);
+        check_equal(call("int", arg(true)), 1);
+
+      elsif run("Test call procedure") then
+        exec("l = [1]");
+        call("l.append", arg(2));
+        check_equal(eval("l[1]"), 2);
+
+      elsif run("Test kwarg") then
+        arg_value2 := kwarg("kw", 17);
+        check_equal(arg_value2.name, "kw");
+        check_equal(arg_value2.value, "17");
+
+        arg_value22 := kwarg("kw", 17.5);
+        check_equal(arg_value22.name, "kw");
+        check_equal(arg_value22.value, "1.7500000000000000e+01");
+
+        arg_value4 := kwarg("kw", "ok");
+        check_equal(arg_value4.name, "kw");
+        check_equal(arg_value4.value, """ok""");
+
+        arg_value4 := kwarg("kw", true);
+        check_equal(arg_value4.name, "kw");
+        check_equal(arg_value4.value, "True");
+
+        arg_value22 := kwarg("kw", integer_vector'(1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
+        check_equal(arg_value22.name, "kw");
+        check_equal(arg_value22.value, "[1,2,3,4,5,6,7,8,9,10]");
+
 
       elsif run("Test exec of function defined in run script") then
         import_run_script;

@@ -15,7 +15,6 @@ import logging
 from vunit.vhdl_standard import VHDL, VHDLStandard
 from vunit.ui.common import get_checked_file_names_from_globs
 
-
 LOGGER = logging.getLogger(__name__)
 
 VHDL_PATH = (Path(__file__).parent / "vhdl").resolve()
@@ -155,14 +154,12 @@ class Builtins(object):
         supports_vhdl_package_generics = self._simulator_class.supports_vhdl_package_generics()
 
         if not osvvm_is_installed():
-            raise RuntimeError(
-                """
+            raise RuntimeError("""
 Found no OSVVM VHDL files. Did you forget to run
 
 git submodule update --init --recursive
 
-in your VUnit Git repository? You have to do this first if installing using setup.py."""
-            )
+in your VUnit Git repository? You have to do this first if installing using setup.py.""")
 
         for file_name in glob(str(VHDL_PATH / "osvvm" / "*.vhd")):
             bname = Path(file_name).name

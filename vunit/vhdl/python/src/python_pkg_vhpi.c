@@ -124,6 +124,8 @@ static const char* get_parameter(const struct vhpiCbDataS* cb_p) {
     ffi_error_handler("getting VHDL parameter value", true);
   }
 
+  vhpi_release_handle(parameter_handle);
+
   return vhdl_parameter_string;
 }
 

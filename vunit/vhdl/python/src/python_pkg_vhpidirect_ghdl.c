@@ -7,6 +7,7 @@
 // Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
 
 #include "python_pkg.h"
+#include <windows.h>
 
 PyObject* globals = NULL;
 PyObject* locals = NULL;
@@ -18,6 +19,10 @@ void python_cleanup(void);
 static void py_error_handler(const char* context, const char* code_or_expr,
                              const char* reason, bool cleanup) {
   const char* unknown_error = "Unknown error";
+
+  if (PyErr_Occurred()) {
+    PyErr_PrintEx(1);
+  }
 
   // Use provided error reason or try extracting the reason from the Python
   // exception
@@ -56,13 +61,20 @@ static void ffi_error_handler(const char* context, bool cleanup) {
 }
 
 void python_setup(void) {
+  SetDllDirectoryA("C:\\msys64\\ucrt64\\bin");
   // See https://github.com/msys2/MINGW-packages/issues/18984
   putenv("PYTHONLEGACYWINDOWSDLLLOADING=1");
-  Py_SetPythonHome(L"c:\\msys64\\mingw64");
+  Py_SetPythonHome(L"c:\\msys64\\ucrt64");
   Py_Initialize();
   if (!Py_IsInitialized()) {
     ffi_error_handler("Failed to initialize Python", false);
   }
+
+  // Need a nicer way of getting access to packages installed in the virtual environment. The following works for my setup, but is not general enough.
+  PyRun_SimpleString(
+      "import sys\n"
+      "sys.path.append(r'C:\\github\\vunit\\examples\\vhdl\\embedded_python\\.venv\\lib\\python3.14\\site-packages')\n"
+  );
 
   PyObject* main_module = PyImport_AddModule("__main__");
   if (main_module == NULL) {
