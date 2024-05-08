@@ -17,7 +17,7 @@ import re
 from sys import stdout  # To avoid output catched in non-verbose mode
 from ..exceptions import CompileError
 from ..ostools import Process
-from . import SimulatorInterface, ListOfStringOption, StringOption
+from . import SimulatorInterface, ListOfStringOption, StringOption, BooleanOption
 from . import run_command
 from ..vhdl_standard import VHDL
 
@@ -88,7 +88,6 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
 
         (major, minor) = self.determine_version(prefix)
         self._supports_jit = major > 1 or (major == 1 and minor >= 9)
-        self._disable_jit = False
         if self.use_color:
             environ["NVC_COLORS"] = "always"
 
@@ -270,12 +269,9 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         for name, value in config.generics.items():
             cmd += [f"-g{name}={value}"]
 
-        if config.sim_options.get("nvc.disable_jit", True):
-            self._disable_jit = True
-            
         if not elaborate_only:
             cmd += ["--no-save"]
-            if self._supports_jit and not self._disable_jit:
+            if self._supports_jit and not config.sim_options.get("nvc.disable_jit", False):
                 cmd += ["--jit"]
             cmd += ["-r"]
             cmd += config.sim_options.get("nvc.sim_flags", [])
