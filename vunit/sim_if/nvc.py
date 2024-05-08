@@ -42,6 +42,7 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
     sim_options = [
         ListOfStringOption("nvc.global_flags"),
         ListOfStringOption("nvc.sim_flags"),
+        BooleanOption("nvc.disable_jit"),
         ListOfStringOption("nvc.elab_flags"),
         StringOption("nvc.heap_size"),
         StringOption("nvc.gtkwave_script.gui"),
@@ -87,7 +88,7 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
 
         (major, minor) = self.determine_version(prefix)
         self._supports_jit = major > 1 or (major == 1 and minor >= 9)
-
+        self._disable_jit = False
         if self.use_color:
             environ["NVC_COLORS"] = "always"
 
@@ -269,9 +270,11 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         for name, value in config.generics.items():
             cmd += [f"-g{name}={value}"]
 
+        if config.sim_options.get("nvc.disable_jit", True):
+            self._disable_jit = True
         if not elaborate_only:
             cmd += ["--no-save"]
-            if self._supports_jit:
+            if self._supports_jit and not self._disable_jit:
                 cmd += ["--jit"]
             cmd += ["-r"]
             cmd += config.sim_options.get("nvc.sim_flags", [])

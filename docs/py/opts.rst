@@ -218,3 +218,7 @@ The following simulation options are known.
 ``nvc.sim_flags``
    Extra simulation flags passed to ``nvc -r``.
    Must be a list of strings.
+
+``nvc.disable_jit``
+   Disable JIT.
+   Must be boolean, default False.
