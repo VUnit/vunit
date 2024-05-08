@@ -272,6 +272,7 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
 
         if config.sim_options.get("nvc.disable_jit", True):
             self._disable_jit = True
+            
         if not elaborate_only:
             cmd += ["--no-save"]
             if self._supports_jit and not self._disable_jit:
