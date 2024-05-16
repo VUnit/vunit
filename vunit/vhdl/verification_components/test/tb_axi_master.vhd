@@ -151,6 +151,9 @@ begin
       wait_until_idle(net, bus_handle);
       check_equal(timestamp, now, "Read: Second wait had to wait");
 
+    elsif run("Test single write with id") then
+      write_axi(net, bus_handle, x"01234567", x"1122", x"25");
+    
     end if;
 
     wait for 100 ns;
@@ -434,7 +437,25 @@ begin
       rvalid <= '0';
 
       done <= true;
+    elsif enabled("Test single write with id") then
+      awready <= '1';
+      wait until (awready and awvalid) = '1' and rising_edge(clk);
+      awready <= '0';
+      check_equal(awaddr, std_logic_vector'(x"01234567"), "awaddr");
+      check_equal(awid, std_logic_vector'(x"25"), "awid");
 
+      wready <= '1';
+      wait until (wready and wvalid) = '1' and rising_edge(clk);
+      wready <= '0';
+      check_equal(wdata, std_logic_vector'(x"1122"), "wdata");
+      check_equal(wstrb, std_logic_vector'("11"), "wstrb");
+
+      bvalid <= '1';
+      bresp <= axi_resp_okay;
+      wait until (bready and bvalid) = '1' and rising_edge(clk);
+      bvalid <= '0';
+
+      done <= true;      
     end if;
   end process;
 

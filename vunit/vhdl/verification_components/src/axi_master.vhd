@@ -165,6 +165,7 @@ begin
         addr_this_transaction := pop_std_ulogic_vector(request_msg);
         wdata_this_transaction := pop_std_ulogic_vector(request_msg);
         wstrb <= pop_std_ulogic_vector(request_msg);
+        awid <= pop_std_ulogic_vector(request_msg);
         expected_resp := pop_std_ulogic_vector(request_msg) when is_axi_msg(msg_type) else axi_resp_okay;
         delete(request_msg);
 
