@@ -99,6 +99,7 @@ begin
     begin
       if drive_invalid then
         araddr <= (araddr'range => drive_invalid_val);
+        arlen <= (arid'range => drive_invalid_val);
         arid <= (arid'range => drive_invalid_val);
       end if;
     end procedure;
@@ -143,6 +144,7 @@ begin
 
       if is_read(msg_type) then
         addr_this_transaction := pop_std_ulogic_vector(request_msg);
+        arlen <= pop_std_ulogic_vector(request_msg);
         arid <= pop_std_ulogic_vector(request_msg);
         expected_resp := pop_std_ulogic_vector(request_msg) when is_axi_msg(msg_type) else axi_resp_okay;
         push(reply_queue, request_msg);

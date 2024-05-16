@@ -34,6 +34,7 @@ package axi_master_pkg is
   procedure read_axi(signal net : inout network_t;
                           constant bus_handle : bus_master_t;
                           constant address : std_logic_vector;
+                          constant len : std_logic_vector;
                           constant id : std_logic_vector := "";
                           constant expected_rresp : axi_resp_t := axi_resp_okay;
                           variable reference : inout bus_reference_t);
@@ -42,6 +43,7 @@ package axi_master_pkg is
   procedure read_axi(signal net : inout network_t;
                           constant bus_handle : bus_master_t;
                           constant address : std_logic_vector;
+                          constant len : std_logic_vector;
                           constant id : std_logic_vector := "";
                           constant expected_rresp : axi_resp_t := axi_resp_okay;
                           variable data : inout std_logic_vector);
@@ -50,6 +52,7 @@ package axi_master_pkg is
   procedure check_axi(signal net : inout network_t;
                            constant bus_handle : bus_master_t;
                            constant address : std_logic_vector;
+                           constant len : std_logic_vector;
                            constant id : std_logic_vector := "";
                            constant expected_rresp : axi_resp_t := axi_resp_okay;
                            constant expected : std_logic_vector;
@@ -99,6 +102,7 @@ package body axi_master_pkg is
   procedure read_axi(signal net : inout network_t;
                           constant bus_handle : bus_master_t;
                           constant address : std_logic_vector;
+                          constant len : std_logic_vector;
                           constant id : std_logic_vector := "";
                           constant expected_rresp : axi_resp_t := axi_resp_okay;
                           variable reference : inout bus_reference_t) is
@@ -108,6 +112,7 @@ package body axi_master_pkg is
     request_msg := new_msg(axi_read_msg);
     full_address(address'length - 1 downto 0) := address;
     push_std_ulogic_vector(request_msg, full_address);
+    push_std_ulogic_vector(request_msg, len);
     push_std_ulogic_vector(request_msg, id);
     push_std_ulogic_vector(request_msg, expected_rresp);
     send(net, bus_handle.p_actor, request_msg);
@@ -116,18 +121,20 @@ package body axi_master_pkg is
   procedure read_axi(signal net : inout network_t;
                           constant bus_handle : bus_master_t;
                           constant address : std_logic_vector;
+                          constant len : std_logic_vector;
                           constant id : std_logic_vector := "";
                           constant expected_rresp : axi_resp_t := axi_resp_okay;
                           variable data : inout std_logic_vector) is
     variable reference : bus_reference_t;
   begin
-    read_axi(net, bus_handle, address, id, expected_rresp, reference);
+    read_axi(net, bus_handle, address, len, id, expected_rresp, reference);
     await_read_bus_reply(net, reference, data);
   end procedure;
 
   procedure check_axi(signal net : inout network_t;
                            constant bus_handle : bus_master_t;
                            constant address : std_logic_vector;
+                           constant len : std_logic_vector;
                            constant id : std_logic_vector := "";
                            constant expected_rresp : axi_resp_t := axi_resp_okay;
                            constant expected : std_logic_vector;
@@ -152,7 +159,7 @@ package body axi_master_pkg is
 
     edata(expected'length - 1 downto 0) := expected;
 
-    read_axi(net, bus_handle, address, id, expected_rresp, data);
+    read_axi(net, bus_handle, address, len, id, expected_rresp, data);
     if not std_match(data, edata) then
       failure(bus_handle.p_logger, base_error);
     end if;

@@ -108,10 +108,10 @@ begin
       read_bus(net, bus_handle, x"01234567", tmp);
 
     elsif run("Test read with axi resp") then
-      read_axi(net, bus_handle, x"01234567", x"25", axi_resp_slverr, tmp);
+      read_axi(net, bus_handle, x"01234567", x"00", x"25", axi_resp_slverr, tmp);
 
     elsif run("Test read with wrong axi resp") then
-      read_axi(net, bus_handle, x"01234567", x"25", axi_resp_exokay, tmp);
+      read_axi(net, bus_handle, x"01234567", x"00", x"25", axi_resp_exokay, tmp);
 
     elsif run("Test random") then
       for i in 0 to num_random_tests-1 loop
@@ -126,7 +126,7 @@ begin
     elsif run("Test random axi resp") then
       for i in 0 to num_random_tests-1 loop
         if rnd.RandInt(0, 1) = 0 then
-          read_axi(net, bus_handle, rnd.RandSlv(araddr'length), x"25", rnd.RandSlv(axi_resp_t'length), tmp);
+          read_axi(net, bus_handle, rnd.RandSlv(araddr'length), x"00", x"25", rnd.RandSlv(axi_resp_t'length), tmp);
           check_equal(tmp, rnd.RandSlv(rdata'length), "read data");
         else
           write_axi(net, bus_handle, rnd.RandSlv(awaddr'length), rnd.RandSlv(wdata'length),
@@ -155,8 +155,11 @@ begin
       write_axi(net, bus_handle, x"01234567", x"1122", x"25");
 
     elsif run("Test single read with id") then
-      read_axi(net, bus_handle, x"01234567", x"25", axi_resp_okay, tmp);
-    
+      read_axi(net, bus_handle, x"01234567", x"00", x"25", axi_resp_okay, tmp);
+
+    elsif run("Test single read with len") then
+        read_axi(net, bus_handle, x"01234567", x"12", x"25", axi_resp_okay, tmp);
+      
     end if;
 
     wait for 100 ns;
@@ -474,11 +477,28 @@ begin
       rvalid <= '0';
 
       done <= true;
+
+    elsif enabled("Test single read with len") then
+        arready <= '1';
+        wait until (arready and arvalid) = '1' and rising_edge(clk);
+        arready <= '0';
+        check_equal(araddr, std_logic_vector'(x"01234567"), "araddr");
+        check_equal(arlen, std_logic_vector'(x"12"), "arid");
+  
+        rvalid <= '1';
+        rresp <= axi_resp_okay;
+        rdata <= x"5566";
+        wait until (rready and rvalid) = '1' and rising_edge(clk);
+        rvalid <= '0';
+  
+        done <= true;
+
     end if;
   end process;
 
   check_not_valid : process
     constant a_addr_invalid_value : std_logic_vector(araddr'range) := (others => 'X');
+    constant a_len_invalid_value : std_logic_vector(arlen'range) := (others => 'X');
     constant a_id_invalid_value : std_logic_vector(arid'range) := (others => 'X');
     constant wdata_invalid_value : std_logic_vector(wdata'range) := (others => 'X');
     constant wstrb_invalid_value : std_logic_vector(wstrb'range) := (others => 'X');
@@ -490,6 +510,7 @@ begin
 
     if not arvalid then
       check_equal(araddr, a_addr_invalid_value, "ARADDR not X when ARVALID low");
+      check_equal(arlen, a_len_invalid_value, "ARLEN not X when ARVALID low");
       check_equal(arid, a_id_invalid_value, "ARID not X when ARVALID low");
     end if;
 
