@@ -149,7 +149,6 @@ begin
         if(is_axi_msg(msg_type)) then
           arlen <= pop_std_ulogic_vector(request_msg);
           arid <= pop_std_ulogic_vector(request_msg)(arid'length -1 downto 0);
-          --tmp := pop_std_ulogic_vector(request_msg);
         end if;
 
         expected_resp := pop_std_ulogic_vector(request_msg) when is_axi_msg(msg_type) else axi_resp_okay;
