@@ -128,6 +128,7 @@ begin
     -- These variables are needed to keep the values for logging when transaction is fully done
     variable addr_this_transaction : std_logic_vector(awaddr'range) := (others => '0');
     variable wdata_this_transaction : std_logic_vector(wdata'range) := (others => '0');
+    variable tmp : std_logic_vector(31 downto 0) := (others => '0');
   begin
     -- Initialization
     drive_ar_invalid;
@@ -144,8 +145,13 @@ begin
 
       if is_read(msg_type) then
         addr_this_transaction := pop_std_ulogic_vector(request_msg);
-        arlen <= pop_std_ulogic_vector(request_msg);
-        arid <= pop_std_ulogic_vector(request_msg);
+
+        if(is_axi_msg(msg_type)) then
+          arlen <= pop_std_ulogic_vector(request_msg);
+          arid <= pop_std_ulogic_vector(request_msg)(arid'length -1 downto 0);
+          --tmp := pop_std_ulogic_vector(request_msg);
+        end if;
+
         expected_resp := pop_std_ulogic_vector(request_msg) when is_axi_msg(msg_type) else axi_resp_okay;
         push(reply_queue, request_msg);
 
@@ -170,8 +176,12 @@ begin
         addr_this_transaction := pop_std_ulogic_vector(request_msg);
         wdata_this_transaction := pop_std_ulogic_vector(request_msg);
         wstrb <= pop_std_ulogic_vector(request_msg);
-        awlen <= pop_std_ulogic_vector(request_msg);
-        awid <= pop_std_ulogic_vector(request_msg);
+
+        if(is_axi_msg(msg_type)) then 
+          awlen <= pop_std_ulogic_vector(request_msg);
+          awid <= pop_std_ulogic_vector(request_msg)(awid'length -1 downto 0);
+        end if;
+
         expected_resp := pop_std_ulogic_vector(request_msg) when is_axi_msg(msg_type) else axi_resp_okay;
         delete(request_msg);
 

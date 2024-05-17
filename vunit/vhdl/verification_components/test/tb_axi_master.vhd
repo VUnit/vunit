@@ -92,10 +92,10 @@ begin
       write_bus(net, bus_handle, x"01234567", x"1122");
 
     elsif run("Test write with axi resp") then
-      write_axi(net, bus_handle, x"01234567", x"1122", axi_resp_slverr);
+      write_axi(net, bus_handle, x"01234567", x"1122", x"12", x"25", axi_resp_slverr);
 
     elsif run("Test write with wrong axi resp") then
-      write_axi(net, bus_handle, x"01234567", x"1122", axi_resp_decerr);
+      write_axi(net, bus_handle, x"01234567", x"1122", x"12", x"25", axi_resp_decerr);
 
     elsif run("Test single read") then
       mock(get_logger(bus_handle), debug);
@@ -130,7 +130,7 @@ begin
           check_equal(tmp, rnd.RandSlv(rdata'length), "read data");
         else
           write_axi(net, bus_handle, rnd.RandSlv(awaddr'length), rnd.RandSlv(wdata'length),
-                         rnd.RandSlv(axi_resp_t'length));
+                x"12", x"25", rnd.RandSlv(axi_resp_t'length));
         end if;
       end loop;
 

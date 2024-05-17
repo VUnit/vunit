@@ -63,6 +63,8 @@ package axi_master_pkg is
   function is_write(msg_type : msg_type_t) return boolean;
   function is_axi_msg(msg_type : msg_type_t) return boolean;
 
+  function len_length(bus_handle : bus_master_t) return natural;
+  function id_length(bus_handle : bus_master_t) return natural;
 end package;
 
 package body axi_master_pkg is
@@ -80,6 +82,8 @@ package body axi_master_pkg is
     variable full_data : std_logic_vector(bus_handle.p_data_length - 1 downto 0) := (others => '0');
     variable full_address : std_logic_vector(bus_handle.p_address_length - 1 downto 0) := (others => '0');
     variable full_byte_enable : std_logic_vector(byte_enable_length(bus_handle) - 1 downto 0);
+    variable full_len : std_logic_vector(len_length(bus_handle) - 1 downto 0) := (others => '0');
+    variable full_id : std_logic_vector(id_length(bus_handle) - 1 downto 0) := (others => '0');
   begin
     full_address(address'length - 1 downto 0) := address;
     push_std_ulogic_vector(request_msg, full_address);
@@ -92,10 +96,18 @@ package body axi_master_pkg is
     else
       full_byte_enable(byte_enable'length - 1 downto 0) := byte_enable;
     end if;
-
     push_std_ulogic_vector(request_msg, full_byte_enable);
+
+    full_len(len'length - 1 downto 0) := len;
     push_std_ulogic_vector(request_msg, len);
-    push_std_ulogic_vector(request_msg, id);
+
+    if id = "" then
+      full_id := (others => '0');
+    else
+    full_id(id'length - 1 downto 0) := id;
+    end if;
+    push_std_ulogic_vector(request_msg, full_id);
+
     push_std_ulogic_vector(request_msg, expected_bresp);
     send(net, bus_handle.p_actor, request_msg);
   end procedure;
@@ -108,13 +120,24 @@ package body axi_master_pkg is
                           constant expected_rresp : axi_resp_t := axi_resp_okay;
                           variable reference : inout bus_reference_t) is
     variable full_address : std_logic_vector(bus_handle.p_address_length - 1 downto 0) := (others => '0');
+    variable full_len : std_logic_vector(len_length(bus_handle) - 1 downto 0) := (others => '0');
+    variable full_id : std_logic_vector(id_length(bus_handle) - 1 downto 0) := (others => '0');
     alias request_msg : msg_t is reference;
   begin
     request_msg := new_msg(axi_read_msg);
     full_address(address'length - 1 downto 0) := address;
     push_std_ulogic_vector(request_msg, full_address);
+
+    full_len(len'length - 1 downto 0) := len;
     push_std_ulogic_vector(request_msg, len);
-    push_std_ulogic_vector(request_msg, id);
+
+    if id = "" then
+      full_id := (others => '0');
+    else
+    full_id(id'length - 1 downto 0) := id;
+    end if;
+    push_std_ulogic_vector(request_msg, full_id);
+
     push_std_ulogic_vector(request_msg, expected_rresp);
     send(net, bus_handle.p_actor, request_msg);
   end procedure;
@@ -181,4 +204,13 @@ package body axi_master_pkg is
     return msg_type = axi_read_msg or msg_type = axi_write_msg;
   end function;
 
+  function len_length(bus_handle : bus_master_t) return natural is
+  begin
+    return 8;
+  end;
+
+  function id_length(bus_handle : bus_master_t) return natural is
+  begin
+    return 32;
+  end;
 end package body;
