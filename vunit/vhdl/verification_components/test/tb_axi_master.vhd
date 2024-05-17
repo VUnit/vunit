@@ -152,13 +152,16 @@ begin
       check_equal(timestamp, now, "Read: Second wait had to wait");
 
     elsif run("Test single write with id") then
-      write_axi(net, bus_handle, x"01234567", x"1122", x"25");
+      write_axi(net, bus_handle, x"01234567", x"1122", x"12", x"25");
 
     elsif run("Test single read with id") then
       read_axi(net, bus_handle, x"01234567", x"00", x"25", axi_resp_okay, tmp);
 
     elsif run("Test single read with len") then
-        read_axi(net, bus_handle, x"01234567", x"12", x"25", axi_resp_okay, tmp);
+      read_axi(net, bus_handle, x"01234567", x"12", x"25", axi_resp_okay, tmp);
+
+    elsif run("Test single write with len") then
+      write_axi(net, bus_handle, x"01234567", x"1122", x"12", x"25");
       
     end if;
 
@@ -490,6 +493,26 @@ begin
         rdata <= x"5566";
         wait until (rready and rvalid) = '1' and rising_edge(clk);
         rvalid <= '0';
+  
+        done <= true;
+
+    elsif enabled("Test single write with len")  then
+        awready <= '1';
+        wait until (awready and awvalid) = '1' and rising_edge(clk);
+        awready <= '0';
+        check_equal(awaddr, std_logic_vector'(x"01234567"), "awaddr");
+        check_equal(awlen, std_logic_vector'(x"12"), "awlen");
+  
+        wready <= '1';
+        wait until (wready and wvalid) = '1' and rising_edge(clk);
+        wready <= '0';
+        check_equal(wdata, std_logic_vector'(x"1122"), "wdata");
+        check_equal(wstrb, std_logic_vector'("11"), "wstrb");
+  
+        bvalid <= '1';
+        bresp <= axi_resp_okay;
+        wait until (bready and bvalid) = '1' and rising_edge(clk);
+        bvalid <= '0';
   
         done <= true;
 

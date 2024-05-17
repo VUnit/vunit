@@ -25,6 +25,7 @@ package axi_master_pkg is
                            constant bus_handle : bus_master_t;
                            constant address : std_logic_vector;
                            constant data : std_logic_vector;
+                           constant len : std_logic_vector;
                            constant id : std_logic_vector := "";
                            constant expected_bresp : axi_resp_t := axi_resp_okay;
                            -- default byte enable is all bytes
@@ -70,6 +71,7 @@ package body axi_master_pkg is
                            constant bus_handle : bus_master_t;
                            constant address : std_logic_vector;
                            constant data : std_logic_vector;
+                           constant len : std_logic_vector;
                            constant id : std_logic_vector := "";
                            constant expected_bresp : axi_resp_t := axi_resp_okay;
                            -- default byte enable is all bytes
@@ -90,12 +92,11 @@ package body axi_master_pkg is
     else
       full_byte_enable(byte_enable'length - 1 downto 0) := byte_enable;
     end if;
+
     push_std_ulogic_vector(request_msg, full_byte_enable);
-
+    push_std_ulogic_vector(request_msg, len);
     push_std_ulogic_vector(request_msg, id);
-
     push_std_ulogic_vector(request_msg, expected_bresp);
-
     send(net, bus_handle.p_actor, request_msg);
   end procedure;
 
