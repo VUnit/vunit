@@ -26,6 +26,8 @@ package axi_master_pkg is
                            constant address : std_logic_vector;
                            constant data : std_logic_vector;
                            constant len : std_logic_vector;
+                           constant size : std_logic_vector;
+                           constant burst : axi_burst_type_t;
                            constant id : std_logic_vector := "";
                            constant expected_bresp : axi_resp_t := axi_resp_okay;
                            -- default byte enable is all bytes
@@ -65,6 +67,7 @@ package axi_master_pkg is
 
   function len_length(bus_handle : bus_master_t) return natural;
   function id_length(bus_handle : bus_master_t) return natural;
+  function size_length(bus_handle : bus_master_t) return natural;
 end package;
 
 package body axi_master_pkg is
@@ -74,6 +77,8 @@ package body axi_master_pkg is
                            constant address : std_logic_vector;
                            constant data : std_logic_vector;
                            constant len : std_logic_vector;
+                           constant size : std_logic_vector;
+                           constant burst : axi_burst_type_t;
                            constant id : std_logic_vector := "";
                            constant expected_bresp : axi_resp_t := axi_resp_okay;
                            -- default byte enable is all bytes
@@ -83,6 +88,7 @@ package body axi_master_pkg is
     variable full_address : std_logic_vector(bus_handle.p_address_length - 1 downto 0) := (others => '0');
     variable full_byte_enable : std_logic_vector(byte_enable_length(bus_handle) - 1 downto 0);
     variable full_len : std_logic_vector(len_length(bus_handle) - 1 downto 0) := (others => '0');
+    variable full_size : std_logic_vector(size_length(bus_handle) - 1 downto 0) := (others => '0');
     variable full_id : std_logic_vector(id_length(bus_handle) - 1 downto 0) := (others => '0');
   begin
     full_address(address'length - 1 downto 0) := address;
@@ -99,7 +105,12 @@ package body axi_master_pkg is
     push_std_ulogic_vector(request_msg, full_byte_enable);
 
     full_len(len'length - 1 downto 0) := len;
-    push_std_ulogic_vector(request_msg, len);
+    push_std_ulogic_vector(request_msg, full_len);
+
+    full_size(size'length - 1 downto 0) := size;
+    push_std_ulogic_vector(request_msg, full_size);
+
+    push_std_ulogic_vector(request_msg, burst);
 
     if id = "" then
       full_id := (others => '0');
@@ -129,7 +140,7 @@ package body axi_master_pkg is
     push_std_ulogic_vector(request_msg, full_address);
 
     full_len(len'length - 1 downto 0) := len;
-    push_std_ulogic_vector(request_msg, len);
+    push_std_ulogic_vector(request_msg, full_len);
 
     if id = "" then
       full_id := (others => '0');
@@ -206,11 +217,16 @@ package body axi_master_pkg is
 
   function len_length(bus_handle : bus_master_t) return natural is
   begin
-    return 8;
+    return 8;  -- Add to bus_master_t?
   end;
 
   function id_length(bus_handle : bus_master_t) return natural is
   begin
-    return 32;
+    return 32; -- Add to bus_master_t?
+  end;
+
+  function size_length(bus_handle : bus_master_t) return natural is
+  begin
+    return 3; -- Add to bus_master_t?
   end;
 end package body;

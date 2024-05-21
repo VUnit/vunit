@@ -99,7 +99,7 @@ begin
     begin
       if drive_invalid then
         araddr <= (araddr'range => drive_invalid_val);
-        arlen <= (arid'range => drive_invalid_val);
+        arlen <= (arlen'range => drive_invalid_val);
         arid <= (arid'range => drive_invalid_val);
       end if;
     end procedure;
@@ -108,6 +108,9 @@ begin
     begin
       if drive_invalid then
         awaddr <= (awaddr'range => drive_invalid_val);
+        awlen <= (awlen'range => drive_invalid_val);
+        awsize <= (awsize'range => drive_invalid_val);
+        awburst <= (awburst'range => drive_invalid_val);
         awid <= (arid'range => drive_invalid_val);
       end if;
     end procedure;
@@ -178,6 +181,8 @@ begin
 
         if(is_axi_msg(msg_type)) then 
           awlen <= pop_std_ulogic_vector(request_msg);
+          awsize <= pop_std_ulogic_vector(request_msg);
+          awburst <= pop_std_ulogic_vector(request_msg);
           awid <= pop_std_ulogic_vector(request_msg)(awid'length -1 downto 0);
         end if;
 
