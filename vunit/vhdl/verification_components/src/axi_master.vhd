@@ -120,6 +120,7 @@ begin
     procedure drive_w_invalid is
     begin
       if drive_invalid then
+        wlast <= drive_invalid_val;
         wdata <= (wdata'range => drive_invalid_val);
         wstrb <= (wstrb'range => drive_invalid_val);
       end if;
@@ -188,6 +189,8 @@ begin
           awsize <= pop_std_ulogic_vector(request_msg);
           awburst <= pop_std_ulogic_vector(request_msg);
           awid <= pop_std_ulogic_vector(request_msg)(awid'length -1 downto 0);
+
+          wlast <= pop_std_ulogic(request_msg);
         end if;
 
         expected_resp := pop_std_ulogic_vector(request_msg) when is_axi_msg(msg_type) else axi_resp_okay;

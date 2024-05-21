@@ -28,6 +28,7 @@ package axi_master_pkg is
                            constant len : std_logic_vector;
                            constant size : std_logic_vector;
                            constant burst : axi_burst_type_t;
+                           constant last : std_logic;
                            constant id : std_logic_vector := "";
                            constant expected_bresp : axi_resp_t := axi_resp_okay;
                            -- default byte enable is all bytes
@@ -85,6 +86,7 @@ package body axi_master_pkg is
                            constant len : std_logic_vector;
                            constant size : std_logic_vector;
                            constant burst : axi_burst_type_t;
+                           constant last : std_logic;
                            constant id : std_logic_vector := "";
                            constant expected_bresp : axi_resp_t := axi_resp_okay;
                            -- default byte enable is all bytes
@@ -125,6 +127,8 @@ package body axi_master_pkg is
     end if;
     push_std_ulogic_vector(request_msg, full_id);
 
+    push_std_ulogic(request_msg, last);
+    
     push_std_ulogic_vector(request_msg, expected_bresp);
     send(net, bus_handle.p_actor, request_msg);
   end procedure;
@@ -155,7 +159,7 @@ package body axi_master_pkg is
     push_std_ulogic_vector(request_msg, full_size);
 
     push_std_ulogic_vector(request_msg, burst);
-    
+
     if id = "" then
       full_id := (others => '0');
     else

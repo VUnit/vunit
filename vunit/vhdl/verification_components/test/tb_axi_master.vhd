@@ -92,10 +92,10 @@ begin
       write_bus(net, bus_handle, x"01234567", x"1122");
 
     elsif run("Test write with axi resp") then
-      write_axi(net, bus_handle, x"01234567", x"1122", x"12", "111" , axi_burst_type_fixed, x"25", axi_resp_slverr);
+      write_axi(net, bus_handle, x"01234567", x"1122", x"12", "111" , axi_burst_type_fixed, '0', x"25", axi_resp_slverr);
 
     elsif run("Test write with wrong axi resp") then
-      write_axi(net, bus_handle, x"01234567", x"1122", x"12", "111" , axi_burst_type_fixed, x"25", axi_resp_decerr);
+      write_axi(net, bus_handle, x"01234567", x"1122", x"12", "111" , axi_burst_type_fixed, '0', x"25", axi_resp_decerr);
 
     elsif run("Test single read") then
       mock(get_logger(bus_handle), debug);
@@ -130,7 +130,7 @@ begin
           check_equal(tmp, rnd.RandSlv(rdata'length), "read data");
         else
           write_axi(net, bus_handle, rnd.RandSlv(awaddr'length), rnd.RandSlv(wdata'length),
-                x"12", "111" , axi_burst_type_fixed, x"25", rnd.RandSlv(axi_resp_t'length));
+                x"12", "111" , axi_burst_type_fixed, '0', x"25", rnd.RandSlv(axi_resp_t'length));
         end if;
       end loop;
 
@@ -152,7 +152,7 @@ begin
       check_equal(timestamp, now, "Read: Second wait had to wait");
 
     elsif run("Test single write with id") then
-      write_axi(net, bus_handle, x"01234567", x"1122", x"12", "111" , axi_burst_type_fixed, x"25");
+      write_axi(net, bus_handle, x"01234567", x"1122", x"12", "111" , axi_burst_type_fixed, '0', x"25");
 
     elsif run("Test single read with id") then
       read_axi(net, bus_handle, x"01234567", x"00", "111" , axi_burst_type_fixed, x"25", axi_resp_okay, tmp);
@@ -161,19 +161,22 @@ begin
       read_axi(net, bus_handle, x"01234567", x"12", "111" , axi_burst_type_fixed, x"25", axi_resp_okay, tmp);
 
     elsif run("Test single write with len") then
-      write_axi(net, bus_handle, x"01234567", x"1122", x"12", "111" , axi_burst_type_fixed, x"25");
+      write_axi(net, bus_handle, x"01234567", x"1122", x"12", "111" , axi_burst_type_fixed, '0', x"25");
       
     elsif run("Test single write with size") then
-      write_axi(net, bus_handle, x"01234567", x"1122", x"12", "010" , axi_burst_type_fixed, x"25");
+      write_axi(net, bus_handle, x"01234567", x"1122", x"12", "010" , axi_burst_type_fixed, '0', x"25");
         
     elsif run("Test single write with burst") then
-      write_axi(net, bus_handle, x"01234567", x"1122", x"12", "010" , axi_burst_type_incr, x"25");
+      write_axi(net, bus_handle, x"01234567", x"1122", x"12", "010" , axi_burst_type_incr, '0', x"25");
 
     elsif run("Test single read with size") then
       read_axi(net, bus_handle, x"01234567", x"12", "101" , axi_burst_type_fixed, x"25", axi_resp_okay, tmp);
 
     elsif run("Test single read with burst") then
       read_axi(net, bus_handle, x"01234567", x"12", "111" , axi_burst_type_incr, x"25", axi_resp_okay, tmp);
+
+    elsif run("Test single write with last") then
+        write_axi(net, bus_handle, x"01234567", x"1122", x"12", "010" , axi_burst_type_incr, '1', x"25");
 
     end if;
 
@@ -597,7 +600,28 @@ begin
       rvalid <= '0';
 
       done <= true;
-    end if;
+
+    elsif enabled("Test single write with last")  then
+      awready <= '1';
+      wait until (awready and awvalid) = '1' and rising_edge(clk);
+      awready <= '0';
+      check_equal(awaddr, std_logic_vector'(x"01234567"), "awaddr");
+      
+
+      wready <= '1';
+      wait until (wready and wvalid) = '1' and rising_edge(clk);
+      wready <= '0';
+      check_equal(wdata, std_logic_vector'(x"1122"), "wdata");
+      check_equal(wstrb, std_logic_vector'("11"), "wstrb");
+      check_equal(wlast, '1', "wlast");
+
+      bvalid <= '1';
+      bresp <= axi_resp_okay;
+      wait until (bready and bvalid) = '1' and rising_edge(clk);
+      bvalid <= '0';
+
+      done <= true;
+      end if;
   end process;
 
   check_not_valid : process
@@ -608,6 +632,7 @@ begin
     constant a_burst_invalid_value : std_logic_vector(arburst'range) := (others => 'X');
     constant wdata_invalid_value : std_logic_vector(wdata'range) := (others => 'X');
     constant wstrb_invalid_value : std_logic_vector(wstrb'range) := (others => 'X');
+    constant wlast_invalid_value : std_logic := 'X';
   begin
     wait until rising_edge(clk);
 
@@ -633,6 +658,7 @@ begin
     if not wvalid then
       check_equal(wdata, wdata_invalid_value, "WDATA not X when WVALID low");
       check_equal(wstrb, wstrb_invalid_value, "WSTRB not X when WVALID low");
+      check_equal(wlast, wlast_invalid_value, "WLAST not X when WVALID low");
     end if;
   end process;
 
