@@ -100,6 +100,8 @@ begin
       if drive_invalid then
         araddr <= (araddr'range => drive_invalid_val);
         arlen <= (arlen'range => drive_invalid_val);
+        arsize <= (arsize'range => drive_invalid_val);
+        arburst <= (arburst'range => drive_invalid_val);
         arid <= (arid'range => drive_invalid_val);
       end if;
     end procedure;
@@ -151,6 +153,8 @@ begin
 
         if(is_axi_msg(msg_type)) then
           arlen <= pop_std_ulogic_vector(request_msg);
+          arsize <= pop_std_ulogic_vector(request_msg);
+          arburst <= pop_std_ulogic_vector(request_msg);
           arid <= pop_std_ulogic_vector(request_msg)(arid'length -1 downto 0);
         end if;
 

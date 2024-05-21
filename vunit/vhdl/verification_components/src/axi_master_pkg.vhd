@@ -38,6 +38,8 @@ package axi_master_pkg is
                           constant bus_handle : bus_master_t;
                           constant address : std_logic_vector;
                           constant len : std_logic_vector;
+                          constant size : std_logic_vector;
+                          constant burst : axi_burst_type_t;
                           constant id : std_logic_vector := "";
                           constant expected_rresp : axi_resp_t := axi_resp_okay;
                           variable reference : inout bus_reference_t);
@@ -47,6 +49,8 @@ package axi_master_pkg is
                           constant bus_handle : bus_master_t;
                           constant address : std_logic_vector;
                           constant len : std_logic_vector;
+                          constant size : std_logic_vector;
+                          constant burst : axi_burst_type_t;
                           constant id : std_logic_vector := "";
                           constant expected_rresp : axi_resp_t := axi_resp_okay;
                           variable data : inout std_logic_vector);
@@ -56,6 +60,8 @@ package axi_master_pkg is
                            constant bus_handle : bus_master_t;
                            constant address : std_logic_vector;
                            constant len : std_logic_vector;
+                           constant size : std_logic_vector;
+                           constant burst : axi_burst_type_t;
                            constant id : std_logic_vector := "";
                            constant expected_rresp : axi_resp_t := axi_resp_okay;
                            constant expected : std_logic_vector;
@@ -127,11 +133,14 @@ package body axi_master_pkg is
                           constant bus_handle : bus_master_t;
                           constant address : std_logic_vector;
                           constant len : std_logic_vector;
+                          constant size : std_logic_vector;
+                          constant burst : axi_burst_type_t;
                           constant id : std_logic_vector := "";
                           constant expected_rresp : axi_resp_t := axi_resp_okay;
                           variable reference : inout bus_reference_t) is
     variable full_address : std_logic_vector(bus_handle.p_address_length - 1 downto 0) := (others => '0');
     variable full_len : std_logic_vector(len_length(bus_handle) - 1 downto 0) := (others => '0');
+    variable full_size : std_logic_vector(size_length(bus_handle) - 1 downto 0) := (others => '0');
     variable full_id : std_logic_vector(id_length(bus_handle) - 1 downto 0) := (others => '0');
     alias request_msg : msg_t is reference;
   begin
@@ -142,6 +151,11 @@ package body axi_master_pkg is
     full_len(len'length - 1 downto 0) := len;
     push_std_ulogic_vector(request_msg, full_len);
 
+    full_size(size'length - 1 downto 0) := size;
+    push_std_ulogic_vector(request_msg, full_size);
+
+    push_std_ulogic_vector(request_msg, burst);
+    
     if id = "" then
       full_id := (others => '0');
     else
@@ -157,12 +171,14 @@ package body axi_master_pkg is
                           constant bus_handle : bus_master_t;
                           constant address : std_logic_vector;
                           constant len : std_logic_vector;
+                          constant size : std_logic_vector;
+                          constant burst : axi_burst_type_t;
                           constant id : std_logic_vector := "";
                           constant expected_rresp : axi_resp_t := axi_resp_okay;
                           variable data : inout std_logic_vector) is
     variable reference : bus_reference_t;
   begin
-    read_axi(net, bus_handle, address, len, id, expected_rresp, reference);
+    read_axi(net, bus_handle, address, len, size, burst, id, expected_rresp, reference);
     await_read_bus_reply(net, reference, data);
   end procedure;
 
@@ -170,6 +186,8 @@ package body axi_master_pkg is
                            constant bus_handle : bus_master_t;
                            constant address : std_logic_vector;
                            constant len : std_logic_vector;
+                           constant size : std_logic_vector;
+                           constant burst : axi_burst_type_t;
                            constant id : std_logic_vector := "";
                            constant expected_rresp : axi_resp_t := axi_resp_okay;
                            constant expected : std_logic_vector;
@@ -194,7 +212,7 @@ package body axi_master_pkg is
 
     edata(expected'length - 1 downto 0) := expected;
 
-    read_axi(net, bus_handle, address, len, id, expected_rresp, data);
+    read_axi(net, bus_handle, address, len, size, burst, id, expected_rresp, data);
     if not std_match(data, edata) then
       failure(bus_handle.p_logger, base_error);
     end if;
