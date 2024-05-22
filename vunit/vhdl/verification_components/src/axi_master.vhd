@@ -135,7 +135,7 @@ begin
     -- These variables are needed to keep the values for logging when transaction is fully done
     variable addr_this_transaction : std_logic_vector(awaddr'range) := (others => '0');
     variable wdata_this_transaction : std_logic_vector(wdata'range) := (others => '0');
-    variable expected_rid : std_logic_vector(rid'range) := (others => '0');
+    variable expected_id : std_logic_vector(rid'range) := (others => '0');
   begin
     -- Initialization
     drive_ar_invalid;
@@ -158,8 +158,8 @@ begin
           arsize <= pop_std_ulogic_vector(request_msg);
           arburst <= pop_std_ulogic_vector(request_msg);
           
-          expected_rid := pop_std_ulogic_vector(request_msg)(arid'length -1 downto 0);
-          arid <= expected_rid;
+          expected_id := pop_std_ulogic_vector(request_msg)(arid'length -1 downto 0);
+          arid <= expected_id;
         end if;
 
         expected_resp := pop_std_ulogic_vector(request_msg) when is_axi_msg(msg_type) else axi_resp_okay;
@@ -178,9 +178,8 @@ begin
         check_axi_resp(bus_handle, rresp, expected_resp, "rresp");
 
         if(is_axi_msg(msg_type)) then
-          check_axi_id(bus_handle, rid, expected_rid, "rid");
+          check_axi_id(bus_handle, rid, expected_id, "rid");
         end if;
-
 
         if is_visible(bus_handle.p_logger, debug) then
           debug(bus_handle.p_logger,
@@ -197,7 +196,9 @@ begin
           awlen <= pop_std_ulogic_vector(request_msg);
           awsize <= pop_std_ulogic_vector(request_msg);
           awburst <= pop_std_ulogic_vector(request_msg);
-          awid <= pop_std_ulogic_vector(request_msg)(awid'length -1 downto 0);
+
+          expected_id := pop_std_ulogic_vector(request_msg)(awid'length -1 downto 0);
+          awid <= expected_id;
 
           wlast <= pop_std_ulogic(request_msg);
         end if;
@@ -234,7 +235,12 @@ begin
         bready <= '1';
         wait until (bvalid and bready) = '1' and rising_edge(aclk);
         bready <= '0';
+
         check_axi_resp(bus_handle, bresp, expected_resp, "bresp");
+
+        if(is_axi_msg(msg_type)) then
+          check_axi_id(bus_handle, bid, expected_id, "bid");
+        end if;
 
         if is_visible(bus_handle.p_logger, debug) then
           debug(bus_handle.p_logger,

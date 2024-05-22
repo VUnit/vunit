@@ -270,6 +270,7 @@ begin
 
       bvalid <= '1';
       bresp <= axi_resp_slverr;
+      bid <= x"25";
       wait until (bready and bvalid) = '1' and rising_edge(clk);
       bvalid <= '0';
 
@@ -289,6 +290,7 @@ begin
 
       bvalid <= '1';
       bresp <= axi_resp_exokay;
+      bid <= x"25";
       mock(bus_logger, failure);
       wait until (bready and bvalid) = '1' and rising_edge(clk);
       bvalid <= '0';
@@ -424,6 +426,7 @@ begin
 
           bvalid <= '1';
           bresp <= rnd.RandSlv(axi_resp_t'length);
+          bid <= x"25";
           wait until (bready and bvalid) = '1' and rising_edge(clk);
           bvalid <= '0';
         end if;
@@ -479,6 +482,7 @@ begin
 
       bvalid <= '1';
       bresp <= axi_resp_okay;
+      bid <= x"25";
       wait until (bready and bvalid) = '1' and rising_edge(clk);
       bvalid <= '0';
 
@@ -531,6 +535,7 @@ begin
 
       bvalid <= '1';
       bresp <= axi_resp_okay;
+      bid <= x"25";
       wait until (bready and bvalid) = '1' and rising_edge(clk);
       bvalid <= '0';
 
@@ -551,6 +556,7 @@ begin
 
       bvalid <= '1';
       bresp <= axi_resp_okay;
+      bid <= x"25";
       wait until (bready and bvalid) = '1' and rising_edge(clk);
       bvalid <= '0';
 
@@ -571,6 +577,7 @@ begin
 
       bvalid <= '1';
       bresp <= axi_resp_okay;
+      bid <= x"25";
       wait until (bready and bvalid) = '1' and rising_edge(clk);
       bvalid <= '0';
 
@@ -624,6 +631,7 @@ begin
 
       bvalid <= '1';
       bresp <= axi_resp_okay;
+      bid <= x"25";
       wait until (bready and bvalid) = '1' and rising_edge(clk);
       bvalid <= '0';
 
