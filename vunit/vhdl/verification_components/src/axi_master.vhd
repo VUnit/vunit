@@ -11,6 +11,7 @@ use ieee.std_logic_1164.all;
 use work.axi_master_pkg.all;
 use work.axi_pkg.all;
 use work.axi_slave_private_pkg.check_axi_resp;
+use work.axi_slave_private_pkg.check_axi_id;
 use work.bus_master_pkg.address_length;
 use work.bus_master_pkg.bus_master_t;
 use work.bus_master_pkg.byte_enable_length;
@@ -134,7 +135,7 @@ begin
     -- These variables are needed to keep the values for logging when transaction is fully done
     variable addr_this_transaction : std_logic_vector(awaddr'range) := (others => '0');
     variable wdata_this_transaction : std_logic_vector(wdata'range) := (others => '0');
-    variable tmp : std_logic_vector(31 downto 0) := (others => '0');
+    variable expected_rid : std_logic_vector(rid'range) := (others => '0');
   begin
     -- Initialization
     drive_ar_invalid;
@@ -156,7 +157,9 @@ begin
           arlen <= pop_std_ulogic_vector(request_msg);
           arsize <= pop_std_ulogic_vector(request_msg);
           arburst <= pop_std_ulogic_vector(request_msg);
-          arid <= pop_std_ulogic_vector(request_msg)(arid'length -1 downto 0);
+          
+          expected_rid := pop_std_ulogic_vector(request_msg)(arid'length -1 downto 0);
+          arid <= expected_rid;
         end if;
 
         expected_resp := pop_std_ulogic_vector(request_msg) when is_axi_msg(msg_type) else axi_resp_okay;
@@ -171,7 +174,13 @@ begin
         rready <= '1';
         wait until (rvalid and rready) = '1' and rising_edge(aclk);
         rready <= '0';
+
         check_axi_resp(bus_handle, rresp, expected_resp, "rresp");
+
+        if(is_axi_msg(msg_type)) then
+          check_axi_id(bus_handle, rid, expected_rid, "rid");
+        end if;
+
 
         if is_visible(bus_handle.p_logger, debug) then
           debug(bus_handle.p_logger,

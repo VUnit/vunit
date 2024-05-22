@@ -338,6 +338,7 @@ begin
       rvalid <= '1';
       rresp <= axi_resp_slverr;
       rdata <= x"0000";
+      rid <= x"25";
       wait until (rready and rvalid) = '1' and rising_edge(clk);
       rvalid <= '0';
 
@@ -352,6 +353,7 @@ begin
       rvalid <= '1';
       rresp <= axi_resp_decerr;
       rdata <= x"0000";
+      rid <= x"25";
       mock(bus_logger, failure);
       wait until (rready and rvalid) = '1' and rising_edge(clk);
       rvalid <= '0';
@@ -405,6 +407,7 @@ begin
           rvalid <= '1';
           rresp <= rnd.RandSlv(axi_resp_t'length);
           rdata <= rnd.RandSlv(rdata'length);
+          rid <= x"25";
           wait until (rready and rvalid) = '1' and rising_edge(clk);
           rvalid <= '0';
         else
@@ -491,6 +494,7 @@ begin
       rvalid <= '1';
       rresp <= axi_resp_okay;
       rdata <= x"5566";
+      rid <= x"25";
       wait until (rready and rvalid) = '1' and rising_edge(clk);
       rvalid <= '0';
 
@@ -506,6 +510,7 @@ begin
       rvalid <= '1';
       rresp <= axi_resp_okay;
       rdata <= x"5566";
+      rid <= x"25";
       wait until (rready and rvalid) = '1' and rising_edge(clk);
       rvalid <= '0';
 
@@ -581,6 +586,7 @@ begin
       rvalid <= '1';
       rresp <= axi_resp_okay;
       rdata <= x"5566";
+      rid <= x"25";
       wait until (rready and rvalid) = '1' and rising_edge(clk);
       rvalid <= '0';
 
@@ -596,6 +602,7 @@ begin
       rvalid <= '1';
       rresp <= axi_resp_okay;
       rdata <= x"5566";
+      rid <= x"25";
       wait until (rready and rvalid) = '1' and rising_edge(clk);
       rvalid <= '0';
 
