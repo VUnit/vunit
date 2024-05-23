@@ -3,6 +3,7 @@
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
 -- Copyright (c) 2014-2024, Lars Asplund lars.anders.asplund@gmail.com
+-- Author David Martin david.martin@phios.group
 
 
 library ieee;
@@ -71,7 +72,9 @@ entity axi_master is
 end entity;
 
 architecture a of axi_master is
-  constant reply_queue, message_queue : queue_t := new_queue;
+  constant read_reply_queue, write_reply_queue, message_queue : queue_t := new_queue;
+  constant read_addr_queue, read_resp_queue, read_id_queue : queue_t := new_queue;
+  constant write_addr_queue, write_resp_queue, write_id_queue, write_data_queue : queue_t := new_queue;
   signal idle : boolean := true;
 begin
 
@@ -129,13 +132,13 @@ begin
 
     variable request_msg : msg_t;
     variable msg_type : msg_type_t;
-    variable expected_resp : axi_resp_t;
     variable w_done, aw_done : boolean;
 
     -- These variables are needed to keep the values for logging when transaction is fully done
-    variable addr_this_transaction : std_logic_vector(awaddr'range) := (others => '0');
-    variable wdata_this_transaction : std_logic_vector(wdata'range) := (others => '0');
-    variable expected_id : std_logic_vector(rid'range) := (others => '0');
+    variable addr : std_logic_vector(awaddr'range) := (others => '0');
+    variable data : std_logic_vector(wdata'range) := (others => '0');
+    variable id : std_logic_vector(rid'range) := (others => '0');
+    variable resp : axi_resp_t;
   begin
     -- Initialization
     drive_ar_invalid;
@@ -151,45 +154,36 @@ begin
       msg_type := message_type(request_msg);
 
       if is_read(msg_type) then
-        addr_this_transaction := pop_std_ulogic_vector(request_msg);
+        
+        addr := pop_std_ulogic_vector(request_msg);
+        araddr <= addr;
 
         if(is_axi_msg(msg_type)) then
           arlen <= pop_std_ulogic_vector(request_msg);
           arsize <= pop_std_ulogic_vector(request_msg);
           arburst <= pop_std_ulogic_vector(request_msg);
           
-          expected_id := pop_std_ulogic_vector(request_msg)(arid'length -1 downto 0);
-          arid <= expected_id;
+          id := pop_std_ulogic_vector(request_msg)(arid'length -1 downto 0);
+          arid <= id;
+          push(read_id_queue, id);
         end if;
 
-        expected_resp := pop_std_ulogic_vector(request_msg) when is_axi_msg(msg_type) else axi_resp_okay;
-        push(reply_queue, request_msg);
+        resp := pop_std_ulogic_vector(request_msg) when is_axi_msg(msg_type) else axi_resp_okay;
+
+        push(read_addr_queue, addr);
+        push(read_resp_queue, resp);
+        push(read_reply_queue, request_msg);
 
         arvalid <= '1';
-        araddr <= addr_this_transaction;
         wait until (arvalid and arready) = '1' and rising_edge(aclk);
         arvalid <= '0';
         drive_ar_invalid;
 
-        rready <= '1';
-        wait until (rvalid and rready) = '1' and rising_edge(aclk);
-        rready <= '0';
-
-        check_axi_resp(bus_handle, rresp, expected_resp, "rresp");
-
-        if(is_axi_msg(msg_type)) then
-          check_axi_id(bus_handle, rid, expected_id, "rid");
-        end if;
-
-        if is_visible(bus_handle.p_logger, debug) then
-          debug(bus_handle.p_logger,
-                "Read 0x" & to_hstring(rdata) &
-                  " from address 0x" & to_hstring(addr_this_transaction));
-        end if;
-
       elsif is_write(msg_type) then
-        addr_this_transaction := pop_std_ulogic_vector(request_msg);
-        wdata_this_transaction := pop_std_ulogic_vector(request_msg);
+        addr := pop_std_ulogic_vector(request_msg);
+        awaddr <= addr;
+        data := pop_std_ulogic_vector(request_msg);
+        wdata <= data;
         wstrb <= pop_std_ulogic_vector(request_msg);
 
         if(is_axi_msg(msg_type)) then 
@@ -197,17 +191,19 @@ begin
           awsize <= pop_std_ulogic_vector(request_msg);
           awburst <= pop_std_ulogic_vector(request_msg);
 
-          expected_id := pop_std_ulogic_vector(request_msg)(awid'length -1 downto 0);
-          awid <= expected_id;
+          id := pop_std_ulogic_vector(request_msg)(awid'length -1 downto 0);
+          awid <= id;
+          push(write_id_queue, id);
 
           wlast <= pop_std_ulogic(request_msg);
         end if;
 
-        expected_resp := pop_std_ulogic_vector(request_msg) when is_axi_msg(msg_type) else axi_resp_okay;
-        delete(request_msg);
-
-        awaddr <= addr_this_transaction;
-        wdata <= wdata_this_transaction;
+        resp := pop_std_ulogic_vector(request_msg) when is_axi_msg(msg_type) else axi_resp_okay;
+        
+        push(write_data_queue, data);
+        push(write_addr_queue, addr);
+        push(write_resp_queue, resp);
+        push(write_reply_queue, request_msg);
 
         wvalid <= '1';
         awvalid <= '1';
@@ -231,22 +227,6 @@ begin
             w_done := true;
           end if;
         end loop;
-
-        bready <= '1';
-        wait until (bvalid and bready) = '1' and rising_edge(aclk);
-        bready <= '0';
-
-        check_axi_resp(bus_handle, bresp, expected_resp, "bresp");
-
-        if(is_axi_msg(msg_type)) then
-          check_axi_id(bus_handle, bid, expected_id, "bid");
-        end if;
-
-        if is_visible(bus_handle.p_logger, debug) then
-          debug(bus_handle.p_logger,
-                "Wrote 0x" & to_hstring(wdata_this_transaction) &
-                  " to address 0x" & to_hstring(addr_this_transaction));
-        end if;
       end if;
 
       idle <= true;
@@ -256,12 +236,73 @@ begin
   -- Reply in separate process do not destroy alignment with the clock
   read_reply : process
     variable request_msg, reply_msg : msg_t;
+    variable msg_type : msg_type_t;
+    variable addr : std_logic_vector(awaddr'range) := (others => '0');
+    variable resp : axi_resp_t;
+    variable id : std_logic_vector(rid'range) := (others => '0');
   begin
+    
+    rready <= '1';
     wait until (rvalid and rready) = '1' and rising_edge(aclk);
-    request_msg := pop(reply_queue);
+    rready <= '0';
+
+    request_msg := pop(read_reply_queue);
+    msg_type := message_type(request_msg);
+    addr := pop(read_addr_queue);
+    resp := pop(read_resp_queue);
+
+    if(is_axi_msg(msg_type)) then
+      id := pop(read_id_queue);
+      check_axi_id(bus_handle, rid, id, "rid");
+    end if;
+
+    check_axi_resp(bus_handle, rresp, resp, "rresp");
+
+    if is_visible(bus_handle.p_logger, debug) then
+      debug(bus_handle.p_logger,
+            "Read 0x" & to_hstring(rdata) &
+              " from address 0x" & to_hstring(addr));
+    end if;
+    
     reply_msg := new_msg;
     push_std_ulogic_vector(reply_msg, rdata);
     reply(net, request_msg, reply_msg);
+    delete(request_msg);
+  end process;
+
+  -- Reply in separate process do not destroy alignment with the clock
+  write_reply : process
+    variable request_msg, reply_msg : msg_t;
+    variable msg_type : msg_type_t;
+    variable addr : std_logic_vector(awaddr'range) := (others => '0');
+    variable data : std_logic_vector(wdata'range) := (others => '0');
+    variable resp : axi_resp_t;
+    variable id : std_logic_vector(rid'range) := (others => '0');
+  begin
+    
+    bready <= '1';
+    wait until (bvalid and bready) = '1' and rising_edge(aclk);
+    bready <= '0';
+
+    request_msg := pop(write_reply_queue);
+    msg_type := message_type(request_msg);
+    addr := pop(write_addr_queue);
+    data := pop(write_data_queue);
+    resp := pop(write_resp_queue);
+
+    if(is_axi_msg(msg_type)) then
+      id := pop(write_id_queue);
+      check_axi_id(bus_handle, bid, id, "bid");
+    end if;
+
+    check_axi_resp(bus_handle, bresp, resp, "bresp");
+
+    if is_visible(bus_handle.p_logger, debug) then
+      debug(bus_handle.p_logger,
+            "Wrote 0x" & to_hstring(data) &
+              " to address 0x" & to_hstring(addr));
+    end if;
+
     delete(request_msg);
   end process;
 
