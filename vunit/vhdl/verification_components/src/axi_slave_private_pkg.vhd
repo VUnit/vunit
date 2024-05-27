@@ -441,7 +441,7 @@ package body axi_slave_private_pkg is
       last_address := burst.address + burst.size*burst.length - 1;
 
       first_page := first_address / 4096;
-      last_page := last_address / 4096;
+      last_address := first_address + burst.size*burst.length - 1;
 
       if first_page /= last_page then
         fail("Crossing 4KByte boundary. First page = "
