@@ -438,10 +438,10 @@ package body axi_slave_private_pkg is
       variable first_page, last_page : integer;
     begin
       first_address := burst.address - (burst.address mod data_size); -- Aligned
-      last_address := burst.address + burst.size*burst.length - 1;
+      last_address := first_address + burst.size*burst.length - 1;
 
       first_page := first_address / 4096;
-      last_address := first_address + burst.size*burst.length - 1;
+      last_address := last_address / 4096;
 
       if first_page /= last_page then
         fail("Crossing 4KByte boundary. First page = "
