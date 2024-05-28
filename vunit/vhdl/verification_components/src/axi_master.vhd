@@ -76,8 +76,6 @@ end entity;
 
 architecture a of axi_master is
   constant read_reply_queue, write_reply_queue, message_queue : queue_t := new_queue;
-  constant read_addr_queue, read_resp_queue, read_id_queue, read_len_queue : queue_t := new_queue;
-  constant write_addr_queue, write_resp_queue, write_id_queue, write_data_queue : queue_t := new_queue;
   signal idle : boolean := true;
 begin
 
@@ -166,6 +164,7 @@ begin
         end loop;
         
         addr := pop_std_ulogic_vector(request_msg);
+        push_std_ulogic_vector(request_msg, addr);
         araddr <= addr;
 
         if msg_type = bus_read_msg then 
@@ -176,6 +175,7 @@ begin
         elsif msg_type = bus_burst_read_msg then 
           burst := pop_integer(request_msg);
           arlen <= std_logic_vector(to_unsigned(burst, arlen'length));
+          push_integer(request_msg, burst);
           arsize(arsize'range) <= (others => '0');
           arburst(arburst'range) <= (others => '0');
           arid(arid'range) <= (others => '0');
@@ -185,21 +185,20 @@ begin
           arburst(arburst'range) <= (others => '0');
           id := pop_std_ulogic_vector(request_msg)(arid'length -1 downto 0);
           arid <= id;
-          push(read_id_queue, id);
+          push_std_ulogic_vector(request_msg, id);
         elsif msg_type = axi_burst_read_msg then 
           len := pop_std_ulogic_vector(request_msg);
+          push_std_ulogic_vector(request_msg, len);
           arlen <= len;
           arsize <= pop_std_ulogic_vector(request_msg);
           arburst <= pop_std_ulogic_vector(request_msg);
           id := pop_std_ulogic_vector(request_msg)(arid'length -1 downto 0);
           arid <= id;
-          push(read_id_queue, id);
+          push_std_ulogic_vector(request_msg, id);
         end if;
 
         resp := pop_std_ulogic_vector(request_msg) when is_axi_msg(msg_type) else axi_resp_okay;
-
-        push(read_addr_queue, addr);
-        push(read_resp_queue, resp);
+        push(request_msg, resp);
         push(read_reply_queue, request_msg);
 
         arvalid <= '1';
@@ -212,8 +211,10 @@ begin
           wait until rising_edge(aclk);
         end loop;
         addr := pop_std_ulogic_vector(request_msg);
+        push_std_ulogic_vector(request_msg, addr);
         awaddr <= addr;
         data := pop_std_ulogic_vector(request_msg);
+        push_std_ulogic_vector(request_msg, data);
         wdata <= data;
         wstrb <= pop_std_ulogic_vector(request_msg);
 
@@ -223,17 +224,14 @@ begin
           awburst <= pop_std_ulogic_vector(request_msg);
 
           id := pop_std_ulogic_vector(request_msg)(awid'length -1 downto 0);
+          push_std_ulogic_vector(request_msg, id);
           awid <= id;
-          push(write_id_queue, id);
-
+          
           wlast <= pop_std_ulogic(request_msg);
         end if;
 
         resp := pop_std_ulogic_vector(request_msg) when is_axi_msg(msg_type) else axi_resp_okay;
-        
-        push(write_data_queue, data);
-        push(write_addr_queue, addr);
-        push(write_resp_queue, resp);
+        push_std_ulogic_vector(request_msg, resp);
         push(write_reply_queue, request_msg);
 
         wvalid <= '1';
@@ -282,21 +280,21 @@ begin
     reply_msg := new_msg;
     request_msg := pop(read_reply_queue);
     msg_type := message_type(request_msg);
-    addr := pop(read_addr_queue);
-    resp := pop(read_resp_queue);
-
+    addr := pop_std_ulogic_vector(request_msg);
+    
     if msg_type = bus_read_msg then 
 
     elsif msg_type = bus_burst_read_msg then 
 
     elsif msg_type = axi_read_msg then 
-      id := pop(read_id_queue);
+      id := pop_std_ulogic_vector(request_msg);
       check_axi_id(bus_handle, rid, id, "rid");
     elsif msg_type = axi_burst_read_msg then 
-      id := pop(read_id_queue);
+      id := pop_std_ulogic_vector(request_msg);
       check_axi_id(bus_handle, rid, id, "rid");
     end if;
 
+    resp := pop_std_ulogic_vector(request_msg);
     check_axi_resp(bus_handle, rresp, resp, "rresp");
 
     if is_visible(bus_handle.p_logger, debug) then
@@ -326,15 +324,15 @@ begin
 
     request_msg := pop(write_reply_queue);
     msg_type := message_type(request_msg);
-    addr := pop(write_addr_queue);
-    data := pop(write_data_queue);
-    resp := pop(write_resp_queue);
+    addr := pop_std_ulogic_vector(request_msg);
+    data := pop_std_ulogic_vector(request_msg);
 
     if(is_axi_msg(msg_type)) then
-      id := pop(write_id_queue);
+      id := pop_std_ulogic_vector(request_msg);
       check_axi_id(bus_handle, bid, id, "bid");
     end if;
 
+    resp := pop_std_ulogic_vector(request_msg);
     check_axi_resp(bus_handle, bresp, resp, "bresp");
 
     if is_visible(bus_handle.p_logger, debug) then
