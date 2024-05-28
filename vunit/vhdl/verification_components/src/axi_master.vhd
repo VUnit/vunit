@@ -8,15 +8,16 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+library osvvm;
+use osvvm.RandomPkg.RandomPType;
 
 use work.axi_master_pkg.all;
 use work.axi_pkg.all;
 use work.axi_slave_private_pkg.check_axi_resp;
 use work.axi_slave_private_pkg.check_axi_id;
-use work.bus_master_pkg.address_length;
-use work.bus_master_pkg.bus_master_t;
-use work.bus_master_pkg.byte_enable_length;
-use work.bus_master_pkg.data_length;
+use work.bus_master_pkg.all;
 use work.com_pkg.net;
 use work.com_pkg.receive;
 use work.com_pkg.reply;
@@ -30,7 +31,9 @@ entity axi_master is
   generic (
     bus_handle : bus_master_t;
     drive_invalid : boolean := true;
-    drive_invalid_val : std_logic := 'X'
+    drive_invalid_val : std_logic := 'X';
+    write_high_probability : real range 0.0 to 1.0 := 1.0;
+    read_high_probability : real range 0.0 to 1.0 := 1.0
   );
   port (
     aclk : in std_logic;
@@ -73,7 +76,7 @@ end entity;
 
 architecture a of axi_master is
   constant read_reply_queue, write_reply_queue, message_queue : queue_t := new_queue;
-  constant read_addr_queue, read_resp_queue, read_id_queue : queue_t := new_queue;
+  constant read_addr_queue, read_resp_queue, read_id_queue, read_len_queue : queue_t := new_queue;
   constant write_addr_queue, write_resp_queue, write_id_queue, write_data_queue : queue_t := new_queue;
   signal idle : boolean := true;
 begin
@@ -130,6 +133,7 @@ begin
       end if;
     end procedure;
 
+    variable rnd : RandomPType;
     variable request_msg : msg_t;
     variable msg_type : msg_type_t;
     variable w_done, aw_done : boolean;
@@ -138,9 +142,12 @@ begin
     variable addr : std_logic_vector(awaddr'range) := (others => '0');
     variable data : std_logic_vector(wdata'range) := (others => '0');
     variable id : std_logic_vector(rid'range) := (others => '0');
+    variable len : std_logic_vector(arlen'range) := (others => '0');
+    variable burst : positive;
     variable resp : axi_resp_t;
   begin
     -- Initialization
+    rnd.InitSeed(rnd'instance_name);
     drive_ar_invalid;
     drive_aw_invalid;
     drive_w_invalid;
@@ -154,15 +161,36 @@ begin
       msg_type := message_type(request_msg);
 
       if is_read(msg_type) then
+        while rnd.Uniform(0.0, 1.0) > read_high_probability loop
+          wait until rising_edge(aclk);
+        end loop;
         
         addr := pop_std_ulogic_vector(request_msg);
         araddr <= addr;
 
-        if(is_axi_msg(msg_type)) then
-          arlen <= pop_std_ulogic_vector(request_msg);
+        if msg_type = bus_read_msg then 
+          arlen(arlen'range) <= (others => '0');
+          arsize(arsize'range) <= (others => '0');
+          arburst(arburst'range) <= (others => '0');
+          arid(arid'range) <= (others => '0');
+        elsif msg_type = bus_burst_read_msg then 
+          burst := pop_integer(request_msg);
+          arlen <= std_logic_vector(to_unsigned(burst, arlen'length));
+          arsize(arsize'range) <= (others => '0');
+          arburst(arburst'range) <= (others => '0');
+          arid(arid'range) <= (others => '0');
+        elsif msg_type = axi_read_msg then 
+          arlen(arlen'range) <= (others => '0');
+          arsize <= pop_std_ulogic_vector(request_msg);
+          arburst(arburst'range) <= (others => '0');
+          id := pop_std_ulogic_vector(request_msg)(arid'length -1 downto 0);
+          arid <= id;
+          push(read_id_queue, id);
+        elsif msg_type = axi_burst_read_msg then 
+          len := pop_std_ulogic_vector(request_msg);
+          arlen <= len;
           arsize <= pop_std_ulogic_vector(request_msg);
           arburst <= pop_std_ulogic_vector(request_msg);
-          
           id := pop_std_ulogic_vector(request_msg)(arid'length -1 downto 0);
           arid <= id;
           push(read_id_queue, id);
@@ -180,6 +208,9 @@ begin
         drive_ar_invalid;
 
       elsif is_write(msg_type) then
+        while rnd.Uniform(0.0, 1.0) > write_high_probability loop
+          wait until rising_edge(aclk);
+        end loop;
         addr := pop_std_ulogic_vector(request_msg);
         awaddr <= addr;
         data := pop_std_ulogic_vector(request_msg);
@@ -227,6 +258,8 @@ begin
             w_done := true;
           end if;
         end loop;
+      else
+        unexpected_msg_type(msg_type);
       end if;
 
       idle <= true;
@@ -237,7 +270,7 @@ begin
   read_reply : process
     variable request_msg, reply_msg : msg_t;
     variable msg_type : msg_type_t;
-    variable addr : std_logic_vector(awaddr'range) := (others => '0');
+    variable addr : std_logic_vector(araddr'range) := (others => '0');
     variable resp : axi_resp_t;
     variable id : std_logic_vector(rid'range) := (others => '0');
   begin
@@ -246,12 +279,20 @@ begin
     wait until (rvalid and rready) = '1' and rising_edge(aclk);
     rready <= '0';
 
+    reply_msg := new_msg;
     request_msg := pop(read_reply_queue);
     msg_type := message_type(request_msg);
     addr := pop(read_addr_queue);
     resp := pop(read_resp_queue);
 
-    if(is_axi_msg(msg_type)) then
+    if msg_type = bus_read_msg then 
+
+    elsif msg_type = bus_burst_read_msg then 
+
+    elsif msg_type = axi_read_msg then 
+      id := pop(read_id_queue);
+      check_axi_id(bus_handle, rid, id, "rid");
+    elsif msg_type = axi_burst_read_msg then 
       id := pop(read_id_queue);
       check_axi_id(bus_handle, rid, id, "rid");
     end if;
@@ -264,7 +305,6 @@ begin
               " from address 0x" & to_hstring(addr));
     end if;
     
-    reply_msg := new_msg;
     push_std_ulogic_vector(reply_msg, rdata);
     reply(net, request_msg, reply_msg);
     delete(request_msg);

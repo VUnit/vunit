@@ -20,6 +20,8 @@ package axi_master_pkg is
 
   constant axi_read_msg : msg_type_t := new_msg_type("read axi ");
   constant axi_write_msg : msg_type_t := new_msg_type("write axi ");
+  constant axi_burst_read_msg : msg_type_t := new_msg_type("read axi burst ");
+  constant axi_burst_write_msg : msg_type_t := new_msg_type("write axi burst ");
 
   -- Blocking: Write the bus
   procedure write_axi(signal net : inout network_t;
@@ -39,6 +41,34 @@ package axi_master_pkg is
   procedure read_axi(signal net : inout network_t;
                           constant bus_handle : bus_master_t;
                           constant address : std_logic_vector;
+                          constant size : std_logic_vector;
+                          constant id : std_logic_vector := "";
+                          constant expected_rresp : axi_resp_t := axi_resp_okay;
+                          variable reference : inout bus_reference_t);
+
+  -- Blocking: read bus with immediate reply
+  procedure read_axi(signal net : inout network_t;
+                          constant bus_handle : bus_master_t;
+                          constant address : std_logic_vector;
+                          constant size : std_logic_vector;
+                          constant id : std_logic_vector := "";
+                          constant expected_rresp : axi_resp_t := axi_resp_okay;
+                          variable data : inout std_logic_vector);
+
+  -- Blocking: Read bus and check result against expected data
+  procedure check_axi(signal net : inout network_t;
+                          constant bus_handle : bus_master_t;
+                          constant address : std_logic_vector;
+                          constant size : std_logic_vector;
+                          constant id : std_logic_vector := "";
+                          constant expected_rresp : axi_resp_t := axi_resp_okay;
+                          constant expected : std_logic_vector;
+                          constant msg : string := "");
+
+  -- Non blocking: Read the bus returning a reference to the future reply
+  procedure burst_read_axi(signal net : inout network_t;
+                          constant bus_handle : bus_master_t;
+                          constant address : std_logic_vector;
                           constant len : std_logic_vector;
                           constant size : std_logic_vector;
                           constant burst : axi_burst_type_t;
@@ -47,7 +77,7 @@ package axi_master_pkg is
                           variable reference : inout bus_reference_t);
 
   -- Blocking: read bus with immediate reply
-  procedure read_axi(signal net : inout network_t;
+  procedure burst_read_axi(signal net : inout network_t;
                           constant bus_handle : bus_master_t;
                           constant address : std_logic_vector;
                           constant len : std_logic_vector;
@@ -58,7 +88,7 @@ package axi_master_pkg is
                           variable data : inout std_logic_vector);
 
   -- Blocking: Read bus and check result against expected data
-  procedure check_axi(signal net : inout network_t;
+  procedure burst_check_axi(signal net : inout network_t;
                            constant bus_handle : bus_master_t;
                            constant address : std_logic_vector;
                            constant len : std_logic_vector;
@@ -137,6 +167,83 @@ package body axi_master_pkg is
   procedure read_axi(signal net : inout network_t;
                           constant bus_handle : bus_master_t;
                           constant address : std_logic_vector;
+                          constant size : std_logic_vector;
+                          constant id : std_logic_vector := "";
+                          constant expected_rresp : axi_resp_t := axi_resp_okay;
+                          variable reference : inout bus_reference_t) is
+    variable full_address : std_logic_vector(bus_handle.p_address_length - 1 downto 0) := (others => '0');
+    variable full_size : std_logic_vector(size_length(bus_handle) - 1 downto 0) := (others => '0');
+    variable full_id : std_logic_vector(id_length(bus_handle) - 1 downto 0) := (others => '0');
+    alias request_msg : msg_t is reference;
+  begin
+    request_msg := new_msg(axi_read_msg);
+    full_address(address'length - 1 downto 0) := address;
+    push_std_ulogic_vector(request_msg, full_address);
+
+    full_size(size'length - 1 downto 0) := size;
+    push_std_ulogic_vector(request_msg, full_size);
+
+    if id = "" then
+      full_id := (others => '0');
+    else
+    full_id(id'length - 1 downto 0) := id;
+    end if;
+    push_std_ulogic_vector(request_msg, full_id);
+
+    push_std_ulogic_vector(request_msg, expected_rresp);
+    send(net, bus_handle.p_actor, request_msg);
+  end procedure;
+
+  procedure read_axi(signal net : inout network_t;
+                          constant bus_handle : bus_master_t;
+                          constant address : std_logic_vector;
+                          constant size : std_logic_vector;
+                          constant id : std_logic_vector := "";
+                          constant expected_rresp : axi_resp_t := axi_resp_okay;
+                          variable data : inout std_logic_vector) is
+    variable reference : bus_reference_t;
+  begin
+    read_axi(net, bus_handle, address, size, id, expected_rresp, reference);
+    await_read_bus_reply(net, reference, data);
+  end procedure;
+
+  procedure check_axi(signal net : inout network_t;
+                           constant bus_handle : bus_master_t;
+                           constant address : std_logic_vector;
+                           constant size : std_logic_vector;
+                           constant id : std_logic_vector := "";
+                           constant expected_rresp : axi_resp_t := axi_resp_okay;
+                           constant expected : std_logic_vector;
+                           constant msg : string := "") is
+    variable data : std_logic_vector(bus_handle.p_data_length - 1 downto 0);
+    variable edata : std_logic_vector(data'range) := (others => '0');
+
+    impure function error_prefix return string is
+    begin
+      if msg = "" then
+        return "check_bus(x""" & to_hstring(address) & """)";
+      else
+        return msg;
+      end if;
+    end;
+
+    impure function base_error return string is
+    begin
+      return error_prefix & " - Got x""" & to_hstring(data) & """ expected x""" & to_hstring(edata) & """";
+    end;
+  begin
+
+    edata(expected'length - 1 downto 0) := expected;
+
+    read_axi(net, bus_handle, address, size, id, expected_rresp, data);
+    if not std_match(data, edata) then
+      failure(bus_handle.p_logger, base_error);
+    end if;
+  end procedure;
+
+  procedure burst_read_axi(signal net : inout network_t;
+                          constant bus_handle : bus_master_t;
+                          constant address : std_logic_vector;
                           constant len : std_logic_vector;
                           constant size : std_logic_vector;
                           constant burst : axi_burst_type_t;
@@ -149,7 +256,7 @@ package body axi_master_pkg is
     variable full_id : std_logic_vector(id_length(bus_handle) - 1 downto 0) := (others => '0');
     alias request_msg : msg_t is reference;
   begin
-    request_msg := new_msg(axi_read_msg);
+    request_msg := new_msg(axi_burst_read_msg);
     full_address(address'length - 1 downto 0) := address;
     push_std_ulogic_vector(request_msg, full_address);
 
@@ -172,7 +279,7 @@ package body axi_master_pkg is
     send(net, bus_handle.p_actor, request_msg);
   end procedure;
 
-  procedure read_axi(signal net : inout network_t;
+  procedure burst_read_axi(signal net : inout network_t;
                           constant bus_handle : bus_master_t;
                           constant address : std_logic_vector;
                           constant len : std_logic_vector;
@@ -183,11 +290,11 @@ package body axi_master_pkg is
                           variable data : inout std_logic_vector) is
     variable reference : bus_reference_t;
   begin
-    read_axi(net, bus_handle, address, len, size, burst, id, expected_rresp, reference);
+    burst_read_axi(net, bus_handle, address, len, size, burst, id, expected_rresp, reference);
     await_read_bus_reply(net, reference, data);
   end procedure;
 
-  procedure check_axi(signal net : inout network_t;
+  procedure burst_check_axi(signal net : inout network_t;
                            constant bus_handle : bus_master_t;
                            constant address : std_logic_vector;
                            constant len : std_logic_vector;
@@ -217,7 +324,7 @@ package body axi_master_pkg is
 
     edata(expected'length - 1 downto 0) := expected;
 
-    read_axi(net, bus_handle, address, len, size, burst, id, expected_rresp, data);
+    burst_read_axi(net, bus_handle, address, len, size, burst, id, expected_rresp, data);
     if not std_match(data, edata) then
       failure(bus_handle.p_logger, base_error);
     end if;
@@ -225,17 +332,17 @@ package body axi_master_pkg is
 
   function is_read(msg_type : msg_type_t) return boolean is
   begin
-    return msg_type = bus_read_msg or msg_type = axi_read_msg;
+    return msg_type = bus_read_msg or msg_type = axi_read_msg or msg_type = bus_burst_read_msg or msg_type = axi_burst_read_msg;
   end function;
 
   function is_write(msg_type : msg_type_t) return boolean is
   begin
-    return msg_type = bus_write_msg or msg_type = axi_write_msg;
+    return msg_type = bus_write_msg or msg_type = axi_write_msg or msg_type = bus_burst_write_msg or msg_type = axi_burst_write_msg;
   end function;
 
   function is_axi_msg(msg_type : msg_type_t) return boolean is
   begin
-    return msg_type = axi_read_msg or msg_type = axi_write_msg;
+    return msg_type = axi_read_msg or msg_type = axi_write_msg or msg_type = axi_burst_read_msg or msg_type = axi_burst_write_msg;
   end function;
 
   function len_length(bus_handle : bus_master_t) return natural is
