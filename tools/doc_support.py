@@ -13,9 +13,12 @@ from pathlib import Path
 from pygments import highlight
 from pygments.lexers.hdl import VhdlLexer
 from pygments.lexers.python import PythonLexer
+from pygments.lexers import get_lexer_for_filename
 from pygments.filters import NameHighlightFilter
 from pygments.formatters.html import HtmlFormatter
+from pygments.formatters import get_formatter_for_filename
 from pygments.token import Name, Keyword, Generic
+from pygments.util import ClassNotFound
 
 
 def left_justify(code):
@@ -72,6 +75,8 @@ def highlight_code(
     types=None,
     highlights=None,
     language="vhdl",
+    highlight_lines=None,
+    font_size=14,
 ):  # pylint: disable=too-many-arguments
     """Create HTML with syntax highlighted code."""
     if language.lower() not in ["vhdl", "python"]:
@@ -98,7 +103,10 @@ def highlight_code(
         code = left_justify(code)
         code = remove_nested_snippets(code)
 
-    lexer = VhdlLexer() if language.lower() == "vhdl" else PythonLexer()
+    try:
+        lexer = get_lexer_for_filename(str(code_path))
+    except ClassNotFound:
+        lexer = VhdlLexer() if language.lower() == "vhdl" else PythonLexer()
 
     if functions:
         lexer.add_filter(NameHighlightFilter(names=functions, tokentype=Name.Function))
@@ -112,16 +120,25 @@ def highlight_code(
     if not output_path.parent.exists():
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    output_path.write_text(
-        highlight(
-            code,
-            lexer,
-            HtmlFormatter(
-                linenos=line_no_offset is not None,
-                linenostart=1 if line_no_offset is None else line_no_offset,
-            ),
-        )
+    formatter = get_formatter_for_filename(
+        str(output_path),
+        line_numbers=line_no_offset is not None,
+        linenostart=1 if line_no_offset is None else line_no_offset,
+        hl_lines=highlight_lines if highlight_lines else [],
+        font_size=font_size,
     )
+
+    output = highlight(
+        code,
+        lexer,
+        formatter,
+    )
+
+    if isinstance(output, bytes):
+        output_path.write_bytes(output)
+
+    if isinstance(output, str):
+        output_path.write_text(output)
 
 
 _CONEMU_COLORS = {
