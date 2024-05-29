@@ -94,10 +94,12 @@ class DependencyGraph(Generic[T]):
             callback(node)
 
         visited: Set[T] = set()
+        path: Set[T] = set()
+        path_ordered: List[T] = []
         for node in nodes:
             if node not in visited:
-                path: Set[T] = set()
-                path_ordered: List[T] = []
+                path = set()
+                path_ordered = []
                 visit(node)
 
     def get_dependent(self, nodes: Iterable[T]) -> Set[T]:
