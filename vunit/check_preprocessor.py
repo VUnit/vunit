@@ -99,6 +99,7 @@ class CheckPreprocessor(Preprocessor):
             return (n_quotes % 2) == 0
 
         code_section = Token.NORMAL
+        next_code_section = Token.NORMAL
         level = 1
         index = 0
         for char in code:
