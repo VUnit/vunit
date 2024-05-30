@@ -16,6 +16,7 @@ import sys
 import time
 import logging
 import string
+from datetime import datetime
 from contextlib import contextmanager
 from .. import ostools
 from ..hashing import hash_string
@@ -87,7 +88,8 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
             for test_name in test_suite.test_names:
                 num_tests += 1
                 if self._is_verbose:
-                    print("Running test: " + test_name)
+                    now = datetime.now().time().strftime("%H:%M:%S")
+                    print(f"({now}) " + "Running test: " + test_name)
 
         if self._is_verbose:
             print(f"Running {num_tests:d} tests")
