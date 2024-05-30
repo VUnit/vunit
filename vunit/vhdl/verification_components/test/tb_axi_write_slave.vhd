@@ -352,7 +352,7 @@ begin
       random_integer_vector_ptr(rnd, data, size * 2, 0, 255);
       buf := allocate(memory, length(data), permissions => no_access);
       transfer(x"2", buf, log_size, data);
-    
+
     elsif run("Test unaligned write around 4kbyte boundary") then
       -- Do one beat write at unaligned address starting around 4kB boundary
       log_size := log_data_size;
