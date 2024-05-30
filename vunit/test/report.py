@@ -18,6 +18,24 @@ from vunit.color_printer import COLOR_PRINTER
 from vunit.ostools import read_file
 
 
+def get_parsed_time(time_in):
+    """
+    Return string representation of input value
+    in hours, minutes and seconds.
+    """
+    time_str = ""
+    (minutes, seconds) = divmod(time_in, 60)
+    (hours, minutes) = divmod(minutes, 60)
+    if hours > 0:
+        time_str += f"{hours} hours, "
+    if minutes > 0:
+        time_str += f"{minutes} minutes, "
+
+    time_str += f"{seconds:.1f} seconds"
+
+    return time_str
+
+
 class TestReport(object):
     """
     Collect reports from running testcases
@@ -91,7 +109,7 @@ class TestReport(object):
         args.append(f"F={len(failed):d}")
         args.append(f"T={total_tests:d}")
 
-        self._printer.write(f" ({' '.join(args)!s}) {result.name!s} ({result.time:.1f} seconds)\n")
+        self._printer.write(f" ({' '.join(args)!s}) {result.name!s} ({get_parsed_time(result.time)})\n")
 
     def all_ok(self):
         """
@@ -143,8 +161,8 @@ class TestReport(object):
         self._printer.write(("=" * (max(max_len + 25, 0))) + "\n")
 
         total_time = sum((result.time for result in self._test_results.values()))
-        self._printer.write(f"Total time was {total_time:.1f} seconds\n")
-        self._printer.write(f"Elapsed time was {self._real_total_time:.1f} seconds\n")
+        self._printer.write(f"Total time was {get_parsed_time(total_time)}\n")
+        self._printer.write(f"Elapsed time was {get_parsed_time(self._real_total_time)}\n")
 
         self._printer.write(("=" * (max(max_len + 25, 0))) + "\n")
 
@@ -279,7 +297,7 @@ class TestResult(object):
 
         my_padding = max(padding - len(self.name), 0)
 
-        printer.write(f"{self.name + (' ' * my_padding)} ({self.time:.1f} seconds)\n")
+        printer.write(f"{self.name + (' ' * my_padding)} ({get_parsed_time(self.time)})\n")
 
     def to_xml(self, xunit_xml_format):
         """
