@@ -400,6 +400,27 @@ class ListOfStringOption(Option):
         except TypeError:
             fail()
 
+class DictOfStringOption(Option):
+    """
+    Must be a dictinary of strings
+    """
+
+    def validate(self, value):
+        def fail():
+            raise ValueError(f"Option {self.name!r} must be a dictionary of strings. Got {value!r}")
+
+        if not isinstance(value, dict):
+            fail()
+
+        try:
+            for name, elem in value.items():
+                if not is_string_not_iterable(name):
+                    fail()
+                if not is_string_not_iterable(elem):
+                    fail()
+        except TypeError:
+            fail()
+
 
 class VHDLAssertLevelOption(Option):
     """

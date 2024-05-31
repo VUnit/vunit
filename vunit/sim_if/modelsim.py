@@ -16,6 +16,7 @@ from ..exceptions import CompileError
 from ..ostools import Process, file_exists
 from ..vhdl_standard import VHDL
 from . import SimulatorInterface, ListOfStringOption, StringOption
+from . import DictOfStringOption 
 from .vsim_simulator_mixin import VsimSimulatorMixin, fix_path
 
 LOGGER = logging.getLogger(__name__)
@@ -41,6 +42,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
     sim_options = [
         ListOfStringOption("modelsim.vsim_flags"),
         ListOfStringOption("modelsim.vsim_flags.gui"),
+        DictOfStringOption("modelsim.vsim_ini.gui"),
         ListOfStringOption("modelsim.init_files.after_load"),
         ListOfStringOption("modelsim.init_files.before_run"),
         StringOption("modelsim.init_file.gui"),
@@ -232,6 +234,8 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         """
         Create the vunit_load TCL function that runs the vsim command and loads the design
         """
+        
+        self._vsim_extra_ini(config)
 
         set_generic_str = " ".join(
             (
@@ -329,7 +333,7 @@ proc vunit_load {{{{vsim_extra_args ""}}}} {{
         """
         Create the vunit_run function to run the test bench
         """
-        return """
+        tcl = """
 
 proc _vunit_run_failure {} {
     catch {
@@ -359,6 +363,7 @@ proc _vunit_sim_restart {} {
     restart -f
 }
 """
+        return tcl
 
     def _vsim_extra_args(self, config):
         """
@@ -371,6 +376,20 @@ proc _vunit_sim_restart {} {
             vsim_extra_args = config.sim_options.get("modelsim.vsim_flags.gui", vsim_extra_args)
 
         return " ".join(vsim_extra_args)
+    
+    def _vsim_extra_ini(self, config):
+        if not self._gui:
+            return
+
+        cfg = parse_modelsimini(self._sim_cfg_file_name)
+
+        vsim_extra_ini = {}
+        vsim_extra_ini = config.sim_options.get("modelsim.vsim_ini.gui", vsim_extra_ini)
+        for name, val in vsim_extra_ini.items():
+            cfg.set("vsim", name, val)
+        
+        write_modelsimini(cfg, self._sim_cfg_file_name)
+        return
 
     def merge_coverage(self, file_name, args=None):
         """
