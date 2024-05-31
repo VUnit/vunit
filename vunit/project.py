@@ -83,28 +83,37 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
     def add_library(
         self,
         logical_name,
-        directory: Union[str, Path],
+        directory: Union[str, Path] = None,
         vhdl_standard: VHDLStandard = VHDL.STD_2008,
         is_external=False,
     ):
         """
         Add library to project with logical_name located or to be located in directory
         is_external -- Library is assumed to a black-box
+        
+        :param directory: The path to the external library directory
+                                if None - supposes simulator provides library_name
         """
         self._validate_new_library_name(logical_name)
 
-        dpath = Path(directory)
-        dstr = str(directory)
-
-        if is_external:
-            if not dpath.exists():
-                raise ValueError(f"External library {dstr!r} does not exist")
-
-            if not dpath.is_dir():
-                raise ValueError(f"External library must be a directory. Got {dstr!r}")
+        if directory :
+            dpath = Path(directory)
+            dstr = str(directory)
+    
+            if is_external:
+                if not dpath.exists():
+                    raise ValueError(f"External library {dstr!r} does not exist")
+    
+                if not dpath.is_dir():
+                    raise ValueError(f"External library must be a directory. Got {dstr!r}")
+            
+            LOGGER.debug("Adding library %s with path %s", logical_name, dstr)
+        else:
+            dstr = None
+            is_external = True
+            LOGGER.debug("Use library %s", logical_name)
 
         library = Library(logical_name, dstr, vhdl_standard, is_external=is_external)
-        LOGGER.debug("Adding library %s with path %s", logical_name, dstr)
 
         self._libraries[logical_name] = library
         self._lower_library_names_dict[logical_name.lower()] = library.name
