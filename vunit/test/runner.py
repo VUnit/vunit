@@ -88,7 +88,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
             for test_name in test_suite.test_names:
                 num_tests += 1
                 if self._is_verbose:
-                    now = datetime.now().time().strftime("%H:%M:%S")
+                    now = datetime.now().strftime("%H:%M:%S")
                     print(f"({now}) " + "Running test: " + test_name)
 
         if self._is_verbose:
