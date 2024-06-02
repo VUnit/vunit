@@ -88,8 +88,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
             for test_name in test_suite.test_names:
                 num_tests += 1
                 if self._is_verbose:
-                    now = datetime.now().strftime("%H:%M:%S")
-                    print(f"({now}) " + "Running test: " + test_name)
+                    print("Running test: " + test_name)
 
         if self._is_verbose:
             print(f"Running {num_tests:d} tests")
@@ -151,7 +150,8 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
 
                 with self._stdout_lock():
                     for test_name in test_suite.test_names:
-                        print(f"Starting {test_name!s}")
+                        now = datetime.now().strftime("%H:%M:%S")
+                        print(f"({now}) Starting {test_name!s}")
                     print(f"Output file: {output_file_name!s}")
 
                 self._run_test_suite(test_suite, write_stdout, num_tests, output_path, output_file_name)
