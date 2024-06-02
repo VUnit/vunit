@@ -46,13 +46,13 @@ class TestTestReport(TestCase):
             self.report_to_str(report),
             """\
 ==== Summary ========================
-{gi}pass{x} passed_test0 (1.0 seconds)
-{gi}pass{x} passed_test1 (2.0 seconds)
+{gi}pass{x} passed_test0 (1.0 s)
+{gi}pass{x} passed_test1 (2.0 s)
 =====================================
 {gi}pass{x} 2 of 2
 =====================================
-Total time was 3.0 seconds
-Elapsed time was 1.0 seconds
+Total time was 3.0 s
+Elapsed time was 1.0 s
 =====================================
 {gi}All passed!{x}
 """,
@@ -69,13 +69,13 @@ Elapsed time was 1.0 seconds
             self.report_to_str(report),
             """\
 ==== Summary ========================
-{gi}pass{x} passed_test0 (1.0 seconds)
-{gi}pass{x} passed_test1 (2.0 seconds)
+{gi}pass{x} passed_test0 (1.0 s)
+{gi}pass{x} passed_test1 (2.0 s)
 =====================================
 {gi}pass{x} 2 of 2
 =====================================
-Total time was 3.0 seconds
-Elapsed time was 1.0 seconds
+Total time was 3.0 s
+Elapsed time was 1.0 s
 =====================================
 {gi}All passed!{x}
 {rgi}WARNING: Test execution aborted after running 2 out of 3 tests{x}
@@ -93,15 +93,15 @@ Elapsed time was 1.0 seconds
             self.report_to_str(report),
             """\
 ==== Summary ========================
-{gi}pass{x} passed_test  (2.0 seconds)
-{ri}fail{x} failed_test0 (11.1 seconds)
-{ri}fail{x} failed_test1 (3.0 seconds)
+{gi}pass{x} passed_test  (2.0 s)
+{ri}fail{x} failed_test0 (11.1 s)
+{ri}fail{x} failed_test1 (3.0 s)
 =====================================
 {gi}pass{x} 1 of 3
 {ri}fail{x} 2 of 3
 =====================================
-Total time was 16.1 seconds
-Elapsed time was 12.0 seconds
+Total time was 16.1 s
+Elapsed time was 12.0 s
 =====================================
 {ri}Some failed!{x}
 """,
@@ -118,16 +118,16 @@ Elapsed time was 12.0 seconds
             self.report_to_str(report),
             """\
 ==== Summary ========================
-{gi}pass{x} passed_test  (1.0 seconds)
-{rgi}skip{x} skipped_test (0.0 seconds)
-{ri}fail{x} failed_test  (3.0 seconds)
+{gi}pass{x} passed_test  (1.0 s)
+{rgi}skip{x} skipped_test (0.0 s)
+{ri}fail{x} failed_test  (3.0 s)
 =====================================
 {gi}pass{x} 1 of 3
 {rgi}skip{x} 1 of 3
 {ri}fail{x} 1 of 3
 =====================================
-Total time was 4.0 seconds
-Elapsed time was 3.0 seconds
+Total time was 4.0 s
+Elapsed time was 3.0 s
 =====================================
 {ri}Some failed!{x}
 """,
