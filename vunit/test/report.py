@@ -18,20 +18,28 @@ from vunit.color_printer import COLOR_PRINTER
 from vunit.ostools import read_file
 
 
-def get_parsed_time(time_in):
+def get_parsed_time(time_in, max_time=0):
     """
     Return string representation of input value
     in hours, minutes and seconds.
     """
     time_str = ""
+    time_max = time_in if max_time == 0 else max_time
+
     (minutes, seconds) = divmod(time_in, 60)
     (hours, minutes) = divmod(minutes, 60)
-    if hours > 0:
-        time_str += f"{hours} hours, "
-    if minutes > 0:
-        time_str += f"{minutes} minutes, "
+    if time_max > 3600:
+        if hours > 0:
+            time_str += f"{hours} h "
+        else:
+            time_str += "    "
+    if time_max > 60:
+        if minutes > 0:
+            time_str += f"{minutes:2} min "
+        else:
+            time_str += "       "
 
-    time_str += f"{seconds:.1f} seconds"
+    time_str += f"{seconds:2.1f} s"
 
     return time_str
 
@@ -137,10 +145,11 @@ class TestReport(object):
             return
 
         prefix = "==== Summary "
-        max_len = max(len(test.name) for test in all_tests)
+        max_len = max(len(test.name)for test in all_tests)
+        max_time = max(test.time for test in all_tests)
         self._printer.write(f"{prefix!s}{'=' * (max(max_len - len(prefix) + 25, 0))}\n")
         for test_result in all_tests:
-            test_result.print_status(self._printer, padding=max_len)
+            test_result.print_status(self._printer, padding=max_len, max_time=max_time)
 
         self._printer.write(("=" * (max(max_len + 25, 0))) + "\n")
         n_failed = len(failures)
@@ -281,7 +290,7 @@ class TestResult(object):
     def failed(self):
         return self._status == FAILED
 
-    def print_status(self, printer, padding=0):
+    def print_status(self, printer, padding=0, max_time=0):
         """
         Print the status and runtime of this test result
         """
@@ -297,7 +306,7 @@ class TestResult(object):
 
         my_padding = max(padding - len(self.name), 0)
 
-        printer.write(f"{self.name + (' ' * my_padding)} ({get_parsed_time(self.time)})\n")
+        printer.write(f"{self.name + (' ' * my_padding)} ({get_parsed_time(self.time, max_time)})\n")
 
     def to_xml(self, xunit_xml_format):
         """
