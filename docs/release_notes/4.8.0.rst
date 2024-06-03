@@ -1,0 +1,5 @@
+Features
+~~~~~~~~
+
+- Update time reporting from test results.
+- Add timestamps to run tests.
