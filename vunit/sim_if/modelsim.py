@@ -205,12 +205,12 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         if library_name in mapped_libraries:
             if mapped_libraries[library_name] == path:
                 return
-            elif path is None:  # use existing map 
+            elif path is None:  # use existing map
                 return
-        
+
         if path is None:
             raise ValueError(f"External library {library_name!r} does not exist")
-            
+
         apath = str(Path(path).parent.resolve())
 
         if not file_exists(apath):

@@ -228,7 +228,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         if path:
             path = Path(path).resolve()
-        
+
         self._project.add_library(
             library_name,
             path,

@@ -90,7 +90,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         """
         Add library to project with logical_name located or to be located in directory
         is_external -- Library is assumed to a black-box
-        
+
         :param directory: The path to the external library directory
                                 if None - supposes simulator provides library_name
         """
@@ -99,14 +99,14 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         if directory :
             dpath = Path(directory)
             dstr = str(directory)
-    
+
             if is_external:
                 if not dpath.exists():
                     raise ValueError(f"External library {dstr!r} does not exist")
-    
+
                 if not dpath.is_dir():
                     raise ValueError(f"External library must be a directory. Got {dstr!r}")
-            
+
             LOGGER.debug("Adding library %s with path %s", logical_name, dstr)
         else:
             dstr = None
