@@ -30,7 +30,7 @@ def get_parsed_time(time_in, max_time=0):
 
     (minutes, seconds) = divmod(time_in, 60)
     (hours, minutes) = divmod(minutes, 60)
-    if max_time >= 3600 or time_in >= 3600:
+    if max(time_in, max_time) >= 3600:
         # If the longest test took 10 hours or more, pad the string to take this
         # into account.
         padding = 5 if (max_time / 3600) % 60 >= 10 else 4
@@ -38,7 +38,7 @@ def get_parsed_time(time_in, max_time=0):
             time_str += f"{int(hours)} h ".rjust(padding)
         else:
             time_str += " " * padding
-    if max_time >= 60 or time_in >= 60:
+    if max(time_in, max_time) >= 60:
         # If the longest test took an hour (or more), or the longest test took
         # 10 minutes or more, pad the string to take this into account.
         padding = 7 if (max_time >= 3600) or ((max_time / 60) % 60 >= 10) else 6
