@@ -16,7 +16,7 @@ from ..exceptions import CompileError
 from ..ostools import Process, file_exists
 from ..vhdl_standard import VHDL
 from . import SimulatorInterface, ListOfStringOption, StringOption
-from . import DictOfStringOption 
+from . import DictOfStringOption
 from .vsim_simulator_mixin import VsimSimulatorMixin, fix_path
 
 LOGGER = logging.getLogger(__name__)
@@ -234,7 +234,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         """
         Create the vunit_load TCL function that runs the vsim command and loads the design
         """
-        
+
         self._vsim_extra_ini(config)
 
         set_generic_str = " ".join(
@@ -376,7 +376,7 @@ proc _vunit_sim_restart {} {
             vsim_extra_args = config.sim_options.get("modelsim.vsim_flags.gui", vsim_extra_args)
 
         return " ".join(vsim_extra_args)
-    
+
     def _vsim_extra_ini(self, config):
         if not self._gui:
             return
@@ -387,7 +387,7 @@ proc _vunit_sim_restart {} {
         vsim_extra_ini = config.sim_options.get("modelsim.vsim_ini.gui", vsim_extra_ini)
         for name, val in vsim_extra_ini.items():
             cfg.set("vsim", name, val)
-        
+
         write_modelsimini(cfg, self._sim_cfg_file_name)
         return
 

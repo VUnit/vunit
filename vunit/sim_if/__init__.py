@@ -400,6 +400,7 @@ class ListOfStringOption(Option):
         except TypeError:
             fail()
 
+
 class DictOfStringOption(Option):
     """
     Must be a dictinary of strings
