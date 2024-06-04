@@ -9,6 +9,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use ieee.math_real.all;
 
 library osvvm;
 use osvvm.RandomPkg.RandomPType;
@@ -131,17 +132,22 @@ begin
       end if;
     end procedure;
 
+    function get_full_size return std_logic_vector is
+      begin
+        return std_logic_vector(to_unsigned(integer(ceil(log2(real(rdata'length/8)))), arsize'length));
+    end function;
+
     variable rnd : RandomPType;
     variable request_msg : msg_t;
     variable msg_type : msg_type_t;
     variable w_done, aw_done : boolean;
 
-    -- These variables are needed to keep the values for logging when transaction is fully done
     variable addr : std_logic_vector(awaddr'range) := (others => '0');
     variable data : std_logic_vector(wdata'range) := (others => '0');
     variable id : std_logic_vector(rid'range) := (others => '0');
-    variable len : std_logic_vector(arlen'range) := (others => '0');
-    variable burst : positive;
+    variable len : natural := 0;
+    variable size : std_logic_vector(arsize'range) := (others => '0');
+    variable burst : std_logic_vector(arburst'range) := (others => '0');
     variable resp : axi_resp_t;
   begin
     -- Initialization
@@ -164,41 +170,47 @@ begin
         end loop;
         
         addr := pop_std_ulogic_vector(request_msg);
-        push_std_ulogic_vector(request_msg, addr);
-        araddr <= addr;
 
         if msg_type = bus_read_msg then 
-          arlen(arlen'range) <= (others => '0');
-          arsize(arsize'range) <= (others => '0');
-          arburst(arburst'range) <= (others => '0');
-          arid(arid'range) <= (others => '0');
+          len := 0;
+          size := get_full_size;
+          burst := axi_burst_type_fixed;
+          id(id'range) := (others => '0');
         elsif msg_type = bus_burst_read_msg then 
-          burst := pop_integer(request_msg);
-          arlen <= std_logic_vector(to_unsigned(burst, arlen'length));
-          push_integer(request_msg, burst);
-          arsize(arsize'range) <= (others => '0');
-          arburst(arburst'range) <= (others => '0');
-          arid(arid'range) <= (others => '0');
+          len := pop_integer(request_msg) - 1; -- bring bus burst down to axi zero based indexing
+          size := get_full_size;
+          burst := axi_burst_type_incr;
+          id(id'range) := (others => '0');
         elsif msg_type = axi_read_msg then 
-          arlen(arlen'range) <= (others => '0');
-          arsize <= pop_std_ulogic_vector(request_msg);
-          arburst(arburst'range) <= (others => '0');
+          len := 0;
+          size := pop_std_ulogic_vector(request_msg);
+          burst := axi_burst_type_fixed;
           id := pop_std_ulogic_vector(request_msg)(arid'length -1 downto 0);
-          arid <= id;
-          push_std_ulogic_vector(request_msg, id);
         elsif msg_type = axi_burst_read_msg then 
-          len := pop_std_ulogic_vector(request_msg);
-          push_std_ulogic_vector(request_msg, len);
-          arlen <= len;
-          arsize <= pop_std_ulogic_vector(request_msg);
-          arburst <= pop_std_ulogic_vector(request_msg);
+          len := to_integer(unsigned(pop_std_ulogic_vector(request_msg)));
+          size := pop_std_ulogic_vector(request_msg);
+          burst := pop_std_ulogic_vector(request_msg);
           id := pop_std_ulogic_vector(request_msg)(arid'length -1 downto 0);
-          arid <= id;
-          push_std_ulogic_vector(request_msg, id);
         end if;
+
+        araddr <= addr;
+        push_std_ulogic_vector(request_msg, addr);
+
+        arlen <= std_logic_vector(to_unsigned(len, arlen'length));
+        push_integer(request_msg, len);
+
+        arsize <= size;
+        push_std_ulogic_vector(request_msg, size);
+
+        arburst <= burst;
+        push_std_ulogic_vector(request_msg, burst);
+
+        arid <= id;
+        push_std_ulogic_vector(request_msg, id);
 
         resp := pop_std_ulogic_vector(request_msg) when is_axi_msg(msg_type) else axi_resp_okay;
         push(request_msg, resp);
+
         push(read_reply_queue, request_msg);
 
         arvalid <= '1';
@@ -226,7 +238,7 @@ begin
           id := pop_std_ulogic_vector(request_msg)(awid'length -1 downto 0);
           push_std_ulogic_vector(request_msg, id);
           awid <= id;
-          
+
           wlast <= pop_std_ulogic(request_msg);
         end if;
 
@@ -268,42 +280,56 @@ begin
   read_reply : process
     variable request_msg, reply_msg : msg_t;
     variable msg_type : msg_type_t;
-    variable addr : std_logic_vector(araddr'range) := (others => '0');
-    variable resp : axi_resp_t;
+    variable addr : std_logic_vector(awaddr'range) := (others => '0');
     variable id : std_logic_vector(rid'range) := (others => '0');
+    variable len : natural := 0;
+    variable size : std_logic_vector(arsize'range) := (others => '0');
+    variable burst : std_logic_vector(arburst'range) := (others => '0');
+    variable resp : axi_resp_t;
+
+    procedure write_debug is
+      begin
+        if is_visible(bus_handle.p_logger, debug) then
+          debug(bus_handle.p_logger,
+                "Read 0x" & to_hstring(rdata) &
+                  " from address 0x" & to_hstring(addr));
+        end if;
+      end procedure;
   begin
     
     rready <= '1';
     wait until (rvalid and rready) = '1' and rising_edge(aclk);
-    rready <= '0';
-
+    
     reply_msg := new_msg;
     request_msg := pop(read_reply_queue);
     msg_type := message_type(request_msg);
+
     addr := pop_std_ulogic_vector(request_msg);
-    
-    if msg_type = bus_read_msg then 
+    len := pop_integer(request_msg);
+    size := pop_std_ulogic_vector(request_msg);
+    burst := pop_std_ulogic_vector(request_msg);
+    id := pop_std_ulogic_vector(request_msg);
+    resp := pop(request_msg);
 
-    elsif msg_type = bus_burst_read_msg then 
-
-    elsif msg_type = axi_read_msg then 
-      id := pop_std_ulogic_vector(request_msg);
-      check_axi_id(bus_handle, rid, id, "rid");
-    elsif msg_type = axi_burst_read_msg then 
-      id := pop_std_ulogic_vector(request_msg);
-      check_axi_id(bus_handle, rid, id, "rid");
+    if msg_type = bus_burst_read_msg or msg_type =  axi_burst_read_msg then 
+      push_integer(reply_msg, len + 1);  -- bring axi burst up to bus one based indexing
     end if;
 
-    resp := pop_std_ulogic_vector(request_msg);
+    -- first iteration
+    check_axi_id(bus_handle, rid, id, "rid");
     check_axi_resp(bus_handle, rresp, resp, "rresp");
-
-    if is_visible(bus_handle.p_logger, debug) then
-      debug(bus_handle.p_logger,
-            "Read 0x" & to_hstring(rdata) &
-              " from address 0x" & to_hstring(addr));
-    end if;
-    
+    write_debug;
     push_std_ulogic_vector(reply_msg, rdata);
+
+    -- burst iterations
+    for i in 0 to len - 1 loop
+      wait until (rvalid and rready) = '1' and rising_edge(aclk);
+      check_axi_id(bus_handle, rid, id, "rid");
+      check_axi_resp(bus_handle, rresp, resp, "rresp");
+      write_debug;
+      push_std_ulogic_vector(reply_msg, rdata);
+    end loop;
+
     reply(net, request_msg, reply_msg);
     delete(request_msg);
   end process;

@@ -16,6 +16,8 @@ context work.com_context;
 use work.axi_pkg.all;
 use work.bus_master_pkg.all;
 use work.axi_master_pkg.all;
+use work.axi_slave_pkg.all;
+use work.memory_pkg.all;
 
 library osvvm;
 use osvvm.RandomPkg.all;
@@ -66,579 +68,120 @@ architecture a of tb_axi_master is
   constant bus_handle : bus_master_t := new_bus(data_length => wdata'length,
                                                 address_length => awaddr'length);
 
-  signal start, done : boolean := false;
+  constant memory : memory_t := new_memory;
+  constant axi_rd_slave : axi_slave_t := new_axi_slave(memory => memory,
+                                                logger => get_logger("axi_rd_slave"));
+
+  constant axi_wr_slave : axi_slave_t := new_axi_slave(memory => memory,
+                                                logger => get_logger("axi_wr_slave"));
+
+  constant tb_logger : logger_t := get_logger("tb");
 begin
 
   main : process
-    variable tmp : std_logic_vector(rdata'range);
+
     variable rnd : RandomPType;
-    variable timestamp : time;
+
+    procedure setup_and_set_random_data_read_memory(
+      memory : memory_t;
+      num_words : positive;
+      width : positive;
+      data : queue_t
+    ) is
+        variable rd_buffer : buffer_t;
+        variable rand : std_logic_vector(width - 1 downto 0);
+    begin
+        clear(memory);
+        rd_buffer := allocate(memory,
+                              num_bytes   => num_words * (width / 8),
+                              name        => rd_buffer'simple_name,
+                              permissions => read_only);
+
+        for i in 0 to num_words - 1 loop
+          rand := rnd.RandSlv(width);
+          write_word(memory, base_address(rd_buffer) + (i*(width/8)), rand);
+          push(data, rand);
+        end loop;
+    end;
+
+    variable read_data_queue : queue_t := new_queue;
+    variable memory_data_queue : queue_t := new_queue;
+
+    variable read_tmp : std_logic_vector(rdata'range);
+    variable memory_tmp : std_logic_vector(rdata'range);
+
+    variable burst : natural := 0;
   begin
     test_runner_setup(runner, runner_cfg);
     rnd.InitSeed("common_seed");
-    start <= true;
     wait for 0 ns;
 
-    if run("Test single write") then
-      mock(get_logger(bus_handle), debug);
-      write_bus(net, bus_handle, x"01234567", x"1122");
-      wait_until_idle(net, bus_handle);
-      check_only_log(get_logger(bus_handle), "Wrote 0x1122 to address 0x01234567", debug);
-      unmock(get_logger(bus_handle));
-
-    elsif run("Test single write with byte enable") then
-      write_bus(net, bus_handle, x"01234567", x"1122", byte_enable => "10");
-
-    elsif run("Test write not okay") then
-      write_bus(net, bus_handle, x"01234567", x"1122");
-
-    elsif run("Test write with axi resp") then
-      write_axi(net, bus_handle, x"01234567", x"1122", x"12", "111" , axi_burst_type_fixed, '0', x"25", axi_resp_slverr);
-
-    elsif run("Test write with wrong axi resp") then
-      write_axi(net, bus_handle, x"01234567", x"1122", x"12", "111" , axi_burst_type_fixed, '0', x"25", axi_resp_decerr);
-
-    elsif run("Test single read") then
-      mock(get_logger(bus_handle), debug);
-      read_bus(net, bus_handle, x"01234567", tmp);
-      check_equal(tmp, std_logic_vector'(x"5566"), "read data");
-      check_only_log(get_logger(bus_handle), "Read 0x5566 from address 0x01234567", debug);
-      unmock(get_logger(bus_handle));
-
-    elsif run("Test read not okay") then
-      read_bus(net, bus_handle, x"01234567", tmp);
-
-    elsif run("Test read with axi resp") then
-      read_axi(net, bus_handle, x"01234567", "111", x"25", axi_resp_slverr, tmp);
-
-    elsif run("Test read with wrong axi resp") then
-      read_axi(net, bus_handle, x"01234567", "111", x"25", axi_resp_exokay, tmp);
-
-    elsif run("Test random") then
-      for i in 0 to num_random_tests-1 loop
-        if rnd.RandInt(0, 1) = 0 then
-          read_bus(net, bus_handle, rnd.RandSlv(araddr'length), tmp);
-          check_equal(tmp, rnd.RandSlv(rdata'length), "read data");
-        else
-          write_bus(net, bus_handle, rnd.RandSlv(awaddr'length), rnd.RandSlv(wdata'length));
-        end if;
+    if run("Test read with read_bus") then
+      for n in 0 to 4 loop
+        info(tb_logger, "Setup...");
+        burst := 1;
+        setup_and_set_random_data_read_memory(memory, burst, rdata'length, memory_data_queue);
+        info(tb_logger, "Reading...");
+        read_bus(net, bus_handle, 0, read_tmp);
+        info(tb_logger, "Compare...");
+        memory_tmp := pop(memory_data_queue);
+        check_equal(read_tmp, memory_tmp, "read data");
+        check_true(is_empty(memory_data_queue), "memory_data_queue not flushed");
       end loop;
-
-    elsif run("Test random axi resp") then
-      for i in 0 to num_random_tests-1 loop
-        if rnd.RandInt(0, 1) = 0 then
-          read_axi(net, bus_handle, rnd.RandSlv(araddr'length), "111", x"25", rnd.RandSlv(axi_resp_t'length), tmp);
-          check_equal(tmp, rnd.RandSlv(rdata'length), "read data");
-        else
-          write_axi(net, bus_handle, rnd.RandSlv(awaddr'length), rnd.RandSlv(wdata'length),
-                x"12", "111" , axi_burst_type_fixed, '0', x"25", rnd.RandSlv(axi_resp_t'length));
-        end if;
-      end loop;
-
-    elsif run("Test idle when idle") then
-      wait until rising_edge(clk);
-      write_bus(net, bus_handle, x"01234567", x"1122");
-      wait for 0 ps;
-      timestamp := now;
-      wait_until_idle(net, bus_handle);
-      check(now > timestamp, "Write: First wait did not have to wait");
-      timestamp := now;
-      wait_until_idle(net, bus_handle);
-      check_equal(timestamp, now, "Write: Second wait had to wait");
-
-      wait until rising_edge(clk);
-      read_bus(net, bus_handle, x"01234567", tmp);
-      timestamp := now;
-      wait_until_idle(net, bus_handle);
-      check_equal(timestamp, now, "Read: Second wait had to wait");
-
-    elsif run("Test single write with id") then
-      write_axi(net, bus_handle, x"01234567", x"1122", x"12", "111" , axi_burst_type_fixed, '0', x"25");
-
-    elsif run("Test single read with id") then
-      read_axi(net, bus_handle, x"01234567", "111", x"25", axi_resp_okay, tmp);
-
-    elsif run("Test single read with len") then
-      read_axi(net, bus_handle, x"01234567", "111", x"25", axi_resp_okay, tmp);
-
-    elsif run("Test single write with len") then
-      write_axi(net, bus_handle, x"01234567", x"1122", x"12", "111" , axi_burst_type_fixed, '0', x"25");
       
-    elsif run("Test single write with size") then
-      write_axi(net, bus_handle, x"01234567", x"1122", x"12", "010" , axi_burst_type_fixed, '0', x"25");
-        
-    elsif run("Test single write with burst") then
-      write_axi(net, bus_handle, x"01234567", x"1122", x"12", "010" , axi_burst_type_incr, '0', x"25");
+    elsif run("Test read with read_axi") then
+      for n in 0 to 4 loop
+        info(tb_logger, "Setup...");
+        burst := 1;
+        setup_and_set_random_data_read_memory(memory, burst, rdata'length, memory_data_queue);
+        info(tb_logger, "Reading...");
+        read_axi(net, bus_handle, x"00000000", "001", x"25", axi_resp_okay, read_tmp);
+        info(tb_logger, "Compare...");
+        memory_tmp := pop(memory_data_queue);
+        check_equal(read_tmp, memory_tmp, "read data");
+        check_true(is_empty(memory_data_queue), "memory_data_queue not flushed");
+      end loop;
 
-    elsif run("Test single read with size") then
-      read_axi(net, bus_handle, x"01234567", "101", x"25", axi_resp_okay, tmp);
+    elsif run("Test random burstcount read with burst_read_bus") then
+      for n in 0 to 4 loop
+        info(tb_logger, "Setup...");
+        burst := rnd.RandInt(1, 255);
+        setup_and_set_random_data_read_memory(memory, burst, rdata'length, memory_data_queue);
+        info(tb_logger, "Reading...");
+        burst_read_bus(net, bus_handle, 0, burst, read_data_queue);
+        info(tb_logger, "Compare...");
+        for i in 0 to burst - 1 loop
+          read_tmp := pop(read_data_queue);
+          memory_tmp := pop(memory_data_queue);
+          check_equal(read_tmp, memory_tmp, "read data");
+        end loop;
+        check_true(is_empty(read_data_queue), "read_data_queue not flushed");
+        check_true(is_empty(memory_data_queue), "memory_data_queue not flushed");
+      end loop;
 
-    elsif run("Test single read with burst") then
-      read_axi(net, bus_handle, x"01234567", "111", x"25", axi_resp_okay, tmp);
-
-    elsif run("Test single write with last") then
-        write_axi(net, bus_handle, x"01234567", x"1122", x"12", "010" , axi_burst_type_incr, '1', x"25");
-
-    end if;
+    elsif run("Test random burstcount read with burst_read_axi") then
+      for n in 0 to 4 loop
+        info(tb_logger, "Setup...");
+        burst := rnd.RandInt(1, 255);
+        setup_and_set_random_data_read_memory(memory, burst+1, rdata'length, memory_data_queue);
+        info(tb_logger, "Reading...");
+        burst_read_axi(net, bus_handle, x"00000000", std_logic_vector(to_unsigned(burst, arlen'length)), "001", axi_burst_type_incr, x"25", axi_resp_okay, read_data_queue);
+        info(tb_logger, "Compare...");
+        for i in 0 to burst loop
+          read_tmp := pop(read_data_queue);
+          memory_tmp := pop(memory_data_queue);
+          check_equal(read_tmp, memory_tmp, "read data");
+        end loop;
+        check_true(is_empty(read_data_queue), "read_data_queue not flushed");
+        check_true(is_empty(memory_data_queue), "memory_data_queue not flushed");
+      end loop;
+  end if;
 
     wait for 100 ns;
-
-    if not done then
-      wait until done;
-    end if;
 
     test_runner_cleanup(runner);
   end process;
   test_runner_watchdog(runner, 100 us);
-
-
-  support : process
-    variable rnd : RandomPType;
-  begin
-    rnd.InitSeed("common_seed");
-
-    wait until start;
-
-    if enabled("Test single write") then
-      awready <= '1';
-      wait until (awready and awvalid) = '1' and rising_edge(clk);
-      awready <= '0';
-      check_equal(awaddr, std_logic_vector'(x"01234567"), "awaddr");
-
-      wready <= '1';
-      wait until (wready and wvalid) = '1' and rising_edge(clk);
-      wready <= '0';
-      check_equal(wdata, std_logic_vector'(x"1122"), "wdata");
-      check_equal(wstrb, std_logic_vector'("11"), "wstrb");
-
-      bvalid <= '1';
-      bresp <= axi_resp_okay;
-      wait until (bready and bvalid) = '1' and rising_edge(clk);
-      bvalid <= '0';
-
-      done <= true;
-
-    elsif enabled("Test single write with byte enable") then
-      awready <= '1';
-      wait until (awready and awvalid) = '1' and rising_edge(clk);
-      awready <= '0';
-      check_equal(awaddr, std_logic_vector'(x"01234567"), "awaddr");
-
-      wready <= '1';
-      wait until (wready and wvalid) = '1' and rising_edge(clk);
-      wready <= '0';
-      check_equal(wdata, std_logic_vector'(x"1122"), "wdata");
-      check_equal(wstrb, std_logic_vector'("10"), "wstrb");
-
-      bvalid <= '1';
-      bresp <= axi_resp_okay;
-      wait until (bready and bvalid) = '1' and rising_edge(clk);
-      bvalid <= '0';
-
-      done <= true;
-
-    elsif enabled("Test write not okay") then
-      awready <= '1';
-      wait until (awready and awvalid) = '1' and rising_edge(clk);
-      awready <= '0';
-
-      wready <= '1';
-      wait until (wready and wvalid) = '1' and rising_edge(clk);
-      wready <= '0';
-
-      bvalid <= '1';
-      bresp <= axi_resp_slverr;
-      mock(bus_logger, failure);
-      wait until (bready and bvalid) = '1' and rising_edge(clk);
-      bvalid <= '0';
-      wait until mock_queue_length > 0 for 0 ns;
-      check_only_log(bus_logger, "bresp - Got AXI response SLVERR(10) expected OKAY(00)", failure);
-      unmock(bus_logger);
-
-      done <= true;
-
-    elsif enabled("Test write with axi resp") then
-      awready <= '1';
-      wait until (awready and awvalid) = '1' and rising_edge(clk);
-      awready <= '0';
-      check_equal(awaddr, std_logic_vector'(x"01234567"), "awaddr");
-
-      wready <= '1';
-      wait until (wready and wvalid) = '1' and rising_edge(clk);
-      wready <= '0';
-      check_equal(wdata, std_logic_vector'(x"1122"), "wdata");
-      check_equal(wstrb, std_logic_vector'("11"), "wstrb");
-
-      bvalid <= '1';
-      bresp <= axi_resp_slverr;
-      bid <= x"25";
-      wait until (bready and bvalid) = '1' and rising_edge(clk);
-      bvalid <= '0';
-
-      done <= true;
-
-    elsif enabled("Test write with wrong axi resp") then
-      awready <= '1';
-      wait until (awready and awvalid) = '1' and rising_edge(clk);
-      awready <= '0';
-      check_equal(awaddr, std_logic_vector'(x"01234567"), "awaddr");
-
-      wready <= '1';
-      wait until (wready and wvalid) = '1' and rising_edge(clk);
-      wready <= '0';
-      check_equal(wdata, std_logic_vector'(x"1122"), "wdata");
-      check_equal(wstrb, std_logic_vector'("11"), "wstrb");
-
-      bvalid <= '1';
-      bresp <= axi_resp_exokay;
-      bid <= x"25";
-      mock(bus_logger, failure);
-      wait until (bready and bvalid) = '1' and rising_edge(clk);
-      bvalid <= '0';
-      wait until mock_queue_length > 0 for 0 ns;
-      check_only_log(bus_logger, "bresp - Got AXI response EXOKAY(01) expected DECERR(11)", failure);
-      unmock(bus_logger);
-
-      done <= true;
-
-    elsif enabled("Test single read") then
-      arready <= '1';
-      wait until (arready and arvalid) = '1' and rising_edge(clk);
-      arready <= '0';
-      check_equal(araddr, std_logic_vector'(x"01234567"), "araddr");
-
-      rvalid <= '1';
-      rresp <= axi_resp_okay;
-      rdata <= x"5566";
-      wait until (rready and rvalid) = '1' and rising_edge(clk);
-      rvalid <= '0';
-
-      done <= true;
-
-    elsif enabled("Test read not okay") then
-      arready <= '1';
-      wait until (arready and arvalid) = '1' and rising_edge(clk);
-      arready <= '0';
-
-      rvalid <= '1';
-      rresp <= axi_resp_decerr;
-      rdata <= x"5566";
-      mock(bus_logger, failure);
-      wait until (rready and rvalid) = '1' and rising_edge(clk);
-      rvalid <= '0';
-      wait until mock_queue_length > 0 for 0 ns;
-      check_only_log(bus_logger, "rresp - Got AXI response DECERR(11) expected OKAY(00)", failure);
-      unmock(bus_logger);
-
-      done <= true;
-
-    elsif enabled("Test read with axi resp") then
-      arready <= '1';
-      wait until (arready and arvalid) = '1' and rising_edge(clk);
-      arready <= '0';
-      check_equal(araddr, std_logic_vector'(x"01234567"), "araddr");
-
-      rvalid <= '1';
-      rresp <= axi_resp_slverr;
-      rdata <= x"0000";
-      rid <= x"25";
-      wait until (rready and rvalid) = '1' and rising_edge(clk);
-      rvalid <= '0';
-
-      done <= true;
-
-    elsif enabled("Test read with wrong axi resp") then
-      arready <= '1';
-      wait until (arready and arvalid) = '1' and rising_edge(clk);
-      arready <= '0';
-      check_equal(araddr, std_logic_vector'(x"01234567"), "araddr");
-
-      rvalid <= '1';
-      rresp <= axi_resp_decerr;
-      rdata <= x"0000";
-      rid <= x"25";
-      mock(bus_logger, failure);
-      wait until (rready and rvalid) = '1' and rising_edge(clk);
-      rvalid <= '0';
-      wait until mock_queue_length > 0 for 0 ns;
-      check_only_log(bus_logger, "rresp - Got AXI response DECERR(11) expected EXOKAY(01)", failure);
-      unmock(bus_logger);
-
-      done <= true;
-
-    elsif enabled("Test random") then
-      for i in 0 to num_random_tests-1 loop
-        if rnd.RandInt(0, 1) = 0 then
-          arready <= '1';
-          wait until (arready and arvalid) = '1' and rising_edge(clk);
-          arready <= '0';
-          check_equal(araddr, rnd.RandSlv(araddr'length), "araddr");
-
-          rvalid <= '1';
-          rresp <= axi_resp_okay;
-          rdata <= rnd.RandSlv(rdata'length);
-          wait until (rready and rvalid) = '1' and rising_edge(clk);
-          rvalid <= '0';
-        else
-          awready <= '1';
-          wait until (awready and awvalid) = '1' and rising_edge(clk);
-          awready <= '0';
-          check_equal(awaddr, rnd.RandSlv(awaddr'length), "awaddr");
-
-          wready <= '1';
-          wait until (wready and wvalid) = '1' and rising_edge(clk);
-          wready <= '0';
-          check_equal(wdata, rnd.RandSlv(wdata'length), "wdata");
-          check_equal(wstrb, std_logic_vector'("11"), "wstrb");
-
-          bvalid <= '1';
-          bresp <= axi_resp_okay;
-          wait until (bready and bvalid) = '1' and rising_edge(clk);
-          bvalid <= '0';
-        end if;
-      end loop;
-      done <= true;
-
-    elsif enabled("Test random axi resp") then
-      for i in 0 to num_random_tests-1 loop
-        if rnd.RandInt(0, 1) = 0 then
-          arready <= '1';
-          wait until (arready and arvalid) = '1' and rising_edge(clk);
-          arready <= '0';
-          check_equal(araddr, rnd.RandSlv(araddr'length), "araddr");
-
-          rvalid <= '1';
-          rresp <= rnd.RandSlv(axi_resp_t'length);
-          rdata <= rnd.RandSlv(rdata'length);
-          rid <= x"25";
-          wait until (rready and rvalid) = '1' and rising_edge(clk);
-          rvalid <= '0';
-        else
-          awready <= '1';
-          wait until (awready and awvalid) = '1' and rising_edge(clk);
-          awready <= '0';
-          check_equal(awaddr, rnd.RandSlv(awaddr'length), "awaddr");
-
-          wready <= '1';
-          wait until (wready and wvalid) = '1' and rising_edge(clk);
-          wready <= '0';
-          check_equal(wdata, rnd.RandSlv(wdata'length), "wdata");
-          check_equal(wstrb, std_logic_vector'("11"), "wstrb");
-
-          bvalid <= '1';
-          bresp <= rnd.RandSlv(axi_resp_t'length);
-          bid <= x"25";
-          wait until (bready and bvalid) = '1' and rising_edge(clk);
-          bvalid <= '0';
-        end if;
-      end loop;
-      done <= true;
-
-    elsif enabled("Test idle when idle") then
-      wait until rising_edge(clk);
-      awready <= '1';
-      wait until (awready and awvalid) = '1' and rising_edge(clk);
-      awready <= '0';
-      check_equal(awaddr, std_logic_vector'(x"01234567"), "awaddr");
-
-      wait until rising_edge(clk);
-      wready <= '1';
-      wait until (wready and wvalid) = '1' and rising_edge(clk);
-      wready <= '0';
-      check_equal(wdata, std_logic_vector'(x"1122"), "wdata");
-      check_equal(wstrb, std_logic_vector'("11"), "wstrb");
-
-      wait until rising_edge(clk);
-      bvalid <= '1';
-      bresp <= axi_resp_okay;
-      wait until (bready and bvalid) = '1' and rising_edge(clk);
-      bvalid <= '0';
-
-      wait until rising_edge(clk);
-      arready <= '1';
-      wait until (arready and arvalid) = '1' and rising_edge(clk);
-      arready <= '0';
-      check_equal(araddr, std_logic_vector'(x"01234567"), "araddr");
-
-      wait until rising_edge(clk);
-      rvalid <= '1';
-      rresp <= axi_resp_okay;
-      rdata <= x"5566";
-      wait until (rready and rvalid) = '1' and rising_edge(clk);
-      rvalid <= '0';
-
-      done <= true;
-    elsif enabled("Test single write with id") then
-      awready <= '1';
-      wait until (awready and awvalid) = '1' and rising_edge(clk);
-      awready <= '0';
-      check_equal(awaddr, std_logic_vector'(x"01234567"), "awaddr");
-      check_equal(awid, std_logic_vector'(x"25"), "awid");
-
-      wready <= '1';
-      wait until (wready and wvalid) = '1' and rising_edge(clk);
-      wready <= '0';
-      check_equal(wdata, std_logic_vector'(x"1122"), "wdata");
-      check_equal(wstrb, std_logic_vector'("11"), "wstrb");
-
-      bvalid <= '1';
-      bresp <= axi_resp_okay;
-      bid <= x"25";
-      wait until (bready and bvalid) = '1' and rising_edge(clk);
-      bvalid <= '0';
-
-      done <= true;
-
-    elsif enabled("Test single read with id") then
-      arready <= '1';
-      wait until (arready and arvalid) = '1' and rising_edge(clk);
-      arready <= '0';
-      check_equal(araddr, std_logic_vector'(x"01234567"), "araddr");
-      check_equal(arid, std_logic_vector'(x"25"), "arid");
-
-      rvalid <= '1';
-      rresp <= axi_resp_okay;
-      rdata <= x"5566";
-      rid <= x"25";
-      wait until (rready and rvalid) = '1' and rising_edge(clk);
-      rvalid <= '0';
-
-      done <= true;
-
-    elsif enabled("Test single read with len") then
-      arready <= '1';
-      wait until (arready and arvalid) = '1' and rising_edge(clk);
-      arready <= '0';
-      check_equal(araddr, std_logic_vector'(x"01234567"), "araddr");
-      --check_equal(arlen, std_logic_vector'(x"12"), "arlen");
-
-      rvalid <= '1';
-      rresp <= axi_resp_okay;
-      rdata <= x"5566";
-      rid <= x"25";
-      wait until (rready and rvalid) = '1' and rising_edge(clk);
-      rvalid <= '0';
-
-      done <= true;
-
-    elsif enabled("Test single write with len")  then
-      awready <= '1';
-      wait until (awready and awvalid) = '1' and rising_edge(clk);
-      awready <= '0';
-      check_equal(awaddr, std_logic_vector'(x"01234567"), "awaddr");
-      check_equal(awlen, std_logic_vector'(x"12"), "awlen");
-
-      wready <= '1';
-      wait until (wready and wvalid) = '1' and rising_edge(clk);
-      wready <= '0';
-      check_equal(wdata, std_logic_vector'(x"1122"), "wdata");
-      check_equal(wstrb, std_logic_vector'("11"), "wstrb");
-
-      bvalid <= '1';
-      bresp <= axi_resp_okay;
-      bid <= x"25";
-      wait until (bready and bvalid) = '1' and rising_edge(clk);
-      bvalid <= '0';
-
-      done <= true;
-        
-    elsif enabled("Test single write with size")  then
-      awready <= '1';
-      wait until (awready and awvalid) = '1' and rising_edge(clk);
-      awready <= '0';
-      check_equal(awaddr, std_logic_vector'(x"01234567"), "awaddr");
-      check_equal(awsize, std_logic_vector'("010"), "awsize");
-
-      wready <= '1';
-      wait until (wready and wvalid) = '1' and rising_edge(clk);
-      wready <= '0';
-      check_equal(wdata, std_logic_vector'(x"1122"), "wdata");
-      check_equal(wstrb, std_logic_vector'("11"), "wstrb");
-
-      bvalid <= '1';
-      bresp <= axi_resp_okay;
-      bid <= x"25";
-      wait until (bready and bvalid) = '1' and rising_edge(clk);
-      bvalid <= '0';
-
-      done <= true;
-
-    elsif enabled("Test single write with burst")  then
-      awready <= '1';
-      wait until (awready and awvalid) = '1' and rising_edge(clk);
-      awready <= '0';
-      check_equal(awaddr, std_logic_vector'(x"01234567"), "awaddr");
-      check_equal(awburst, axi_burst_type_incr, "awburst");
-
-      wready <= '1';
-      wait until (wready and wvalid) = '1' and rising_edge(clk);
-      wready <= '0';
-      check_equal(wdata, std_logic_vector'(x"1122"), "wdata");
-      check_equal(wstrb, std_logic_vector'("11"), "wstrb");
-
-      bvalid <= '1';
-      bresp <= axi_resp_okay;
-      bid <= x"25";
-      wait until (bready and bvalid) = '1' and rising_edge(clk);
-      bvalid <= '0';
-
-      done <= true;
-          
-    elsif enabled("Test single read with size") then
-      arready <= '1';
-      wait until (arready and arvalid) = '1' and rising_edge(clk);
-      arready <= '0';
-      check_equal(araddr, std_logic_vector'(x"01234567"), "araddr");
-      check_equal(arsize, std_logic_vector'("101"), "arsize");
-
-      rvalid <= '1';
-      rresp <= axi_resp_okay;
-      rdata <= x"5566";
-      rid <= x"25";
-      wait until (rready and rvalid) = '1' and rising_edge(clk);
-      rvalid <= '0';
-
-      done <= true;
-
-    elsif enabled("Test single read with burst") then
-      arready <= '1';
-      wait until (arready and arvalid) = '1' and rising_edge(clk);
-      arready <= '0';
-      check_equal(araddr, std_logic_vector'(x"01234567"), "araddr");
-      --check_equal(arburst, axi_burst_type_incr, "arburst");
-
-      rvalid <= '1';
-      rresp <= axi_resp_okay;
-      rdata <= x"5566";
-      rid <= x"25";
-      wait until (rready and rvalid) = '1' and rising_edge(clk);
-      rvalid <= '0';
-
-      done <= true;
-
-    elsif enabled("Test single write with last")  then
-      awready <= '1';
-      wait until (awready and awvalid) = '1' and rising_edge(clk);
-      awready <= '0';
-      check_equal(awaddr, std_logic_vector'(x"01234567"), "awaddr");
-      
-
-      wready <= '1';
-      wait until (wready and wvalid) = '1' and rising_edge(clk);
-      wready <= '0';
-      check_equal(wdata, std_logic_vector'(x"1122"), "wdata");
-      check_equal(wstrb, std_logic_vector'("11"), "wstrb");
-      check_equal(wlast, '1', "wlast");
-
-      bvalid <= '1';
-      bresp <= axi_resp_okay;
-      bid <= x"25";
-      wait until (bready and bvalid) = '1' and rising_edge(clk);
-      bvalid <= '0';
-
-      done <= true;
-      end if;
-  end process;
 
   check_not_valid : process
     constant a_addr_invalid_value : std_logic_vector(araddr'range) := (others => 'X');
@@ -682,7 +225,7 @@ begin
     generic map (
       bus_handle => bus_handle)
     port map (
-      aclk    => clk,
+      aclk => clk,
 
       arvalid => arvalid,
       arready => arready,
@@ -717,6 +260,27 @@ begin
       bready => bready,
       bid => bid,
       bresp => bresp);
+
+  read_slave : entity work.axi_read_slave
+    generic map (
+      axi_slave => axi_rd_slave)
+    port map (
+      aclk => clk,
+      
+      arvalid => arvalid,
+      arready => arready,
+      arid => arid,
+      araddr => araddr,
+      arlen => arlen,
+      arsize => arsize,
+      arburst => arburst,
+  
+      rvalid => rvalid,
+      rready => rready,
+      rid => rid,
+      rdata => rdata,
+      rresp => rresp,
+      rlast => rlast);
 
   clk <= not clk after 5 ns;
 
