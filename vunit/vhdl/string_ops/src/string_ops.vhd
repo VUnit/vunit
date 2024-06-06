@@ -485,7 +485,7 @@ package body string_ops is
     variable start_pos, stop_pos : natural;
     variable n, o : natural := 0;
   begin
-    if substring = "" then
+    if substring'length = 0 then
       n := s'length + 1;
     elsif s = "" then
       n := 0;
