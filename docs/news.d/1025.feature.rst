@@ -1,0 +1,1 @@
+Update time reporting from test results. Also add timestamps when starting tests.
