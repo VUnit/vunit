@@ -163,7 +163,6 @@ Elapsed time was 45.0 s
         self.assertTrue(report.result_of("passed_test2").passed)
         self.assertTrue(report.result_of("passed_test3").passed)
 
-
     def test_report_with_long_tests(self):
         report = self._report_with_long_tests()
         report.set_real_total_time(3700.0)
@@ -193,7 +192,6 @@ Elapsed time was 1 h 1 min 40.0 s
         self.assertTrue(report.result_of("passed_test3").passed)
         self.assertTrue(report.result_of("passed_test4").passed)
         self.assertTrue(report.result_of("passed_test5").passed)
-
 
     def test_report_with_no_tests(self):
         report = self._new_report()
@@ -383,9 +381,9 @@ Elapsed time was 1 h 1 min 40.0 s
     def _report_with_mixed_length_tests(self):
         "@returns A report with various long tests"
         report = self._new_report()
-        report.add_result("passed_test0", PASSED,  time=0.2, output_file_name=self.output_file_name)
-        report.add_result("passed_test1", PASSED,  time=2.1, output_file_name=self.output_file_name)
-        report.add_result("passed_test2", PASSED,  time=5.3, output_file_name=self.output_file_name)
+        report.add_result("passed_test0", PASSED, time=0.2, output_file_name=self.output_file_name)
+        report.add_result("passed_test1", PASSED, time=2.1, output_file_name=self.output_file_name)
+        report.add_result("passed_test2", PASSED, time=5.3, output_file_name=self.output_file_name)
         report.add_result("passed_test3", PASSED, time=60.3, output_file_name=self.output_file_name)
         report.set_expected_num_tests(4)
         return report
@@ -393,11 +391,11 @@ Elapsed time was 1 h 1 min 40.0 s
     def _report_with_long_tests(self):
         "@returns A report with various long tests"
         report = self._new_report()
-        report.add_result("passed_test0", PASSED,    time=0.2, output_file_name=self.output_file_name)
-        report.add_result("passed_test1", PASSED,    time=2.1, output_file_name=self.output_file_name)
-        report.add_result("passed_test2", PASSED,   time=10.3, output_file_name=self.output_file_name)
-        report.add_result("passed_test3", PASSED,   time=60.1, output_file_name=self.output_file_name)
-        report.add_result("passed_test4", PASSED,  time=615.1, output_file_name=self.output_file_name)
+        report.add_result("passed_test0", PASSED, time=0.2, output_file_name=self.output_file_name)
+        report.add_result("passed_test1", PASSED, time=2.1, output_file_name=self.output_file_name)
+        report.add_result("passed_test2", PASSED, time=10.3, output_file_name=self.output_file_name)
+        report.add_result("passed_test3", PASSED, time=60.1, output_file_name=self.output_file_name)
+        report.add_result("passed_test4", PASSED, time=615.1, output_file_name=self.output_file_name)
         report.add_result("passed_test5", PASSED, time=3780.1, output_file_name=self.output_file_name)
         report.set_expected_num_tests(6)
         return report

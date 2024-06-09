@@ -157,7 +157,7 @@ class TestReport(object):
             return
 
         prefix = "==== Summary "
-        max_len = max(len(test.name)for test in all_tests)
+        max_len = max(len(test.name) for test in all_tests)
         max_time = max(test.time for test in all_tests)
         self._printer.write(f"{prefix!s}{'=' * (max(max_len - len(prefix) + 25, 0))}\n")
         for test_result in all_tests:
