@@ -104,6 +104,37 @@ begin
         end loop;
     end;
 
+    procedure setup_and_set_random_data_write_memory(
+      memory : memory_t;
+      num_words : positive;
+      width : positive;
+      data : queue_t
+    ) is
+        variable wt_buffer : buffer_t;
+        variable rand : std_logic_vector(width - 1 downto 0);
+    begin
+        clear(memory);
+        wt_buffer := allocate(memory,
+                              num_bytes   => num_words * (width / 8),
+                              name        => wt_buffer'simple_name,
+                              permissions => write_only);
+
+        for i in 0 to num_words - 1 loop
+          rand := rnd.RandSlv(width);
+          set_expected_word(memory, base_address(wt_buffer) + (i*(width/8)), rand);
+          push(data, rand);
+        end loop;
+    end;
+
+    procedure wait_on_data_write_memory(
+      memory : memory_t
+    ) is
+    begin
+        while not expected_was_written(memory) loop
+            wait for 1 ns;
+        end loop;
+    end;
+
     variable read_data_queue : queue_t := new_queue;
     variable memory_data_queue : queue_t := new_queue;
 
@@ -128,7 +159,7 @@ begin
         check_equal(read_tmp, memory_tmp, "read data");
         check_true(is_empty(memory_data_queue), "memory_data_queue not flushed");
       end loop;
-      
+
     elsif run("Test read with read_axi") then
       for n in 0 to 4 loop
         info(tb_logger, "Setup...");
@@ -175,7 +206,31 @@ begin
         check_true(is_empty(read_data_queue), "read_data_queue not flushed");
         check_true(is_empty(memory_data_queue), "memory_data_queue not flushed");
       end loop;
-  end if;
+
+    elsif run("Test write with write_bus") then
+      for n in 0 to 4 loop
+        info(tb_logger, "Setup...");
+        burst := 1;
+        setup_and_set_random_data_write_memory(memory, burst, rdata'length, memory_data_queue);
+        info(tb_logger, "Reading...");
+        write_bus(net, bus_handle, 0, pop(memory_data_queue));
+        info(tb_logger, "Compare...");
+        check_true(is_empty(memory_data_queue), "memory_data_queue not flushed");
+        wait_on_data_write_memory(memory);
+      end loop;
+
+    elsif run("Test write with write_axi") then
+      for n in 0 to 4 loop
+        info(tb_logger, "Setup...");
+        burst := 1;
+        setup_and_set_random_data_write_memory(memory, burst, rdata'length, memory_data_queue);
+        info(tb_logger, "Reading...");
+        write_axi(net, bus_handle, x"00000000", pop(memory_data_queue), "001", x"25", axi_resp_okay);
+        info(tb_logger, "Compare...");
+        check_true(is_empty(memory_data_queue), "memory_data_queue not flushed");
+        wait_on_data_write_memory(memory);
+      end loop;
+    end if;
 
     wait for 100 ns;
 
@@ -281,6 +336,31 @@ begin
       rdata => rdata,
       rresp => rresp,
       rlast => rlast);
+
+  write_slave : entity work.axi_write_slave
+    generic map (
+      axi_slave => axi_wr_slave)
+    port map (
+      aclk => clk,
+
+      awvalid => awvalid,
+      awready => awready,
+      awid => awid,
+      awaddr => awaddr,
+      awlen => awlen,
+      awsize => awsize,
+      awburst => awburst,
+  
+      wvalid => wvalid,
+      wready => wready,
+      wdata => wdata,
+      wstrb => wstrb,
+      wlast => wlast,
+  
+      bvalid => bvalid,
+      bready => bready,
+      bid => bid,
+      bresp => bresp);
 
   clk <= not clk after 5 ns;
 

@@ -26,17 +26,28 @@ package axi_master_pkg is
 
   -- Blocking: Write the bus
   procedure write_axi(signal net : inout network_t;
-                           constant bus_handle : bus_master_t;
-                           constant address : std_logic_vector;
-                           constant data : std_logic_vector;
-                           constant len : std_logic_vector;
-                           constant size : std_logic_vector;
-                           constant burst : axi_burst_type_t;
-                           constant last : std_logic;
-                           constant id : std_logic_vector := "";
-                           constant expected_bresp : axi_resp_t := axi_resp_okay;
-                           -- default byte enable is all bytes
-                           constant byte_enable : std_logic_vector := "");
+                          constant bus_handle : bus_master_t;
+                          constant address : std_logic_vector;
+                          constant data : std_logic_vector;
+                          constant size : std_logic_vector;
+                          constant id : std_logic_vector := "";
+                          constant expected_bresp : axi_resp_t := axi_resp_okay;
+                          -- default byte enable is all bytes
+                          constant byte_enable : std_logic_vector := "");
+
+  -- Blocking: Burst write the bus
+  procedure burst_write_axi(signal net : inout network_t;
+                          constant bus_handle : bus_master_t;
+                          constant address : std_logic_vector;
+                          constant data : std_logic_vector;
+                          constant len : std_logic_vector;
+                          constant size : std_logic_vector;
+                          constant burst : axi_burst_type_t;
+                          constant last : std_logic;
+                          constant id : std_logic_vector := "";
+                          constant expected_bresp : axi_resp_t := axi_resp_okay;
+                          -- default byte enable is all bytes
+                          constant byte_enable : std_logic_vector := "");
 
   -- Non blocking: Read the bus returning a reference to the future reply
   procedure read_axi(signal net : inout network_t;
@@ -112,6 +123,50 @@ end package;
 package body axi_master_pkg is
 
   procedure write_axi(signal net : inout network_t;
+                            constant bus_handle : bus_master_t;
+                            constant address : std_logic_vector;
+                            constant data : std_logic_vector;
+                            constant size : std_logic_vector;
+                            constant id : std_logic_vector := "";
+                            constant expected_bresp : axi_resp_t := axi_resp_okay;
+                            -- default byte enable is all bytes
+                            constant byte_enable : std_logic_vector := "") is
+    variable request_msg : msg_t := new_msg(axi_write_msg);
+    variable full_data : std_logic_vector(bus_handle.p_data_length - 1 downto 0) := (others => '0');
+    variable full_address : std_logic_vector(bus_handle.p_address_length - 1 downto 0) := (others => '0');
+    variable full_byte_enable : std_logic_vector(byte_enable_length(bus_handle) - 1 downto 0);
+    variable full_len : std_logic_vector(len_length(bus_handle) - 1 downto 0) := (others => '0');
+    variable full_size : std_logic_vector(size_length(bus_handle) - 1 downto 0) := (others => '0');
+    variable full_id : std_logic_vector(id_length(bus_handle) - 1 downto 0) := (others => '0');
+  begin
+    full_address(address'length - 1 downto 0) := address;
+    push_std_ulogic_vector(request_msg, full_address);
+
+    full_data(data'length - 1 downto 0) := data;
+    push_std_ulogic_vector(request_msg, full_data);
+
+    if byte_enable = "" then
+      full_byte_enable := (others => '1');
+    else
+      full_byte_enable(byte_enable'length - 1 downto 0) := byte_enable;
+    end if;
+    push_std_ulogic_vector(request_msg, full_byte_enable);
+
+    full_size(size'length - 1 downto 0) := size;
+    push_std_ulogic_vector(request_msg, full_size);
+
+    if id = "" then
+      full_id := (others => '0');
+    else
+      full_id(id'length - 1 downto 0) := id;
+    end if;
+    push_std_ulogic_vector(request_msg, full_id);
+
+    push_std_ulogic_vector(request_msg, expected_bresp);
+    send(net, bus_handle.p_actor, request_msg);
+  end procedure;
+
+  procedure burst_write_axi(signal net : inout network_t;
                            constant bus_handle : bus_master_t;
                            constant address : std_logic_vector;
                            constant data : std_logic_vector;
@@ -123,7 +178,7 @@ package body axi_master_pkg is
                            constant expected_bresp : axi_resp_t := axi_resp_okay;
                            -- default byte enable is all bytes
                            constant byte_enable : std_logic_vector := "") is
-    variable request_msg : msg_t := new_msg(axi_write_msg);
+    variable request_msg : msg_t := new_msg(axi_burst_write_msg);
     variable full_data : std_logic_vector(bus_handle.p_data_length - 1 downto 0) := (others => '0');
     variable full_address : std_logic_vector(bus_handle.p_address_length - 1 downto 0) := (others => '0');
     variable full_byte_enable : std_logic_vector(byte_enable_length(bus_handle) - 1 downto 0);

@@ -148,6 +148,7 @@ begin
     variable len : natural := 0;
     variable size : std_logic_vector(arsize'range) := (others => '0');
     variable burst : std_logic_vector(arburst'range) := (others => '0');
+    variable byteenable : std_logic_vector(wstrb'range) := (others => '0');
     variable resp : axi_resp_t;
   begin
     -- Initialization
@@ -222,26 +223,49 @@ begin
         while rnd.Uniform(0.0, 1.0) > write_high_probability loop
           wait until rising_edge(aclk);
         end loop;
+
         addr := pop_std_ulogic_vector(request_msg);
-        push_std_ulogic_vector(request_msg, addr);
-        awaddr <= addr;
         data := pop_std_ulogic_vector(request_msg);
-        push_std_ulogic_vector(request_msg, data);
-        wdata <= data;
-        wstrb <= pop_std_ulogic_vector(request_msg);
-
-        if(is_axi_msg(msg_type)) then 
-          awlen <= pop_std_ulogic_vector(request_msg);
-          awsize <= pop_std_ulogic_vector(request_msg);
-          awburst <= pop_std_ulogic_vector(request_msg);
-
-          id := pop_std_ulogic_vector(request_msg)(awid'length -1 downto 0);
-          push_std_ulogic_vector(request_msg, id);
-          awid <= id;
-
-          wlast <= pop_std_ulogic(request_msg);
+        byteenable := pop_std_ulogic_vector(request_msg);
+        
+        if msg_type = bus_write_msg then 
+          len := 0;
+          size := get_full_size;
+          burst := axi_burst_type_fixed;
+          id(id'range) := (others => '0');
+        elsif msg_type = bus_burst_write_msg then 
+          len := pop_integer(request_msg) - 1; -- bring bus burst down to axi zero based indexing
+          size := get_full_size;
+          burst := axi_burst_type_incr;
+          id(id'range) := (others => '0');
+        elsif msg_type = axi_write_msg then 
+          len := 0;
+          size := pop_std_ulogic_vector(request_msg);
+          burst := axi_burst_type_fixed;
+          id := pop_std_ulogic_vector(request_msg)(arid'length -1 downto 0);
+        elsif msg_type = axi_burst_write_msg then 
+          len := to_integer(unsigned(pop_std_ulogic_vector(request_msg)));
+          size := pop_std_ulogic_vector(request_msg);
+          burst := pop_std_ulogic_vector(request_msg);
+          id := pop_std_ulogic_vector(request_msg)(arid'length -1 downto 0);
         end if;
 
+        awaddr <= addr;
+        push_std_ulogic_vector(request_msg, addr);
+
+        awlen <= std_logic_vector(to_unsigned(len, awlen'length));
+        awsize <= size;
+        awburst <= burst;
+
+        awid <= id;
+        push_std_ulogic_vector(request_msg, id);
+
+        wdata <= data;
+        push_std_ulogic_vector(request_msg, data);
+        
+        wstrb <= byteenable;
+        wlast <= '1';
+        
         resp := pop_std_ulogic_vector(request_msg) when is_axi_msg(msg_type) else axi_resp_okay;
         push_std_ulogic_vector(request_msg, resp);
         push(write_reply_queue, request_msg);
@@ -268,6 +292,8 @@ begin
             w_done := true;
           end if;
         end loop;
+
+
       else
         unexpected_msg_type(msg_type);
       end if;
@@ -351,14 +377,11 @@ begin
     request_msg := pop(write_reply_queue);
     msg_type := message_type(request_msg);
     addr := pop_std_ulogic_vector(request_msg);
+    id := pop_std_ulogic_vector(request_msg);
     data := pop_std_ulogic_vector(request_msg);
-
-    if(is_axi_msg(msg_type)) then
-      id := pop_std_ulogic_vector(request_msg);
-      check_axi_id(bus_handle, bid, id, "bid");
-    end if;
-
     resp := pop_std_ulogic_vector(request_msg);
+
+    check_axi_id(bus_handle, bid, id, "bid");
     check_axi_resp(bus_handle, bresp, resp, "bresp");
 
     if is_visible(bus_handle.p_logger, debug) then
