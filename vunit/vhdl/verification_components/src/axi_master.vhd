@@ -238,6 +238,7 @@ begin
           size := get_full_write_size;
           burst := axi_burst_type_fixed;
           id(id'range) := (others => '0');
+          resp :=  axi_resp_okay;
         elsif msg_type = bus_burst_write_msg then
           byteenable(byteenable'range) := (others => '1'); -- not set in bus master pkg
           len := pop_integer(request_msg) - 1; -- bring bus burst down to axi zero based indexing
@@ -245,6 +246,7 @@ begin
           size := get_full_write_size;
           burst := axi_burst_type_incr;
           id(id'range) := (others => '0');
+          resp :=  axi_resp_okay;
         elsif msg_type = axi_write_msg then 
           data := pop_std_ulogic_vector(request_msg);
           byteenable := pop_std_ulogic_vector(request_msg);
@@ -252,17 +254,17 @@ begin
           size := pop_std_ulogic_vector(request_msg);
           burst := axi_burst_type_fixed;
           id := pop_std_ulogic_vector(request_msg)(arid'length -1 downto 0);
+          resp := pop_std_ulogic_vector(request_msg);
         elsif msg_type = axi_burst_write_msg then 
-          data := pop_std_ulogic_vector(request_msg);
           byteenable := pop_std_ulogic_vector(request_msg);
           len := to_integer(unsigned(pop_std_ulogic_vector(request_msg)));
           size := pop_std_ulogic_vector(request_msg);
           burst := pop_std_ulogic_vector(request_msg);
           id := pop_std_ulogic_vector(request_msg)(arid'length -1 downto 0);
+          resp := pop_std_ulogic_vector(request_msg);
+          data := pop_std_ulogic_vector(request_msg);
         end if;
 
-        resp := pop_std_ulogic_vector(request_msg) when is_axi_msg(msg_type) else axi_resp_okay;
-        
         w_done := false;
         aw_done := false;
 

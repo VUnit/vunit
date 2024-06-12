@@ -39,11 +39,10 @@ package axi_master_pkg is
   procedure burst_write_axi(signal net : inout network_t;
                           constant bus_handle : bus_master_t;
                           constant address : std_logic_vector;
-                          constant data : std_logic_vector;
                           constant len : std_logic_vector;
                           constant size : std_logic_vector;
                           constant burst : axi_burst_type_t;
-                          constant last : std_logic;
+                          constant data : queue_t;
                           constant id : std_logic_vector := "";
                           constant expected_bresp : axi_resp_t := axi_resp_okay;
                           -- default byte enable is all bytes
@@ -169,11 +168,10 @@ package body axi_master_pkg is
   procedure burst_write_axi(signal net : inout network_t;
                            constant bus_handle : bus_master_t;
                            constant address : std_logic_vector;
-                           constant data : std_logic_vector;
                            constant len : std_logic_vector;
                            constant size : std_logic_vector;
                            constant burst : axi_burst_type_t;
-                           constant last : std_logic;
+                           constant data : queue_t;
                            constant id : std_logic_vector := "";
                            constant expected_bresp : axi_resp_t := axi_resp_okay;
                            -- default byte enable is all bytes
@@ -188,9 +186,6 @@ package body axi_master_pkg is
   begin
     full_address(address'length - 1 downto 0) := address;
     push_std_ulogic_vector(request_msg, full_address);
-
-    full_data(data'length - 1 downto 0) := data;
-    push_std_ulogic_vector(request_msg, full_data);
 
     if byte_enable = "" then
       full_byte_enable := (others => '1');
@@ -214,9 +209,13 @@ package body axi_master_pkg is
     end if;
     push_std_ulogic_vector(request_msg, full_id);
 
-    push_std_ulogic(request_msg, last);
-    
     push_std_ulogic_vector(request_msg, expected_bresp);
+
+    for i in 0 to to_integer(unsigned(len)) loop
+      full_data(bus_handle.p_data_length-1 downto 0) := pop(data);
+      push_std_ulogic_vector(request_msg, full_data);
+    end loop;
+
     send(net, bus_handle.p_actor, request_msg);
   end procedure;
 
