@@ -211,7 +211,7 @@ begin
       for n in 0 to 4 loop
         info(tb_logger, "Setup...");
         burst := 1;
-        setup_and_set_random_data_write_memory(memory, burst, rdata'length, memory_data_queue);
+        setup_and_set_random_data_write_memory(memory, burst, wdata'length, memory_data_queue);
         info(tb_logger, "Reading...");
         write_bus(net, bus_handle, 0, pop(memory_data_queue));
         info(tb_logger, "Compare...");
@@ -223,9 +223,21 @@ begin
       for n in 0 to 4 loop
         info(tb_logger, "Setup...");
         burst := 1;
-        setup_and_set_random_data_write_memory(memory, burst, rdata'length, memory_data_queue);
+        setup_and_set_random_data_write_memory(memory, burst, wdata'length, memory_data_queue);
         info(tb_logger, "Reading...");
         write_axi(net, bus_handle, x"00000000", pop(memory_data_queue), "001", x"25", axi_resp_okay);
+        info(tb_logger, "Compare...");
+        check_true(is_empty(memory_data_queue), "memory_data_queue not flushed");
+        wait_on_data_write_memory(memory);
+      end loop;
+
+    elsif run("Test random burstcount write with burst_write_bus") then
+      for n in 0 to 4 loop
+        info(tb_logger, "Setup...");
+        burst := rnd.RandInt(1, 255);
+        setup_and_set_random_data_write_memory(memory, burst, wdata'length, memory_data_queue);
+        info(tb_logger, "Reading...");
+        burst_write_bus(net, bus_handle, x"00000000", burst, memory_data_queue);
         info(tb_logger, "Compare...");
         check_true(is_empty(memory_data_queue), "memory_data_queue not flushed");
         wait_on_data_write_memory(memory);
