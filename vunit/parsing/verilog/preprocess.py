@@ -10,9 +10,12 @@
 """
 Verilog parsing functionality
 """
+from typing import Dict, List, Optional, Set, Tuple
+from typing_extensions import Self
 from pathlib import Path
 import logging
 from vunit.parsing.tokenizer import (
+    Location,
     TokenStream,
     Token,
     add_previous,
@@ -20,37 +23,169 @@ from vunit.parsing.tokenizer import (
     EOFException,
     LocationException,
 )
-from vunit.parsing.verilog.tokens import (
-    COMMA,
-    EQUAL,
-    IDENTIFIER,
-    LBRACE,
-    LBRACKET,
-    LPAR,
-    NEWLINE,
-    PREPROCESSOR,
-    RBRACE,
-    RBRACKET,
-    RPAR,
-    STRING,
-    WHITESPACE,
-)
+from vunit.parsing.verilog.tokenizer import VerilogTokenizer
+from vunit.parsing.verilog.tokens import TokenKind
 from vunit.ostools import read_file
 
 LOGGER = logging.getLogger(__name__)
 
 
-class VerilogPreprocessor(object):
+Defines = Dict[str, "Macro"]
+IncludePaths = List[str]
+IncludedFiles = List[Tuple[str, Optional[str]]]
+
+
+class Macro:
+    """
+    A `define macro with zero or more arguments
+    """
+
+    name: str
+    tokens: List[Token]
+    args: Tuple[str, ...]
+    defaults: Dict[str, List[Token]]
+
+    def __init__(
+        self,
+        name: str,
+        tokens: Optional[List[Token]] = None,
+        args: Tuple[str, ...] = tuple(),
+        defaults: Optional[Dict[str, List[Token]]] = None,
+    ):
+        self.name = name
+        self.tokens = [] if tokens is None else tokens
+        self.args = args
+        self.defaults = {} if defaults is None else defaults
+
+    @property
+    def num_args(self) -> int:
+        return len(self.args)
+
+    def __repr__(self) -> str:
+        return f"Macro({self.name!r}, {self.tokens!r} {self.args!r}, {self.defaults!r})"
+
+    def expand(self, values: List[List[Token]], previous: Optional[Location]) -> List[Token]:
+        """
+        Expand macro with actual values, returns a list of expanded tokens
+        """
+        tokens: List[Token] = []
+        for token in self.tokens:
+            if token.kind == TokenKind.IDENTIFIER and token.value in self.args:
+                idx = self.args.index(token.value)
+                value = values[idx]
+                tokens += value
+            else:
+                tokens.append(token)
+        return [Token(tok.kind, tok.value, add_previous(tok.location, previous)) for tok in tokens]
+
+    def __eq__(self, other: Self) -> bool:
+        return (
+            (self.name == other.name)
+            and (self.tokens == other.tokens)
+            and (self.args == other.args)
+            and (self.defaults == other.defaults)
+        )
+
+    def expand_from_stream(self, token: Token, stream: TokenStream, previous: Optional[Location] = None) -> List[Token]:
+        """
+        Expand macro consuming arguments from the stream
+        returns the expanded tokens
+        """
+        if self.num_args == 0:
+            values: List[List[Token]] = []
+        else:
+            try:
+                values = self._parse_macro_actuals(token, stream)
+            except EOFException as exe:
+                raise LocationException.warning(
+                    "EOF reached when parsing `define actuals", location=token.location
+                ) from exe
+
+            # Bind defaults
+            if len(values) < len(self.args):
+                for i in range(len(values), len(self.args)):
+                    name = self.args[i]
+                    if name in self.defaults:
+                        values.append(self.defaults[name])
+                    else:
+                        raise LocationException.warning(f"Missing value for argument {name!s}", token.location)
+
+            elif len(values) > len(self.args):
+                raise LocationException.warning(
+                    f"Too many arguments got {len(values):d} expected {len(self.args):d}",
+                    token.location,
+                )
+
+        return self.expand(values, previous)
+
+    @staticmethod
+    def _parse_macro_actuals(define_token: Token, stream: TokenStream) -> List[List[Token]]:
+        """
+        Parse the actual values of macro call such as
+        1 2 in `macro(1, 2)
+        """
+
+        stream.skip_while(TokenKind.WHITESPACE)
+
+        token = stream.pop()
+        if token.kind != TokenKind.LPAR:
+            raise LocationException.warning("Bad `define argument list", define_token.location)
+        token = stream.pop()
+        value: List[Token] = []
+        values: List[List[Token]] = []
+
+        bracket_count = 0
+        brace_count = 0
+        par_count = 0
+
+        while not (token.kind == TokenKind.RPAR and par_count == 0):
+            if token.kind is TokenKind.LBRACKET:
+                bracket_count += 1
+            elif token.kind is TokenKind.RBRACKET:
+                bracket_count += -1
+            elif token.kind is TokenKind.LBRACE:
+                brace_count += 1
+            elif token.kind is TokenKind.RBRACE:
+                brace_count += -1
+            elif token.kind is TokenKind.LPAR:
+                par_count += 1
+            elif token.kind is TokenKind.RPAR:
+                par_count += -1
+
+            value_ok = token.kind == TokenKind.COMMA and bracket_count == 0 and brace_count == 0 and par_count == 0
+
+            if value_ok:
+                values.append(value)
+                value = []
+            else:
+                value.append(token)
+            token = stream.pop()
+
+        values.append(value)
+        return values
+
+
+class VerilogPreprocessor:
     """
     A Verilog preprocessor
     """
 
-    def __init__(self, tokenizer):
+    _tokenizer: VerilogTokenizer
+    _macro_trace: Set[Tuple[Tuple[str | None, Tuple[int, int]] | None, int]]
+    _include_trace: Set[Tuple[Tuple[str | None, Tuple[int, int]] | None, int]]
+
+    def __init__(self, tokenizer: VerilogTokenizer):
         self._tokenizer = tokenizer
         self._macro_trace = set()
         self._include_trace = set()
 
-    def preprocess(self, tokens, defines=None, include_paths=None, included_files=None):
+    def preprocess(
+        self,
+        tokens: List[Token],
+        defines: Optional[Defines] = None,
+        include_paths: Optional[IncludePaths] = None,
+        included_files: Optional[IncludedFiles] = None,
+    ) -> List[Token]:
         """
         Entry point of preprocessing
         """
@@ -58,7 +193,13 @@ class VerilogPreprocessor(object):
         self._macro_trace = set()
         return self._preprocess(tokens, defines, include_paths, included_files)
 
-    def _preprocess(self, tokens, defines=None, include_paths=None, included_files=None):
+    def _preprocess(
+        self,
+        tokens: List[Token],
+        defines: Optional[Defines] = None,
+        include_paths: Optional[IncludePaths] = None,
+        included_files: Optional[IncludedFiles] = None,
+    ) -> List[Token]:
         """
         Pre-process tokens while filling in defines
         """
@@ -66,11 +207,11 @@ class VerilogPreprocessor(object):
         include_paths = [] if include_paths is None else include_paths
         included_files = [] if included_files is None else included_files
         defines = {} if defines is None else defines
-        result = []
+        result: List[Token] = []
 
         while not stream.eof:
             token = stream.pop()
-            if not token.kind == PREPROCESSOR:
+            if not token.kind == TokenKind.PREPROCESSOR:
                 result.append(token)
                 continue
 
@@ -82,8 +223,13 @@ class VerilogPreprocessor(object):
         return result
 
     def preprocessor(  # pylint: disable=too-many-arguments,too-many-branches
-        self, token, stream, defines, include_paths, included_files
-    ):
+        self,
+        token: Token,
+        stream: TokenStream,
+        defines: Defines,
+        include_paths: IncludePaths,
+        included_files: IncludedFiles,
+    ) -> List[Token]:
         """
         Handle preprocessor token
         """
@@ -119,14 +265,14 @@ class VerilogPreprocessor(object):
 
         elif token.value in ("timescale", "default_nettype", "unconnected_drive"):
             # Ignore directive and arguments
-            stream.skip_until(NEWLINE)
+            stream.skip_until(TokenKind.NEWLINE)
 
         elif token.value == "pragma":
-            stream.skip_while(WHITESPACE)
+            stream.skip_while(TokenKind.WHITESPACE)
             pp_token = stream.pop()
 
             if pp_token.value == "protect":
-                stream.skip_while(WHITESPACE)
+                stream.skip_while(TokenKind.WHITESPACE)
                 token = stream.pop()
 
                 if token.value == "begin_protected":
@@ -140,7 +286,7 @@ class VerilogPreprocessor(object):
         return []
 
     @staticmethod
-    def _skip_protected_region(stream):
+    def _skip_protected_region(stream: TokenStream) -> None:
         """
                 Skip a protected region
         `pragma protect begin_protected
@@ -148,22 +294,27 @@ class VerilogPreprocessor(object):
         `pragma protect end_protected
         """
         while not stream.eof:
-            stream.skip_while(WHITESPACE)
+            stream.skip_while(TokenKind.WHITESPACE)
             token = stream.pop()
 
-            if token.kind == PREPROCESSOR and token.value == "pragma":
-                stream.skip_while(WHITESPACE)
+            if token.kind == TokenKind.PREPROCESSOR and token.value == "pragma":
+                stream.skip_while(TokenKind.WHITESPACE)
                 token = stream.pop()
 
                 if token.value == "protect":
-                    stream.skip_while(WHITESPACE)
+                    stream.skip_while(TokenKind.WHITESPACE)
                     token = stream.pop()
 
                     if token.value == "end_protected":
                         return
 
     def expand_macro(  # pylint: disable=too-many-arguments
-        self, macro_token, stream, defines, include_paths, included_files
+        self,
+        macro_token: Token,
+        stream: TokenStream,
+        defines: Defines,
+        include_paths: IncludePaths,
+        included_files: IncludedFiles,
     ):
         """
         Expand a macro
@@ -189,20 +340,20 @@ class VerilogPreprocessor(object):
         return tokens
 
     @staticmethod
-    def if_statement(if_token, stream, defines):
+    def if_statement(if_token: Token, stream: TokenStream, defines: Defines) -> List[Token]:
         """
         Handle if statement
         """
 
-        def check_arg(if_token, arg):
+        def check_arg(if_token: Token, arg: Token) -> None:
             """
             Check the define argument of an if statement
             """
-            if arg.kind != IDENTIFIER:
+            if arg.kind != TokenKind.IDENTIFIER:
                 raise LocationException.warning(f"Bad argument to `{if_token.value!s}", arg.location)
-            stream.skip_while(NEWLINE)
+            stream.skip_while(TokenKind.NEWLINE)
 
-        def determine_if_taken(if_token, arg):
+        def determine_if_taken(if_token: Token, arg: Token) -> bool:
             """
             Determine if the branch was taken
             """
@@ -214,8 +365,8 @@ class VerilogPreprocessor(object):
 
             raise ValueError(f"Invalid if token {if_token.value!r}")
 
-        result = []
-        stream.skip_while(WHITESPACE)
+        result: List[Token] = []
+        stream.skip_while(TokenKind.WHITESPACE)
         arg = stream.pop()
         check_arg(if_token, arg)
 
@@ -224,7 +375,7 @@ class VerilogPreprocessor(object):
         count = 1
         while True:
             token = stream.pop()
-            if token.kind == PREPROCESSOR:
+            if token.kind == TokenKind.PREPROCESSOR:
                 if token.value in ("ifdef", "ifndef"):
                     count += 1
                 elif token.value == "endif":
@@ -232,18 +383,18 @@ class VerilogPreprocessor(object):
                     if count == 0:
                         break
 
-            if count == 1 and (token.kind, token.value) == (PREPROCESSOR, "else"):
-                stream.skip_while(NEWLINE)
+            if count == 1 and (token.kind, token.value) == (TokenKind.PREPROCESSOR, "else"):
+                stream.skip_while(TokenKind.NEWLINE)
                 if not any_taken:
                     taken = True
                     any_taken = True
                 else:
                     taken = False
-            elif count == 1 and (token.kind, token.value) == (PREPROCESSOR, "elsif"):
-                stream.skip_while(WHITESPACE)
+            elif count == 1 and (token.kind, token.value) == (TokenKind.PREPROCESSOR, "elsif"):
+                stream.skip_while(TokenKind.WHITESPACE)
                 arg = stream.pop()
                 check_arg(token, arg)
-                stream.skip_while(NEWLINE)
+                stream.skip_while(TokenKind.NEWLINE)
                 if not any_taken:
                     taken = determine_if_taken(token, arg)
                     any_taken = taken
@@ -251,20 +402,27 @@ class VerilogPreprocessor(object):
                     taken = False
             elif taken:
                 result.append(token)
-        stream.skip_while(NEWLINE)
+        stream.skip_while(TokenKind.NEWLINE)
         return result
 
-    def include(self, token, stream, include_paths, included_files, defines):  # pylint: disable=too-many-arguments
+    def include(
+        self,
+        token: Token,
+        stream: TokenStream,
+        include_paths: IncludePaths,
+        included_files: IncludedFiles,
+        defines: Defines,
+    ) -> List[Token]:  # pylint: disable=too-many-arguments
         """
         Handle `include directive
         """
-        stream.skip_while(WHITESPACE)
+        stream.skip_while(TokenKind.WHITESPACE)
         try:
             tok = stream.pop()
         except EOFException as exe:
             raise LocationException.warning("EOF reached when parsing `include argument", token.location) from exe
 
-        if tok.kind == PREPROCESSOR:
+        if tok.kind == TokenKind.PREPROCESSOR:
             if tok.value in defines:
                 macro = defines[tok.value]
             else:
@@ -279,12 +437,12 @@ class VerilogPreprocessor(object):
                     tok.location,
                 )
 
-            if expanded_tokens[0].kind != STRING:
+            if expanded_tokens[0].kind != TokenKind.STRING:
                 raise LocationException.warning("Verilog `include has bad argument", expanded_tokens[0].location)
 
             file_name_tok = expanded_tokens[0]
 
-        elif tok.kind == STRING:
+        elif tok.kind == TokenKind.STRING:
             file_name_tok = tok
         else:
             raise LocationException.warning("Verilog `include bad argument", tok.location)
@@ -319,7 +477,7 @@ class VerilogPreprocessor(object):
         return included_tokens
 
 
-def find_included_file(include_paths, file_name):
+def find_included_file(include_paths: List[str], file_name: str) -> Optional[str]:
     """
     Find the file to include given include_paths
     """
@@ -330,17 +488,17 @@ def find_included_file(include_paths, file_name):
     return None
 
 
-def undef(undef_token, stream, defines):
+def undef(undef_token: Token, stream: TokenStream, defines: Defines) -> None:
     """
     Handles undef directive
     """
-    stream.skip_while(WHITESPACE, NEWLINE)
+    stream.skip_while(TokenKind.WHITESPACE, TokenKind.NEWLINE)
     try:
         name_token = stream.pop()
     except EOFException as exe:
         raise LocationException.warning("EOF reached when parsing `undef", undef_token.location) from exe
 
-    if name_token.kind != IDENTIFIER:
+    if name_token.kind != TokenKind.IDENTIFIER:
         raise LocationException.warning("Bad argument to `undef", name_token.location)
 
     if name_token.value not in defines:
@@ -349,17 +507,17 @@ def undef(undef_token, stream, defines):
     del defines[name_token.value]
 
 
-def define(define_token, stream):
+def define(define_token: Token, stream: TokenStream) -> Optional[Macro]:
     """
     Handle a `define directive
     """
-    stream.skip_while(WHITESPACE, NEWLINE)
+    stream.skip_while(TokenKind.WHITESPACE, TokenKind.NEWLINE)
     try:
         name_token = stream.pop()
     except EOFException as exe:
         raise LocationException.warning("Verilog `define without argument", define_token.location) from exe
 
-    if name_token.kind != IDENTIFIER:
+    if name_token.kind != TokenKind.IDENTIFIER:
         raise LocationException.warning("Verilog `define invalid name", name_token.location)
 
     name = name_token.value
@@ -370,26 +528,26 @@ def define(define_token, stream):
         # Empty define
         return Macro(name)
 
-    if token.kind in (NEWLINE,):
+    if token.kind in (TokenKind.NEWLINE,):
         # Empty define
         return Macro(name)
 
-    if token.kind in (WHITESPACE,):
+    if token.kind in (TokenKind.WHITESPACE,):
         # Define without arguments
         args = tuple()
         defaults = {}
-    elif token.kind == LPAR:
+    elif token.kind == TokenKind.LPAR:
         lpar_token = token
         args = tuple()
         defaults = {}
 
         try:
-            while token.kind != RPAR:
-                if token.kind == IDENTIFIER:
+            while token.kind != TokenKind.RPAR:
+                if token.kind == TokenKind.IDENTIFIER:
                     argname = token.value
                     args = args + (argname,)
                     token = stream.pop()
-                    if token.kind == EQUAL:
+                    if token.kind == TokenKind.EQUAL:
                         token = stream.pop()
                         defaults[argname] = [token]
                         token = stream.pop()
@@ -400,128 +558,9 @@ def define(define_token, stream):
                 "EOF reached when parsing `define argument list", lpar_token.location
             ) from exe
 
-    stream.skip_while(WHITESPACE)
+    stream.skip_while(TokenKind.WHITESPACE)
     start = stream.idx
-    end = stream.skip_until(NEWLINE)
+    end = stream.skip_until(TokenKind.NEWLINE)
     if not stream.eof:
         stream.pop()
     return Macro(name, tokens=stream.slice(start, end), args=args, defaults=defaults)
-
-
-class Macro(object):
-    """
-    A `define macro with zero or more arguments
-    """
-
-    def __init__(self, name, tokens=None, args=tuple(), defaults=None):
-        self.name = name
-        self.tokens = [] if tokens is None else tokens
-        self.args = args
-        self.defaults = {} if defaults is None else defaults
-
-    @property
-    def num_args(self):
-        return len(self.args)
-
-    def __repr__(self):
-        return f"Macro({self.name!r}, {self.tokens!r} {self.args!r}, {self.defaults!r})"
-
-    def expand(self, values, previous):
-        """
-        Expand macro with actual values, returns a list of expanded tokens
-        """
-        tokens = []
-        for token in self.tokens:
-            if token.kind == IDENTIFIER and token.value in self.args:
-                idx = self.args.index(token.value)
-                value = values[idx]
-                tokens += value
-            else:
-                tokens.append(token)
-        return [Token(tok.kind, tok.value, add_previous(tok.location, previous)) for tok in tokens]
-
-    def __eq__(self, other):
-        return (
-            (self.name == other.name)
-            and (self.tokens == other.tokens)
-            and (self.args == other.args)
-            and (self.defaults == other.defaults)
-        )
-
-    def expand_from_stream(self, token, stream, previous=None):
-        """
-        Expand macro consuming arguments from the stream
-        returns the expanded tokens
-        """
-        if self.num_args == 0:
-            values = []
-        else:
-            try:
-                values = self._parse_macro_actuals(token, stream)
-            except EOFException as exe:
-                raise LocationException.warning(
-                    "EOF reached when parsing `define actuals", location=token.location
-                ) from exe
-
-            # Bind defaults
-            if len(values) < len(self.args):
-                for i in range(len(values), len(self.args)):
-                    name = self.args[i]
-                    if name in self.defaults:
-                        values.append(self.defaults[name])
-                    else:
-                        raise LocationException.warning(f"Missing value for argument {name!s}", token.location)
-
-            elif len(values) > len(self.args):
-                raise LocationException.warning(
-                    f"Too many arguments got {len(values):d} expected {len(self.args):d}",
-                    token.location,
-                )
-
-        return self.expand(values, previous)
-
-    @staticmethod
-    def _parse_macro_actuals(define_token, stream):
-        """
-        Parse the actual values of macro call such as
-        1 2 in `macro(1, 2)
-        """
-
-        stream.skip_while(WHITESPACE)
-
-        token = stream.pop()
-        if token.kind != LPAR:
-            raise LocationException.warning("Bad `define argument list", define_token.location)
-        token = stream.pop()
-        value = []
-        values = []
-
-        bracket_count = 0
-        brace_count = 0
-        par_count = 0
-
-        while not (token.kind == RPAR and par_count == 0):
-            if token.kind is LBRACKET:
-                bracket_count += 1
-            elif token.kind is RBRACKET:
-                bracket_count += -1
-            elif token.kind is LBRACE:
-                brace_count += 1
-            elif token.kind is RBRACE:
-                brace_count += -1
-            elif token.kind is LPAR:
-                par_count += 1
-            elif token.kind is RPAR:
-                par_count += -1
-
-            value_ok = token.kind == COMMA and bracket_count == 0 and brace_count == 0 and par_count == 0
-
-            if value_ok:
-                values.append(value)
-                value = []
-            else:
-                value.append(token)
-            token = stream.pop()
-
-        values.append(value)
-        return values

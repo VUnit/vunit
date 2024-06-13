@@ -10,22 +10,29 @@ PyPI setup script
 
 import os
 import sys
-from pathlib import Path
+from glob import glob
 from logging import warning
+from pathlib import Path
+from typing import List, Optional
+
 from setuptools import setup
 
 # Ensure that the source tree is on the sys path
 sys.path.insert(0, str(Path(__file__).parent.resolve()))
 
-from vunit.about import version, doc  # pylint: disable=wrong-import-position
-from vunit.builtins import osvvm_is_installed  # pylint: disable=wrong-import-position
+
+def osvvm_is_installed() -> bool:
+    """
+    Checks if OSVVM is installed within the VUnit directory structure
+    """
+    return len(glob(str(Path(__file__) / "vunit" / "vhdl" / "osvvm" / "*.vhd"))) != 0
 
 
-def find_all_files(directory, endings=None):
+def find_all_files(directory: str, endings: Optional[List[str]] = None) -> List[str]:
     """
     Recursively find all files within directory
     """
-    result = []
+    result: List[str] = []
     for root, _, filenames in os.walk(directory):
         for filename in filenames:
             ending = os.path.splitext(filename)[-1]
@@ -34,55 +41,14 @@ def find_all_files(directory, endings=None):
     return result
 
 
-DATA_FILES = []
+DATA_FILES: List[str] = []
 DATA_FILES += find_all_files("vunit", endings=[".tcl"])
 DATA_FILES += find_all_files(str(Path("vunit") / "vhdl"))
 DATA_FILES += find_all_files(str(Path("vunit") / "verilog"), endings=[".v", ".sv", ".svh"])
 DATA_FILES = [os.path.relpath(file_name, "vunit") for file_name in DATA_FILES]
 
 setup(
-    name="vunit_hdl",
-    version=version(),
-    packages=[
-        "tests",
-        "tests.lint",
-        "tests.unit",
-        "tests.acceptance",
-        "vunit",
-        "vunit.com",
-        "vunit.parsing",
-        "vunit.parsing.verilog",
-        "vunit.sim_if",
-        "vunit.test",
-        "vunit.ui",
-        "vunit.vivado",
-    ],
     package_data={"vunit": DATA_FILES},
-    zip_safe=False,
-    url="https://github.com/VUnit/vunit",
-    classifiers=[
-        "Development Status :: 5 - Production/Stable",
-        "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
-        "Natural Language :: English",
-        "Intended Audience :: Developers",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
-        "Operating System :: Microsoft :: Windows",
-        "Operating System :: MacOS :: MacOS X",
-        "Operating System :: POSIX :: Linux",
-        "Topic :: Software Development :: Testing",
-        "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
-    ],
-    python_requires=">=3.6",
-    install_requires=["colorama"],
-    requires=["colorama"],
-    license="Mozilla Public License 2.0 (MPL 2.0)",
-    author="Lars Asplund",
-    author_email="lars.anders.asplund@gmail.com",
-    description="VUnit is an open source unit testing framework for VHDL/SystemVerilog.",
-    long_description=doc(),
 )
 
 if not osvvm_is_installed():
