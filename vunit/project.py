@@ -83,7 +83,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
     def add_library(
         self,
         logical_name,
-        directory: Union[str, Path] = None,
+        directory: Union[str, Path, None] = None,
         vhdl_standard: VHDLStandard = VHDL.STD_2008,
         is_external=False,
     ):

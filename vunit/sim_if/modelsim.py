@@ -205,7 +205,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         if library_name in mapped_libraries:
             if mapped_libraries[library_name] == path:
                 return
-            elif path is None:  # use existing map
+            if path is None:  # use existing map
                 return
 
         if path is None:
