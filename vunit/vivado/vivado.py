@@ -9,7 +9,7 @@ Utilities for integrating with Vivado
 """
 
 from subprocess import check_call
-from os import makedirs
+from os import makedirs, environ
 from pathlib import Path
 
 
@@ -17,7 +17,13 @@ def add_from_compile_order_file(
     vunit_obj, compile_order_file, dependency_scan_defaultlib=True, fail_on_non_hdl_files=True
 ):  # pylint: disable=too-many-locals
     """
-    Add Vivado IP:s from a compile order file
+    Add Vivado IP:s from a compile order file.
+
+    :param project_file: :class:`~vunit.ui.VUnit`
+    :param compile_order_file: Compile-order file (from :func:`create_compile_order_file`)
+    :param dependency_scan_defaultlib: Whether to do VUnit scanning of ``xil_defaultlib``.
+    :param fail_on_non_hdl_files: Whether to fail on non-HDL files.
+
     """
     compile_order, libraries, include_dirs = _read_compile_order(compile_order_file, fail_on_non_hdl_files)
 
@@ -30,8 +36,9 @@ def add_from_compile_order_file(
 
     no_dependency_scan = []
     with_dependency_scan = []
+    verilog_file_endings = (".v", ".vp", ".sv")
     for library_name, file_name in compile_order:
-        is_verilog = file_name.endswith(".v") or file_name.endswith(".vp")
+        is_verilog = file_name.endswith(verilog_file_endings)
 
         # Optionally use VUnit dependency scanning for everything in xil_defaultlib, which
         # typically contains unencrypted top levels that instantiate encrypted implementations.
@@ -63,7 +70,13 @@ def add_from_compile_order_file(
 
 def create_compile_order_file(project_file, compile_order_file, vivado_path=None):
     """
-    Create compile file from Vivado project
+    Create compile file from Vivado project.
+
+    :param project_file: Project filename.
+    :param compile_order_file: Filename for to write compile-order file.
+    :param vivado_path: Path to Vivado install directory. If ``None``, the
+        environment variable ``VUNIT_VIVADO_PATH`` is used if set. Otherwise,
+        rely on that ``vivado`` is in the path.
     """
     print(f"Generating Vivado project compile order into {str(Path(compile_order_file).resolve())} ...")
 
@@ -81,18 +94,19 @@ def create_compile_order_file(project_file, compile_order_file, vivado_path=None
 
 def _read_compile_order(file_name, fail_on_non_hdl_files):
     """
-    Read the compile order file and filter out duplicate files
+    Read the compile order file and filter out duplicate files.
     """
     compile_order = []
     unique = set()
     include_dirs = set()
     libraries = set()
 
+    valid_file_types = ("Verilog", "VHDL", "Verilog Header", "SystemVerilog")
     with Path(file_name).open("r", encoding="utf-8") as ifile:
         for line in ifile.readlines():
             library_name, file_type, file_name = line.strip().split(",", 2)
 
-            if file_type not in ("Verilog", "VHDL", "Verilog Header"):
+            if file_type not in valid_file_types:
                 if fail_on_non_hdl_files:
                     raise RuntimeError(f"Unsupported compile order file: {file_name}")
                 print(f"Compile order file ignored: {file_name}")
@@ -119,12 +133,22 @@ def run_vivado(tcl_file_name, tcl_args=None, cwd=None, vivado_path=None):
     """
     Run tcl script in Vivado in batch mode.
 
-    Note: the shell=True is important in windows where Vivado is just a bat file.
+    :param tcl_file_name: Path to tcl file
+    :param tcl_args: tcl arguments passed to Vivado via the ``-tclargs`` switch
+    :param cwd: Passed as ``cwd`` to :func:`subprocess.check_call`
+    :param vivado_path: Path to Vivado install directory. If ``None``, the
+        environment variable ``VUNIT_VIVADO_PATH`` is used if set. Otherwise,
+        rely on that ``vivado`` is in the path.
     """
-    vivado = "vivado" if vivado_path is None else str(Path(vivado_path).resolve() / "bin" / "vivado")
-    cmd = f"{vivado} -nojournal -nolog -notrace -mode batch -source {str(Path(tcl_file_name).resolve())}"
+    vivado = (
+        str(Path(vivado_path).resolve() / "bin" / "vivado")
+        if vivado_path is not None
+        else environ.get("VUNIT_VIVADO_PATH", "vivado")
+    )
+    cmd = f'"{vivado}" -nojournal -nolog -notrace -mode batch -source "{Path(tcl_file_name).resolve()}"'
     if tcl_args is not None:
-        cmd += " -tclargs " + " ".join([str(val) for val in tcl_args])
+        cmd += " -tclargs " + " ".join([f'"{val}"' for val in tcl_args])
 
     print(cmd)
+    # shell=True is important in Windows where Vivado is just a bat file.
     check_call(cmd, cwd=cwd, shell=True)

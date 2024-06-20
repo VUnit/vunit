@@ -13,3 +13,5 @@ from vunit.vivado.vivado import (
     add_from_compile_order_file,
     create_compile_order_file,
 )
+
+__all__ = ["run_vivado", "add_from_compile_order_file", "create_compile_order_file"]
