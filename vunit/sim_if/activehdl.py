@@ -460,12 +460,15 @@ proc vunit_help {} {
     def _create_user_init_function(self, config):
         """
         Create the vunit_user_init function which sources the user defined TCL file in
-        simulator_name.init_file.gui
+        simulator_name.init_file.gui.
+        Also defines the vunit_tb_path and the vunit_tb_name variable.
         """
         opt_name = self.name + ".init_file.gui"
         init_file = config.sim_options.get(opt_name, None)
         tcl = "proc vunit_user_init {} {\n"
         if init_file is not None:
+            tcl += f'set vunit_tb_name {config.design_unit_name}\n'
+            tcl += f'set vunit_tb_path {fix_path(str(Path(config.tb_path).resolve()))}\n'
             tcl += f'source "{fix_path(str(Path(init_file).resolve()))!s}"\n'
         tcl += "    return 0\n"
         tcl += "}\n"
@@ -473,7 +476,8 @@ proc vunit_help {} {
 
     def _create_gui_script(self, common_file_name, config):
         """
-        Create the user facing script which loads common functions and prints a help message
+        Create the user facing script which loads common functions and prints a help message.
+        Also defines the vunit_tb_path and the vunit_tb_name variable.
         """
 
         tcl = ""
