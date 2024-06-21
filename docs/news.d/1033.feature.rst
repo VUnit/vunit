@@ -1,0 +1,2 @@
+[Riviera-PRO, ModelSim/Questa, Active-HDL] Defined the TCL variable ``vunit_tb_name`` as the name of the top level design unit during the evaluation of the ``<simulator>.init_file`` scripts for Active-HDL, Riviera-PRO and ModelSim/Qusta.
+[Active-HDL] Defined the TCL variable ``vunit_tb_path`` during the evaluation of the ``activehdl.init_file.gui`` script.

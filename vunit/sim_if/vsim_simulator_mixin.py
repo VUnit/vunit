@@ -233,9 +233,12 @@ proc vunit_run {} {
         """
         Create TCL to source a file and catch errors
         Also defines the vunit_tb_path variable as the config.tb_path
+        and the vunit_tb_name variable as the config.design_unit_name
+
         """
         template = """
     set vunit_tb_path "%s"
+    set vunit_tb_name "%s"
     set file_name "%s"
     puts "Sourcing file ${file_name} from %s"
     if {[catch {source ${file_name}} error_msg]} {
@@ -246,6 +249,7 @@ proc vunit_run {} {
 """
         tcl = template % (
             fix_path(str(Path(config.tb_path).resolve())),
+            config.design_unit_name,
             fix_path(str(Path(file_name).resolve())),
             message,
         )
