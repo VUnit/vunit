@@ -467,8 +467,8 @@ proc vunit_help {} {
         init_file = config.sim_options.get(opt_name, None)
         tcl = "proc vunit_user_init {} {\n"
         if init_file is not None:
-            tcl += f'set vunit_tb_name {config.design_unit_name}\n'
-            tcl += f'set vunit_tb_path {fix_path(str(Path(config.tb_path).resolve()))}\n'
+            tcl += f"set vunit_tb_name {config.design_unit_name}\n"
+            tcl += f"set vunit_tb_path {fix_path(str(Path(config.tb_path).resolve()))}\n"
             tcl += f'source "{fix_path(str(Path(init_file).resolve()))!s}"\n'
         tcl += "    return 0\n"
         tcl += "}\n"
