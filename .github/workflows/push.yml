@@ -36,7 +36,7 @@ jobs:
         pip install -U virtualenv tox --progress-bar off
 
     - name: '🐍 Run black'
-      run: tox -e py312-fmt -- --check
+      run: tox -e py312-fmt -- --diff --color
 
 #
 # Linux linting and unit tests
