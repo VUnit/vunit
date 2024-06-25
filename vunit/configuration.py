@@ -12,6 +12,8 @@ import logging
 import inspect
 from pathlib import Path
 from copy import copy
+from collections import OrderedDict
+from typing import Any, Callable, List, Union
 from vunit.sim_if.factory import SIMULATOR_FACTORY
 
 
@@ -111,7 +113,7 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
         """
         self.vhdl_configuration_name = name
 
-    def set_generic(self, name, value):
+    def set_generic(self, name: str, value: Any) -> None:
         """
         Set generic
         """
@@ -128,7 +130,7 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
         else:
             self.generics[name] = value
 
-    def set_sim_option(self, name, value):
+    def set_sim_option(self, name: str, value: Union[str, List[str], bool]):
         """
         Set sim option
         """
@@ -198,11 +200,10 @@ class ConfigurationVisitor(object):
     def _check_enabled(self):
         pass
 
-    @staticmethod
-    def get_configuration_dicts():
+    def get_configuration_dicts(self) -> "List[OrderedDict[Any, Configuration]]":
         raise NotImplementedError
 
-    def set_attribute(self, name, value):
+    def set_attribute(self, name: str, value: Any):
         """
         Set attribute
         """
@@ -229,7 +230,7 @@ class ConfigurationVisitor(object):
             for config in configs.values():
                 config.set_vhdl_configuration_name(value)
 
-    def set_sim_option(self, name, value, overwrite=True):
+    def set_sim_option(self, name: str, value: Union[str, List[str], bool], overwrite=True) -> None:
         """
         Set sim option
 
@@ -243,7 +244,7 @@ class ConfigurationVisitor(object):
                     continue
                 config.set_sim_option(name, value)
 
-    def set_pre_config(self, value):
+    def set_pre_config(self, value: Callable) -> None:
         """
         Set pre_config function
         """

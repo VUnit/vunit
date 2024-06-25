@@ -13,6 +13,7 @@ import re
 import bisect
 import collections
 from collections import OrderedDict
+from typing import Any, Iterable, List, Union
 from ..ostools import file_exists
 from ..cached import cached
 from ..vhdl_parser import remove_comments as remove_vhdl_comments
@@ -35,7 +36,7 @@ class TestBench(ConfigurationVisitor):
         self._database = database
 
         self._individual_tests = False
-        self._configs = {}
+        self._configs: OrderedDict[Any, Configuration] = OrderedDict()
         self._test_cases = []
         self._implicit_test = None
 
@@ -122,7 +123,7 @@ class TestBench(ConfigurationVisitor):
                 return test_case
         raise KeyError(name)
 
-    def get_configuration_dicts(self):  # pylint: disable=arguments-differ
+    def get_configuration_dicts(self) -> "List[OrderedDict[str, Configuration]]":  # pylint: disable=arguments-differ
         """
         Get all configurations within the test bench
 
@@ -146,7 +147,7 @@ class TestBench(ConfigurationVisitor):
             del configs[DEFAULT_NAME]
         return configs.values()
 
-    def scan_tests_from_file(self, file_name):
+    def scan_tests_from_file(self, file_name: Union[str, Path]) -> None:
         """
         Scan file for test cases and attributes
         """
@@ -316,7 +317,7 @@ class TestConfigurationVisitor(ConfigurationVisitor):
         self._test = test
         assert test.is_explicit
         self._enable_configuration = enable_configuration
-        self._configs = OrderedDict({default_config.name: default_config})
+        self._configs: OrderedDict[Any, Configuration] = OrderedDict({default_config.name: default_config})
 
     @property
     def name(self):
@@ -337,13 +338,13 @@ class TestConfigurationVisitor(ConfigurationVisitor):
         if not self._enable_configuration:
             raise RuntimeError("Individual test configuration is not possible with run_all_in_same_sim")
 
-    def get_configuration_dicts(self):  # pylint: disable=arguments-differ
+    def get_configuration_dicts(self) -> List[OrderedDict[Any, Configuration]]:  # pylint: disable=arguments-differ
         """
         Get all configurations of this test
         """
         return [self._configs]
 
-    def _get_configurations_to_run(self):
+    def _get_configurations_to_run(self) -> Iterable[Configuration]:
         """
         Get all simulation runs for this test bench
         """

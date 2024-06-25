@@ -11,7 +11,12 @@ Functionality to represent and operate on a HDL code library
 """
 
 import logging
+from typing import List, cast, TYPE_CHECKING
+from vunit.design_unit import Entity, VHDLDesignUnit
 from vunit.vhdl_standard import VHDLStandard
+
+if TYPE_CHECKING:
+    from vunit.source_file import SourceFile, VHDLSourceFile, VerilogSourceFile
 
 LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +51,7 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
 
         self._is_external = is_external
 
-    def add_source_file(self, source_file):
+    def add_source_file(self, source_file: "SourceFile") -> "SourceFile":
         """
         Add source file to library unless it exists
 
@@ -104,7 +109,7 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
         if design_unit.name in dictionary:
             self._warning_on_duplication(design_unit, dictionary[design_unit.name].source_file.name)
 
-    def add_vhdl_design_units(self, design_units):
+    def add_vhdl_design_units(self, design_units: List[VHDLDesignUnit]):
         """
         Add VHDL design units to the library
         """
@@ -119,7 +124,7 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
                     self._entities[design_unit.name] = design_unit
 
                     for architecture in self._architectures[design_unit.name].values():
-                        design_unit.add_architecture(architecture)
+                        cast(Entity, design_unit).add_architecture(architecture)
 
             else:
                 if design_unit.unit_type == "architecture":
