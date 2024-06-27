@@ -281,7 +281,9 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
             libraries[key] = str((Path(library_cfg_file).parent / (Path(value).parent)).resolve())
         return libraries
 
-    def _create_load_function(self, test_suite_name, config, output_path):  # pylint: disable=unused-argument
+    def _create_load_function(
+        self, test_suite_name, config, output_path, optimize_design
+    ):  # pylint: disable=unused-argument
         """
         Create the vunit_load TCL function that runs the vsim command and loads the design
         """
