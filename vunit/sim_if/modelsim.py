@@ -15,7 +15,7 @@ from configparser import RawConfigParser
 from ..exceptions import CompileError
 from ..ostools import Process, file_exists
 from ..vhdl_standard import VHDL
-from . import SimulatorInterface, ListOfStringOption, StringOption
+from . import SimulatorInterface, ListOfStringOption, StringOption, BooleanOption
 from .vsim_simulator_mixin import VsimSimulatorMixin, fix_path
 
 LOGGER = logging.getLogger(__name__)
@@ -41,9 +41,12 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
     sim_options = [
         ListOfStringOption("modelsim.vsim_flags"),
         ListOfStringOption("modelsim.vsim_flags.gui"),
+        ListOfStringOption("modelsim.vopt_flags"),
+        ListOfStringOption("modelsim.vopt_flags.gui"),
         ListOfStringOption("modelsim.init_files.after_load"),
         ListOfStringOption("modelsim.init_files.before_run"),
         StringOption("modelsim.init_file.gui"),
+        BooleanOption("modelsim.three_step_flow"),
     ]
 
     @classmethod
@@ -258,14 +261,33 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
             coverage_save_cmd = ""
             coverage_args = ""
 
-        simulation_target = (
+        three_step_flow = config.sim_options.get("modelsim.three_step_flow", False)
+
+        design_to_optimize = (
             config.library_name + "." + config.entity_name + architecture_suffix
             if config.vhdl_configuration_name is None
             else config.library_name + "." + config.vhdl_configuration_name
         )
 
+        if three_step_flow:
+            # vopt has limitations on how the optimized design can be named. Simply removing
+            # non-alphanumeric characters is a simple solution to that
+            simulation_target = "opt_" + "".join(ch for ch in design_to_optimize if ch.isalnum())
+
+            vopt_flags = [
+                f"{design_to_optimize}",
+                f"-work {{{config.library_name}}}",
+                "-quiet",
+                f"-floatgenerics+{config.entity_name}.",
+                f"-o {{{simulation_target}}}",
+                self._vopt_extra_args(config),
+            ]
+        else:
+            simulation_target = design_to_optimize
+
         vsim_flags = [
             f"-wlf {{{fix_path(str(Path(output_path) / 'vsim.wlf'))!s}}}",
+            f"-work {{{config.library_name}}}",
             "-quiet",
             "-t ps",
             # for correct handling of verilog fatal/finish
@@ -280,15 +302,41 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         # There is a known bug in modelsim that prevents the -modelsimini flag from accepting
         # a space in the path even with escaping, see issue #36
         if " " not in self._sim_cfg_file_name:
-            vsim_flags.insert(0, f"-modelsimini {fix_path(self._sim_cfg_file_name)!s}")
+            modelsimini_option = f"-modelsimini {fix_path(self._sim_cfg_file_name)!s}"
+            vsim_flags.insert(0, modelsimini_option)
 
+            if three_step_flow:
+                vopt_flags.insert(0, modelsimini_option)
+
+        library_option = []
         for library in self._libraries:
-            vsim_flags += ["-L", library.name]
+            library_option += ["-L", library.name]
+
+        vsim_flags += library_option
+
+        if three_step_flow:
+            vopt_flags += library_option
 
         vhdl_assert_stop_level_mapping = {"warning": 1, "error": 2, "failure": 3}
 
         tcl = """
-proc vunit_load {{{{vsim_extra_args ""}}}} {{
+proc vunit_load {{vsim_extra_args ""} {vopt_extra_args ""}} {"""
+
+        if three_step_flow:
+            tcl += """
+    set vopt_failed [catch {{
+        eval vopt ${{vopt_extra_args}} {{{vopt_flags}}}
+    }}]
+
+    if {{${{vopt_failed}}}} {{
+       echo Command 'vopt ${{vopt_extra_args}} {vopt_flags}' failed
+       echo Bad flag from vopt_extra_args?
+       return true
+    }}""".format(
+                vopt_flags=" ".join(vopt_flags)
+            )
+
+        tcl += """
     set vsim_failed [catch {{
         eval vsim ${{vsim_extra_args}} {{{vsim_flags}}}
     }}]
@@ -359,6 +407,18 @@ proc _vunit_sim_restart {} {
     restart -f
 }
 """
+
+    def _vopt_extra_args(self, config):
+        """
+        Determine vopt_extra_args
+        """
+        vopt_extra_args = []
+        vopt_extra_args = config.sim_options.get("modelsim.vopt_flags", vopt_extra_args)
+
+        if self._gui:
+            vopt_extra_args = config.sim_options.get("modelsim.vopt_flags.gui", vopt_extra_args)
+
+        return " ".join(vopt_extra_args)
 
     def _vsim_extra_args(self, config):
         """
