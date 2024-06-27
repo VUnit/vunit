@@ -19,6 +19,7 @@ import os
 from typing import Optional, Set, Union
 from pathlib import Path
 from fnmatch import fnmatch
+from inspect import stack
 
 from ..database import PickledDataBase, DataBase
 from .. import ostools
@@ -116,9 +117,18 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         args,
         vhdl_standard: Optional[str] = None,
     ):
+
         self._args = args
         self._configure_logging(args.log_level)
         self._output_path = str(Path(args.output_path).resolve())
+
+        # The run script is defined as the external file making the call that created the VUnit object.
+        # That file is not necessarily the caller of the __init__ function nor the root of the stack.
+        stack_frame = 0
+        this_file_path = Path(__file__).resolve()
+        while Path(stack()[stack_frame][1]).resolve() == this_file_path:
+            stack_frame += 1
+        self._run_script_path = Path(stack()[stack_frame][1]).resolve()
 
         if args.no_color:
             self._printer = NO_COLOR_PRINTER
@@ -953,6 +963,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         runner = TestRunner(
             report,
             str(Path(self._output_path) / TEST_OUTPUT_PATH),
+            self._run_script_path,
             verbosity=verbosity,
             num_threads=self._args.num_threads,
             fail_fast=self._args.fail_fast,
@@ -1031,6 +1042,12 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         Add JSON-for-VHDL library
         """
         self._builtins.add("json4vhdl")
+
+    def add_python(self):
+        """
+        Add python package
+        """
+        self._builtins.add("python")
 
     def get_compile_order(self, source_files=None):
         """
