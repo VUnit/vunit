@@ -1,0 +1,4 @@
+[Questa/Modelsim] Added support for 3-step flow which is enabled by setting the
+simulation option ``modelsim.three_step_flow`` to ``True``. Extra flags to the ``vopt``
+step can be provided with the simulation flags ``modelsim.vopt_flags`` and
+``modelsim.vopt_flags.gui`` in normal and GUI mode, respectively.
