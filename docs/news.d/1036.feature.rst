@@ -1,0 +1,4 @@
+[NVC] VUnit now sets the ``NVC_CONCURRENT_JOBS`` environment variable to
+the value of the ``--num-threads`` argument which allows ``nvc`` to
+scale its worker thread count based on the number of concurrently
+running simulations.
