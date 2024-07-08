@@ -1,0 +1,3 @@
+recursive-include vunit/ *.tcl
+recursive-include vunit/vhdl/ *
+recursive-include vunit/verilog/ *.sv *.v *.svh
