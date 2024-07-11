@@ -1,0 +1,1 @@
+It is possible to use all logical CPUs by passing `-p0` (`--num-threads=0`). See `multiprocessing.cpu_count` for how the number is determined.

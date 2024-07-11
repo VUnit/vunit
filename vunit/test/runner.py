@@ -9,6 +9,7 @@ Provided functionality to run a suite of test in a robust way
 """
 
 import os
+from multiprocessing import cpu_count
 from pathlib import Path
 import traceback
 import threading
@@ -56,7 +57,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
             self.VERBOSITY_VERBOSE,
         )
         self._verbosity = verbosity
-        self._num_threads = num_threads
+        self._num_threads = num_threads or cpu_count()
         self._stdout = sys.stdout
         self._stdout_ansi = wrap(self._stdout, use_color=not no_color)
         self._stderr = sys.stderr
