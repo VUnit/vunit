@@ -514,12 +514,12 @@ define work "%s/libraries/work"
                         "-f",
                         Path(elaborate_args_file).name,
                     ],
-                    cwd=str(Path(elaborate_args_file).parent),
+                    cwd=Path(elaborate_args_file).parent,
                     env=simif.get_env(),
                 ),
                 mock.call(
                     [str(Path("prefix") / "irun"), "-f", Path(simulate_args_file).name],
-                    cwd=str(Path(simulate_args_file).parent),
+                    cwd=Path(simulate_args_file).parent,
                     env=simif.get_env(),
                 ),
             ]
@@ -602,12 +602,12 @@ define work "%s/libraries/work"
                         "-f",
                         Path(elaborate_args_file).name,
                     ],
-                    cwd=str(Path(elaborate_args_file).parent),
+                    cwd=Path(elaborate_args_file).parent,
                     env=simif.get_env(),
                 ),
                 mock.call(
                     [str(Path("prefix") / "irun"), "-f", Path(simulate_args_file).name],
-                    cwd=str(Path(simulate_args_file).parent),
+                    cwd=Path(simulate_args_file).parent,
                     env=simif.get_env(),
                 ),
             ]
@@ -681,12 +681,12 @@ define work "%s/libraries/work"
                         "-f",
                         Path(elaborate_args_file).name,
                     ],
-                    cwd=str(Path(elaborate_args_file).parent),
+                    cwd=Path(elaborate_args_file).parent,
                     env=simif.get_env(),
                 ),
                 mock.call(
                     [str(Path("prefix") / "irun"), "-f", Path(simulate_args_file).name],
-                    cwd=str(Path(simulate_args_file).parent),
+                    cwd=Path(simulate_args_file).parent,
                     env=simif.get_env(),
                 ),
             ]
@@ -719,12 +719,12 @@ define work "%s/libraries/work"
                         "-f",
                         Path(elaborate_args_file).name,
                     ],
-                    cwd=str(Path(elaborate_args_file).parent),
+                    cwd=Path(elaborate_args_file).parent,
                     env=simif.get_env(),
                 ),
                 mock.call(
                     [str(Path("prefix") / "irun"), "-f", Path(simulate_args_file).name],
-                    cwd=str(Path(simulate_args_file).parent),
+                    cwd=Path(simulate_args_file).parent,
                     env=simif.get_env(),
                 ),
             ]
@@ -755,12 +755,12 @@ define work "%s/libraries/work"
                         "-f",
                         Path(elaborate_args_file).name,
                     ],
-                    cwd=str(Path(elaborate_args_file).parent),
+                    cwd=Path(elaborate_args_file).parent,
                     env=simif.get_env(),
                 ),
                 mock.call(
                     [str(Path("prefix") / "irun"), "-f", Path(simulate_args_file).name],
-                    cwd=str(Path(simulate_args_file).parent),
+                    cwd=Path(simulate_args_file).parent,
                     env=simif.get_env(),
                 ),
             ]
@@ -788,7 +788,7 @@ define work "%s/libraries/work"
                         "-f",
                         Path(elaborate_args_file).name,
                     ],
-                    cwd=str(Path(elaborate_args_file).parent),
+                    cwd=Path(elaborate_args_file).parent,
                     env=simif.get_env(),
                 )
             ]
@@ -836,7 +836,7 @@ define work "%s/libraries/work"
                         "-f",
                         Path(elaborate_args_file).name,
                     ],
-                    cwd=str(Path(elaborate_args_file).parent),
+                    cwd=Path(elaborate_args_file).parent,
                     env=simif.get_env(),
                 )
             ]
@@ -861,12 +861,12 @@ define work "%s/libraries/work"
                         "-f",
                         Path(elaborate_args_file).name,
                     ],
-                    cwd=str(Path(elaborate_args_file).parent),
+                    cwd=Path(elaborate_args_file).parent,
                     env=simif.get_env(),
                 ),
                 mock.call(
                     [str(Path("prefix") / "irun"), "-f", Path(simulate_args_file).name],
-                    cwd=str(Path(simulate_args_file).parent),
+                    cwd=Path(simulate_args_file).parent,
                     env=simif.get_env(),
                 ),
             ]
@@ -899,12 +899,12 @@ define work "%s/libraries/work"
                         "-f",
                         Path(elaborate_args_file).name,
                     ],
-                    cwd=str(Path(elaborate_args_file).parent),
+                    cwd=Path(elaborate_args_file).parent,
                     env=simif.get_env(),
                 ),
                 mock.call(
                     [str(Path("prefix") / "irun"), "-f", Path(simulate_args_file).name],
-                    cwd=str(Path(simulate_args_file).parent),
+                    cwd=Path(simulate_args_file).parent,
                     env=simif.get_env(),
                 ),
             ]
@@ -974,7 +974,7 @@ define work "%s/libraries/work"
             self.assertEqual(simif._select_vhdl_top(config), "lib.tb_entity:arch")  # pylint: disable=protected-access
 
     def setUp(self):
-        self.output_path = str(Path(__file__).parent / "test_incisive_out")
+        self.output_path = Path(__file__).parent / "test_incisive_out"
         renew_path(self.output_path)
         self.project = Project()
         self.cwd = os.getcwd()

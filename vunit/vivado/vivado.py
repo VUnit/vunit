@@ -9,7 +9,6 @@ Utilities for integrating with Vivado
 """
 
 from subprocess import check_call
-from os import makedirs
 from pathlib import Path
 
 
@@ -69,7 +68,7 @@ def create_compile_order_file(project_file, compile_order_file, vivado_path=None
 
     fpath = Path(compile_order_file)
     if not fpath.parent.exists():
-        makedirs(str(fpath.parent))
+        fpath.parent.mkdir(parents=True)
 
     print("Extracting compile order ...")
     run_vivado(
@@ -122,9 +121,9 @@ def run_vivado(tcl_file_name, tcl_args=None, cwd=None, vivado_path=None):
     Note: the shell=True is important in windows where Vivado is just a bat file.
     """
     vivado = "vivado" if vivado_path is None else str(Path(vivado_path).resolve() / "bin" / "vivado")
-    cmd = f"{vivado} -nojournal -nolog -notrace -mode batch -source {str(Path(tcl_file_name).resolve())}"
+    cmd = f"{vivado} -nojournal -nolog -notrace -mode batch -source {Path(tcl_file_name).resolve()}"
     if tcl_args is not None:
-        cmd += " -tclargs " + " ".join([str(val) for val in tcl_args])
+        cmd += " -tclargs " + " ".join(str(val) for val in tcl_args)
 
     print(cmd)
     check_call(cmd, cwd=cwd, shell=True)

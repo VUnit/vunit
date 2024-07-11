@@ -11,7 +11,6 @@ A simple file based database
 from pathlib import Path
 import os
 import pickle
-import io
 import struct
 from vunit.ostools import renew_path
 
@@ -55,7 +54,7 @@ class DataBase(object):
         """
         keys_to_nodes = {}
         for file_base_name in os.listdir(self._path):
-            key = self._read_key(str(Path(self._path) / file_base_name))
+            key = self._read_key(Path(self._path) / file_base_name)
             assert key not in keys_to_nodes  # Two nodes contains the same key
             keys_to_nodes[key] = int(file_base_name)
         return keys_to_nodes
@@ -70,37 +69,37 @@ class DataBase(object):
         key = fptr.read(key_size)
         return key
 
-    def _read_key(self, file_name):
+    def _read_key(self, file_name: Path):
         """
         Read key found in file_name
         """
-        with io.open(file_name, "rb") as fptr:
+        with file_name.open("rb") as fptr:
             return self._read_key_from_fptr(fptr)
 
-    def _read_data(self, file_name):
+    def _read_data(self, file_name: Path):
         """
         Read key found in file_name
         """
-        with io.open(file_name, "rb") as fptr:
+        with file_name.open("rb") as fptr:
             self._read_key_from_fptr(fptr)
             data = fptr.read()
         return data
 
     @staticmethod
-    def _write_node(file_name, key, value):
+    def _write_node(file_name: Path, key, value):
         """
         Write node to file
         """
-        with io.open(file_name, "wb") as fptr:
+        with file_name.open("wb") as fptr:
             fptr.write(struct.pack("I", len(key)))
             fptr.write(key)
             fptr.write(value)
 
-    def _to_file_name(self, key):
+    def _to_file_name(self, key) -> Path:
         """
         Convert key to file name
         """
-        return str(Path(self._path) / str(self._keys_to_nodes[key]))
+        return Path(self._path) / str(self._keys_to_nodes[key])
 
     def _allocate_node_for_key(self, key):
         """

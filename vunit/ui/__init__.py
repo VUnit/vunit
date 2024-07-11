@@ -118,7 +118,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
     ):
         self._args = args
         self._configure_logging(args.log_level)
-        self._output_path = str(Path(args.output_path).resolve())
+        self._output_path = Path(args.output_path).resolve()
 
         if args.no_color:
             self._printer = NO_COLOR_PRINTER
@@ -145,10 +145,10 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         # Use default simulator options if no simulator was present
         if self._simulator_class is None:
             simulator_class = SimulatorInterface
-            self._simulator_output_path = str(Path(self._output_path) / "none")
+            self._simulator_output_path = self._output_path / "none"
         else:
             simulator_class = self._simulator_class
-            self._simulator_output_path = str(Path(self._output_path) / simulator_class.name)
+            self._simulator_output_path = self._output_path / simulator_class.name
 
         self._create_output_path(args.clean)
 
@@ -169,7 +169,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         Check for Python version used to create the database is the
         same as the running python instance or re-create
         """
-        project_database_file_name = str(Path(self._output_path) / "project_database")
+        project_database_file_name = str(self._output_path / "project_database")
         create_new = False
         key = b"version"
         version = str((9, sys.version)).encode()
@@ -290,9 +290,9 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         """
         standard = self._which_vhdl_standard(vhdl_standard)
-        path = Path(self._simulator_output_path) / "libraries" / library_name
+        path = self._simulator_output_path / "libraries" / library_name
         if not self._project.has_library(library_name):
-            self._project.add_library(library_name, str(path.resolve()), standard)
+            self._project.add_library(library_name, path.resolve(), standard)
         elif not allow_duplicate:
             raise ValueError(f"Library {library_name!s} already added. Use allow_duplicate to ignore this error.")
         return self.library(library_name)
@@ -765,8 +765,8 @@ other preprocessors. Lowest value first. The order between preprocessors with th
             )
             sys.exit(1)
 
-        if not Path(self._simulator_output_path).exists():
-            os.makedirs(self._simulator_output_path)
+        if not self._simulator_output_path.exists():
+            self._simulator_output_path.mkdir(parents=True)
 
         return self._simulator_class.from_args(args=self._args, output_path=self._simulator_output_path)
 
@@ -893,8 +893,8 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         """
         if clean:
             ostools.renew_path(self._output_path)
-        elif not Path(self._output_path).exists():
-            os.makedirs(self._output_path)
+        elif not self._output_path.exists():
+            self._output_path.mkdir(parents=True)
 
         ostools.renew_path(self._preprocessed_path)
 
@@ -904,11 +904,11 @@ other preprocessors. Lowest value first. The order between preprocessors with th
 
     @property
     def _preprocessed_path(self):
-        return str(Path(self._output_path) / "preprocessed")
+        return str(self._output_path / "preprocessed")
 
     @property
     def codecs_path(self):
-        return str(Path(self._output_path) / "codecs")
+        return str(self._output_path / "codecs")
 
     def _compile(self, simulator_if: SimulatorInterface):
         """
@@ -952,7 +952,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
 
         runner = TestRunner(
             report,
-            str(Path(self._output_path) / TEST_OUTPUT_PATH),
+            str(self._output_path / TEST_OUTPUT_PATH),
             verbosity=verbosity,
             num_threads=self._args.num_threads,
             fail_fast=self._args.fail_fast,

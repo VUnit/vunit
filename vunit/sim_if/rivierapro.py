@@ -9,7 +9,6 @@ Interface towards Aldec Riviera Pro
 """
 
 from pathlib import Path
-import os
 import re
 import logging
 from ..exceptions import CompileError
@@ -66,7 +65,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         """
 
         def no_avhdl(path):
-            return not file_exists(str(Path(path) / "avhdl.exe"))
+            return not (Path(path) / "avhdl.exe").exists()
 
         return cls.find_toolchain(["vsim", "vsimsa"], constraints=[no_avhdl])
 
@@ -224,15 +223,17 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         """
         mapped_libraries = mapped_libraries if mapped_libraries is not None else {}
 
-        apath = str(Path(path).parent.resolve())
+        path = Path(path)
 
-        if not file_exists(apath):
-            os.makedirs(apath)
+        apath = path.parent.resolve()
 
-        if not file_exists(path):
+        if not apath.exists():
+            apath.mkdir(parents=True)
+
+        if not path.exists():
             proc = Process(
-                [str(Path(self._prefix) / "vlib"), library_name, path],
-                cwd=str(Path(self._sim_cfg_file_name).parent),
+                [str(Path(self._prefix) / "vlib"), library_name, str(path)],
+                cwd=Path(self._sim_cfg_file_name).parent,
                 env=self.get_env(),
             )
             proc.consume_output(callback=None)
@@ -241,8 +242,8 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
             return
 
         proc = Process(
-            [str(Path(self._prefix) / "vmap"), library_name, path],
-            cwd=str(Path(self._sim_cfg_file_name).parent),
+            [str(Path(self._prefix) / "vmap"), library_name, str(path)],
+            cwd=Path(self._sim_cfg_file_name).parent,
             env=self.get_env(),
         )
         proc.consume_output(callback=None)
@@ -251,10 +252,11 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         """
         Create the library.cfg file if it does not exist
         """
-        if file_exists(self._sim_cfg_file_name):
+        cfg_file = Path(self._sim_cfg_file_name)
+        if cfg_file.exists():
             return
 
-        with Path(self._sim_cfg_file_name).open("w", encoding="utf-8") as ofile:
+        with cfg_file.open("w", encoding="utf-8") as ofile:
             ofile.write(f'$INCLUDE = "{self._builtin_library_cfg!s}"\n')
 
     @property
@@ -268,7 +270,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         Get mapped libraries by running vlist on the working directory
         """
         lines = []
-        proc = Process([str(Path(self._prefix) / "vlist")], cwd=str(Path(library_cfg_file).parent))
+        proc = Process([str(Path(self._prefix) / "vlist")], cwd=Path(library_cfg_file).parent)
         proc.consume_output(callback=lines.append)
 
         libraries = {}
@@ -291,15 +293,15 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         pli_str = " ".join(f'-pli "{fix_path(name)}"' for name in config.sim_options.get("pli", []))
 
         vsim_flags = [
-            f"-dataset {{{fix_path(str(Path(output_path) / 'dataset.asdb'))!s}}}",
+            f"-dataset {{{fix_path(Path(output_path) / 'dataset.asdb')}}}",
             pli_str,
             set_generic_str,
         ]
 
         if config.sim_options.get("enable_coverage", False):
-            coverage_file_path = str(Path(output_path) / "coverage.acdb")
+            coverage_file_path = Path(output_path) / "coverage.acdb"
             self._coverage_files.add(coverage_file_path)
-            vsim_flags += [f"-acdb_file {{{coverage_file_path!s}}}"]
+            vsim_flags += [f"-acdb_file {{{coverage_file_path}}}"]
 
         vsim_flags += [self._vsim_extra_args(config)]
 
@@ -418,7 +420,7 @@ proc _vunit_sim_restart {} {
         fname = file_name.replace("\\", "/")
         merge_command += f" -o {{{fname}}}"
 
-        merge_script_name = Path(self._output_path) / "acdb_merge.tcl"
+        merge_script_name = self.output_path / "acdb_merge.tcl"
         with merge_script_name.open("w", encoding="utf-8") as fptr:
             fptr.write(merge_command + "\n")
 

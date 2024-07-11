@@ -384,7 +384,7 @@ endmodule;
         full_name = Path(self.output_path) / file_name
         full_path = full_name.parent
         if not full_path.exists():
-            os.makedirs(str(full_path))
+            full_path.mkdir(parents=True)
         with full_name.open("w") as fptr:
             fptr.write(contents)
 

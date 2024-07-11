@@ -9,6 +9,7 @@ Contains different kinds of test suites
 """
 
 from pathlib import Path
+from typing import Union
 from .. import ostools
 from .report import PASSED, SKIPPED, FAILED
 
@@ -218,15 +219,16 @@ class TestRun(object):
 
         config = self._config.copy()
 
+        output_path = str(output_path).replace("\\", "/") + "/"
         if "output_path" in config.generic_names and "output_path" not in config.generics:
-            config.generics["output_path"] = str(output_path.replace("\\", "/")) + "/"
+            config.generics["output_path"] = output_path
 
         runner_cfg = {
             "enabled_test_cases": ",".join(
                 encode_test_case(test_case) for test_case in self._test_cases if test_case is not None
             ),
             "use_color": self._simulator_if.use_color,
-            "output path": output_path.replace("\\", "/") + "/",
+            "output path": output_path,
             "active python runner": True,
             "tb path": config.tb_path.replace("\\", "/") + "/",
         }
@@ -326,5 +328,5 @@ def _full_name(test_suite_name, test_case_name):
     return test_suite_name + "." + test_case_name
 
 
-def get_result_file_name(output_path):
-    return str(Path(output_path) / "vunit_results")
+def get_result_file_name(output_path: Union[Path, str]) -> Path:
+    return Path(output_path) / "vunit_results"

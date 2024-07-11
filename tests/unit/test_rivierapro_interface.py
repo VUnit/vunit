@@ -50,7 +50,7 @@ class TestRivieraProInterface(unittest.TestCase):
                 str(Path("prefix") / "vcom"),
                 "-quiet",
                 "-j",
-                self.output_path,
+                str(self.output_path),
                 "-2019",
                 "-work",
                 "lib",
@@ -84,7 +84,7 @@ class TestRivieraProInterface(unittest.TestCase):
                 str(Path("prefix") / "vcom"),
                 "-quiet",
                 "-j",
-                self.output_path,
+                str(self.output_path),
                 "-2008",
                 "-work",
                 "lib",
@@ -118,7 +118,7 @@ class TestRivieraProInterface(unittest.TestCase):
                 str(Path("prefix") / "vcom"),
                 "-quiet",
                 "-j",
-                self.output_path,
+                str(self.output_path),
                 "-2002",
                 "-work",
                 "lib",
@@ -152,7 +152,7 @@ class TestRivieraProInterface(unittest.TestCase):
                 str(Path("prefix") / "vcom"),
                 "-quiet",
                 "-j",
-                self.output_path,
+                str(self.output_path),
                 "-93",
                 "-work",
                 "lib",
@@ -187,7 +187,7 @@ class TestRivieraProInterface(unittest.TestCase):
                 str(Path("prefix") / "vcom"),
                 "-quiet",
                 "-j",
-                self.output_path,
+                str(self.output_path),
                 "custom",
                 "flags",
                 "-2008",
@@ -385,7 +385,7 @@ class TestRivieraProInterface(unittest.TestCase):
         )
 
     def setUp(self):
-        self.output_path = str(Path(__file__).parent / "test_rivierapro_out")
+        self.output_path = Path(__file__).parent / "test_rivierapro_out"
         renew_path(self.output_path)
         self.project = Project()
         self.cwd = os.getcwd()
