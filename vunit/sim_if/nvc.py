@@ -47,6 +47,19 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         StringOption("nvc.gtkwave_script.gui"),
     ]
 
+    @staticmethod
+    def add_arguments(parser):
+        """
+        Add command line arguments
+        """
+        group = parser.add_argument_group("nvc", description="NVC specific flags")
+        group.add_argument(
+            "--nvc-fst",
+            action="store_true",
+            default=False,
+            help=("Generate wave file in FST format."),
+        )
+
     @classmethod
     def from_args(cls, args, output_path, **kwargs):
         """
@@ -58,6 +71,7 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
             prefix=prefix,
             gui=args.gui,
             num_threads=args.num_threads,
+            nvc_fst=args.nvc_fst,
         )
 
     @classmethod
@@ -73,6 +87,7 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         prefix,
         num_threads,
         gui=False,
+        nvc_fst=False,
         gtkwave_args="",
     ):
         SimulatorInterface.__init__(self, output_path, gui)
@@ -84,6 +99,7 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
 
         self._gui = gui
         self._gtkwave_args = gtkwave_args
+        self._nvc_fst = nvc_fst
         self._vhdl_standard = None
         self._coverage_test_dirs = set()
 
@@ -251,7 +267,7 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         if not script_path.exists():
             makedirs(script_path)
 
-        if self._gui:
+        if self._gui or self._nvc_fst:
             wave_file = script_path / (f"{config.entity_name}.fst")
             if wave_file.exists():
                 remove(wave_file)
