@@ -77,8 +77,8 @@ deps=
     coverage: setuptools
     docs: docutils
     docs: furo
-    docs: sphinx
-    docs: sphinx-argparse
+    docs: sphinx==7.3.7
+    docs: sphinx-argparse==0.4.0
     docs: towncrier
 
 setenv=
