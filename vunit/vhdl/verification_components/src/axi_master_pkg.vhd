@@ -19,6 +19,27 @@ use work.queue_pkg.all;
 
 package axi_master_pkg is
 
+  -- Handle to VC instance
+  type axi_master_t is record
+    -- These fields are private, do not use directly
+    p_bus_handle : bus_master_t;
+    p_drive_invalid : boolean;
+    p_drive_invalid_val : std_logic;
+    p_write_high_probability : real range 0.0 to 1.0;
+    p_read_high_probability : real range 0.0 to 1.0;
+  end record;
+
+  impure function new_axi_master(data_length : natural;
+                                  address_length : natural;
+                                  byte_length : natural := 8;
+                                  logger : logger_t := bus_logger;
+                                  actor : actor_t := null_actor;
+                                  drive_invalid : boolean := true;
+                                  drive_invalid_val : std_logic :=  'X';
+                                  write_high_probability : real := 1.0;
+                                  read_high_probability : real := 1.0
+  ) return axi_master_t;
+
   constant axi_read_msg : msg_type_t := new_msg_type("read axi ");
   constant axi_write_msg : msg_type_t := new_msg_type("write axi ");
   constant axi_burst_read_msg : msg_type_t := new_msg_type("read axi burst ");
@@ -120,6 +141,31 @@ package axi_master_pkg is
 end package;
 
 package body axi_master_pkg is
+  impure function new_axi_master(data_length : natural;
+                                  address_length : natural;
+                                  byte_length : natural := 8;
+                                  logger : logger_t := bus_logger;
+                                  actor : actor_t := null_actor;
+                                  drive_invalid : boolean := true;
+                                  drive_invalid_val : std_logic :=  'X';
+                                  write_high_probability : real := 1.0;
+                                  read_high_probability : real := 1.0
+  ) return axi_master_t is
+    variable bus_handle : bus_master_t := new_bus(
+      data_length,
+      address_length,
+      byte_length,
+      logger,
+      actor
+    );
+  begin
+    return (
+      p_bus_handle => bus_handle,
+      p_drive_invalid => drive_invalid,
+      p_drive_invalid_val => drive_invalid_val,
+      p_write_high_probability => write_high_probability,
+      p_read_high_probability => read_high_probability);
+  end;
 
   procedure write_axi(signal net : inout network_t;
                             constant bus_handle : bus_master_t;

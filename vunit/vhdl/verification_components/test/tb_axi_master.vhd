@@ -65,8 +65,8 @@ architecture a of tb_axi_master is
   signal bid     : std_logic_vector(7 downto 0); --TBD
   signal bresp   : std_logic_vector(1 downto 0);
 
-  constant bus_handle : bus_master_t := new_bus(data_length => wdata'length,
-                                                address_length => awaddr'length);
+  constant axi_master_handle : axi_master_t := new_axi_master(data_length => wdata'length,
+                                                              address_length => awaddr'length);
 
   constant memory : memory_t := new_memory;
   constant axi_rd_slave : axi_slave_t := new_axi_slave(memory => memory,
@@ -153,7 +153,7 @@ begin
         burst := 1;
         setup_and_set_random_data_read_memory(memory, burst, rdata'length, memory_data_queue);
         info(tb_logger, "Reading...");
-        read_bus(net, bus_handle, 0, read_tmp);
+        read_bus(net, axi_master_handle.p_bus_handle, 0, read_tmp);
         info(tb_logger, "Compare...");
         memory_tmp := pop(memory_data_queue);
         check_equal(read_tmp, memory_tmp, "read data");
@@ -166,7 +166,7 @@ begin
         burst := 1;
         setup_and_set_random_data_read_memory(memory, burst, rdata'length, memory_data_queue);
         info(tb_logger, "Reading...");
-        read_axi(net, bus_handle, x"00000000", "001", x"25", axi_resp_okay, read_tmp);
+        read_axi(net, axi_master_handle.p_bus_handle, x"00000000", "001", x"25", axi_resp_okay, read_tmp);
         info(tb_logger, "Compare...");
         memory_tmp := pop(memory_data_queue);
         check_equal(read_tmp, memory_tmp, "read data");
@@ -179,7 +179,7 @@ begin
         burst := rnd.RandInt(1, 255);
         setup_and_set_random_data_read_memory(memory, burst, rdata'length, memory_data_queue);
         info(tb_logger, "Reading...");
-        burst_read_bus(net, bus_handle, 0, burst, read_data_queue);
+        burst_read_bus(net, axi_master_handle.p_bus_handle, 0, burst, read_data_queue);
         info(tb_logger, "Compare...");
         for i in 0 to burst - 1 loop
           read_tmp := pop(read_data_queue);
@@ -196,7 +196,7 @@ begin
         burst := rnd.RandInt(1, 255);
         setup_and_set_random_data_read_memory(memory, burst+1, rdata'length, memory_data_queue);
         info(tb_logger, "Reading...");
-        burst_read_axi(net, bus_handle, x"00000000", std_logic_vector(to_unsigned(burst, arlen'length)), "001", axi_burst_type_incr, x"25", axi_resp_okay, read_data_queue);
+        burst_read_axi(net, axi_master_handle.p_bus_handle, x"00000000", std_logic_vector(to_unsigned(burst, arlen'length)), "001", axi_burst_type_incr, x"25", axi_resp_okay, read_data_queue);
         info(tb_logger, "Compare...");
         for i in 0 to burst loop
           read_tmp := pop(read_data_queue);
@@ -213,7 +213,7 @@ begin
         burst := 1;
         setup_and_set_random_data_write_memory(memory, burst, wdata'length, memory_data_queue);
         info(tb_logger, "Reading...");
-        write_bus(net, bus_handle, 0, pop(memory_data_queue));
+        write_bus(net, axi_master_handle.p_bus_handle, 0, pop(memory_data_queue));
         info(tb_logger, "Compare...");
         check_true(is_empty(memory_data_queue), "memory_data_queue not flushed");
         wait_on_data_write_memory(memory);
@@ -225,7 +225,7 @@ begin
         burst := 1;
         setup_and_set_random_data_write_memory(memory, burst, wdata'length, memory_data_queue);
         info(tb_logger, "Reading...");
-        write_axi(net, bus_handle, x"00000000", pop(memory_data_queue), "001", x"25", axi_resp_okay);
+        write_axi(net, axi_master_handle.p_bus_handle, x"00000000", pop(memory_data_queue), "001", x"25", axi_resp_okay);
         info(tb_logger, "Compare...");
         check_true(is_empty(memory_data_queue), "memory_data_queue not flushed");
         wait_on_data_write_memory(memory);
@@ -237,7 +237,7 @@ begin
         burst := rnd.RandInt(1, 255);
         setup_and_set_random_data_write_memory(memory, burst, wdata'length, memory_data_queue);
         info(tb_logger, "Reading...");
-        burst_write_bus(net, bus_handle, x"00000000", burst, memory_data_queue);
+        burst_write_bus(net, axi_master_handle.p_bus_handle, x"00000000", burst, memory_data_queue);
         info(tb_logger, "Compare...");
         check_true(is_empty(memory_data_queue), "memory_data_queue not flushed");
         wait_on_data_write_memory(memory);
@@ -249,7 +249,7 @@ begin
           burst := rnd.RandInt(1, 255);
           setup_and_set_random_data_write_memory(memory, burst+1, wdata'length, memory_data_queue);
           info(tb_logger, "Reading...");
-          burst_write_axi(net, bus_handle, x"00000000", std_logic_vector(to_unsigned(burst, awlen'length)),"001", axi_burst_type_incr, memory_data_queue, x"25", axi_resp_okay);
+          burst_write_axi(net, axi_master_handle.p_bus_handle, x"00000000", std_logic_vector(to_unsigned(burst, awlen'length)),"001", axi_burst_type_incr, memory_data_queue, x"25", axi_resp_okay);
           info(tb_logger, "Compare...");
           check_true(is_empty(memory_data_queue), "memory_data_queue not flushed");
           wait_on_data_write_memory(memory);
@@ -303,7 +303,7 @@ begin
 
   dut : entity work.axi_master
     generic map (
-      bus_handle => bus_handle)
+      axi_master_handle => axi_master_handle)
     port map (
       aclk => clk,
 

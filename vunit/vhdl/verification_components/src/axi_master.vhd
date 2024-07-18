@@ -30,11 +30,7 @@ use work.sync_pkg.all;
 
 entity axi_master is
   generic (
-    bus_handle : bus_master_t;
-    drive_invalid : boolean := true;
-    drive_invalid_val : std_logic := 'X';
-    write_high_probability : real range 0.0 to 1.0 := 1.0;
-    read_high_probability : real range 0.0 to 1.0 := 1.0
+    axi_master_handle : axi_master_t
   );
   port (
     aclk : in std_logic;
@@ -42,7 +38,7 @@ entity axi_master is
     arvalid : out std_logic := '0';
     arready : in std_logic;
     arid : out std_logic_vector;
-    araddr : out std_logic_vector(address_length(bus_handle) - 1 downto 0) := (others => '0');
+    araddr : out std_logic_vector(address_length(axi_master_handle.p_bus_handle) - 1 downto 0) := (others => '0');
     arlen : out std_logic_vector;
     arsize : out std_logic_vector;
     arburst : out axi_burst_type_t;
@@ -50,22 +46,22 @@ entity axi_master is
     rvalid : in std_logic;
     rready : out std_logic := '0';
     rid : in std_logic_vector;
-    rdata : in std_logic_vector(data_length(bus_handle) - 1 downto 0);
+    rdata : in std_logic_vector(data_length(axi_master_handle.p_bus_handle) - 1 downto 0);
     rresp : in axi_resp_t;
     rlast : in std_logic;
 
     awvalid : out std_logic := '0';
     awready : in std_logic := '0';
     awid : out std_logic_vector;
-    awaddr : out std_logic_vector(address_length(bus_handle) - 1 downto 0) := (others => '0');
+    awaddr : out std_logic_vector(address_length(axi_master_handle.p_bus_handle) - 1 downto 0) := (others => '0');
     awlen : out std_logic_vector;
     awsize : out std_logic_vector;
     awburst : out axi_burst_type_t;
 
     wvalid : out std_logic;
     wready : in std_logic := '0';
-    wdata : out std_logic_vector(data_length(bus_handle) - 1 downto 0) := (others => '0');
-    wstrb : out std_logic_vector(byte_enable_length(bus_handle) - 1 downto 0) := (others => '0');
+    wdata : out std_logic_vector(data_length(axi_master_handle.p_bus_handle) - 1 downto 0) := (others => '0');
+    wstrb : out std_logic_vector(byte_enable_length(axi_master_handle.p_bus_handle) - 1 downto 0) := (others => '0');
     wlast : out std_logic;
 
     bvalid : in std_logic;
@@ -84,7 +80,7 @@ begin
     variable request_msg : msg_t;
     variable msg_type : msg_type_t;
   begin
-    receive(net, bus_handle.p_actor, request_msg);
+    receive(net, axi_master_handle.p_bus_handle.p_actor, request_msg);
     msg_type := message_type(request_msg);
 
     if is_read(msg_type) or is_write(msg_type) then
@@ -103,32 +99,32 @@ begin
   bus_process : process
     procedure drive_ar_invalid is
     begin
-      if drive_invalid then
-        araddr <= (araddr'range => drive_invalid_val);
-        arlen <= (arlen'range => drive_invalid_val);
-        arsize <= (arsize'range => drive_invalid_val);
-        arburst <= (arburst'range => drive_invalid_val);
-        arid <= (arid'range => drive_invalid_val);
+      if axi_master_handle.p_drive_invalid then
+        araddr <= (araddr'range => axi_master_handle.p_drive_invalid_val);
+        arlen <= (arlen'range => axi_master_handle.p_drive_invalid_val);
+        arsize <= (arsize'range => axi_master_handle.p_drive_invalid_val);
+        arburst <= (arburst'range => axi_master_handle.p_drive_invalid_val);
+        arid <= (arid'range => axi_master_handle.p_drive_invalid_val);
       end if;
     end procedure;
 
     procedure drive_aw_invalid is
     begin
-      if drive_invalid then
-        awaddr <= (awaddr'range => drive_invalid_val);
-        awlen <= (awlen'range => drive_invalid_val);
-        awsize <= (awsize'range => drive_invalid_val);
-        awburst <= (awburst'range => drive_invalid_val);
-        awid <= (arid'range => drive_invalid_val);
+      if axi_master_handle.p_drive_invalid then
+        awaddr <= (awaddr'range => axi_master_handle.p_drive_invalid_val);
+        awlen <= (awlen'range => axi_master_handle.p_drive_invalid_val);
+        awsize <= (awsize'range => axi_master_handle.p_drive_invalid_val);
+        awburst <= (awburst'range => axi_master_handle.p_drive_invalid_val);
+        awid <= (arid'range => axi_master_handle.p_drive_invalid_val);
       end if;
     end procedure;
 
     procedure drive_w_invalid is
     begin
-      if drive_invalid then
-        wlast <= drive_invalid_val;
-        wdata <= (wdata'range => drive_invalid_val);
-        wstrb <= (wstrb'range => drive_invalid_val);
+      if axi_master_handle.p_drive_invalid then
+        wlast <= axi_master_handle.p_drive_invalid_val;
+        wdata <= (wdata'range => axi_master_handle.p_drive_invalid_val);
+        wstrb <= (wstrb'range => axi_master_handle.p_drive_invalid_val);
       end if;
     end procedure;
 
@@ -171,7 +167,7 @@ begin
       msg_type := message_type(request_msg);
 
       if is_read(msg_type) then
-        while rnd.Uniform(0.0, 1.0) > read_high_probability loop
+        while rnd.Uniform(0.0, 1.0) > axi_master_handle.p_read_high_probability loop
           wait until rising_edge(aclk);
         end loop;
         
@@ -225,7 +221,7 @@ begin
         drive_ar_invalid;
 
       elsif is_write(msg_type) then
-        while rnd.Uniform(0.0, 1.0) > write_high_probability loop
+        while rnd.Uniform(0.0, 1.0) > axi_master_handle.p_write_high_probability loop
           wait until rising_edge(aclk);
         end loop;
 
@@ -305,8 +301,8 @@ begin
               wlast <= '1' when len = 0 else '0';
             end if;
 
-            if is_visible(bus_handle.p_logger, debug) then
-              debug(bus_handle.p_logger,
+            if is_visible(axi_master_handle.p_bus_handle.p_logger, debug) then
+              debug(axi_master_handle.p_bus_handle.p_logger,
                     "Wrote 0x" & to_hstring(data) &
                       " to address 0x" & to_hstring(addr));
             end if;
@@ -340,8 +336,8 @@ begin
 
     procedure write_debug is
       begin
-        if is_visible(bus_handle.p_logger, debug) then
-          debug(bus_handle.p_logger,
+        if is_visible(axi_master_handle.p_bus_handle.p_logger, debug) then
+          debug(axi_master_handle.p_bus_handle.p_logger,
                 "Read 0x" & to_hstring(rdata) &
                   " from address 0x" & to_hstring(addr));
         end if;
@@ -367,16 +363,16 @@ begin
     end if;
 
     -- first iteration
-    check_axi_id(bus_handle, rid, id, "rid");
-    check_axi_resp(bus_handle, rresp, resp, "rresp");
+    check_axi_id(axi_master_handle.p_bus_handle, rid, id, "rid");
+    check_axi_resp(axi_master_handle.p_bus_handle, rresp, resp, "rresp");
     write_debug;
     push_std_ulogic_vector(reply_msg, rdata);
 
     -- burst iterations
     for i in 0 to len - 1 loop
       wait until (rvalid and rready) = '1' and rising_edge(aclk);
-      check_axi_id(bus_handle, rid, id, "rid");
-      check_axi_resp(bus_handle, rresp, resp, "rresp");
+      check_axi_id(axi_master_handle.p_bus_handle, rid, id, "rid");
+      check_axi_resp(axi_master_handle.p_bus_handle, rresp, resp, "rresp");
       write_debug;
       push_std_ulogic_vector(reply_msg, rdata);
     end loop;
@@ -405,8 +401,8 @@ begin
     id := pop_std_ulogic_vector(request_msg);
     resp := pop_std_ulogic_vector(request_msg);
 
-    check_axi_id(bus_handle, bid, id, "bid");
-    check_axi_resp(bus_handle, bresp, resp, "bresp");
+    check_axi_id(axi_master_handle.p_bus_handle, bid, id, "bid");
+    check_axi_resp(axi_master_handle.p_bus_handle, bresp, resp, "bresp");
 
     delete(request_msg);
   end process;
