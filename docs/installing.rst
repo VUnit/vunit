@@ -92,6 +92,10 @@ Once installed, VUnit may be updated to new versions via a similar method:
 
    > pip install -U vunit_hdl
 
+Occasionally, pre-releases and development versions are available via `pip <https://pip.pypa.io/en/stable/>`__.
+These give early access to updates before the next planned release has been fully completed. These are installed
+by adding the ``--pre`` option to the ``pip install`` command.
+
 .. _installing_master:
 
 Using the Development Version
