@@ -1,0 +1,1 @@
+[GHDL] Added coverage support for mcode backend.
