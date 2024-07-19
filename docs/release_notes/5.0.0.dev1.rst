@@ -1,0 +1,73 @@
+
+Breaking Changes
+~~~~~~~~~~~~~~~~
+
+- HDL builtins are not compiled by default.
+  To preserve the functionality, the run script is now required to explicitly use methods
+  :meth:`add_vhdl_builtins() <vunit.ui.VUnit.add_vhdl_builtins>` or
+  :meth:`add_verilog_builtins() <vunit.ui.VUnit.add_verilog_builtins>`. (:vunit_issue:`559`, :vunit_issue:`764`, :vunit_issue:`777`)
+- [VHDL] Remove ``array_pkg``; use ``integer_array_t`` instead. (:vunit_issue:`600`)
+- Continue after compilation failure if ``--keep-compiling`` is ``True``. (:vunit_issue:`742`)
+- [GHDL] Remove ``ghdl.flags``; use ``ghdl.a_flags`` instead. (:vunit_issue:`932`)
+- [VHDL] Remove deprecated ``check``, ``log`` and ``run`` packages. (:vunit_issue:`933`)
+- Remove 1 ms gate lock timeout. (:vunit_issue:`983`)
+
+
+Bug Fixes
+~~~~~~~~~
+
+- [VCs] Take ``tkeep`` and ``tstrb`` into account when checking for invalid ``tdata`` in ``axi_stream_protocol_checker``. (:vunit_issue:`798`, :vunit_issue:`799`)
+- [Questa] Added workaround for bit-ordering bug in Questa (:vunit_issue:`889`)
+- [GHDL] Create missing directories when generating coverage report. (:vunit_issue:`924`)
+- [VHDL] Fixed memory leak in check/log functions. (:vunit_issue:`954`, :vunit_issue:`956`, :vunit_issue:`1001`)
+- [OSVVM] Compile correct MemoryPkg files for simulators supporting generic packages. (:vunit_issue:`965`)
+- Fixed bug for ``check_relation`` when using custom checker. (:vunit_issue:`971`)
+- [VC] Fixed failing 4kB boundary check in AXI when using unaligned addresses. (:vunit_issue:`1018`)
+
+
+Deprecations
+~~~~~~~~~~~~
+
+- Drop Python v3.6.
+
+
+Documentation
+~~~~~~~~~~~~~
+
+- Rename 'VHDL Libraries' to :ref:`hdl_libraries`. Add section :ref:`Guides <user_guide>`. (:vunit_issue:`764`)
+
+
+Features
+~~~~~~~~
+
+- Added support for simulating top-level VHDL configurations. (:vunit_issue:`179`, :vunit_issue:`951`)
+- Add common log interface for third-party logging framework integration. (:vunit_issue:`776`, :vunit_issue:`947`, :vunit_issue:`949`)
+- [VCs] Drive ``axi_lite_master``, ``axi_read_slave`` and ``axi_write_slave`` bus with ``'X'`` when valid is low. (:vunit_issue:`802`, :vunit_issue:`994`)
+- [VHDL] Add ``check_equal`` for ``ieee.fixed_pkg`` types. (:vunit_issue:`909`, :vunit_issue:`989`, :vunit_issue:`998`)
+- [NVC] New simulation and compile option ``nvc.global_flags`` can be used
+  to pass arbitrary flags to ``nvc``. (:vunit_issue:`946`, :vunit_issue:`948`)
+- [Parsing] Allow multiply and divide within component instantiations. (:vunit_issue:`966`)
+- [GHDL] Support selecting FST format for waveform files. (:vunit_issue:`967`, :vunit_issue:`1004`)
+- Add ``py.typed`` file to indicate the existence of Python typing hints. (:vunit_issue:`991`)
+- [GHDL] Add support for mcode JIT in backend detection. (:vunit_issue:`1005`)
+- [GHDL] Added coverage support for mcode backend. (:vunit_issue:`1007`)
+- Update time reporting from test results. Also add timestamps when starting tests. (:vunit_issue:`1025`)
+- [Active-HDL] Added vunit_help, vunit_load, vunit_run, vunit_compile, vunit_restart, and vunit_user_init TCL commands to Active-HDL. (:vunit_issue:`1032`)
+- [Riviera-PRO, ModelSim/Questa, Active-HDL] Defined the TCL variable ``vunit_tb_name`` as the name of the top level design unit during the evaluation of the ``<simulator>.init_file`` scripts for Active-HDL, Riviera-PRO and ModelSim/Qusta.
+  [Active-HDL] Defined the TCL variable ``vunit_tb_path`` during the evaluation of the ``activehdl.init_file.gui`` script. (:vunit_issue:`1033`)
+- [NVC] VUnit now sets the ``NVC_CONCURRENT_JOBS`` environment variable to
+  the value of the ``--num-threads`` argument which allows ``nvc`` to
+  scale its worker thread count based on the number of concurrently
+  running simulations. (:vunit_issue:`1036`)
+- It is possible to use all logical CPUs by passing ``-p0`` (``--num-threads=0``). See ``multiprocessing.cpu_count`` for how the number is determined. (:vunit_issue:`1039`)
+
+
+Miscellaneous
+~~~~~~~~~~~~~
+
+- [NVC] Multi-word command line arguments are now quoted in the log. (:vunit_issue:`940`)
+- Removed unused code. (:vunit_issue:`972`)
+- [Questa/Modelsim] Remove compile warnings. (:vunit_issue:`981`, :vunit_issue:`993`, :vunit_issue:`996`)
+- [VHDL] Minimize imports in packages and VCs in an effort to reduce simulator startup time. (:vunit_issue:`992`)
+- Improved error message when entity name in architecture statement is misspelled such that there is no matching entity. (:vunit_issue:`1026`)
+- [OSVVM] Bump to 2023.04.
