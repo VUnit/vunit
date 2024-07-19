@@ -34,7 +34,8 @@ def main():
 
     elif args.cmd == "validate":
         version = get_local_version()
-        validate_new_release(version, pre_tag=False)
+        major, minor, patch, development = parse_version(version)
+        validate_new_release(major, minor, patch, development, pre_tag=False)
         print(f"Release {version} is validated for publishing")
 
     elif args.cmd == "development":
@@ -75,7 +76,7 @@ def create_release(major, minor, patch, development):
 
     print(f"Attempting to create new release {version}")
     set_version(version)
-    validate_new_release(version, pre_tag=True)
+    validate_new_release(major, minor, patch, development, pre_tag=True)
     make_release_commit(major, minor, patch, development)
 
     if development:
@@ -132,34 +133,36 @@ def make_next_pre_release_commit(version):
     run(["git", "commit", "-m", f"Start of next release candidate {version!s}"])
 
 
-def validate_new_release(version, pre_tag):
+def validate_new_release(major, minor, patch, development, pre_tag):
     """
     Check that a new release is valid or exit
     """
+    python_version = to_python_version(major, minor, patch, development)
+    semver_version = to_semver_version(major, minor, patch, development)
 
-    release_note = release_note_file_name(version)
+    release_note = release_note_file_name(python_version)
     if not release_note.exists():
-        print(f"Not releasing version {version!s} since release note {release_note!s} does not exist")
+        print(f"Not releasing version {python_version} since release note {release_note} does not exist")
         sys.exit(1)
 
     with release_note.open("r") as fptr:
         if not fptr.read():
-            print(f"Not releasing version {version!s} since release note {release_note!s} is empty")
+            print(f"Not releasing version {python_version} since release note {release_note} is empty")
             sys.exit(1)
 
-    if pre_tag and check_tag(version):
-        print(f"Not creating new release {version!s} since tag v{version!s} already exist")
+    if pre_tag and check_tag(semver_version):
+        print(f"Not creating new release {python_version} since tag v{semver_version} already exist")
         sys.exit(1)
 
-    if not pre_tag and not check_tag(version):
-        print(f"Not releasing version {version!s} since tag v{version!s} does not exist")
+    if not pre_tag and not check_tag(semver_version):
+        print(f"Not releasing version {python_version} since tag v{semver_version} does not exist")
         sys.exit(1)
 
     with urlopen("https://pypi.python.org/pypi/vunit_hdl/json") as fptr:
         info = json.load(fptr)
 
-    if version in info["releases"].keys():
-        print(f"Version {version!s} has already been released")
+    if python_version in info["releases"].keys():
+        print(f"Version {python_version} has already been released")
         sys.exit(1)
 
 
