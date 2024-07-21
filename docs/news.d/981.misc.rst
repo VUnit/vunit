@@ -1,1 +1,0 @@
-[Questa/Modelsim] Remove compile warnings.

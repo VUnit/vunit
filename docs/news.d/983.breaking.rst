@@ -1,1 +1,0 @@
-Remove 1 ms gate lock timeout.

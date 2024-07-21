@@ -1,2 +1,0 @@
-[GHDL] Remove ``ghdl.flags``; use ``ghdl.a_flags`` instead.
-

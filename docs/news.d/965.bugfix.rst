@@ -1,1 +1,0 @@
-[OSVVM] Compile correct MemoryPkg files for simulators supporting generic packages.
