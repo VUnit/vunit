@@ -1,1 +1,0 @@
-[GHDL] Add support for mcode JIT in backend detection.

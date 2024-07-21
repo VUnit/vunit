@@ -1,1 +1,0 @@
-Improved error message when entity name in architecture statement is misspelled such that there is no matching entity.

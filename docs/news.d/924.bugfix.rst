@@ -1,1 +1,0 @@
-[GHDL] Create missing directories when generating coverage report.

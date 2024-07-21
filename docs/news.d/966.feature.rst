@@ -1,1 +1,0 @@
-[Parsing] Allow multiply and divide within component instantiations.
