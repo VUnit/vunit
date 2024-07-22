@@ -50,11 +50,11 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
     supports_colors_in_gui = False
 
     def __init__(self, output_path, gui):
-        self._output_path = output_path
+        self._output_path = Path(output_path)
         self._gui = gui
 
     @property
-    def output_path(self):
+    def output_path(self) -> Path:
         return self._output_path
 
     @property
@@ -318,6 +318,17 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         """
         Allows inheriting classes to overload this to modify environment variables. Return None for default environment
         """
+
+    def get_script_path(self, output_path) -> Path:
+        """
+        Get path for scripts.
+
+        Also creates the required directories if they do not exist.
+        """
+        script_path = Path(output_path) / self.name
+        if not script_path.exists():
+            script_path.mkdir(parents=True)
+        return script_path
 
 
 def isfile(file_name):

@@ -19,7 +19,7 @@ class Results(object):
     """
 
     def __init__(self, output_path, simulator_if, report):
-        self._output_path = output_path
+        self._output_path = Path(output_path)
         self._simulator_if = simulator_if
         self._report = report
 
@@ -44,7 +44,7 @@ class Results(object):
             report.tests.update(
                 {
                     test.name: TestResult(
-                        Path(self._output_path) / TEST_OUTPUT_PATH,
+                        self._output_path / TEST_OUTPUT_PATH,
                         obj["status"],
                         obj["time"],
                         obj["path"],

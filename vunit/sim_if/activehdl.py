@@ -10,6 +10,7 @@ Interface towards Aldec Active HDL
 
 from functools import total_ordering
 from pathlib import Path
+from typing import Union
 import os
 import re
 import logging
@@ -159,15 +160,17 @@ class ActiveHDLInterface(SimulatorInterface):
         """
         mapped_libraries = mapped_libraries if mapped_libraries is not None else {}
 
-        apath = str(Path(path).parent.resolve())
+        path = Path(path)
 
-        if not file_exists(apath):
-            os.makedirs(apath)
+        apath = path.parent.resolve()
 
-        if not file_exists(path):
+        if not apath.exists():
+            apath.mkdir(parents=True)
+
+        if not path.exists():
             proc = Process(
-                [str(Path(self._prefix) / "vlib"), library_name, path],
-                cwd=str(Path(self._library_cfg).parent),
+                [str(Path(self._prefix) / "vlib"), library_name, str(path)],
+                cwd=Path(self._library_cfg).parent,
                 env=self.get_env(),
             )
             proc.consume_output(callback=None)
@@ -176,8 +179,8 @@ class ActiveHDLInterface(SimulatorInterface):
             return
 
         proc = Process(
-            [str(Path(self._prefix) / "vmap"), library_name, path],
-            cwd=str(Path(self._library_cfg).parent),
+            [str(Path(self._prefix) / "vmap"), library_name, str(path)],
+            cwd=Path(self._library_cfg).parent,
             env=self.get_env(),
         )
         proc.consume_output(callback=None)
@@ -250,9 +253,9 @@ class ActiveHDLInterface(SimulatorInterface):
             vsim_flags.append(config.vhdl_configuration_name)
 
         if config.sim_options.get("enable_coverage", False):
-            coverage_file_path = str(Path(output_path) / "coverage.acdb")
+            coverage_file_path = Path(output_path) / "coverage.acdb"
             self._coverage_files.add(coverage_file_path)
-            vsim_flags += [f"-acdb_file {{{fix_path(coverage_file_path)!s}}}"]
+            vsim_flags += [f"-acdb_file {{{fix_path(coverage_file_path)}}}"]
 
         vsim_flags += [self._vsim_extra_args(config)]
 
@@ -326,8 +329,8 @@ proc vunit_run {} {
 
         merge_command += f" -o {{{fix_path(file_name)!s}}}\n"
 
-        merge_script_name = str(Path(self._output_path) / "acdb_merge.tcl")
-        with Path(merge_script_name).open("w", encoding="utf-8") as fptr:
+        merge_script_name = self.output_path / "acdb_merge.tcl"
+        with merge_script_name.open("w", encoding="utf-8") as fptr:
             fptr.write(merge_command + "\n")
 
         vcover_cmd = [
@@ -468,8 +471,8 @@ proc vunit_help {} {
         tcl = "proc vunit_user_init {} {\n"
         if init_file is not None:
             tcl += f"set vunit_tb_name {config.design_unit_name}\n"
-            tcl += f"set vunit_tb_path {fix_path(str(Path(config.tb_path).resolve()))}\n"
-            tcl += f'source "{fix_path(str(Path(init_file).resolve()))!s}"\n'
+            tcl += f"set vunit_tb_path {fix_path(Path(config.tb_path).resolve())}\n"
+            tcl += f'source "{fix_path(Path(init_file).resolve())}"\n'
         tcl += "    return 0\n"
         tcl += "}\n"
         return tcl
@@ -486,7 +489,7 @@ proc vunit_help {} {
         tcl += "design create -a design .\n"
 
         for library in self._libraries:
-            tcl += f"vmap {library.name!s} {fix_path(library.directory)!s}\n"
+            tcl += f"vmap {library.name!s} {fix_path(library.directory)}\n"
 
         tcl += self._create_user_init_function(config)
         tcl += "if {![vunit_load]} {\n"
@@ -496,12 +499,12 @@ proc vunit_help {} {
 
         return tcl
 
-    def _run_batch_file(self, batch_file_name, gui, cwd):
+    def _run_batch_file(self, batch_file_name: Union[Path, str], gui, cwd):
         """
         Run a test bench in batch by invoking a new vsim process from the command line
         """
 
-        todo = f'@do -tcl ""{fix_path(batch_file_name)!s}""'
+        todo = f'@do -tcl ""{fix_path(batch_file_name)}""'
         if not gui:
             todo = "@onerror {quit -code 1};" + todo
 
@@ -525,7 +528,7 @@ proc vunit_help {} {
         """
         Run a test bench
         """
-        script_path = Path(output_path) / self.name
+        script_path = self.get_script_path(output_path)
         common_file_name = script_path / "common.tcl"
         batch_file_name = script_path / "batch.tcl"
         gui_file_name = script_path / "gui.tcl"
@@ -538,11 +541,11 @@ proc vunit_help {} {
         )
 
         if self._gui:
-            gui_path = str(script_path / "gui")
+            gui_path = script_path / "gui"
             renew_path(gui_path)
             return self._run_batch_file(str(gui_file_name), gui=True, cwd=gui_path)
 
-        return self._run_batch_file(str(batch_file_name), gui=False, cwd=str(Path(self._library_cfg).parent))
+        return self._run_batch_file(str(batch_file_name), gui=False, cwd=Path(self._library_cfg).parent)
 
 
 @total_ordering

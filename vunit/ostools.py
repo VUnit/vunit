@@ -328,16 +328,17 @@ def renew_path(path):
 
     http://stackoverflow.com/questions/27625683/can-anyone-explain-this-weird-behaviour-of-shutil-rmtree-and-shutil-copytree
     """
+    path = Path(path)
     if IS_WINDOWS_SYSTEM:
         retries = 10
-        while retries > 0 and Path(path).exists():
+        while retries > 0 and path.exists():
             shutil.rmtree(path, ignore_errors=retries > 1)
             time.sleep(0.01)
             retries -= 1
     else:
-        if Path(path).exists():
+        if path.exists():
             shutil.rmtree(path)
-    makedirs(path)
+    path.mkdir(parents=True)
 
 
 def simplify_path(path):

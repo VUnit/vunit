@@ -70,7 +70,7 @@ class TestActiveHDLInterface(unittest.TestCase):
                 str(Path("prefix") / "vcom"),
                 "-quiet",
                 "-j",
-                self.output_path,
+                str(self.output_path),
                 f"-{standard}",
                 "-work",
                 "lib",
@@ -116,7 +116,7 @@ class TestActiveHDLInterface(unittest.TestCase):
                 str(Path("prefix") / "vcom"),
                 "-quiet",
                 "-j",
-                self.output_path,
+                str(self.output_path),
                 "custom",
                 "flags",
                 "-2008",
@@ -322,7 +322,7 @@ class TestActiveHDLInterface(unittest.TestCase):
         self.assertFalse(simif.supports_vhdl_package_generics())
 
     def setUp(self):
-        self.output_path = str(Path(__file__).parent / "test_activehdl_out")
+        self.output_path = Path(__file__).parent / "test_activehdl_out"
         renew_path(self.output_path)
         self.project = Project()
         self.cwd = os.getcwd()

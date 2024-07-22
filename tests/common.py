@@ -97,7 +97,7 @@ def create_tempdir(path: Path = None):
     if path.exists():
         shutil.rmtree(path)
 
-    os.makedirs(str(path))
+    path.mkdir(parents=True)
 
     try:
         yield path

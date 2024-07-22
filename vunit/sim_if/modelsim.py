@@ -102,9 +102,9 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         """
         Create the modelsim.ini file
         """
-        parent = str(Path(self._sim_cfg_file_name).parent)
-        if not file_exists(parent):
-            os.makedirs(parent)
+        parent = Path(self._sim_cfg_file_name).parent
+        if not parent.exists():
+            parent.mkdir(parents=True)
 
         original_modelsim_ini = os.environ.get("VUNIT_MODELSIM_INI", str(Path(self._prefix).parent / "modelsim.ini"))
         with Path(original_modelsim_ini).open("rb") as fread:
@@ -202,13 +202,15 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         """
         mapped_libraries = mapped_libraries if mapped_libraries is not None else {}
 
-        apath = str(Path(path).parent.resolve())
+        path = Path(path)
 
-        if not file_exists(apath):
-            os.makedirs(apath)
+        apath = path.parent.resolve()
 
-        if not file_exists(path):
-            proc = Process([str(Path(self._prefix) / "vlib"), "-unix", path], env=self.get_env())
+        if not apath.exists():
+            apath.mkdir(parents=True)
+
+        if not path.exists():
+            proc = Process([str(Path(self._prefix) / "vlib"), "-unix", str(path)], env=self.get_env())
             proc.consume_output(callback=None)
 
         if library_name in mapped_libraries and mapped_libraries[library_name] == path:
@@ -265,7 +267,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         )
 
         vsim_flags = [
-            f"-wlf {{{fix_path(str(Path(output_path) / 'vsim.wlf'))!s}}}",
+            f"-wlf {{{fix_path(Path(output_path) / 'vsim.wlf')}}}",
             "-quiet",
             "-t ps",
             # for correct handling of verilog fatal/finish
@@ -280,7 +282,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         # There is a known bug in modelsim that prevents the -modelsimini flag from accepting
         # a space in the path even with escaping, see issue #36
         if " " not in self._sim_cfg_file_name:
-            vsim_flags.insert(0, f"-modelsimini {fix_path(self._sim_cfg_file_name)!s}")
+            vsim_flags.insert(0, f"-modelsimini {fix_path(self._sim_cfg_file_name)}")
 
         for library in self._libraries:
             vsim_flags += ["-L", library.name]
@@ -383,9 +385,9 @@ proc _vunit_sim_restart {} {
         if args is None:
             args = []
 
-        coverage_files = str(Path(self._output_path) / "coverage_files.txt")
-        vcover_cmd = [str(Path(self._prefix) / "vcover"), "merge", "-inputs"] + [coverage_files] + args + [file_name]
-        with Path(coverage_files).open("w", encoding="utf-8") as fptr:
+        coverage_files = self.output_path / "coverage_files.txt"
+        vcover_cmd = [Path(self._prefix) / "vcover", "merge", "-inputs"] + [coverage_files] + args + [file_name]
+        with coverage_files.open("w", encoding="utf-8") as fptr:
             for coverage_file in self._coverage_files:
                 if file_exists(coverage_file):
                     fptr.write(str(coverage_file) + "\n")
