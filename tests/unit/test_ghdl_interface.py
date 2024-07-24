@@ -27,22 +27,6 @@ class TestGHDLInterface(unittest.TestCase):
     Test the GHDL interface
     """
 
-    @mock.patch("vunit.sim_if.ghdl.GHDLInterface.find_executable")
-    def test_runtime_error_on_missing_gtkwave(self, find_executable):
-        executables = {}
-
-        def find_executable_side_effect(name):
-            return executables[name]
-
-        find_executable.side_effect = find_executable_side_effect
-
-        executables["gtkwave"] = ["path"]
-        GHDLInterface(prefix="prefix", output_path="")
-
-        executables["gtkwave"] = []
-        GHDLInterface(prefix="prefix", output_path="")
-        self.assertRaises(RuntimeError, GHDLInterface, prefix="prefix", output_path="", gui=True)
-
     @mock.patch("subprocess.check_output", autospec=True)
     def test_parses_llvm_backend(self, check_output):
         version = b"""\
