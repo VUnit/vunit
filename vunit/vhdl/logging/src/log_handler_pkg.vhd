@@ -52,23 +52,40 @@ package log_handler_pkg is
 
   constant null_file_name : string := "";
 
+  -- Log time unit is selected such that the value is in the [0, 1000[ range.
+  -- The exception is times >= 1000 sec for which the unit is always sec.
+  constant auto_time_unit : time;
+
+  -- Log time unit native to the simulator
+  constant native_time_unit : time;
+
+  -- Number of decimals for log time corresponds to the full resolution
+  -- provided by the simulator
+  constant full_time_resolution : integer;
+
   -- Set the format to be used by the log handler
   procedure set_format(log_handler : log_handler_t;
                        format : log_format_t;
-                       use_color : boolean := false);
+                       use_color : boolean := false;
+                       log_time_unit : time := native_time_unit;
+                       n_log_time_decimals : integer :=  0);
 
   -- Get the format used by the log handler
   procedure get_format(constant log_handler : in log_handler_t;
                        variable format : out log_format_t;
-                       variable use_color : out boolean);
+                       variable use_color : out boolean;
+                       variable log_time_unit : out time;
+                       variable n_log_time_decimals : out integer);
 
   impure function new_log_handler(file_name : string;
                                   format : log_format_t := verbose;
-                                  use_color : boolean := false) return log_handler_t;
+                                  use_color : boolean := false;
+                                  log_time_unit : time := native_time_unit;
+                                  n_log_time_decimals : integer :=  0) return log_handler_t;
 
-  ---------------------------------------------
-  -- Private parts not intended for public use
-  ---------------------------------------------
+  --------------------------------------------------
+  -- Private subprograms not intended for public use
+  --------------------------------------------------
   impure function get_id_number(log_handler : log_handler_t) return natural;
   procedure update_max_logger_name_length(log_handler : log_handler_t; value : natural);
   impure function get_max_logger_name_length(log_handler : log_handler_t) return natural;
@@ -85,5 +102,8 @@ package log_handler_pkg is
   procedure init_log_handler(log_handler : log_handler_t;
                              format : log_format_t;
                              file_name : string;
-                             use_color : boolean := false);
+                             use_color : boolean := false;
+                             log_time_unit : time := native_time_unit;
+                             n_log_time_decimals : integer :=  0);
+
 end package;
