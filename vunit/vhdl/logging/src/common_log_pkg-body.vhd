@@ -4,8 +4,164 @@
 --
 -- Copyright (c) 2014-2024, Lars Asplund lars.anders.asplund@gmail.com
 
+library ieee;
+use ieee.math_real.all;
+
+use std.textio.all;
+
 package body common_log_pkg is
   constant is_original_pkg : boolean := true;
+
+  function get_resolution_limit_as_log10_of_sec return integer is
+    constant t : string := time'image(time'high);
+    constant signature : character := t(t'length - 1);
+  begin
+    case signature is
+      when 'f' => return -15;
+      when 'p' => return -12;
+      when 'n' => return -9;
+      when 'u' => return -6;
+      when 'm' => return -3;
+      when others =>
+        report "Only resolution limits in the fs to ms range are supported. " &
+        "Only native simulation time formatting is supported" severity warning;
+        return -12;
+    end case;
+  end;
+
+  constant p_resolution_limit_as_log10_of_sec : integer := get_resolution_limit_as_log10_of_sec;
+
+  function p_to_string(
+    value : time;
+    unit : integer := p_native_unit;
+    n_decimals : integer := 0
+  ) return string is
+    -- The typical simulator can handle time ranges wider than the integer range it can handle.
+    -- For example, 9876543210 fs i a valid time but 9876543210 is not a valid integer.
+    -- For that reason we cannot extract the integer part and then use normal arithmetic. Instead, the solution
+    -- is based on manipulating the string representation. This has two implications:
+    -- 1. When limiting the number of decimals, the value is truncated rather than rounded. However, when limiting
+    --    the number of decimals, the exact value is of no interest.
+    -- 2. Only units between fs and sec are supported. These are separated by powers of 10 and conversion
+    -- can be perfomed by moving the radix point. However, this approach of division is exact which a floating point
+    -- division may not be
+
+    constant value_str : string := time'image(value);
+
+    function unit_to_log10_of_sec(position_of_last_digit : positive) return integer is
+    begin
+      if unit = p_auto_unit then
+        return ((position_of_last_digit - 1) / 3) * 3 + p_resolution_limit_as_log10_of_sec;
+      elsif unit = p_native_unit then
+        return p_resolution_limit_as_log10_of_sec;
+      else
+        return unit;
+      end if;
+    end;
+
+    function max(a, b : integer) return integer is
+    begin
+      if a >= b then
+        return a;
+      end if;
+
+      return b;
+    end;
+
+    function min(a, b : integer) return integer is
+    begin
+      if a <= b then
+        return a;
+      end if;
+
+      return b;
+    end;
+
+    variable position_of_last_digit : positive;
+    variable unit_as_log10_of_sec : integer;
+    variable n_decimals_to_use : integer;
+    variable n_decimals_for_full_resolution : integer;
+    variable point_position : integer;
+    variable result : line;
+    variable position_of_last_decimal_to_use : integer;
+    variable position_of_first_decimal_to_use : integer;
+    variable n_added_decimals : natural;
+    variable n_decimals_to_add : integer;
+  begin
+    -- Shortcut for limiting performance impact on default behavior
+    if (unit = p_native_unit) and (n_decimals = 0) then
+      return value_str;
+    end if;
+
+    -- We assume that time is presented with a unit in the fs to ms range (space + 2 characters)
+    position_of_last_digit := value_str'length - 3;
+    unit_as_log10_of_sec := unit_to_log10_of_sec(position_of_last_digit);
+
+    -- Assuming that value_str is given in resolution_limit units
+    n_decimals_for_full_resolution := unit_as_log10_of_sec - p_resolution_limit_as_log10_of_sec;
+
+    -- digits before the point position are the integer part. The digits at the point position and after
+    -- are the decimal part
+    point_position := position_of_last_digit - n_decimals_for_full_resolution + 1;
+
+    if n_decimals = p_full_resolution then
+      n_decimals_to_use := n_decimals_for_full_resolution;
+    else
+      n_decimals_to_use := n_decimals;
+    end if;
+
+    -- Add integer part
+    if point_position > 1 then
+      write(result, value_str(1 to point_position - 1));
+    else
+      write(result, string'("0"));
+    end if;
+
+    -- Add decimal part
+    if (n_decimals_to_use > 0) then
+      write(result, string'("."));
+      n_added_decimals := 0;
+
+      -- Add leading zeros, for example 123 fs = 0.000123 ns
+      if -point_position + 1 > 0 then
+        n_added_decimals := min(n_decimals_to_use, -point_position + 1);
+        write(result, string'((1 to n_added_decimals => '0')));
+      end if;
+
+      -- Add digits from the value input
+      if n_added_decimals < n_decimals_to_use then
+        position_of_first_decimal_to_use := max(point_position, 1);
+  	    position_of_last_decimal_to_use := min(
+  	      position_of_first_decimal_to_use + n_decimals_to_use - n_added_decimals - 1,
+  	      position_of_last_digit
+  	    );
+        n_decimals_to_add := position_of_last_decimal_to_use - position_of_first_decimal_to_use + 1;
+        if n_decimals_to_add > 0 then
+          write(result, value_str(position_of_first_decimal_to_use to position_of_last_decimal_to_use));
+          n_added_decimals := n_added_decimals + n_decimals_to_add;
+        end if;
+      end if;
+
+      -- Add trailing zeros to get total number of decimals, for example 123 fs = 123.00 fs with 2 decimals
+      if n_added_decimals < n_decimals_to_use then
+        write(result, string'((1 to n_decimals_to_use - n_added_decimals => '0')));
+      end if;
+    end if;
+
+    -- Add unit
+    case unit_as_log10_of_sec is
+      when -15 => write(result, string'(" fs"));
+      when -12 => write(result, string'(" ps"));
+      when -9 => write(result, string'(" ns"));
+      when -6 => write(result, string'(" us"));
+      when -3 => write(result, string'(" ms"));
+      when 0 => write(result, string'(" sec"));
+      when others =>
+        report "Time unit not supported: " & integer'image(unit_as_log10_of_sec) severity failure;
+    end case;
+
+    return result.all;
+  end;
 
   procedure write_to_log(
     file log_destination : text;
@@ -19,6 +175,8 @@ package body common_log_pkg is
     log_source_line_number : natural;
     log_sequence_number : natural;
     use_color : boolean;
+    log_time_unit : integer;
+    n_log_time_decimals : integer;
     max_logger_name_length : natural
   ) is
 
@@ -38,7 +196,7 @@ package body common_log_pkg is
     end;
 
     procedure write_time(variable l : inout line; justify : boolean := false) is
-      constant time_string : string := time'image(log_time);
+      constant time_string : string := p_to_string(log_time, log_time_unit, n_log_time_decimals);
     begin
       if justify then
         pad(l, max_time_length - time_string'length);

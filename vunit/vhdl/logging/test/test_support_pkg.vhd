@@ -18,7 +18,6 @@ package test_support_pkg is
   impure function get_display_handler(logger : logger_t) return log_handler_t;
   impure function get_file_handler(logger : logger_t) return log_handler_t;
   procedure check_stop_level(logger : logger_t; pass_level : log_level_t; stop_level : log_level_t);
-  procedure check_format(logger : logger_t; handler : log_handler_t; expected : deprecated_log_format_t);
 end package;
 
 package body test_support_pkg is
@@ -81,32 +80,6 @@ package body test_support_pkg is
     check_and_unmock_core_failure;
     reset_log_count(logger, stop_level);
     reset_log_count(logger, pass_level);
-  end;
-
-  procedure check_format(logger : logger_t; handler : log_handler_t; expected : deprecated_log_format_t) is
-    variable format : log_format_t;
-    variable use_color : boolean;
-  begin
-    get_format(handler, format, use_color);
-
-    if get_file_name(handler) = stdout_file_name then
-      assert_true(use_color);
-    else
-      assert_true(not use_color);
-    end if;
-
-    if expected = off then
-      for level in legal_log_level_t'low to legal_log_level_t'high loop
-        assert_false(is_visible(logger, handler, level),
-                    "Level visible: " & log_level_t'image(level));
-      end loop;
-    else
-      assert_true(format = expected);
-      for level in legal_log_level_t'low to legal_log_level_t'high loop
-        assert_true(is_visible(logger, handler, level),
-                    "Level invisible: " & log_level_t'image(level));
-      end loop;
-    end if;
   end;
 
 end package body;

@@ -37,6 +37,8 @@ package file_pkg is
     log_source_line_number : natural;
     log_sequence_number : natural;
     use_color : boolean;
+    log_time_unit : integer;
+    n_log_time_decimals : integer;
     max_logger_name_length : integer);
 
 end package;
@@ -235,6 +237,8 @@ package body file_pkg is
     log_source_line_number : natural;
     log_sequence_number : natural;
     use_color : boolean;
+    log_time_unit : integer;
+    n_log_time_decimals : integer;
     max_logger_name_length : integer) is
 
     constant id : natural := get(file_id.p_data, id_idx);
@@ -257,6 +261,8 @@ package body file_pkg is
           log_source_line_number => log_source_line_number,
           log_sequence_number => log_sequence_number,
           use_color => use_color,
+          log_time_unit => log_time_unit,
+          n_log_time_decimals => n_log_time_decimals,
           max_logger_name_length => max_logger_name_length
           );
       else
@@ -272,6 +278,8 @@ package body file_pkg is
           log_source_line_number => log_source_line_number,
           log_sequence_number => log_sequence_number,
           use_color => use_color,
+          log_time_unit => log_time_unit,
+          n_log_time_decimals => n_log_time_decimals,
           max_logger_name_length => max_logger_name_length
         );
       end if;
