@@ -134,15 +134,19 @@ TB_AXI_STREAM = LIB.test_bench("tb_axi_stream")
 for id_length in [0, 8]:
     for dest_length in [0, 8]:
         for user_length in [0, 8]:
-            for test in TB_AXI_STREAM.get_tests("*check"):
-                test.add_config(
-                    name="id_l=%d dest_l=%d user_l=%d" % (id_length, dest_length, user_length),
-                    generics=dict(
-                        g_id_length=id_length,
-                        g_dest_length=dest_length,
-                        g_user_length=user_length,
-                    ),
-                )
+            for data_length in [8, 16]:
+                for test in TB_AXI_STREAM.get_tests("*check"):
+                    test.add_config(
+                        name=f"id_l={id_length} dest_l={dest_length} user_l={user_length} data_l={data_length}",
+                        generics=dict(
+                            g_data_length=data_length,
+                            g_id_length=id_length,
+                            g_dest_length=dest_length,
+                            g_user_length=user_length,
+                        ),
+                    )
+
+TB_AXI_STREAM.test("test passing with no tkeep").set_generic("g_data_length", 16)
 
 TB_AXI_STREAM_PROTOCOL_CHECKER = LIB.test_bench("tb_axi_stream_protocol_checker")
 
