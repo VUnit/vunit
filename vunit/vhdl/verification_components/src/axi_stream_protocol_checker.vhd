@@ -30,8 +30,8 @@ entity axi_stream_protocol_checker is
     tready   : in std_logic := '1';
     tdata    : in std_logic_vector(data_length(protocol_checker) - 1 downto 0);
     tlast    : in std_logic                                                    := '1';
-    tkeep    : in std_logic_vector(data_length(protocol_checker)/8-1 downto 0) := (others => '0');
-    tstrb    : in std_logic_vector(data_length(protocol_checker)/8-1 downto 0) := (others => '0');
+    tkeep    : in std_logic_vector(data_length(protocol_checker)/8-1 downto 0) := (others => '1');
+    tstrb    : in std_logic_vector(data_length(protocol_checker)/8-1 downto 0) := (others => 'U');
     tid      : in std_logic_vector(id_length(protocol_checker)-1 downto 0)     := (others => '0');
     tdest    : in std_logic_vector(dest_length(protocol_checker)-1 downto 0)   := (others => '0');
     tuser    : in std_logic_vector(user_length(protocol_checker)-1 downto 0)   := (others => '0')
@@ -77,6 +77,7 @@ architecture a of axi_stream_protocol_checker is
   signal not_tvalid  : std_logic;
 
   signal tdata_normalized : std_logic_vector(tdata'range);
+  signal tstrb_resolved : std_logic_vector(tstrb'range);
 
   function normalize_tdata(data, strb, keep : std_logic_vector) return std_logic_vector is
     variable ret : std_logic_vector(data'range);
@@ -90,6 +91,7 @@ architecture a of axi_stream_protocol_checker is
     return ret;
   end function;
 begin
+  tstrb_resolved <= tstrb when tstrb /= (tstrb'range => 'U') else tkeep;
   handshake_is_not_x <= '1' when not is_x(tvalid) and not is_x(tready) else '0';
 
   -- AXI4STREAM_ERRM_TDATA_STABLE TDATA remains stable when TVALID is asserted,
@@ -132,7 +134,7 @@ begin
 
   -- AXI4STREAM_ERRM_TDATA_X A value of X on TDATA is not permitted when TVALID
   -- is HIGH
-  tdata_normalized <= normalize_tdata(tdata, tstrb, tkeep) when protocol_checker.p_allow_x_in_non_data_bytes else tdata;
+  tdata_normalized <= normalize_tdata(tdata, tstrb_resolved, tkeep) when protocol_checker.p_allow_x_in_non_data_bytes else tdata;
   check_not_unknown(rule5_checker, aclk, tvalid, tdata_normalized, result("for tdata when tvalid is high"));
 
   -- AXI4STREAM_ERRM_TLAST_X A value of X on TLAST is not permitted when TVALID
@@ -224,9 +226,9 @@ begin
 
   -- AXI4STREAM_ERRM_TSTRB_STABLE TSTRB remains stable when TVALID is asserted,
   -- and TREADY is LOW
-  enable_rule14_check <= '1' when (handshake_is_not_x = '1') and not is_x(tstrb) else '0';
+  enable_rule14_check <= '1' when (handshake_is_not_x = '1') and not is_x(tstrb_resolved) else '0';
   check_stable(
-    rule14_checker, aclk, enable_rule14_check, tvalid, tready, tstrb,
+    rule14_checker, aclk, enable_rule14_check, tvalid, tready, tstrb_resolved,
     result("for tstrb while waiting for tready"));
 
   -- AXI4STREAM_ERRM_TKEEP_STABLE TKEEP remains stable when TVALID is asserted,
@@ -246,7 +248,7 @@ begin
 
   -- AXI4STREAM_ERRM_TSTRB_X A value of X on TSTRB is not permitted when TVALID
   -- is HIGH
-  check_not_unknown(rule18_checker, aclk, tvalid, tstrb, result("for tstrb when tvalid is high"));
+  check_not_unknown(rule18_checker, aclk, tvalid, tstrb_resolved, result("for tstrb when tvalid is high"));
 
   -- AXI4STREAM_ERRM_TKEEP_X A value of X on TKEEP is not permitted when TVALID
   -- is HIGH
@@ -254,7 +256,7 @@ begin
 
   -- AXI4STREAM_ERRM_TKEEP_TSTRB If TKEEP is de-asserted, then TSTRB must also be de-asserted
   -- eschmidscs: Binding this to tvalid. ARM does not include that, but makes more sense this way?
-  rule20_check_value <= not(or(((not tkeep) and tstrb)));
+  rule20_check_value <= not(or(((not tkeep) and tstrb_resolved)));
   check_true(rule20_checker, aclk, tvalid, rule20_check_value, result("for tstrb de-asserted when tkeep de-asserted"));
 
   -- AXI4STREAM_AUXM_TID_TDTEST_WIDTH  The value of ID_WIDTH + DEST_WIDTH must not exceed 24

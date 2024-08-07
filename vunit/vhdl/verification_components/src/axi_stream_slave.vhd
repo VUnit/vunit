@@ -34,8 +34,8 @@ entity axi_stream_slave is
     tready   : out std_logic := '0';
     tdata    : in std_logic_vector(data_length(slave)-1 downto 0);
     tlast    : in std_logic                                         := '1';
-    tkeep    : in std_logic_vector(data_length(slave)/8-1 downto 0) := (others => '0');
-    tstrb    : in std_logic_vector(data_length(slave)/8-1 downto 0) := (others => '0');
+    tkeep    : in std_logic_vector(data_length(slave)/8-1 downto 0) := (others => '1');
+    tstrb    : in std_logic_vector(data_length(slave)/8-1 downto 0) := (others => 'U');
     tid      : in std_logic_vector(id_length(slave)-1 downto 0)     := (others => '0');
     tdest    : in std_logic_vector(dest_length(slave)-1 downto 0)   := (others => '0');
     tuser    : in std_logic_vector(user_length(slave)-1 downto 0)   := (others => '0')
@@ -97,6 +97,7 @@ begin
       tuser(tuser'range)
     );
     variable rnd : RandomPType;
+    variable tstrb_resolved : std_logic_vector(tstrb'range);
   begin
     rnd.InitSeed(rnd'instance_name);
     loop
@@ -123,12 +124,13 @@ begin
           wait until (tvalid and tready) = '1' and rising_edge(aclk);
           tready <= '0';
 
+          tstrb_resolved := tstrb when tstrb /= (tstrb'range => 'U') else tkeep;
           if msg_type = stream_pop_msg or msg_type = pop_axi_stream_msg then
             axi_stream_transaction := (
               tdata => tdata,
               tlast => tlast = '1',
               tkeep => tkeep,
-              tstrb => tstrb,
+              tstrb => tstrb_resolved,
               tid   => tid,
               tdest => tdest,
               tuser => tuser
@@ -140,7 +142,7 @@ begin
             report_msg := new_string_ptr(pop_string(msg));
             check_field(tdata, pop_std_ulogic_vector(msg), "TDATA mismatch, " & to_string(report_msg));
             check_field(tkeep, pop_std_ulogic_vector(msg), "TKEEP mismatch, " & to_string(report_msg));
-            check_field(tstrb, pop_std_ulogic_vector(msg), "TSTRB mismatch, " & to_string(report_msg));
+            check_field(tstrb_resolved, pop_std_ulogic_vector(msg), "TSTRB mismatch, " & to_string(report_msg));
             check_equal(tlast, pop_std_ulogic(msg), "TLAST mismatch, " & to_string(report_msg));
             check_field(tid, pop_std_ulogic_vector(msg), "TID mismatch, " & to_string(report_msg));
             check_field(tdest, pop_std_ulogic_vector(msg), "TDEST mismatch, " & to_string(report_msg));
@@ -170,7 +172,7 @@ begin
         tdata  => tdata,
         tlast  => tlast,
         tkeep  => tkeep,
-        tstrb  => tstrb,
+        tstrb  => tstrb, -- Resolves unconnected signal internally
         tid    => tid,
         tdest  => tdest,
         tuser  => tuser
@@ -189,7 +191,7 @@ begin
         tdata    => tdata,
         tlast    => tlast,
         tkeep    => tkeep,
-        tstrb    => tstrb,
+        tstrb    => tstrb, -- Resolves unconnected signal internally
         tid      => tid,
         tdest    => tdest,
         tuser    => tuser
