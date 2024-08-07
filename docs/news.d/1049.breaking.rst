@@ -1,0 +1,6 @@
+Changed default values for unconnected tkeep and tstrb inputs for AXI stream VCs to match the standard:
+
+- tkeep changed from all zeros to all ones
+- tstrb changed from all zeros to value of tkeep
+
+May affect existing code if these values are verified by the testbench despite being unconnected.
