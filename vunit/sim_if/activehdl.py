@@ -61,6 +61,13 @@ class ActiveHDLInterface(SimulatorInterface):
         return True
 
     @classmethod
+    def supported_foreign_language_interfaces(cls):
+        """
+        Returns set of supported foreign interfaces
+        """
+        return set(["VHPI"])
+
+    @classmethod
     def supports_vhdl_package_generics(cls):
         """
         Returns True when this simulator supports VHDL package generics

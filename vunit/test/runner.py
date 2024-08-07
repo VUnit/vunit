@@ -39,6 +39,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         self,
         report,
         output_path,
+        run_script_path,
         verbosity=VERBOSITY_NORMAL,
         num_threads=1,
         fail_fast=False,
@@ -51,6 +52,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         self._local = threading.local()
         self._report = report
         self._output_path = output_path
+        self._run_script_path = run_script_path
         assert verbosity in (
             self.VERBOSITY_QUIET,
             self.VERBOSITY_NORMAL,
@@ -244,7 +246,9 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
                 output_file.seek(prev)
                 return contents
 
-            results = test_suite.run(output_path=output_path, read_output=read_output)
+            results = test_suite.run(
+                output_path=output_path, read_output=read_output, run_script_path=self._run_script_path
+            )
         except KeyboardInterrupt as exk:
             self._add_skipped_tests(test_suite, results, start_time, num_tests, output_file_name)
             raise KeyboardInterrupt from exk
