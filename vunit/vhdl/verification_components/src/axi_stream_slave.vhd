@@ -51,7 +51,6 @@ architecture a of axi_stream_slave is
   signal bus_process_done           : event_t    := new_event(bus_process_done_id);
 
 begin
-
   main : process
     variable request_msg    : msg_t;
     variable notify_msg     : msg_t;
@@ -97,6 +96,8 @@ begin
       tuser(tuser'range)
     );
     variable rnd : RandomPType;
+    variable expected_tdata : std_logic_vector(tdata'range);
+    variable mismatch : boolean;
     variable tstrb_resolved : std_logic_vector(tstrb'range);
   begin
     rnd.InitSeed(rnd'instance_name);
@@ -140,7 +141,19 @@ begin
             reply(net, msg, reply_msg);
           elsif msg_type = check_axi_stream_msg then
             report_msg := new_string_ptr(pop_string(msg));
-            check_field(tdata, pop_std_ulogic_vector(msg), "TDATA mismatch, " & to_string(report_msg));
+
+            expected_tdata := pop_std_ulogic_vector(msg);
+            mismatch := false;
+            for idx in tkeep'range loop
+              if tkeep(idx) and tstrb_resolved(idx) then
+                mismatch := tdata(8 * idx + 7 downto 8 * idx) /= expected_tdata(8 * idx + 7 downto 8 * idx);
+                exit when mismatch;
+              end if;
+            end loop;
+            if mismatch then
+                check_field(tdata, expected_tdata, "TDATA mismatch, " & to_string(report_msg));
+            end if;
+
             check_field(tkeep, pop_std_ulogic_vector(msg), "TKEEP mismatch, " & to_string(report_msg));
             check_field(tstrb_resolved, pop_std_ulogic_vector(msg), "TSTRB mismatch, " & to_string(report_msg));
             check_equal(tlast, pop_std_ulogic(msg), "TLAST mismatch, " & to_string(report_msg));

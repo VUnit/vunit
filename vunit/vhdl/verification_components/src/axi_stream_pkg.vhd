@@ -12,7 +12,7 @@ use work.checker_pkg.all;
 use work.check_pkg.all;
 use work.stream_master_pkg.stream_master_t;
 use work.stream_slave_pkg.stream_slave_t;
-use work.sync_pkg.sync_handle_t;
+use work.sync_pkg.all;
 use work.com_pkg.all;
 use work.com_types_pkg.all;
 
@@ -736,35 +736,17 @@ package body axi_stream_pkg is
     variable got_tuser : std_logic_vector(user_length(axi_stream)-1 downto 0);
     variable check_msg : msg_t := new_msg(check_axi_stream_msg);
   begin
+    push_string(check_msg, msg);
+    push_std_ulogic_vector(check_msg, expected);
+    push_std_ulogic_vector(check_msg, tkeep);
+    push_std_ulogic_vector(check_msg, tstrb);
+    push_std_ulogic(check_msg, tlast);
+    push_std_ulogic_vector(check_msg, tid);
+    push_std_ulogic_vector(check_msg, tdest);
+    push_std_ulogic_vector(check_msg, tuser);
+    send(net, axi_stream.p_actor, check_msg);
     if blocking then
-      pop_axi_stream(net, axi_stream, got_tdata, got_tlast, got_tkeep, got_tstrb, got_tid, got_tdest, got_tuser);
-      check_equal(got_tdata, expected, "TDATA mismatch, " & msg);
-      check_equal(got_tlast, tlast, "TLAST mismatch, " & msg);
-      if tkeep'length > 0 then
-        check_equal(got_tkeep, tkeep, "TKEEP mismatch, " & msg);
-      end if;
-      if tstrb'length > 0 then
-        check_equal(got_tstrb, tstrb, "TSTRB mismatch, " & msg);
-      end if;
-      if tid'length > 0 then
-        check_equal(got_tid, tid, "TID mismatch, " & msg);
-      end if;
-      if tdest'length > 0 then
-        check_equal(got_tdest, tdest, "TDEST mismatch, " & msg);
-      end if;
-      if tuser'length > 0 then
-        check_equal(got_tuser, tuser, "TUSER mismatch, " & msg);
-      end if;
-    else
-      push_string(check_msg, msg);
-      push_std_ulogic_vector(check_msg, expected);
-      push_std_ulogic_vector(check_msg, tkeep);
-      push_std_ulogic_vector(check_msg, tstrb);
-      push_std_ulogic(check_msg, tlast);
-      push_std_ulogic_vector(check_msg, tid);
-      push_std_ulogic_vector(check_msg, tdest);
-      push_std_ulogic_vector(check_msg, tuser);
-      send(net, axi_stream.p_actor, check_msg);
+      wait_until_idle(net, as_sync(axi_stream));
     end if;
   end procedure;
 
