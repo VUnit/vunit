@@ -1,0 +1,16 @@
+
+Breaking Changes
+~~~~~~~~~~~~~~~~
+
+- Changed default values for unconnected tkeep and tstrb inputs for AXI stream VCs to match the standard:
+
+  - tkeep changed from all zeros to all ones
+  - tstrb changed from all zeros to value of tkeep
+
+  May affect existing code if these values are verified by the testbench despite being unconnected. (:vunit_issue:`1049`)
+
+
+Bug Fixes
+~~~~~~~~~
+
+- Changed AXI stream slave to only verify tdata if both of tkeep and tstrb are set. Removed potential race condition an AXI stream master. (:vunit_issue:`1049`)
