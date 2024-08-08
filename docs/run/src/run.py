@@ -9,6 +9,7 @@
 from pathlib import Path
 from vunit import VUnit, VUnitCLI
 from io import StringIO
+from multiprocessing import cpu_count
 import sys
 import re
 from tools.doc_support import highlight_code, highlight_log, LogRegistry
@@ -194,8 +195,8 @@ for test_pattern in test_patterns:
             test_case_names = list(test_case_names)
             test_case_names.sort()
             name = "_".join(test_case_names)
-            if args.num_threads > 1:
-                options += f" -p{args.num_threads}"
+            if args.num_threads != 1:
+                options += f" -p{args.num_threads or cpu_count()}"
             if len(test_case_names) == 1:
                 (root / f"{name}_stdout.txt").write_text(f"> python run.py{options}\n" + std_out)
             else:

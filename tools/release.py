@@ -9,6 +9,8 @@
 """
 Create and validates new tagged release commits
 The release process is described in the Contributing section of the web page
+Note that the releases are tagged using Semantic Versioning which differs from
+Python module versioning when creating pre-releases.
 """
 
 import argparse
@@ -27,22 +29,62 @@ def main():
     args = parse_args()
 
     if args.cmd == "create":
-        version = args.version[0]
-        major, minor, patch = parse_version(version)
-
-        print(f"Attempting to create new release {version!s}")
-        set_version(version)
-        validate_new_release(version, pre_tag=True)
-        make_release_commit(version)
-
-        new_version = f"{major:d}.{minor:d}.{patch + 1:d}-dev"
-        set_version(new_version)
-        make_next_pre_release_commit(new_version)
+        major, minor, patch, development = parse_version(args.version[0])
+        create_release(major, minor, patch, development)
 
     elif args.cmd == "validate":
         version = get_local_version()
-        validate_new_release(version, pre_tag=False)
-        print(f"Release {version!s} is validated for publishing")
+        major, minor, patch, development = parse_version(version)
+        validate_new_release(major, minor, patch, development, pre_tag=False)
+        print(f"Release {version} is validated for publishing")
+
+    elif args.cmd == "development":
+        major, minor, patch, development = parse_version(get_local_version())
+        create_release(major, minor, patch, development)
+
+
+def to_python_version(major, minor, patch, development):
+    """
+    Create Python version string.
+    """
+
+    version = f"{major}.{minor}.{patch}"
+    if development:
+        version += f".dev{development}"
+
+    return version
+
+
+def to_semver_version(major, minor, patch, development):
+    """
+    Create SemVer version string.
+    """
+
+    version = f"{major}.{minor}.{patch}"
+    if development:
+        version += f"-dev.{development}"
+
+    return version
+
+
+def create_release(major, minor, patch, development):
+    """
+    Create release.
+    """
+
+    version = to_python_version(major, minor, patch, development)
+
+    print(f"Attempting to create new release {version}")
+    set_version(version)
+    validate_new_release(major, minor, patch, development, pre_tag=True)
+    make_release_commit(major, minor, patch, development)
+
+    if development:
+        new_version = to_python_version(major, minor, patch, development + 1)
+    else:
+        new_version = to_python_version(major, minor, patch + 1, 1)
+    set_version(new_version)
+    make_next_pre_release_commit(new_version)
 
 
 def parse_args():
@@ -60,17 +102,27 @@ def parse_args():
     validate = subparsers.add_parser("validate")
     validate.set_defaults(cmd="validate")
 
+    development = subparsers.add_parser("development")
+    development.set_defaults(cmd="development")
+
     return parser.parse_args()
 
 
-def make_release_commit(version):
+def make_release_commit(major, minor, patch, development):
     """
-    Add release notes and make the release commit
+    Add release notes and make the release commit.
+
+    Tags are named according to Semantic Versioning which means that
+    a development version X.Y.Z.devN is tagged vX.Y.Z-dev.N
     """
-    run(["git", "add", str(release_note_file_name(version))])
+    python_version = to_python_version(major, minor, patch, development)
+
+    run(["git", "add", str(release_note_file_name(python_version))])
     run(["git", "add", str(ABOUT_PY)])
-    run(["git", "commit", "-m", f"Release {version!s}"])
-    run(["git", "tag", f"v{version!s}", "-a", "-m", f"release {version!s}"])
+    run(["git", "commit", "-m", f"Release {python_version}"])
+
+    semver_version = to_semver_version(major, minor, patch, development)
+    run(["git", "tag", f"v{semver_version}", "-a", "-m", f"Release {python_version}"])
 
 
 def make_next_pre_release_commit(version):
@@ -81,42 +133,54 @@ def make_next_pre_release_commit(version):
     run(["git", "commit", "-m", f"Start of next release candidate {version!s}"])
 
 
-def validate_new_release(version, pre_tag):
+def validate_new_release(major, minor, patch, development, pre_tag):
     """
     Check that a new release is valid or exit
     """
+    python_version = to_python_version(major, minor, patch, development)
+    semver_version = to_semver_version(major, minor, patch, development)
 
-    release_note = release_note_file_name(version)
+    release_note = release_note_file_name(python_version)
     if not release_note.exists():
-        print(f"Not releasing version {version!s} since release note {release_note!s} does not exist")
+        print(f"Not releasing version {python_version} since release note {release_note} does not exist")
         sys.exit(1)
 
     with release_note.open("r") as fptr:
         if not fptr.read():
-            print(f"Not releasing version {version!s} since release note {release_note!s} is empty")
+            print(f"Not releasing version {python_version} since release note {release_note} is empty")
             sys.exit(1)
 
-    if pre_tag and check_tag(version):
-        print(f"Not creating new release {version!s} since tag v{version!s} already exist")
+    if pre_tag and check_tag(semver_version):
+        print(f"Not creating new release {python_version} since tag v{semver_version} already exist")
         sys.exit(1)
 
-    if not pre_tag and not check_tag(version):
-        print(f"Not releasing version {version!s} since tag v{version!s} does not exist")
+    if not pre_tag and not check_tag(semver_version):
+        print(f"Not releasing version {python_version} since tag v{semver_version} does not exist")
         sys.exit(1)
 
     with urlopen("https://pypi.python.org/pypi/vunit_hdl/json") as fptr:
         info = json.load(fptr)
 
-    if version in info["releases"].keys():
-        print(f"Version {version!s} has already been released")
+    if python_version in info["releases"].keys():
+        print(f"Version {python_version} has already been released")
         sys.exit(1)
 
 
 def parse_version(version_str):
     """
-    Create a 3-element tuple with the major,minor,patch version
+    Create a 4-element tuple with the major,minor,patch, development version
     """
-    return tuple((int(elem) for elem in version_str.split(".")))
+    elements = version_str.split(".")
+    version = [int(elem) for elem in elements[0:3]]
+    if len(elements) == 4:
+        assert elements[3].startswith("dev")
+        development_version = int(elements[3][3:])
+        assert development_version > 0
+        version += [development_version]
+    else:
+        version += [None]
+
+    return tuple(version)
 
 
 def set_version(version):

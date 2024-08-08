@@ -9,7 +9,6 @@ Contains classes to represent a test bench and test cases
 """
 
 import logging
-from pathlib import Path
 import re
 import bisect
 import collections
@@ -32,8 +31,7 @@ class TestBench(ConfigurationVisitor):
     """
 
     def __init__(self, design_unit, database=None):
-        ConfigurationVisitor.__init__(self)
-        self.design_unit = design_unit
+        ConfigurationVisitor.__init__(self, design_unit)
         self._database = database
 
         self._individual_tests = False
@@ -75,24 +73,6 @@ class TestBench(ConfigurationVisitor):
         if self._individual_tests:
             raise RuntimeError(f"Test bench {self.library_name!s}.{self.name!s} has individually configured tests")
         return self._configs[DEFAULT_NAME]
-
-    @staticmethod
-    def _check_architectures(design_unit):
-        """
-        Check that an entity which has been classified as a VUnit test bench
-        has exactly one architecture. Raise RuntimeError otherwise.
-        """
-        if design_unit.is_entity:
-            if not design_unit.architecture_names:
-                raise RuntimeError(f"Test bench '{design_unit.name!s}' has no architecture.")
-
-            if len(design_unit.architecture_names) > 1:
-                archs = ", ".join(
-                    f"{name!s}:{Path(fname).name!s}" for name, fname in sorted(design_unit.architecture_names.items())
-                )
-                raise RuntimeError(
-                    "Test bench not allowed to have multiple architectures. " f"Entity {design_unit.name!s} has {archs}"
-                )
 
     def create_tests(self, simulator_if, elaborate_only, test_list=None):
         """
@@ -332,10 +312,9 @@ class TestConfigurationVisitor(ConfigurationVisitor):
     """
 
     def __init__(self, test, design_unit, enable_configuration, default_config):
-        ConfigurationVisitor.__init__(self)
+        ConfigurationVisitor.__init__(self, design_unit)
         self._test = test
         assert test.is_explicit
-        self.design_unit = design_unit
         self._enable_configuration = enable_configuration
         self._configs = OrderedDict({default_config.name: default_config})
 

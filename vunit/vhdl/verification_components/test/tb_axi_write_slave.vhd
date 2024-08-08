@@ -353,6 +353,14 @@ begin
       buf := allocate(memory, length(data), permissions => no_access);
       transfer(x"2", buf, log_size, data);
 
+    elsif run("Test unaligned write around 4kbyte boundary") then
+      -- Do one beat write at unaligned address starting around 4kB boundary
+      log_size := log_data_size;
+      buf := allocate(memory, 4096 - 2**log_size + 1, permissions => no_access);
+      random_integer_vector_ptr(rnd, data, 2**log_size , 0, 255);
+      buf := allocate(memory, length(data), permissions => no_access); -- Unaligned address
+      transfer(x"2", buf, log_size, data);
+
     elsif run("Test error on missing tlast fixed") then
       mock(axi_slave_logger, failure);
 

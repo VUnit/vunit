@@ -1,1 +1,0 @@
-[VHDL] Remove ``array_pkg``; use ``integer_array_t`` instead.

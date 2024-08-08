@@ -18,6 +18,44 @@ from vunit.color_printer import COLOR_PRINTER
 from vunit.ostools import read_file
 
 
+def get_parsed_time(time_in, max_time=0):
+    """
+    Return string representation of input value
+    in hours, minutes and seconds.
+    Inputs:
+      time_in  : Time to convert to string
+      max_time : Longest test time among tests. Optional parameter
+    """
+    time_str = ""
+
+    (minutes, seconds) = divmod(time_in, 60)
+    (hours, minutes) = divmod(minutes, 60)
+
+    if max(time_in, max_time) >= 3600:
+        # If the longest test took 10 hours or more, pad the string to take this
+        # into account.
+        padding = len(f"{int(max_time // 3600)} h ")
+        if hours > 0:
+            time_str += f"{int(hours)} h ".rjust(padding)
+        else:
+            time_str += " " * padding
+    if max(time_in, max_time) >= 60:
+        # If the longest test took an hour (or more), or the longest test took
+        # 10 minutes or more, pad the string to take this into account.
+        padding = 7 if (max_time / 60 >= 10) else 6
+        if minutes > 0:
+            time_str += f"{int(minutes)} min ".rjust(padding)
+        else:
+            time_str += " " * padding
+
+    # If the longest test took a minute (or more), or the longest test
+    # took 10 seconds or more, pad the string to take this into account.
+    padding = 6 if (max_time >= 10) else 5
+    time_str += f"{seconds:2.1f} s".rjust(padding)
+
+    return time_str
+
+
 class TestReport(object):
     """
     Collect reports from running testcases
@@ -91,7 +129,7 @@ class TestReport(object):
         args.append(f"F={len(failed):d}")
         args.append(f"T={total_tests:d}")
 
-        self._printer.write(f" ({' '.join(args)!s}) {result.name!s} ({result.time:.1f} seconds)\n")
+        self._printer.write(f" ({' '.join(args)!s}) {result.name!s} ({get_parsed_time(result.time)})\n")
 
     def all_ok(self):
         """
@@ -120,9 +158,10 @@ class TestReport(object):
 
         prefix = "==== Summary "
         max_len = max(len(test.name) for test in all_tests)
+        max_time = max(test.time for test in all_tests)
         self._printer.write(f"{prefix!s}{'=' * (max(max_len - len(prefix) + 25, 0))}\n")
         for test_result in all_tests:
-            test_result.print_status(self._printer, padding=max_len)
+            test_result.print_status(self._printer, padding=max_len, max_time=max_time)
 
         self._printer.write(("=" * (max(max_len + 25, 0))) + "\n")
         n_failed = len(failures)
@@ -143,8 +182,8 @@ class TestReport(object):
         self._printer.write(("=" * (max(max_len + 25, 0))) + "\n")
 
         total_time = sum((result.time for result in self._test_results.values()))
-        self._printer.write(f"Total time was {total_time:.1f} seconds\n")
-        self._printer.write(f"Elapsed time was {self._real_total_time:.1f} seconds\n")
+        self._printer.write(f"Total time was {get_parsed_time(total_time)}\n")
+        self._printer.write(f"Elapsed time was {get_parsed_time(self._real_total_time)}\n")
 
         self._printer.write(("=" * (max(max_len + 25, 0))) + "\n")
 
@@ -263,7 +302,7 @@ class TestResult(object):
     def failed(self):
         return self._status == FAILED
 
-    def print_status(self, printer, padding=0):
+    def print_status(self, printer, padding=0, max_time=0):
         """
         Print the status and runtime of this test result
         """
@@ -279,7 +318,7 @@ class TestResult(object):
 
         my_padding = max(padding - len(self.name), 0)
 
-        printer.write(f"{self.name + (' ' * my_padding)} ({self.time:.1f} seconds)\n")
+        printer.write(f"{self.name + (' ' * my_padding)} ({get_parsed_time(self.time, max_time)})\n")
 
     def to_xml(self, xunit_xml_format):
         """

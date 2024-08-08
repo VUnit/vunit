@@ -1,2 +1,0 @@
-[NVC] New simulation and compile option ``nvc.global_flags`` can be used
-to pass arbitrary flags to ``nvc``.

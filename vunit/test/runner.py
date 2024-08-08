@@ -9,6 +9,7 @@ Provided functionality to run a suite of test in a robust way
 """
 
 import os
+from multiprocessing import cpu_count
 from pathlib import Path
 import traceback
 import threading
@@ -16,6 +17,7 @@ import sys
 import time
 import logging
 import string
+from datetime import datetime
 from contextlib import contextmanager
 from .. import ostools
 from ..hashing import hash_string
@@ -55,7 +57,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
             self.VERBOSITY_VERBOSE,
         )
         self._verbosity = verbosity
-        self._num_threads = num_threads
+        self._num_threads = num_threads or cpu_count()
         self._stdout = sys.stdout
         self._stdout_ansi = wrap(self._stdout, use_color=not no_color)
         self._stderr = sys.stderr
@@ -149,7 +151,8 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
 
                 with self._stdout_lock():
                     for test_name in test_suite.test_names:
-                        print(f"Starting {test_name!s}")
+                        now = datetime.now().strftime("%H:%M:%S")
+                        print(f"({now}) Starting {test_name!s}")
                     print(f"Output file: {output_file_name!s}")
 
                 self._run_test_suite(test_suite, write_stdout, num_tests, output_path, output_file_name)

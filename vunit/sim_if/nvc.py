@@ -8,6 +8,7 @@
 Interface for NVC simulator
 """
 
+from multiprocessing import cpu_count
 from pathlib import Path
 from os import environ, makedirs, remove
 import logging
@@ -57,6 +58,7 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
             output_path=output_path,
             prefix=prefix,
             gui=args.gui,
+            num_threads=args.num_threads,
         )
 
     @classmethod
@@ -70,6 +72,7 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         self,
         output_path,
         prefix,
+        num_threads,
         gui=False,
         gtkwave_args="",
     ):
@@ -90,6 +93,10 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
 
         if self.use_color:
             environ["NVC_COLORS"] = "always"
+
+        # Allow NVC to scale its worker thread count based on the number
+        # of VUnit threads and the number of available CPUs.
+        environ["NVC_CONCURRENT_JOBS"] = str(num_threads or cpu_count())
 
     def has_valid_exit_code(self):  # pylint: disable=arguments-differ
         """

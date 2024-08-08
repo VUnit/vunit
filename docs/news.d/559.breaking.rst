@@ -1,4 +1,0 @@
-HDL builtins are not compiled by default.
-To preserve the functionality, the run script is now required to explicitly use methods
-:meth:`add_vhdl_builtins() <vunit.ui.VUnit.add_vhdl_builtins>` or
-:meth:`add_verilog_builtins() <vunit.ui.VUnit.add_verilog_builtins>`.
