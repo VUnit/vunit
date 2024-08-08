@@ -65,7 +65,7 @@ package log_handler_pkg is
 
   -- Set the format to be used by the log handler
   procedure set_format(log_handler : log_handler_t;
-                       format : log_format_t;
+                       format : log_format_t := verbose;
                        use_color : boolean := false;
                        log_time_unit : time := native_time_unit;
                        n_log_time_decimals : integer :=  0);
@@ -76,6 +76,10 @@ package log_handler_pkg is
                        variable use_color : out boolean;
                        variable log_time_unit : out time;
                        variable n_log_time_decimals : out integer);
+
+  procedure get_format(constant log_handler : in log_handler_t;
+                       variable format : out log_format_t;
+                       variable use_color : out boolean);
 
   impure function new_log_handler(file_name : string;
                                   format : log_format_t := verbose;

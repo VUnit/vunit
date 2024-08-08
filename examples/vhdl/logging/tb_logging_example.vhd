@@ -54,7 +54,29 @@ begin
     debug(my_logger, "This is no longer shown on stdout");
     debug(get_parent(my_logger), "This is still shown on stdout");
 
-    -- The log format can be changed
+    -- The simulation time format can be changed
+    wait for 1500 ns;
+    info("Default time format using the simulator's native resolution as unit");
+    set_format(display_handler, use_color => true, log_time_unit => ns);
+    info("Changing to ns");
+    set_format(
+      display_handler, use_color => true, log_time_unit => ns, n_log_time_decimals => full_time_resolution
+    );
+    info("With decimals to cover the full simulator resolution");
+    set_format(
+      display_handler, use_color => true, log_time_unit => auto_time_unit, n_log_time_decimals => full_time_resolution
+    );
+    info("The unit can be automatically adjusted to keep the numerical value in the [0, 1000) range");
+    set_format(
+      display_handler, use_color => true, log_time_unit => auto_time_unit, n_log_time_decimals => 2
+    );
+    info("The number of decimals can be a fix value");
+    set_format(
+      display_handler, use_color => true, log_time_unit => native_time_unit, n_log_time_decimals => 0
+    );
+    info("Back to the native format");
+
+    -- The overall log format can also be changed
     set_format(display_handler, raw);
     info("Raw format");
 

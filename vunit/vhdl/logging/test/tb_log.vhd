@@ -277,7 +277,7 @@ begin
       set_string(entries, "2", time_padding      & "                                        !");
       check_log_file(file_handler, log_file_name, entries);
 
-    elsif run("verbose format with auto unit and fixed number of decimals") then
+    elsif run("verbose format with auto unit and fix number of decimals") then
       set_format(display_handler, format => verbose, log_time_unit => auto_time_unit, n_log_time_decimals => 2);
       init_log_handler(file_handler, file_name => log_file_name, format => verbose,
         log_time_unit => auto_time_unit, n_log_time_decimals => 2
@@ -287,7 +287,7 @@ begin
       set_string(entries, "0", format_time("123.45 ns") & " - logger               -    INFO - message");
       check_log_file(file_handler, log_file_name, entries);
 
-    elsif run("verbose format with custom unit and fixed number of decimals") then
+    elsif run("verbose format with custom unit and full resolution") then
       set_format(display_handler, format => verbose, log_time_unit => us, n_log_time_decimals => 8);
       init_log_handler(file_handler, file_name => log_file_name, format => verbose,
         log_time_unit => us, n_log_time_decimals => 8
