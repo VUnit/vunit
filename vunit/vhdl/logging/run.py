@@ -196,7 +196,6 @@ def main():
             ),
         )
 
-    ui.set_compile_option("rivierapro.vcom_flags", ["-dbg"])
     ui.main()
 
 

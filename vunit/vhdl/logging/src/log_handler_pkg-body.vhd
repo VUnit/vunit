@@ -115,7 +115,7 @@ package body log_handler_pkg is
   end;
 
   procedure set_format(log_handler : log_handler_t;
-                       format : log_format_t;
+                       format : log_format_t := verbose;
                        use_color : boolean := false;
                        log_time_unit : time := native_time_unit;
                        n_log_time_decimals : integer :=  0) is
@@ -170,6 +170,15 @@ package body log_handler_pkg is
         integer'image(get(log_handler.p_data, log_time_unit_idx)) severity failure;
     end case;
     n_log_time_decimals := get(log_handler.p_data, n_log_time_decimals_idx);
+  end;
+
+  procedure get_format(constant log_handler : in log_handler_t;
+                       variable format : out log_format_t;
+                       variable use_color : out boolean) is
+    variable not_used_log_time_unit : time;
+    variable not_used_n_log_time_decimals : integer;
+  begin
+    get_format(log_handler, format, use_color, not_used_log_time_unit, not_used_n_log_time_decimals);
   end;
 
   procedure set_max_logger_name_length(log_handler : log_handler_t; value : natural) is

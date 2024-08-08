@@ -1,0 +1,9 @@
+<div class="highlight"><pre><span></span><span class="n">logger</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">get_logger</span><span class="p">(</span><span class="s">&quot;my_library&quot;</span><span class="p">);</span>
+<span class="n">mock</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span><span class="w"> </span><span class="n">failure</span><span class="p">);</span>
+
+<span class="c1">-- Code to trigger an error</span>
+
+<span class="c1">-- Verify that the expected error message has been produced</span>
+<span class="n">check_only_log</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Some error message&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">failure</span><span class="p">);</span>
+<span class="n">unmock</span><span class="p">(</span><span class="n">logger</span><span class="p">);</span>
+</pre></div>
