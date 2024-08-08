@@ -145,7 +145,7 @@ class Builtins(object):
         Add osvvm library
         """
         library = self._add_library_if_not_exist(
-            "osvvm", "Library 'OSVVM' previously defined. Skipping addition of builtin OSVVM (2023.04)."
+            "osvvm", "Library 'OSVVM' previously defined. Skipping addition of builtin OSVVM."
         )
         if library is None:
             return
@@ -163,10 +163,10 @@ git submodule update --init --recursive
 in your VUnit Git repository? You have to do this first if installing using setup.py."""
             )
 
-        for file_name in glob(str(VHDL_PATH / "osvvm" / "*.vhd")):
+        for file_name in glob(str(VHDL_PATH / "osvvm" / "*.vhd")) + glob(str(VHDL_PATH / "osvvm" / "deprecated" / "*.vhd")):
             bname = Path(file_name).name
 
-            if (bname == "AlertLogPkg_body_BVUL.vhd") or ("2019" in bname):
+            if bname in ["LanguageSupport2019Pkg.vhd", "MessagePkg.vhd", "ClockResetPkg_2024_05.vhd", "MemoryGenericPkg_xilinx.vhd"]:
                 continue
 
             if ((simulator_coverage_api != "rivierapro") and (bname == "VendorCovApiPkg_Aldec.vhd")) or (
@@ -180,6 +180,9 @@ in your VUnit Git repository? You have to do this first if installing using setu
                     "ScoreboardGenericPkg.vhd",
                     "ScoreboardPkg_int.vhd",
                     "ScoreboardPkg_slv.vhd",
+                    "ScoreboardPkg_signed.vhd",
+                    "ScoreboardPkg_unsigned.vhd",
+                    "ScoreboardPkg_IntV.vhd",
                     "MemoryPkg.vhd",
                     "MemoryGenericPkg.vhd",
                 ]
@@ -191,6 +194,9 @@ in your VUnit Git repository? You have to do this first if installing using setu
                 in [
                     "ScoreboardPkg_int_c.vhd",
                     "ScoreboardPkg_slv_c.vhd",
+                    "ScoreboardPkg_signed_c.vhd",
+                    "ScoreboardPkg_unsigned_c.vhd",
+                    "ScoreboardPkg_IntV_c.vhd",
                     "MemoryPkg_c.vhd",
                     "MemoryPkg_orig_c.vhd",
                 ]

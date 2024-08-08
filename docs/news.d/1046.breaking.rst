@@ -1,0 +1,5 @@
+Bumped OSVVM to 2024.07.
+
+The seed generation of OSVVM has changed to a new algorithm which may cause some testbenches using InitSeed(some_value)
+to fail since the random sequence of values doesn't reproduce what was previously generated. This can occur if the testbench
+has assumptions on the random sequence that aren't explicitly enforced (other than setting the seed).

@@ -205,7 +205,7 @@ begin
         check_expected_was_written(buf);
       end loop;
 
-      assert num_ops > 5000;
+      assert num_ops > 4500;
 
     elsif run("Test that permissions are checked") then
       -- Also check that memory errors are made to the axi slave logger
