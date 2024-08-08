@@ -163,10 +163,17 @@ git submodule update --init --recursive
 in your VUnit Git repository? You have to do this first if installing using setup.py."""
             )
 
-        for file_name in glob(str(VHDL_PATH / "osvvm" / "*.vhd")) + glob(str(VHDL_PATH / "osvvm" / "deprecated" / "*.vhd")):
+        for file_name in glob(str(VHDL_PATH / "osvvm" / "*.vhd")) + glob(
+            str(VHDL_PATH / "osvvm" / "deprecated" / "*.vhd")
+        ):
             bname = Path(file_name).name
 
-            if bname in ["LanguageSupport2019Pkg.vhd", "MessagePkg.vhd", "ClockResetPkg_2024_05.vhd", "MemoryGenericPkg_xilinx.vhd"]:
+            if bname in [
+                "LanguageSupport2019Pkg.vhd",
+                "MessagePkg.vhd",
+                "ClockResetPkg_2024_05.vhd",
+                "MemoryGenericPkg_xilinx.vhd",
+            ]:
                 continue
 
             if ((simulator_coverage_api != "rivierapro") and (bname == "VendorCovApiPkg_Aldec.vhd")) or (
