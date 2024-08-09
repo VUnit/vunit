@@ -116,7 +116,7 @@ jobs:
         submodules: recursive
 
     - name: '🚧 Run job'
-      uses: docker://ghcr.io/vunit/dev/nvc@sha256:e6337a2b40a2eed076ffda9a5ef0af2c676718fcc7cf0c31fcfe24505de759c4
+      uses: docker://ghcr.io/vunit/dev/nvc
       with:
         args: tox -e py${{ matrix.task.do }}-nvc
 
