@@ -5,20 +5,27 @@
 -- Copyright (c) 2014-2024, Lars Asplund lars.anders.asplund@gmail.com
 
 package body log_handler_pkg is
+  -- Questa will issue warnings if the code contains time units lower than
+  -- the resolution even if that code isn't executed. To avoid that is most
+  -- cases a number of replacement constants are defined as fractions of us.
+  constant femtosecond : time := us / 1000000000;
+  constant picosecond : time := us / 1000000;
+  constant nanosecond : time := us / 1000;
+
   function resolution_limit return delay_length is
     constant t : string := time'image(time'high);
     constant signature : character := t(t'length - 1);
   begin
     case signature is
-      when 'f' => return fs;
-      when 'p' => return ps;
-      when 'n' => return ns;
+      when 'f' => return femtosecond;
+      when 'p' => return picosecond;
+      when 'n' => return nanosecond;
       when 'u' => return us;
       when 'm' => return ms;
       when others =>
         report "Only resolution limits in the fs to ms range are supported. " &
         "Only native simulation time formatting is supported" severity warning;
-        return ps;
+        return picosecond;
     end case;
   end;
 
@@ -136,11 +143,11 @@ package body log_handler_pkg is
       set(log_handler.p_data, log_time_unit_idx, -3);
     elsif log_time_unit = us then
       set(log_handler.p_data, log_time_unit_idx, -6);
-    elsif log_time_unit = ns then
+    elsif log_time_unit = nanosecond then
       set(log_handler.p_data, log_time_unit_idx, -9);
-    elsif log_time_unit = ps then
+    elsif log_time_unit = picosecond then
       set(log_handler.p_data, log_time_unit_idx, -12);
-    elsif log_time_unit = fs then
+    elsif log_time_unit = femtosecond then
       set(log_handler.p_data, log_time_unit_idx, -15);
     else
       report "Illegal log_time_unit: " & time'image(log_time_unit) severity failure;
@@ -162,9 +169,9 @@ package body log_handler_pkg is
       when 0 => log_time_unit := sec;
       when -3 => log_time_unit := ms;
       when -6 => log_time_unit := us;
-      when -9 => log_time_unit := ns;
-      when -12 => log_time_unit := ps;
-      when -15 => log_time_unit := fs;
+      when -9 => log_time_unit := nanosecond;
+      when -12 => log_time_unit := picosecond;
+      when -15 => log_time_unit := femtosecond;
       when others =>
         report "Illegal internal log_time_unit representation: " &
         integer'image(get(log_handler.p_data, log_time_unit_idx)) severity failure;

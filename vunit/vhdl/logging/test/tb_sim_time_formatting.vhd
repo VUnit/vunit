@@ -109,7 +109,7 @@ begin
 
       elsif run("Test image performance") then
         for iter in 1 to n_performance_iterations loop
-          report time'image(123456 ns);
+          report time'image(123456 ps);
         end loop;
 
       elsif run("Test VUnit to_string performance") then
