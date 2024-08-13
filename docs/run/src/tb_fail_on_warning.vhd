@@ -7,18 +7,19 @@
 library vunit_lib;
 context vunit_lib.vunit_context;
 
-entity tb_stopping_failure is
+entity tb_fail_on_warning is
   generic(runner_cfg : string);
 end entity;
 
-architecture tb of tb_stopping_failure is
+architecture tb of tb_fail_on_warning is
 begin
-  -- start_snippet tb_stopping_failure
+  -- start_snippet tb_fail_on_warning
   test_runner : process
     variable my_vector : integer_vector(1 to 17);
   begin
     test_runner_setup(runner, runner_cfg);
 
+    -- vunit: fail_on_warning
     while test_suite loop
       if run("Test that fails on an assert") then
         assert false;
@@ -33,5 +34,5 @@ begin
 
     test_runner_cleanup(runner);
   end process;
-  -- end_snippet tb_stopping_failure
+  -- end_snippet tb_fail_on_warning
 end;

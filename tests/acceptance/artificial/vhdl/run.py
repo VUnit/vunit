@@ -60,7 +60,9 @@ def configure_tb_same_sim_all_pass(ui):
             return "Test 3 was here" in fptr.read()
 
     ent = ui.library("lib").entity("tb_same_sim_all_pass")
-    ent.add_config("cfg", generics=dict(), post_check=post_check)
+    ent.add_config("cfg", post_check=post_check)
+    ent = ui.library("lib").entity("tb_same_sim_from_python_all_pass")
+    ent.add_config("cfg", post_check=post_check, attributes=dict(run_all_in_same_sim=True))
 
 
 def configure_tb_set_generic(ui):
@@ -115,13 +117,21 @@ def configure_tb_with_vhdl_configuration(ui):
     test_2.add_config(name="cfg2", post_check=make_post_check("arch2"))
     test_3.add_config(name="cfg3", post_check=make_post_check("arch3"), vhdl_configuration_name="cfg3")
 
+def configure_tb_no_fail_on_warning(ui):
+    tb = ui.library("lib").test_bench("tb_no_fail_on_warning")
+    tb.add_config(name="cfg1", attributes=dict(fail_on_warning=False))
+    tb.add_config(name="cfg2")
 
 configure_tb_with_generic_config()
 configure_tb_same_sim_all_pass(vu)
 configure_tb_set_generic(vu)
 configure_tb_assert_stop_level(vu)
 configure_tb_with_vhdl_configuration(vu)
+configure_tb_no_fail_on_warning(vu)
 lib.entity("tb_no_generic_override").set_generic("g_val", False)
 lib.entity("tb_ieee_warning").test("pass").set_sim_option("disable_ieee_warnings", True)
 lib.entity("tb_other_file_tests").scan_tests_from_file(str(root / "other_file_tests.vhd"))
+lib.entity("tb_same_sim_from_python_some_fail").set_attribute("run_all_in_same_sim", True)
+lib.entity("tb_fail_on_warning_from_python").set_attribute("fail_on_warning", True)
+
 vu.main()

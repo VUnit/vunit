@@ -274,6 +274,24 @@ if run("Test_2")
         self.assert_has_tests(tests, [("lib.tb_entity", ("lib.tb_entity.Test_1", "lib.tb_entity.Test_2"))])
 
     @with_tempdir
+    def test_that_run_in_same_simulation_attribute_from_python_works(self, tempdir):
+        for value in [None, True]:
+            design_unit = Entity(
+                "tb_entity",
+                file_name=str(Path(tempdir) / "file.vhd"),
+                contents="""\
+if run("Test_1")
+if run("Test_2")
+--if run("Test_3")
+""",
+            )
+            design_unit.generic_names = ["runner_cfg"]
+            test_bench = TestBench(design_unit)
+            test_bench.set_attribute("run_all_in_same_sim", value)
+            tests = self.create_tests(test_bench)
+            self.assert_has_tests(tests, [("lib.tb_entity", ("lib.tb_entity.Test_1", "lib.tb_entity.Test_2"))])
+
+    @with_tempdir
     def test_add_config(self, tempdir):
         design_unit = Entity("tb_entity", file_name=str(Path(tempdir) / "file.vhd"))
         design_unit.generic_names = ["runner_cfg", "value", "global_value"]
@@ -450,6 +468,22 @@ if run("Test 2")
             )
         else:
             assert False, "RuntimeError not raised"
+
+    @with_tempdir
+    def test_error_on_global_attributes_from_python_on_tests(self, tempdir):
+        design_unit = Entity(
+            "tb_entity",
+            file_name=str(Path(tempdir) / "file.vhd"),
+            contents="""\
+if run("Test 1")
+if run("Test 2")
+""",
+        )
+        design_unit.generic_names = ["runner_cfg"]
+
+        test_bench = TestBench(design_unit)
+        test = test_bench.get_test_case("Test 1")
+        self.assertRaises(AttributeException, test.set_attribute, "run_all_in_same_sim", True)    
 
     @with_tempdir
     def test_test_information(self, tempdir):

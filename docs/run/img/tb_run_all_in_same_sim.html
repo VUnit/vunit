@@ -1,6 +1,4 @@
-<div class="highlight"><pre><span></span><span class="c1">-- vunit: run_all_in_same_sim</span>
-
-<span class="k">library</span><span class="w"> </span><span class="nn">vunit_lib</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><span class="k">library</span><span class="w"> </span><span class="nn">vunit_lib</span><span class="p">;</span>
 <span class="n">context</span><span class="w"> </span><span class="n">vunit_lib</span><span class="p">.</span><span class="n">vunit_context</span><span class="p">;</span>
 
 <span class="k">entity</span><span class="w"> </span><span class="nc">tb_run_all_in_same_sim</span><span class="w"> </span><span class="k">is</span>
@@ -13,6 +11,7 @@
 <span class="w">  </span><span class="k">begin</span>
 <span class="w">    </span><span class="n">test_runner_setup</span><span class="p">(</span><span class="n">runner</span><span class="p">,</span><span class="w"> </span><span class="n">runner_cfg</span><span class="p">);</span>
 
+<span class="w">    </span><span class="c1">-- vunit: run_all_in_same_sim</span>
 <span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="n">test_suite</span><span class="w"> </span><span class="k">loop</span>
 <span class="w">      </span><span class="k">if</span><span class="w"> </span><span class="n">run</span><span class="p">(</span><span class="s">&quot;Test to_string for integer again&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
 <span class="w">        </span><span class="n">check_equal</span><span class="p">(</span><span class="n">to_string</span><span class="p">(</span><span class="mi">17</span><span class="p">),</span><span class="w"> </span><span class="s">&quot;17&quot;</span><span class="p">);</span>
