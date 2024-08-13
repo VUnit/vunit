@@ -3,6 +3,7 @@
 <span class="k">begin</span>
 <span class="w">  </span><span class="n">test_runner_setup</span><span class="p">(</span><span class="n">runner</span><span class="p">,</span><span class="w"> </span><span class="n">runner_cfg</span><span class="p">);</span>
 
+<span class="w">  </span><span class="c1">-- vunit: fail_on_warning</span>
 <span class="w">  </span><span class="k">while</span><span class="w"> </span><span class="n">test_suite</span><span class="w"> </span><span class="k">loop</span>
 <span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="n">run</span><span class="p">(</span><span class="s">&quot;Test that fails on an assert&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
 <span class="w">      </span><span class="k">assert</span><span class="w"> </span><span class="n">false</span><span class="p">;</span>

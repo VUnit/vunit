@@ -4,31 +4,35 @@
 --
 -- Copyright (c) 2014-2024, Lars Asplund lars.anders.asplund@gmail.com
 
--- start_snippet tb_run_all_in_same_sim
 library vunit_lib;
 context vunit_lib.vunit_context;
 
-entity tb_run_all_in_same_sim is
-  generic(runner_cfg : string);
+entity tb_same_sim_from_python_some_fail is
+  generic (
+    runner_cfg : string);
 end entity;
 
-architecture tb of tb_run_all_in_same_sim is
+architecture vunit_test_bench of tb_same_sim_from_python_some_fail is
 begin
   test_runner : process
   begin
     test_runner_setup(runner, runner_cfg);
 
-    -- vunit: run_all_in_same_sim
     while test_suite loop
-      if run("Test to_string for integer again") then
-        check_equal(to_string(17), "17");
-      elsif run("Test to_string for boolean again") then
-        check_equal(to_string(true), "true");
+      if run("Test 1") then
+        wait for 10 ns;
+        report "Test 1";
+      elsif run("Test 2") then
+        wait for 10 ns;
+        report "Test 2";
+        assert false;
+      elsif run("Test 3") then
+        wait for 10 ns;
+        report "Test 3";
       end if;
     end loop;
 
     test_runner_cleanup(runner);
+    wait;
   end process;
 end architecture;
--- end_snippet tb_run_all_in_same_sim
-
