@@ -334,6 +334,8 @@ package axi_stream_pkg is
     max_stall_cycles  : natural
   ) return stall_config_t;
 
+  function is_u(value : std_ulogic_vector) return boolean;
+
 end package;
 
 package body axi_stream_pkg is
@@ -607,8 +609,8 @@ package body axi_stream_pkg is
     ) is
     variable msg             : msg_t := new_msg(push_axi_stream_msg);
     variable normalized_data : std_logic_vector(data_length(axi_stream)-1 downto 0) := (others => '0');
-    variable normalized_keep : std_logic_vector(data_length(axi_stream)/8-1 downto 0) := (others => '0');
-    variable normalized_strb : std_logic_vector(data_length(axi_stream)/8-1 downto 0) := (others => '0');
+    variable normalized_keep : std_logic_vector(data_length(axi_stream)/8-1 downto 0) := (others => '1');
+    variable normalized_strb : std_logic_vector(data_length(axi_stream)/8-1 downto 0) := (others => '1');
     variable normalized_id   : std_logic_vector(id_length(axi_stream)-1 downto 0) := (others => '0');
     variable normalized_dest : std_logic_vector(dest_length(axi_stream)-1 downto 0) := (others => '0');
     variable normalized_user : std_logic_vector(user_length(axi_stream)-1 downto 0) := (others => '0');
@@ -618,6 +620,7 @@ package body axi_stream_pkg is
     push_std_ulogic(msg, tlast);
     normalized_keep(tkeep'length-1 downto 0) := tkeep;
     push_std_ulogic_vector(msg, normalized_keep);
+    normalized_strb := normalized_keep;
     normalized_strb(tstrb'length-1 downto 0) := tstrb;
     push_std_ulogic_vector(msg, normalized_strb);
     normalized_id(tid'length-1 downto 0) := tid;
@@ -808,6 +811,17 @@ package body axi_stream_pkg is
       min_stall_cycles  => min_stall_cycles,
       max_stall_cycles  => max_stall_cycles);
     return stall_config;
+  end;
+
+  function is_u(value : std_ulogic_vector) return boolean is
+  begin
+    for idx in value'range loop
+      if value(idx) /= 'U' then
+        return false;
+      end if;
+    end loop;
+
+    return true;
   end;
 
 end package body;

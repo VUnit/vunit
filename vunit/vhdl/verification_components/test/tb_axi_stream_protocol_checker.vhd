@@ -200,7 +200,10 @@ begin
     procedure fail_unknown_test(
       signal d: out std_logic_vector;
       signal e1, e2: out std_logic;
-      constant rname : string; constant sname : string; constant e1name : string
+      constant rname : string;
+      constant sname : string;
+      constant e1name : string;
+      constant skip_meta_values : boolean_vector(meta_values'range) := (others => false)
     ) is
       variable rule_logger : logger_t;
     begin
@@ -214,6 +217,7 @@ begin
       e1 <= '1';
       e2 <= '1';
       for i in meta_values'range loop
+        next when skip_meta_values(i);
         d <= (d'range => meta_values(i));
         wait until rising_edge(aclk);
         wait for 1 ns;
@@ -543,9 +547,21 @@ begin
       tkeep <= (others => '1');
       pass_unknown_test(tstrb, tvalid, tready);
 
+      -- U is reolved to the value of tkeep and should not fail      
+      tvalid <= '0';
+      tready <= '0';
+      wait until rising_edge(aclk);
+      tvalid <= '1';
+      tready <= '1';
+      tstrb <= (others => 'U');
+      wait until rising_edge(aclk);
+      wait for 1 ns;
+      check_no_log;
+
     elsif run("Test failing check of that tstrb must not be unknown when tvalid is high") then
       tkeep <= (others => '1');
-      fail_unknown_test(tstrb, tvalid, tready, ":rule 18", "tstrb", "tvalid");
+      -- U is reolved to the value of tkeep and should not fail      
+      fail_unknown_test(tstrb, tvalid, tready, ":rule 18", "tstrb", "tvalid", skip_meta_values => (5 => true, others => false));
 
     elsif run("Test passing check of that tkeep must not be unknown when tvalid is high") then
       pass_unknown_test(tkeep, tvalid, tready);

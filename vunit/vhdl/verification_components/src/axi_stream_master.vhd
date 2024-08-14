@@ -37,8 +37,8 @@ entity axi_stream_master is
     tready       : in  std_logic                                          := '1';
     tdata        : out std_logic_vector(data_length(master)-1 downto 0)   := (others => '0');
     tlast        : out std_logic                                          := '0';
-    tkeep        : out std_logic_vector(data_length(master)/8-1 downto 0) := (others => '0');
-    tstrb        : out std_logic_vector(data_length(master)/8-1 downto 0) := (others => '0');
+    tkeep        : out std_logic_vector(data_length(master)/8-1 downto 0) := (others => '1');
+    tstrb        : out std_logic_vector(data_length(master)/8-1 downto 0) := (others => '1');
     tid          : out std_logic_vector(id_length(master)-1 downto 0)     := (others => '0');
     tdest        : out std_logic_vector(dest_length(master)-1 downto 0)   := (others => '0');
     tuser        : out std_logic_vector(user_length(master)-1 downto 0)   := (others => '0')

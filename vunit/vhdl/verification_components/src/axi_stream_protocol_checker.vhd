@@ -91,7 +91,7 @@ architecture a of axi_stream_protocol_checker is
     return ret;
   end function;
 begin
-  tstrb_resolved <= tstrb when tstrb /= (tstrb'range => 'U') else tkeep;
+  tstrb_resolved <= tkeep when is_u(tstrb) else tstrb;
   handshake_is_not_x <= '1' when not is_x(tvalid) and not is_x(tready) else '0';
 
   -- AXI4STREAM_ERRM_TDATA_STABLE TDATA remains stable when TVALID is asserted,

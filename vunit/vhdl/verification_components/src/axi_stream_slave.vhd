@@ -125,7 +125,7 @@ begin
           wait until (tvalid and tready) = '1' and rising_edge(aclk);
           tready <= '0';
 
-          tstrb_resolved := tstrb when tstrb /= (tstrb'range => 'U') else tkeep;
+          tstrb_resolved := tkeep when is_u(tstrb) else tstrb;
           if msg_type = stream_pop_msg or msg_type = pop_axi_stream_msg then
             axi_stream_transaction := (
               tdata => tdata,
