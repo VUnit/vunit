@@ -1,1 +1,0 @@
-Added support for setting ``run_all_in_same_sim`` and ``fail_on_warning attributes`` from Python.
