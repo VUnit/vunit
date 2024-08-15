@@ -10,11 +10,10 @@ Interface for the Cadence Incisive simulator
 
 from pathlib import Path
 from os.path import relpath
-import os
 import subprocess
 import logging
 from ..exceptions import CompileError
-from ..ostools import write_file, file_exists
+from ..ostools import write_file
 from ..vhdl_standard import VHDL
 from . import SimulatorInterface, run_command, ListOfStringOption
 from .cds_file import CDSFile
@@ -126,7 +125,7 @@ softinclude {self._cds_root_irun}/tools/inca/files/cds.lib
 # needed for referencing the library 'basic' for cells 'cds_alias', 'cds_thru' etc. in analog models:
 # NOTE: 'virtuoso' executable not found!
 # define basic ".../tools/dfII/etc/cdslib/basic"
-define work "{self._output_path}/libraries/work"
+define work "{self.output_path}/libraries/work"
 """
             if cds_root_virtuoso is None
             else f"""\
@@ -134,7 +133,7 @@ define work "{self._output_path}/libraries/work"
 softinclude {self._cds_root_irun}/tools/inca/files/cds.lib
 # needed for referencing the library 'basic' for cells 'cds_alias', 'cds_thru' etc. in analog models:
 define basic "{cds_root_virtuoso}/tools/dfII/etc/cdslib/basic"
-define work "{self._output_path}/libraries/work"
+define work "{self.output_path}/libraries/work"
 """
         )
 
@@ -193,7 +192,7 @@ define work "{self._output_path}/libraries/work"
         args += ["-work work"]
         args += [f'-cdslib "{self._cdslib!s}"']
         args += self._hdlvar_args()
-        args += [f'-log "{(Path(self._output_path) / f"irun_compile_vhdl_file_{source_file.library.name!s}.log")!s}"']
+        args += [f'-log "{(Path(self.output_path) / f"irun_compile_vhdl_file_{source_file.library.name!s}.log")!s}"']
         if not self._log_level == "debug":
             args += ["-quiet"]
         else:
@@ -204,7 +203,7 @@ define work "{self._output_path}/libraries/work"
         args += [f"-makelib {source_file.library.directory!s}"]
         args += [f'"{source_file.name!s}"']
         args += ["-endlib"]
-        argsfile = str(Path(self._output_path) / f"irun_compile_vhdl_file_{source_file.library.name!s}.args")
+        argsfile = str(Path(self.output_path) / f"irun_compile_vhdl_file_{source_file.library.name!s}.args")
         write_file(argsfile, "\n".join(args))
         return [cmd, "-f", argsfile]
 
@@ -228,7 +227,7 @@ define work "{self._output_path}/libraries/work"
         args += [f'-cdslib "{self._cdslib!s}"']
         args += self._hdlvar_args()
         args += [
-            f'-log "{(Path(self._output_path) / f"irun_compile_verilog_file_{source_file.library.name!s}.log")!s}"'
+            f'-log "{(Path(self.output_path) / f"irun_compile_verilog_file_{source_file.library.name}.log")}"'
         ]
         if not self._log_level == "debug":
             args += ["-quiet"]
@@ -236,19 +235,19 @@ define work "{self._output_path}/libraries/work"
             args += ["-messages"]
             args += ["-libverbose"]
         for include_dir in source_file.include_dirs:
-            args += [f'-incdir "{include_dir!s}"']
+            args += [f'-incdir "{include_dir}"']
 
         # for "disciplines.vams" etc.
-        args += [f'-incdir "{self._cds_root_irun!s}/tools/spectre/etc/ahdl/"']
+        args += [f'-incdir "{self._cds_root_irun}/tools/spectre/etc/ahdl/"']
 
         for key, value in source_file.defines.items():
             val = value.replace('"', '\\"')
-            args += [f"-define {key!s}={val!s}"]
-        args += [f'-nclibdirname "{Path(source_file.library.directory).parent!s}"']
-        args += [f"-makelib {source_file.library.name!s}"]
-        args += [f'"{source_file.name!s}"']
+            args += [f"-define {key}={val}"]
+        args += [f'-nclibdirname "{Path(source_file.library.directory).parent}"']
+        args += [f"-makelib {source_file.library.name}"]
+        args += [f'"{source_file.name}"']
         args += ["-endlib"]
-        argsfile = str(Path(self._output_path) / f"irun_compile_verilog_file_{source_file.library.name!s}.args")
+        argsfile = str(self.output_path / f"irun_compile_verilog_file_{source_file.library.name!s}.args")
         write_file(argsfile, "\n".join(args))
         return [cmd, "-f", argsfile]
 
@@ -258,10 +257,10 @@ define work "{self._output_path}/libraries/work"
         """
         mapped_libraries = mapped_libraries if mapped_libraries is not None else {}
 
-        lpath = str(Path(library_path).resolve().parent)
+        lpath = Path(library_path).resolve().parent
 
-        if not file_exists(lpath):
-            os.makedirs(lpath)
+        if not lpath.exists():
+            lpath.mkdir(parents=True)
 
         if library_name in mapped_libraries and mapped_libraries[library_name] == library_path:
             return
@@ -281,7 +280,7 @@ define work "{self._output_path}/libraries/work"
     def _select_vhdl_top(config):
         "Select VHDL configuration or entity as top."
         if config.vhdl_configuration_name is None:
-            return f"{config.library_name!s}.{config.entity_name!s}:{config.architecture_name!s}"
+            return f"{config.library_name}.{config.entity_name}:{config.architecture_name}"
 
         return f"{config.vhdl_configuration_name!s}"
 
@@ -292,7 +291,7 @@ define work "{self._output_path}/libraries/work"
         Elaborates and Simulates with entity as top level using generics
         """
 
-        script_path = str(Path(output_path) / self.name)
+        script_path = self.get_script_path(output_path)
         launch_gui = self._gui is not False and not elaborate_only
 
         if elaborate_only:
@@ -320,11 +319,11 @@ define work "{self._output_path}/libraries/work"
             args += ["-ncerror EVBSTR"]  # promote to error: "bad string literal in generic association"
             args += ["-ncerror EVBNAT"]  # promote to error: "bad natural literal in generic association"
             args += ["-work work"]
-            args += [f'-nclibdirname "{Path(self._output_path) / "libraries"!s}"']  # @TODO: ugly
+            args += [f'-nclibdirname "{self.output_path / "libraries"}"']  # @TODO: ugly
             args += config.sim_options.get("incisive.irun_sim_flags", [])
             args += [f'-cdslib "{self._cdslib!s}"']
             args += self._hdlvar_args()
-            args += [f'-log "{(Path(script_path) / f"irun_{step!s}.log")!s}"']
+            args += [f'-log "{(script_path / f"irun_{step}.log")}"']
             if not self._log_level == "debug":
                 args += ["-quiet"]
             else:
@@ -332,7 +331,7 @@ define work "{self._output_path}/libraries/work"
                 # args += ['-libverbose']
             args += self._generic_args(config.entity_name, config.generics)
             for library in self._libraries:
-                args += [f'-reflib "{library.directory!s}"']
+                args += [f'-reflib "{library.directory}"']
             if launch_gui:
                 args += ["-access +rwc"]
                 # args += ['-linedebug']

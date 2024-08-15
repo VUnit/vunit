@@ -319,7 +319,7 @@ class TestModelSimInterface(unittest.TestCase):
     def setUp(self):
         self.test_path = str(Path(__file__).parent / "test_modelsim_out")
 
-        self.output_path = str(Path(self.test_path) / "modelsim")
+        self.output_path = Path(self.test_path) / "modelsim"
         self.prefix_path = str(Path(self.test_path) / "prefix" / "bin")
         renew_path(self.test_path)
         renew_path(self.output_path)
@@ -327,7 +327,7 @@ class TestModelSimInterface(unittest.TestCase):
         installed_modelsim_ini = str(Path(self.prefix_path) / ".." / "modelsim.ini")
         write_file(installed_modelsim_ini, "[Library]")
         self.project = Project()
-        self.cwd = os.getcwd()
+        self.cwd = Path(os.getcwd())
         os.chdir(self.test_path)
 
     def tearDown(self):

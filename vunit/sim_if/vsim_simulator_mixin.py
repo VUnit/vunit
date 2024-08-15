@@ -12,6 +12,7 @@ and RivieraPRO
 import sys
 import os
 from pathlib import Path
+from typing import Union
 from ..ostools import write_file, Process
 from ..test.suites import get_result_file_name
 from ..persistent_tcl_shell import PersistentTclShell
@@ -41,7 +42,7 @@ class VsimSimulatorMixin(object):
                     "-do",
                     str((Path(__file__).parent / "tcl_read_eval_loop.tcl").resolve()),
                 ],
-                cwd=str(Path(sim_cfg_file_name).parent),
+                cwd=Path(sim_cfg_file_name).parent,
                 env=env,
             )
 
@@ -177,7 +178,7 @@ proc vunit_run {} {
         """
         batch_do = ""
         batch_do += "onerror {quit -code 1}\n"
-        batch_do += f'source "{fix_path(common_file_name)!s}"\n'
+        batch_do += f'source "{fix_path(common_file_name)}"\n'
         batch_do += "set failed [vunit_load]\n"
         batch_do += "if {$failed} {quit -code 1}\n"
         if not load_only:
@@ -259,7 +260,7 @@ proc vunit_run {} {
         """
         Create the user facing script which loads common functions and prints a help message
         """
-        tcl = f'source "{fix_path(common_file_name)!s}"\n'
+        tcl = f'source "{fix_path(common_file_name)}"\n'
         tcl += self._create_user_init_function(config)
         tcl += "if {![vunit_load]} {\n"
         tcl += "  vunit_user_init\n"
@@ -279,10 +280,10 @@ proc vunit_run {} {
                 "-l",
                 str(Path(batch_file_name).parent / "transcript"),
                 "-do",
-                f'source "{fix_path(batch_file_name)!s}"',
+                f'source "{fix_path(batch_file_name)}"',
             ]
 
-            proc = Process(args, cwd=str(Path(self._sim_cfg_file_name).parent))
+            proc = Process(args, cwd=Path(self._sim_cfg_file_name).parent)
             proc.consume_output()
         except Process.NonZeroExitCode:
             return False
@@ -293,7 +294,7 @@ proc vunit_run {} {
         Run a test bench using the persistent vsim process
         """
         try:
-            self._persistent_shell.execute(f'source "{fix_path(common_file_name)!s}"')
+            self._persistent_shell.execute(f'source "{fix_path(common_file_name)}"')
             self._persistent_shell.execute("set failed [vunit_load]")
             if self._persistent_shell.read_bool("failed"):
                 return False
@@ -311,7 +312,7 @@ proc vunit_run {} {
         """
         Run a test bench
         """
-        script_path = Path(output_path) / self.name
+        script_path = self.get_script_path(output_path)
 
         common_file_name = script_path / "common.do"
         gui_file_name = script_path / "gui.do"
@@ -336,11 +337,11 @@ proc vunit_run {} {
         return self._run_batch_file(str(batch_file_name))
 
 
-def fix_path(path):
+def fix_path(path: Union[Path, str]) -> str:
     """
     Adjust path for TCL usage
     """
-    return path.replace("\\", "/").replace(" ", "\\ ")
+    return str(path).replace("\\", "/").replace(" ", "\\ ")
 
 
 def get_is_test_suite_done_tcl(vunit_result_file):
@@ -350,7 +351,7 @@ def get_is_test_suite_done_tcl(vunit_result_file):
     """
     return f"""
 proc is_test_suite_done {{}} {{
-    set fd [open "{fix_path(vunit_result_file)!s}" "r"]
+    set fd [open "{fix_path(vunit_result_file)}" "r"]
     set contents [read $fd]
     close $fd
     set lines [split $contents "\n"]

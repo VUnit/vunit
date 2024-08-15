@@ -9,7 +9,7 @@ Interface for GHDL simulator
 """
 
 from pathlib import Path
-from os import environ, makedirs, remove
+from os import environ
 import logging
 import subprocess
 import shlex
@@ -207,7 +207,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         self._project = project
         for library in project.get_libraries():
             if not Path(library.directory).exists():
-                makedirs(library.directory)
+                Path(library.directory).mkdir(parents=True)
 
         vhdl_standards = set(
             source_file.get_vhdl_standard()
@@ -260,7 +260,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
             "-a",
             f"--workdir={source_file.library.directory!s}",
             f"--work={source_file.library.name!s}",
-            f"--std={self._std_str(source_file.get_vhdl_standard())!s}",
+            f"--std={self._std_str(source_file.get_vhdl_standard())}",
         ]
         for library in self._project.get_libraries():
             cmd += [f"-P{library.directory!s}"]
@@ -281,11 +281,12 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         """
         Return GHDL simulation command
         """
+        output_path = Path(output_path)
         cmd = [str(Path(self._prefix) / self.executable)]
 
         cmd += ["-e"] if ghdl_e else ["--elab-run"]
 
-        cmd += [f"--std={self._std_str(self._vhdl_standard)!s}"]
+        cmd += [f"--std={self._std_str(self._vhdl_standard)}"]
         cmd += [f"--work={config.library_name!s}"]
         cmd += [f"--workdir={self._project.get_library(config.library_name).directory!s}"]
         cmd += [f"-P{lib.directory!s}" for lib in self._project.get_libraries()]
@@ -299,8 +300,8 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
                 # Enable coverage in linker
                 cmd += ["-Wl,-lgcov"]
             else:
-                coverage_file = str(Path(output_path) / f"{test_suite_name!s}.json")
-                cmd += ["--coverage", f"--coverage-output={coverage_file!s}"]
+                coverage_file = output_path / f"{test_suite_name!s}.json"
+                cmd += ["--coverage", f"--coverage-output={coverage_file}"]
 
         if config.vhdl_configuration_name is not None:
             cmd += [config.vhdl_configuration_name]
@@ -328,13 +329,13 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
                 cmd += ["--no-run"]
         else:
             try:
-                makedirs(output_path, mode=0o777)
+                output_path.mkdir(parents=True, mode=0o777)
             except OSError:
                 pass
-            with (Path(output_path) / "args.json").open("w", encoding="utf-8") as fname:
+            with (output_path / "args.json").open("w", encoding="utf-8") as fname:
                 dump(
                     {
-                        "bin": str(Path(output_path) / f"{config.entity_name!s}-{config.architecture_name!s}"),
+                        "bin": str(output_path / f"{config.entity_name}-{config.architecture_name}"),
                         "build": cmd[1:],
                         "sim": sim,
                     },
@@ -348,17 +349,14 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         Simulate with entity as top level using generics
         """
 
-        script_path = str(Path(output_path) / self.name)
-
-        if not Path(script_path).exists():
-            makedirs(script_path)
+        script_path = self.get_script_path(output_path)
 
         ghdl_e = elaborate_only and config.sim_options.get("ghdl.elab_e", False)
 
         if self._gtkwave_fmt is not None:
-            data_file_name = str(Path(script_path) / f"wave.{self._gtkwave_fmt!s}")
-            if Path(data_file_name).exists():
-                remove(data_file_name)
+            data_file_name = script_path / f"wave.{self._gtkwave_fmt!s}"
+            if data_file_name.exists():
+                data_file_name.unlink()
         else:
             data_file_name = None
 
@@ -374,7 +372,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
                 gcov_env["GCOV_PREFIX"] = coverage_dir
                 self._coverage_test_dirs.add(coverage_dir)
             else:
-                self._coverage_files.add(str(Path(script_path) / f"{test_suite_name!s}.json"))
+                self._coverage_files.add(str(script_path / f"{test_suite_name}.json"))
 
         try:
             proc = Process(cmd, env=gcov_env)
@@ -387,9 +385,9 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
 
             init_file = config.sim_options.get(self.name + ".gtkwave_script.gui", None)
             if init_file is not None:
-                cmd += ["--script", str(Path(init_file).resolve())]
+                cmd += ["--script", Path(init_file).resolve()]
 
-            stdout.write(" ".join(cmd) + "\n")
+            stdout.write(" ".join(str(c) for c in cmd) + "\n")
             subprocess.call(cmd)
 
         return status

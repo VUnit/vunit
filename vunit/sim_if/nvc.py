@@ -10,7 +10,7 @@ Interface for NVC simulator
 
 from multiprocessing import cpu_count
 from pathlib import Path
-from os import environ, makedirs, remove
+from os import environ
 import logging
 import subprocess
 import shlex
@@ -161,7 +161,7 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
             path = Path(library.directory)
             if not path.exists():
                 if not path.parent.exists():
-                    makedirs(path.parent)
+                    path.parent.mkdir(parents=True)
 
                 if not run_command(
                     [str(Path(self._prefix) / self.executable), "--work=" + library.directory, "--init"],
@@ -247,15 +247,12 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         Simulate with entity as top level using generics
         """
 
-        script_path = Path(output_path) / self.name
-
-        if not script_path.exists():
-            makedirs(script_path)
+        script_path = self.get_script_path(output_path)
 
         if self._gui:
             wave_file = script_path / (f"{config.entity_name}.fst")
             if wave_file.exists():
-                remove(wave_file)
+                wave_file.unlink()
         else:
             wave_file = None
 

@@ -146,7 +146,7 @@ class TestTestRunner(unittest.TestCase):
                 test_output = runner._get_output_path(test_name)
                 self.assertEqual(
                     test_output,
-                    str(Path(output_path).resolve() / (test_name + "_" + hash_string(test_name))),
+                    Path(output_path).resolve() / (test_name + "_" + hash_string(test_name)),
                 )
 
                 output_path = "output_path"
@@ -154,7 +154,7 @@ class TestTestRunner(unittest.TestCase):
                 test_output = runner._get_output_path(test_name)
                 self.assertEqual(
                     test_output,
-                    str(Path(output_path).resolve() / (test_name + "_" + hash_string(test_name))),
+                    Path(output_path).resolve() / (test_name + "_" + hash_string(test_name)),
                 )
 
                 output_path = "output_path"
@@ -163,7 +163,7 @@ class TestTestRunner(unittest.TestCase):
                 test_output = runner._get_output_path(test_name)
                 self.assertEqual(
                     test_output,
-                    str(Path(output_path).resolve() / (safe_name + "_" + hash_string(test_name))),
+                    Path(output_path).resolve() / (safe_name + "_" + hash_string(test_name)),
                 )
 
     def test_get_output_path_on_windows(self):
@@ -175,7 +175,7 @@ class TestTestRunner(unittest.TestCase):
             with mock.patch("os.environ", new={}):
                 test_name = "_" * 400
                 test_output = runner._get_output_path(test_name)
-                self.assertEqual(len(test_output), 260 - 100 + 1)
+                self.assertEqual(len(str(test_output)), 260 - 100 + 1)
 
             with mock.patch("os.environ", new={"VUNIT_TEST_OUTPUT_PATH_MARGIN": "-1000"}):
                 output_path = "output_path"
@@ -183,7 +183,7 @@ class TestTestRunner(unittest.TestCase):
                 test_output = runner._get_output_path(test_name)
                 self.assertEqual(
                     test_output,
-                    str(Path(output_path).resolve() / (test_name + "_" + hash_string(test_name))),
+                    Path(output_path).resolve() / (test_name + "_" + hash_string(test_name)),
                 )
 
             with mock.patch("os.environ", new={"VUNIT_SHORT_TEST_OUTPUT_PATHS": ""}):
@@ -192,7 +192,7 @@ class TestTestRunner(unittest.TestCase):
                 test_output = runner._get_output_path(test_name)
                 self.assertEqual(
                     test_output,
-                    str(Path(output_path).resolve() / hash_string(test_name)),
+                    Path(output_path).resolve() / hash_string(test_name),
                 )
 
     @staticmethod
