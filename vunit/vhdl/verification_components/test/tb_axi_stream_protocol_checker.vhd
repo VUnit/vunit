@@ -547,7 +547,7 @@ begin
       tkeep <= (others => '1');
       pass_unknown_test(tstrb, tvalid, tready);
 
-      -- U is reolved to the value of tkeep and should not fail      
+      -- U is reolved to the value of tkeep and should not fail
       tvalid <= '0';
       tready <= '0';
       wait until rising_edge(aclk);
@@ -560,7 +560,7 @@ begin
 
     elsif run("Test failing check of that tstrb must not be unknown when tvalid is high") then
       tkeep <= (others => '1');
-      -- U is reolved to the value of tkeep and should not fail      
+      -- U is reolved to the value of tkeep and should not fail
       fail_unknown_test(tstrb, tvalid, tready, ":rule 18", "tstrb", "tvalid", skip_meta_values => (5 => true, others => false));
 
     elsif run("Test passing check of that tkeep must not be unknown when tvalid is high") then

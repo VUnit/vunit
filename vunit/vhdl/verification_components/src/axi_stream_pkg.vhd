@@ -730,6 +730,7 @@ package body axi_stream_pkg is
       msg      : string           := "";
       blocking : boolean          := true
     ) is
+    constant expected_normalized : std_logic_vector(expected'length - 1 downto 0) := expected;
     variable got_tdata : std_logic_vector(data_length(axi_stream)-1 downto 0);
     variable got_tlast : std_logic;
     variable got_tkeep : std_logic_vector(data_length(axi_stream)/8-1 downto 0);
@@ -738,18 +739,47 @@ package body axi_stream_pkg is
     variable got_tdest : std_logic_vector(dest_length(axi_stream)-1 downto 0);
     variable got_tuser : std_logic_vector(user_length(axi_stream)-1 downto 0);
     variable check_msg : msg_t := new_msg(check_axi_stream_msg);
+    variable mismatch : boolean;
   begin
-    push_string(check_msg, msg);
-    push_std_ulogic_vector(check_msg, expected);
-    push_std_ulogic_vector(check_msg, tkeep);
-    push_std_ulogic_vector(check_msg, tstrb);
-    push_std_ulogic(check_msg, tlast);
-    push_std_ulogic_vector(check_msg, tid);
-    push_std_ulogic_vector(check_msg, tdest);
-    push_std_ulogic_vector(check_msg, tuser);
-    send(net, axi_stream.p_actor, check_msg);
     if blocking then
-      wait_until_idle(net, as_sync(axi_stream));
+      pop_axi_stream(net, axi_stream, got_tdata, got_tlast, got_tkeep, got_tstrb, got_tid, got_tdest, got_tuser);
+      mismatch := false;
+      for idx in got_tkeep'range loop
+        if got_tkeep(idx) and got_tstrb(idx) then
+          mismatch := got_tdata(8 * idx + 7 downto 8 * idx) /= expected_normalized(8 * idx + 7 downto 8 * idx);
+          exit when mismatch;
+        end if;
+      end loop;
+      if mismatch then
+        check_equal(got_tdata, expected, "TDATA mismatch, " & msg);
+      end if;
+
+      if tkeep'length > 0 then
+        check_equal(got_tkeep, tkeep, "TKEEP mismatch, " & msg);
+      end if;
+      if tstrb'length > 0 then
+        check_equal(got_tstrb, tstrb, "TSTRB mismatch, " & msg);
+      end if;
+      check_equal(got_tlast, tlast, "TLAST mismatch, " & msg);
+      if tid'length > 0 then
+        check_equal(got_tid, tid, "TID mismatch, " & msg);
+      end if;
+      if tdest'length > 0 then
+        check_equal(got_tdest, tdest, "TDEST mismatch, " & msg);
+      end if;
+      if tuser'length > 0 then
+        check_equal(got_tuser, tuser, "TUSER mismatch, " & msg);
+      end if;
+    else
+      push_string(check_msg, msg);
+      push_std_ulogic_vector(check_msg, expected);
+      push_std_ulogic_vector(check_msg, tkeep);
+      push_std_ulogic_vector(check_msg, tstrb);
+      push_std_ulogic(check_msg, tlast);
+      push_std_ulogic_vector(check_msg, tid);
+      push_std_ulogic_vector(check_msg, tdest);
+      push_std_ulogic_vector(check_msg, tuser);
+      send(net, axi_stream.p_actor, check_msg);
     end if;
   end procedure;
 

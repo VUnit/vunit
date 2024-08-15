@@ -454,8 +454,8 @@ begin
                 to_nibble_string(keep) & " (" & to_string(to_integer(keep)) & "). Expected " &
                 to_nibble_string(not keep) & " (" & to_string(to_integer(not keep)) & ").", error);
       check_log(mocklogger, "TSTRB mismatch, checking axi stream - Got " &
-                to_nibble_string(keep) & " (" & to_string(to_integer(keep)) & "). Expected " &
-                to_nibble_string(not keep) & " (" & to_string(to_integer(not keep)) & ").", error);
+                to_nibble_string(strb) & " (" & to_string(to_integer(strb)) & "). Expected " &
+                to_nibble_string(not strb) & " (" & to_string(to_integer(not strb)) & ").", error);
       check_log(mocklogger, "TLAST mismatch, checking axi stream - Got 1. Expected 0.", error);
       if id'length > 0 then
         check_log(mocklogger, "TID mismatch, checking axi stream - Got 0010_0010 (34). Expected 0010_0011 (35).", error);
