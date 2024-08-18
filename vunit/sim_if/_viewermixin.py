@@ -8,7 +8,7 @@ Viewer handling for GHDL and NVC.
 """
 
 
-class OSSMixin:
+class ViewerMixin:
     """
     Mixin class for handling common viewer functionality for the GHDL and NVC simulators.
     """
@@ -35,8 +35,7 @@ class OSSMixin:
         """
         Determine the waveform viewer to use.
 
-        Falls back to gtkwave or surfer, in that order, if none is provided or the provided
-        cannot be found.
+        Falls back to gtkwave or surfer, in that order, if none is provided.
         """
         viewer = self._viewer or config.sim_options.get(self.name + ".viewer.gui", None)
 

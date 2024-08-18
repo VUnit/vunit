@@ -20,13 +20,13 @@ from ..exceptions import CompileError
 from ..ostools import Process
 from . import SimulatorInterface, ListOfStringOption, StringOption
 from . import run_command
-from ._ossmixin import OSSMixin
+from ._viewermixin import ViewerMixin
 from ..vhdl_standard import VHDL
 
 LOGGER = logging.getLogger(__name__)
 
 
-class NVCInterface(SimulatorInterface, OSSMixin):  # pylint: disable=too-many-instance-attributes
+class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many-instance-attributes
     """
     Interface for NVC simulator
     """
@@ -80,7 +80,7 @@ class NVCInterface(SimulatorInterface, OSSMixin):  # pylint: disable=too-many-in
         if viewer_fmt == "ghw":
             LOGGER.warning("NVC does not support ghw, defaulting to fst")
             viewer_fmt = None  # Defaults to FST later
-        OSSMixin.__init__(self, gui=gui, viewer=viewer, viewer_fmt=viewer_fmt, viewer_args=viewer_args)
+        ViewerMixin.__init__(self, gui=gui, viewer=viewer, viewer_fmt=viewer_fmt, viewer_args=viewer_args)
 
         self._prefix = prefix
         self._project = None
@@ -305,11 +305,9 @@ class NVCInterface(SimulatorInterface, OSSMixin):  # pylint: disable=too-many-in
             status = False
 
         if config.sim_options.get(self.name + ".gtkwave_script.gui", None):
-            warn_str = (
-                "%s.gtkwave_script.gui is deprecated and will be removed " % self.name  # pylint: disable=C0209
-                + "in a future version, use %s.viewer_script.gui instead" % self.name   # pylint: disable=C0209
-            )
-            LOGGER.warning(warn_str)
+            LOGGER.warning("%s.gtkwave_script.gui is deprecated and will be removed "
+                           "in a future version, use %s.viewer_script.gui instead",
+                           self.name, self.name)
 
         if self._gui and not elaborate_only:
             cmd = [self._get_viewer(config)] + shlex.split(self._viewer_args) + [str(wave_file)]

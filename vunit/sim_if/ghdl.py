@@ -21,12 +21,12 @@ from ..exceptions import CompileError
 from ..ostools import Process
 from . import SimulatorInterface, ListOfStringOption, StringOption, BooleanOption
 from ..vhdl_standard import VHDL
-from ._ossmixin import OSSMixin
+from ._viewermixin import ViewerMixin
 
 LOGGER = logging.getLogger(__name__)
 
 
-class GHDLInterface(SimulatorInterface, OSSMixin):  # pylint: disable=too-many-instance-attributes
+class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many-instance-attributes
     """
     Interface for GHDL simulator
     """
@@ -100,7 +100,7 @@ class GHDLInterface(SimulatorInterface, OSSMixin):  # pylint: disable=too-many-i
         backend="llvm",
     ):
         SimulatorInterface.__init__(self, output_path, gui)
-        OSSMixin.__init__(
+        ViewerMixin.__init__(
             self,
             gui=gui,
             viewer=viewer,
@@ -132,7 +132,7 @@ class GHDLInterface(SimulatorInterface, OSSMixin):  # pylint: disable=too-many-i
     @classmethod
     def _get_help_output(cls, prefix):
         """
-        Get the output of 'ghdl --version'
+        Get the output of 'ghdl --help'
         """
         return subprocess.check_output([str(Path(prefix) / cls.executable), "--help"]).decode()
 
@@ -392,11 +392,9 @@ class GHDLInterface(SimulatorInterface, OSSMixin):  # pylint: disable=too-many-i
             status = False
 
         if config.sim_options.get(self.name + ".gtkwave_script.gui", None):
-            warn_str = (
-                "%s.gtkwave_script.gui is deprecated and will be removed " % self.name  # pylint: disable=C0209
-                + "in a future version, use %s.viewer_script.gui instead" % self.name   # pylint: disable=C0209
-            )
-            LOGGER.warning(warn_str)
+            LOGGER.warning("%s.gtkwave_script.gui is deprecated and will be removed "
+                           "in a future version, use %s.viewer_script.gui instead",
+                           self.name, self.name)
 
         if self._gui and not elaborate_only:
             cmd = [self._get_viewer(config)] + shlex.split(self._viewer_args) + [data_file_name]
