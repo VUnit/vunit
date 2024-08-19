@@ -52,7 +52,7 @@ begin
       debug(monitor.p_logger, "tdata: " & to_nibble_string(tdata) & " (" & to_integer_string(tdata) & ")" & ", tlast: " & to_string(tlast));
     end if;
 
-    tstrb_resolved := tstrb when tstrb /= (tstrb'range => 'U') else tkeep;
+    tstrb_resolved := tkeep when is_u(tstrb) else tstrb;
     axi_stream_transaction := (
       tdata => tdata,
       tlast => tlast = '1',

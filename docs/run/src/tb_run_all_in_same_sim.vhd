@@ -5,8 +5,6 @@
 -- Copyright (c) 2014-2024, Lars Asplund lars.anders.asplund@gmail.com
 
 -- start_snippet tb_run_all_in_same_sim
--- vunit: run_all_in_same_sim
-
 library vunit_lib;
 context vunit_lib.vunit_context;
 
@@ -20,6 +18,7 @@ begin
   begin
     test_runner_setup(runner, runner_cfg);
 
+    -- vunit: run_all_in_same_sim
     while test_suite loop
       if run("Test to_string for integer again") then
         check_equal(to_string(17), "17");

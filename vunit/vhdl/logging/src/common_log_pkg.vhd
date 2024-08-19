@@ -55,7 +55,28 @@ package common_log_pkg is
     log_sequence_number : natural;
     -- True if log entry is to be in color
     use_color : boolean;
+    -- Unit to use for log time.
+    -- log_time_unit <= 0: unit = 10 ** log_time_unit.
+    -- log_time_unit = 1: native simulator unit.
+    -- log_time_unit = 2: unit such that log_time = n * unit where n is in the [0, 1000[ range.
+    log_time_unit : integer;
+    -- Number of decimals to use for log_time. If = -1 then the number of decimals is the number
+    -- yielding the full resolution provided by the simulator.
+    n_log_time_decimals : integer;
     -- Max length of logger names (used for alignment)
     max_logger_name_length : natural
   );
+
+  -- This is not part of the public interface but exposes a private function for
+  -- testing purposes
+  constant p_resolution_limit_as_log10_of_sec : integer;
+  constant p_native_unit : integer := 1;
+  constant p_auto_unit : integer := 2;
+  constant p_full_resolution : integer := -1;
+  function p_to_string(
+    value : time;
+    unit : integer := p_native_unit;
+    n_decimals : integer := 0
+  ) return string;
+
 end package;

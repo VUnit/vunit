@@ -26,6 +26,8 @@ begin
         report to_string(my_vector(runner_cfg'length));
       elsif run("Test that fails on VUnit check procedure") then
         check_equal(17, 18);
+      elsif run("Test that a warning passes") then
+        assert false severity warning;
       end if;
     end loop;
 

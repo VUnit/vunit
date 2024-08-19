@@ -91,6 +91,15 @@ def extract_snippets():
         )
 
     for snippet in [
+        "tb_fail_on_warning",
+    ]:
+        highlight_code(
+            root / "tb_fail_on_warning.vhd",
+            root / ".." / "img" / f"{snippet}.html",
+            snippet,
+        )
+
+    for snippet in [
         "tb_stop_level",
     ]:
         highlight_code(
@@ -164,7 +173,7 @@ for test_pattern in test_patterns:
         args.verbose = True
         options += " -v"
 
-    vu = VUnit.from_args(args=args, compile_builtins=False)
+    vu = VUnit.from_args(args=args)
     vu.add_vhdl_builtins()
 
     lib = vu.add_library("lib")

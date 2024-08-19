@@ -69,17 +69,17 @@ architecture a of tb_axi_stream is
 
   constant n_monitors : natural := 3;
 
-  signal aclk     : std_logic := '0';
+  signal aclk : std_logic := '0';
   signal areset_n : std_logic := '1';
-  signal tvalid   : std_logic;
-  signal tready   : std_logic;
-  signal tdata    : std_logic_vector(data_length(slave_axi_stream)-1 downto 0);
-  signal tlast    : std_logic;
-  signal tkeep    : std_logic_vector(data_length(slave_axi_stream)/8-1 downto 0);
-  signal tstrb    : std_logic_vector(data_length(slave_axi_stream)/8-1 downto 0);
-  signal tid      : std_logic_vector(id_length(slave_axi_stream)-1 downto 0);
-  signal tdest    : std_logic_vector(dest_length(slave_axi_stream)-1 downto 0);
-  signal tuser    : std_logic_vector(user_length(slave_axi_stream)-1 downto 0);
+  signal tvalid : std_logic;
+  signal tready : std_logic;
+  signal tdata : std_logic_vector(data_length(slave_axi_stream)-1 downto 0);
+  signal tlast : std_logic;
+  signal tkeep, tkeep_from_master : std_logic_vector(data_length(slave_axi_stream)/8-1 downto 0);
+  signal tstrb, tstrb_from_master : std_logic_vector(data_length(slave_axi_stream)/8-1 downto 0);
+  signal tid : std_logic_vector(id_length(slave_axi_stream)-1 downto 0);
+  signal tdest : std_logic_vector(dest_length(slave_axi_stream)-1 downto 0);
+  signal tuser : std_logic_vector(user_length(slave_axi_stream)-1 downto 0);
 
   signal not_valid      : std_logic;
   signal not_valid_data : std_logic;
@@ -89,6 +89,8 @@ architecture a of tb_axi_stream is
   signal not_valid_dest : std_logic;
   signal not_valid_user : std_logic;
 
+  signal connected_tkeep : boolean := true;
+  signal connected_tstrb : boolean := true;
   -----------------------------------------------------------------------------
   -- signals used for the statistics for stall evaluation
   type axis_stall_stats_fields_t is record
@@ -228,6 +230,36 @@ begin
         check_equal(axi_stream_transaction.tid, std_logic_vector'(x"11"), result("pop stream id"));
         check_equal(axi_stream_transaction.tdest, std_logic_vector'(x"22"), result("pop stream dest"));
         check_equal(axi_stream_transaction.tuser, std_logic_vector'(x"33"), result("pop stream user"));
+      end loop;
+
+    elsif run("test disconnecting tstrb and tkeep") then
+      for iter in 1 to 2 loop
+        connected_tstrb <= false;
+        connected_tkeep <= iter = 1;
+        if iter = 1 then
+          push_axi_stream(net, master_axi_stream, x"99", tlast => '1', tkeep => "1", tid => x"11", tdest => x"22", tuser => x"33" );
+        else
+          push_axi_stream(net, master_axi_stream, x"99", tlast => '1', tid => x"11", tdest => x"22", tuser => x"33" );
+        end if;
+        pop_axi_stream(net, slave_axi_stream, data, last, keep, strb, id, dest, user);
+        check_equal(data, std_logic_vector'(x"99"), result("pop axi stream data"));
+        check_equal(last, std_logic'('1'), result("pop stream last"));
+        check_equal(keep, std_logic_vector'("1"), result("pop stream keep"));
+        check_equal(strb, std_logic_vector'("1"), result("pop stream strb"));
+        check_equal(id, std_logic_vector'(x"11"), result("pop stream id"));
+        check_equal(dest, std_logic_vector'(x"22"), result("pop stream dest"));
+        check_equal(user, std_logic_vector'(x"33"), result("pop stream user"));
+
+        for i in 1 to n_monitors loop
+          get_axi_stream_transaction(axi_stream_transaction);
+          check_equal(axi_stream_transaction.tdata, std_logic_vector'(x"99"), result("for axi_stream_transaction.tdata"));
+          check_true(axi_stream_transaction.tlast, result("for axi_stream_transaction.tlast"));
+          check_equal(axi_stream_transaction.tkeep, std_logic_vector'("1"), result("pop stream keep"));
+          check_equal(axi_stream_transaction.tstrb, std_logic_vector'("1"), result("pop stream strb"));
+          check_equal(axi_stream_transaction.tid, std_logic_vector'(x"11"), result("pop stream id"));
+          check_equal(axi_stream_transaction.tdest, std_logic_vector'(x"22"), result("pop stream dest"));
+          check_equal(axi_stream_transaction.tuser, std_logic_vector'(x"33"), result("pop stream user"));
+        end loop;
       end loop;
 
     elsif run("test single stalled push and pop") then
@@ -422,8 +454,8 @@ begin
                 to_nibble_string(keep) & " (" & to_string(to_integer(keep)) & "). Expected " &
                 to_nibble_string(not keep) & " (" & to_string(to_integer(not keep)) & ").", error);
       check_log(mocklogger, "TSTRB mismatch, checking axi stream - Got " &
-                to_nibble_string(keep) & " (" & to_string(to_integer(keep)) & "). Expected " &
-                to_nibble_string(not keep) & " (" & to_string(to_integer(not keep)) & ").", error);
+                to_nibble_string(strb) & " (" & to_string(to_integer(strb)) & "). Expected " &
+                to_nibble_string(not strb) & " (" & to_string(to_integer(not strb)) & ").", error);
       check_log(mocklogger, "TLAST mismatch, checking axi stream - Got 1. Expected 0.", error);
       if id'length > 0 then
         check_log(mocklogger, "TID mismatch, checking axi stream - Got 0010_0010 (34). Expected 0010_0011 (35).", error);
@@ -644,19 +676,22 @@ begin
       tready   => tready,
       tdata    => tdata,
       tlast    => tlast,
-      tkeep    => tkeep,
-      tstrb    => tstrb,
+      tkeep    => tkeep_from_master,
+      tstrb    => tstrb_from_master,
       tid      => tid,
       tuser    => tuser,
       tdest    => tdest);
+
+  tkeep <= tkeep_from_master when connected_tkeep else (others => '1');
+  tstrb <= tstrb_from_master when connected_tstrb else (others => 'U');
 
  not_valid <= not tvalid;
 
  not_valid_data <= '1' when is_x(tdata) else '0';
  check_true(aclk, not_valid, not_valid_data, "Invalid data not X");
- not_valid_keep <= '1' when is_x(tkeep) else '0';
+ not_valid_keep <= '1' when is_x(tkeep_from_master) else '0';
  check_true(aclk, not_valid, not_valid_keep, "Invalid keep not X");
- not_valid_strb <= '1' when is_x(tstrb) else '0';
+ not_valid_strb <= '1' when is_x(tstrb_from_master) else '0';
  check_true(aclk, not_valid, not_valid_strb, "Invalid strb not X");
  GEN_CHECK_INVALID_ID: if g_id_length > 0 generate
    not_valid_id   <= '1' when is_x(tid) else '0';

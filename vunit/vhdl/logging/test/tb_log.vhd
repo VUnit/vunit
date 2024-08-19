@@ -105,10 +105,15 @@ begin
 
     constant max_time_str : string := time'image(1 sec);
     constant time_padding  : string(max_time_str'range) := (others => ' ');
-    impure function format_time(t : time) return string is
-      constant time_str : string := time'image(t);
+
+    impure function format_time(time_str : string) return string is
     begin
       return (1 to (max_time_str'length - time_str'length) => ' ') & time_str;
+    end function;
+
+    impure function format_time(t : time) return string is
+    begin
+      return format_time(time'image(t));
     end function;
 
     variable file_handler : log_handler_t := new_log_handler(log_file_name,
@@ -270,6 +275,26 @@ begin
       set_string(entries, "0", format_time(0 ns) & " - logger               -    INFO - hello");
       set_string(entries, "1", time_padding      & "                                    world");
       set_string(entries, "2", time_padding      & "                                        !");
+      check_log_file(file_handler, log_file_name, entries);
+
+    elsif run("verbose format with auto unit and fix number of decimals") then
+      set_format(display_handler, format => verbose, log_time_unit => auto_time_unit, n_log_time_decimals => 2);
+      init_log_handler(file_handler, file_name => log_file_name, format => verbose,
+        log_time_unit => auto_time_unit, n_log_time_decimals => 2
+      );
+      wait for 123456 ps;
+      info(logger, "message");
+      set_string(entries, "0", format_time("123.45 ns") & " - logger               -    INFO - message");
+      check_log_file(file_handler, log_file_name, entries);
+
+    elsif run("verbose format with custom unit and full resolution") then
+      set_format(display_handler, format => verbose, log_time_unit => us, n_log_time_decimals => 8);
+      init_log_handler(file_handler, file_name => log_file_name, format => verbose,
+        log_time_unit => us, n_log_time_decimals => 8
+      );
+      wait for 12345 ps;
+      info(logger, "message");
+      set_string(entries, "0", format_time("0.01234500 us") & " - logger               -    INFO - message");
       check_log_file(file_handler, log_file_name, entries);
 
     elsif run("hierarchical format") then

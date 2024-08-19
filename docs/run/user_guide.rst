@@ -163,12 +163,18 @@ good reasons for this
 Possible drawbacks to this approach are that test cases have to be independent and the overhead
 of starting a new simulation for each test case (this is typically less than one second per test case). If that
 is the case you can force all test cases of a testbench to be run in the same simulation. This is done by adding
-the ``run_all_in_same_sim`` attribute.
+the ``run_all_in_same_sim`` attribute (``-- vunit: run_all_in_same_sim``) before the test suite.
 
 .. raw:: html
     :file: img/tb_run_all_in_same_sim.html
 
 
+The ``run_all_in_same_sim`` attribute can also be set from the run script, see :class:`vunit.ui.testbench.TestBench`.
+
+.. important::
+   When setting ``run_all_in_same_sim`` from the run script, the setting must be identical for all configurations
+   of the testbench.
+	   
 The VUnit Watchdog
 ------------------
 
@@ -196,10 +202,22 @@ test.
 .. raw:: html
     :file: img/tb_stopping_failure.html
 
-All these test cases will fail
+All but the last of these test cases will fail
 
 .. raw:: html
     :file: img/tb_stopping_failure_stdout.html
+
+By setting the VUnit ``fail_on_warning`` attribute (``-- vunit: fail_on_warning``) before the test suite,
+the last test case will also fail.
+
+.. raw:: html
+    :file: img/tb_fail_on_warning.html
+
+The ``fail_on_warning`` attribute can also be set from the run script, see :class:`vunit.ui.testbench.TestBench`.
+
+.. important::
+   When setting ``fail_on_warning`` from the run script, the setting must be identical for all configurations
+   of the testbench.
 
 Counting Errors with VUnit Logging/Check Libraries
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
