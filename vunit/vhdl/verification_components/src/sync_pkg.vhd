@@ -16,9 +16,11 @@ package sync_pkg is
   -- Handle to talk to a VC implementing the sync VCI
   alias sync_handle_t is actor_t;
 
-  -- Blocking: Wait until all operations requested from the VC have been finished
+  -- Blocking: Wait until all operations requested from the VC have been
+  -- finished or timeout has been reached. A timeout results in an error.
   procedure wait_until_idle(signal net : inout network_t;
-                            handle     :       sync_handle_t);
+                            handle     :       sync_handle_t;
+                            timeout    :       delay_length := max_timeout);
 
   -- Non-blocking: Make VC wait for a delay before starting the next operation
   procedure wait_for_time(signal net : inout network_t;
