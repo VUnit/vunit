@@ -29,7 +29,8 @@ end entity;
 architecture a of tb_axi_master is
   constant num_random_tests : integer := 128;
 
-  signal clk    : std_logic := '0';
+  signal clk      : std_logic := '0';
+  signal areset_n : std_logic := '0';
 
   signal arvalid : std_logic;
   signal arready : std_logic := '0';
@@ -70,10 +71,16 @@ architecture a of tb_axi_master is
 
   constant memory : memory_t := new_memory;
   constant axi_rd_slave : axi_slave_t := new_axi_slave(memory => memory,
-                                                logger => get_logger("axi_rd_slave"));
+                                                logger => get_logger("axi_rd_slave"),
+                                                address_stall_probability => 0.5,
+                                                data_stall_probability =>  0.5,
+                                                write_response_stall_probability => 0.5);
 
   constant axi_wr_slave : axi_slave_t := new_axi_slave(memory => memory,
-                                                logger => get_logger("axi_wr_slave"));
+                                                logger => get_logger("axi_wr_slave"),
+                                                address_stall_probability => 0.5,
+                                                data_stall_probability =>  0.5,
+                                                write_response_stall_probability => 0.5);
 
   constant tb_logger : logger_t := get_logger("tb");
 begin
@@ -142,9 +149,12 @@ begin
     variable memory_tmp : std_logic_vector(rdata'range);
 
     variable burst : natural := 0;
+
+    variable reference : bus_reference_t;
   begin
     test_runner_setup(runner, runner_cfg);
     rnd.InitSeed("common_seed");
+    areset_n <= '1';
     wait for 0 ns;
 
     if run("Test read with read_bus") then
@@ -255,6 +265,24 @@ begin
           wait_on_data_write_memory(memory);
         end loop;
 
+    elsif run("Test read asyncron reset") then
+      info(tb_logger, "Setup...");
+      burst := 1;
+      setup_and_set_random_data_read_memory(memory, burst, rdata'length, memory_data_queue);
+      info(tb_logger, "Reading...");
+      read_axi(net, axi_master_handle.p_bus_handle, x"00000000", "001", x"25", axi_resp_okay, reference);
+      info(tb_logger, "Sync on clk edge...");
+      wait until rising_edge(clk);
+      info(tb_logger, "Set reset asyncron...");
+      wait until rising_edge(arvalid);
+      areset_n <= '0' after 2ns;
+      wait until rising_edge(clk);
+      check_equal(arvalid, '0', "ARVALID not 0 when ARESET_N low");
+      wait until rising_edge(clk);
+      info(tb_logger, "Release reset asyncron...");
+      areset_n <= '1' after 0ps;
+      wait until rising_edge(clk);
+      check_equal(arvalid, '0', "ARVALID not 0 after ARESET_N low");
     end if;
 
     wait for 100 ns;
@@ -306,6 +334,7 @@ begin
       axi_master_handle => axi_master_handle)
     port map (
       aclk => clk,
+      areset_n => areset_n, 
 
       arvalid => arvalid,
       arready => arready,

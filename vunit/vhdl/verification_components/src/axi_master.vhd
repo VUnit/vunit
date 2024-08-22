@@ -34,7 +34,8 @@ entity axi_master is
   );
   port (
     aclk : in std_logic;
-
+    areset_n : in std_logic;
+    
     arvalid : out std_logic := '0';
     arready : in std_logic;
     arid : out std_logic_vector;
@@ -128,6 +129,16 @@ begin
       end if;
     end procedure;
 
+    procedure drive_idle is
+      begin
+        arvalid <= '0';
+        awvalid <= '0';
+        wvalid <= '0';
+        drive_ar_invalid;
+        drive_aw_invalid;
+        drive_w_invalid;
+    end procedure;
+
     function get_full_read_size return std_logic_vector is
       begin
         return std_logic_vector(to_unsigned(integer(ceil(log2(real(rdata'length/8)))), arsize'length));
@@ -154,12 +165,10 @@ begin
   begin
     -- Initialization
     rnd.InitSeed(rnd'instance_name);
-    drive_ar_invalid;
-    drive_aw_invalid;
-    drive_w_invalid;
+    drive_idle;
 
     loop
-      wait until rising_edge(aclk) and not is_empty(message_queue);
+      wait until rising_edge(aclk) and not is_empty(message_queue) and areset_n = '1';
       idle <= false;
       wait for 0 ps;
 
@@ -167,8 +176,8 @@ begin
       msg_type := message_type(request_msg);
 
       if is_read(msg_type) then
-        while rnd.Uniform(0.0, 1.0) > axi_master_handle.p_read_high_probability loop
-          wait until rising_edge(aclk);
+        while rnd.Uniform(0.0, 1.0) > axi_master_handle.p_read_high_probability and areset_n = '1' loop
+          wait until rising_edge(aclk) or areset_n = '0';
         end loop;
         
         addr := pop_std_ulogic_vector(request_msg);
@@ -216,7 +225,7 @@ begin
         push(read_reply_queue, request_msg);
 
         arvalid <= '1';
-        wait until (arvalid and arready) = '1' and rising_edge(aclk);
+        wait until ((arvalid and arready) = '1' and rising_edge(aclk)) or areset_n = '0';
         arvalid <= '0';
         drive_ar_invalid;
 
@@ -319,6 +328,14 @@ begin
         unexpected_msg_type(msg_type);
       end if;
 
+      if areset_n = '0' then 
+        drive_idle;
+        flush(read_reply_queue);
+        flush(write_reply_queue);
+        flush(message_queue);
+        wait for 0 ps;
+      end if;
+
       idle <= true;
     end loop;
   end process;
@@ -345,40 +362,47 @@ begin
   begin
     
     rready <= '1';
-    wait until (rvalid and rready) = '1' and rising_edge(aclk);
+    wait until ((rvalid and rready) = '1' and rising_edge(aclk));
     
-    reply_msg := new_msg;
-    request_msg := pop(read_reply_queue);
-    msg_type := message_type(request_msg);
+    if areset_n = '1' then 
+      reply_msg := new_msg;
+      request_msg := pop(read_reply_queue);
+      msg_type := message_type(request_msg);
 
-    addr := pop_std_ulogic_vector(request_msg);
-    len := pop_integer(request_msg);
-    size := pop_std_ulogic_vector(request_msg);
-    burst := pop_std_ulogic_vector(request_msg);
-    id := pop_std_ulogic_vector(request_msg);
-    resp := pop(request_msg);
+      addr := pop_std_ulogic_vector(request_msg);
+      len := pop_integer(request_msg);
+      size := pop_std_ulogic_vector(request_msg);
+      burst := pop_std_ulogic_vector(request_msg);
+      id := pop_std_ulogic_vector(request_msg);
+      resp := pop(request_msg);
 
-    if msg_type = bus_burst_read_msg or msg_type =  axi_burst_read_msg then 
-      push_integer(reply_msg, len + 1);  -- bring axi burst up to bus one based indexing
-    end if;
+      if msg_type = bus_burst_read_msg or msg_type =  axi_burst_read_msg then 
+        push_integer(reply_msg, len + 1);  -- bring axi burst up to bus one based indexing
+      end if;
 
-    -- first iteration
-    check_axi_id(axi_master_handle.p_bus_handle, rid, id, "rid");
-    check_axi_resp(axi_master_handle.p_bus_handle, rresp, resp, "rresp");
-    write_debug;
-    push_std_ulogic_vector(reply_msg, rdata);
-
-    -- burst iterations
-    for i in 0 to len - 1 loop
-      wait until (rvalid and rready) = '1' and rising_edge(aclk);
+      -- first iteration
       check_axi_id(axi_master_handle.p_bus_handle, rid, id, "rid");
       check_axi_resp(axi_master_handle.p_bus_handle, rresp, resp, "rresp");
       write_debug;
       push_std_ulogic_vector(reply_msg, rdata);
-    end loop;
 
-    reply(net, request_msg, reply_msg);
-    delete(request_msg);
+      -- burst iterations
+      for i in 0 to len - 1 loop
+        wait until ((rvalid and rready) = '1' and rising_edge(aclk)) or areset_n = '0';
+        if areset_n = '0' then 
+          exit;
+        end if;
+        check_axi_id(axi_master_handle.p_bus_handle, rid, id, "rid");
+        check_axi_resp(axi_master_handle.p_bus_handle, rresp, resp, "rresp");
+        write_debug;
+        push_std_ulogic_vector(reply_msg, rdata);
+      end loop;
+
+      if areset_n = '1' then 
+        reply(net, request_msg, reply_msg);
+        delete(request_msg);
+      end if;
+    end if;
   end process;
 
   -- Reply in separate process do not destroy alignment with the clock
