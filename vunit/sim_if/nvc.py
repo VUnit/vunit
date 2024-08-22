@@ -150,6 +150,13 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
         """
         return True
 
+    @classmethod
+    def supported_foreign_language_interfaces(cls):
+        """
+        Returns set of supported foreign interfaces
+        """
+        return set(["VHPIDIRECT_NVC"])
+
     def setup_library_mapping(self, project):
         """
         Setup library mapping

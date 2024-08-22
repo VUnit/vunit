@@ -187,6 +187,13 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
         return True
 
     @classmethod
+    def supported_foreign_language_interfaces(cls):
+        """
+        Returns set of supported foreign interfaces
+        """
+        return set(["VHPIDIRECT_GHDL"])
+
+    @classmethod
     def supports_vhpi(cls):
         """
         Returns True when the simulator supports VHPI

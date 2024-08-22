@@ -519,4 +519,14 @@ package body run_pkg is
     end if;
   end;
 
+  impure function run_script_path(
+    constant runner_cfg : string)
+  return string is
+  begin
+    if has_key(runner_cfg, "run script path") then
+      return get(runner_cfg, "run script path");
+    else
+      return "";
+    end if;
+  end;
 end package body run_pkg;
