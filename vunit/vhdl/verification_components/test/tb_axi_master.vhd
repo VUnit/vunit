@@ -277,12 +277,31 @@ begin
       wait until rising_edge(arvalid);
       areset_n <= '0' after 2ns;
       wait until rising_edge(clk);
-      check_equal(arvalid, '0', "ARVALID not 0 when ARESET_N low");
+      check_equal(arvalid, '0', "ARVALID 0 when ARESET_N low");
       wait until rising_edge(clk);
       info(tb_logger, "Release reset asyncron...");
       areset_n <= '1' after 0ps;
       wait until rising_edge(clk);
-      check_equal(arvalid, '0', "ARVALID not 0 after ARESET_N low");
+      check_equal(arvalid, '0', "ARVALID 0 after ARESET_N low");
+    elsif run("Test write asyncron reset") then
+      info(tb_logger, "Setup...");
+      burst := 1;
+      setup_and_set_random_data_write_memory(memory, burst, wdata'length, memory_data_queue);
+      info(tb_logger, "Reading...");
+      write_axi(net, axi_master_handle.p_bus_handle, x"00000000", pop(memory_data_queue), "001", x"25", axi_resp_okay);
+      info(tb_logger, "Sync on clk edge...");
+      wait until rising_edge(clk);
+      info(tb_logger, "Set reset asyncron...");
+      wait until rising_edge(awvalid);
+      areset_n <= '0' after 2ns;
+      wait until rising_edge(clk);
+      check_equal(arvalid, '0', "AWVALID 0 when ARESET_N low");
+      wait until rising_edge(clk);
+      info(tb_logger, "Release reset asyncron...");
+      areset_n <= '1' after 0ps;
+      wait until rising_edge(clk);
+      check_equal(awvalid, '0', "AWVALID 0 after ARESET_N low");
+      check_equal(wvalid, '0', "WVALID 0 after ARESET_N low");
     end if;
 
     wait for 100 ns;

@@ -230,8 +230,8 @@ begin
         drive_ar_invalid;
 
       elsif is_write(msg_type) then
-        while rnd.Uniform(0.0, 1.0) > axi_master_handle.p_write_high_probability loop
-          wait until rising_edge(aclk);
+        while rnd.Uniform(0.0, 1.0) > axi_master_handle.p_write_high_probability and areset_n = '1' loop
+          wait until rising_edge(aclk) or areset_n = '0';
         end loop;
 
         addr := pop_std_ulogic_vector(request_msg);
@@ -287,7 +287,11 @@ begin
         wlast <= '1' when len = 0 else '0';
 
         while not (w_done and aw_done) loop
-          wait until ((awvalid and awready) = '1' or (wvalid and wready) = '1') and rising_edge(aclk);
+          wait until (((awvalid and awready) = '1' or (wvalid and wready) = '1') and rising_edge(aclk)) or areset_n = '0';
+
+          if areset_n = '0' then 
+            exit;
+          end if;
 
           if (awvalid and awready) = '1' then
             awvalid <= '0';
@@ -319,10 +323,12 @@ begin
 
         end loop;
 
-        push_std_ulogic_vector(request_msg, addr);
-        push_std_ulogic_vector(request_msg, id);
-        push_std_ulogic_vector(request_msg, resp);
-        push(write_reply_queue, request_msg);
+        if areset_n = '1' then 
+          push_std_ulogic_vector(request_msg, addr);
+          push_std_ulogic_vector(request_msg, id);
+          push_std_ulogic_vector(request_msg, resp);
+          push(write_reply_queue, request_msg);
+        end if;
 
       else
         unexpected_msg_type(msg_type);
@@ -417,18 +423,20 @@ begin
     
     bready <= '1';
     wait until (bvalid and bready) = '1' and rising_edge(aclk);
-    bready <= '0';
+    if areset_n = '1' then 
+      bready <= '0';
 
-    request_msg := pop(write_reply_queue);
-    msg_type := message_type(request_msg);
-    addr := pop_std_ulogic_vector(request_msg);
-    id := pop_std_ulogic_vector(request_msg);
-    resp := pop_std_ulogic_vector(request_msg);
+      request_msg := pop(write_reply_queue);
+      msg_type := message_type(request_msg);
+      addr := pop_std_ulogic_vector(request_msg);
+      id := pop_std_ulogic_vector(request_msg);
+      resp := pop_std_ulogic_vector(request_msg);
 
-    check_axi_id(axi_master_handle.p_bus_handle, bid, id, "bid");
-    check_axi_resp(axi_master_handle.p_bus_handle, bresp, resp, "bresp");
+      check_axi_id(axi_master_handle.p_bus_handle, bid, id, "bid");
+      check_axi_resp(axi_master_handle.p_bus_handle, bresp, resp, "bresp");
 
-    delete(request_msg);
+      delete(request_msg);
+    end if;
   end process;
 
 end architecture;
