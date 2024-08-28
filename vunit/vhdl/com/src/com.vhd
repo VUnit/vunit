@@ -447,6 +447,11 @@ package body com_pkg is
 
     check(position /= -1, null_message_error);
 
+    -- For testing purposes when logger is mocked and the check procedure returns
+    if position = -1 then
+      return;
+    end if;
+
     get_message(net, source_actor, position, mailbox_id, reply_msg);
   end;
 
