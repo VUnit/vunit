@@ -73,7 +73,7 @@ class VHDLDesignFile(object):  # pylint: disable=too-many-instance-attributes
         Return a new VHDLDesignFile instance by parsing the code
         """
         code = remove_comments(code).lower()
-        return cls(
+        result = cls(
             entities=list(VHDLEntity.find(code)),
             architectures=list(VHDLArchitecture.find(code)),
             packages=list(VHDLPackage.find(code)),
@@ -83,6 +83,19 @@ class VHDLDesignFile(object):  # pylint: disable=too-many-instance-attributes
             configurations=list(VHDLConfiguration.find(code)),
             references=list(VHDLReference.find(code)),
         )
+        #The following lines fix an issue with use declarations of instantiated packages.
+        #Those may only have two parts like "package"."selected_name" which are incorrectly detected
+        #as "library"."package" by the parser. Whether the first name is a package or a library
+        #can only be understood by the context. We exclude any use references of the instantiated
+        #package name here. This is not 100% correct, as there may be visible instantiated packages
+        #in other files such as primary units or packages.
+        instantiated_packages = VHDLPackage.find_all_package_instances(code)
+        fixed_references = []
+        for ref in result.references:
+            if all(ref.library != package.identifier for package in instantiated_packages):
+                fixed_references.append(ref)
+        result.references = fixed_references
+        return result
 
     _component_re = re.compile(
         r"[a-zA-Z]\w*\s*\:\s*(?:component)?\s*(?:(?:[a-zA-Z]\w*)\.)?([a-zA-Z]\w*)\s*"
@@ -245,6 +258,7 @@ class VHDLPackage(object):
                 yield cls.parse(sub_code[: match.end()])
 
     _package_instance_re = re.compile("^" + PACKAGE_INSTANCE_PATTERN, re.MULTILINE | re.IGNORECASE)
+    _package_instance_includeindent_re = re.compile(PACKAGE_INSTANCE_PATTERN, re.MULTILINE | re.IGNORECASE)
 
     @classmethod
     def _find_package_instances(cls, code):
@@ -254,6 +268,17 @@ class VHDLPackage(object):
         """
         references = []
         for match in cls._package_instance_re.finditer(code):
+            references.append(cls(match.group("new_name"), [], [], []))
+        return references
+    
+    @classmethod    
+    def find_all_package_instances(cls, code):
+        """
+        Find all package instances.
+        Does not filter out any nested package instances.
+        """
+        references = []
+        for match in cls._package_instance_includeindent_re.finditer(code):
             references.append(cls(match.group("new_name"), [], [], []))
         return references
 
