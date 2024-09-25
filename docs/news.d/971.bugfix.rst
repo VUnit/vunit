@@ -1,0 +1,1 @@
+Fixed bug for ``check_relation`` when using custom checker.
