@@ -11,11 +11,13 @@ Interface towards Mentor Graphics ModelSim
 from pathlib import Path
 import os
 import logging
+from typing import Optional, Set, Union
 from configparser import RawConfigParser
 from ..exceptions import CompileError
 from ..ostools import Process, file_exists
 from ..vhdl_standard import VHDL
 from . import SimulatorInterface, ListOfStringOption, StringOption
+from . import DictOfStringOption
 from .vsim_simulator_mixin import VsimSimulatorMixin, fix_path
 
 LOGGER = logging.getLogger(__name__)
@@ -41,6 +43,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
     sim_options = [
         ListOfStringOption("modelsim.vsim_flags"),
         ListOfStringOption("modelsim.vsim_flags.gui"),
+        DictOfStringOption("modelsim.vsim_ini.gui"),
         ListOfStringOption("modelsim.init_files.after_load"),
         ListOfStringOption("modelsim.init_files.before_run"),
         StringOption("modelsim.init_file.gui"),
@@ -233,6 +236,8 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         Create the vunit_load TCL function that runs the vsim command and loads the design
         """
 
+        self._vsim_extra_ini(config)
+
         set_generic_str = " ".join(
             (
                 f"-g/{config.entity_name!s}/{name!s}={encode_generic_value(value)!s}"
@@ -329,7 +334,7 @@ proc vunit_load {{{{vsim_extra_args ""}}}} {{
         """
         Create the vunit_run function to run the test bench
         """
-        return """
+        tcl = """
 
 proc _vunit_run_failure {} {
     catch {
@@ -359,6 +364,7 @@ proc _vunit_sim_restart {} {
     restart -f
 }
 """
+        return tcl
 
     def _vsim_extra_args(self, config):
         """
@@ -371,6 +377,46 @@ proc _vunit_sim_restart {} {
             vsim_extra_args = config.sim_options.get("modelsim.vsim_flags.gui", vsim_extra_args)
 
         return " ".join(vsim_extra_args)
+
+    def _vsim_extra_ini(self, config):
+        if not self._gui:
+            return
+
+        cfg = parse_modelsimini(self._sim_cfg_file_name)
+
+        vsim_extra_ini = {}
+        vsim_extra_ini = config.sim_options.get("modelsim.vsim_ini.gui", vsim_extra_ini)
+        for name, val in vsim_extra_ini.items():
+            cfg.set("vsim", name, val)
+
+        write_modelsimini(cfg, self._sim_cfg_file_name)
+        return
+
+    def _create_gui_script(self, common_file_name, config):
+        cfg = parse_modelsimini(self._sim_cfg_file_name)
+        vsimcfg = dict(cfg.items("vsim"))
+        if "shutdownfile" in vsimcfg:
+            dofile = vsimcfg["shutdownfile"]
+            self._dostartup_cleanup(dofile)
+
+        return super()._create_gui_script(common_file_name, config)
+
+    def _dostartup_cleanup(self, dofile : str):
+        """
+        cleanup restore session do-file from vsim command options, since it breaks options invoked 
+            by vunit
+        """
+        if file_exists(dofile):
+            dofinal = [];
+            with open(dofile, 'rt') as file_in:
+                ## dofinal = filter(lambda line: not line.startswith("vsim"), file_in )
+                for line in file_in:
+                    if not line.startswith("vsim"):
+                        dofinal.append(line)
+            
+            with open(dofile, 'wt') as file_out:
+                file_out.writelines(dofinal)
+        
 
     def merge_coverage(self, file_name, args=None):
         """
