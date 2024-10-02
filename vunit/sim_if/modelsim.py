@@ -11,6 +11,7 @@ Interface towards Mentor Graphics ModelSim
 from pathlib import Path
 import os
 import logging
+from typing import Optional, Set, Union
 from configparser import RawConfigParser
 from ..exceptions import CompileError
 from ..ostools import Process, file_exists
@@ -390,6 +391,32 @@ proc _vunit_sim_restart {} {
 
         write_modelsimini(cfg, self._sim_cfg_file_name)
         return
+
+    def _create_gui_script(self, common_file_name, config):
+        cfg = parse_modelsimini(self._sim_cfg_file_name)
+        vsimcfg = dict(cfg.items("vsim"))
+        if "shutdownfile" in vsimcfg:
+            dofile = vsimcfg["shutdownfile"]
+            self._dostartup_cleanup(dofile)
+
+        return super()._create_gui_script(common_file_name, config)
+
+    def _dostartup_cleanup(self, dofile : str):
+        """
+        cleanup restore session do-file from vsim command options, since it breaks options invoked 
+            by vunit
+        """
+        if file_exists(dofile):
+            dofinal = [];
+            with open(dofile, 'rt') as file_in:
+                ## dofinal = filter(lambda line: not line.startswith("vsim"), file_in )
+                for line in file_in:
+                    if not line.startswith("vsim"):
+                        dofinal.append(line)
+            
+            with open(dofile, 'wt') as file_out:
+                file_out.writelines(dofinal)
+        
 
     def merge_coverage(self, file_name, args=None):
         """
