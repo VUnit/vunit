@@ -62,10 +62,12 @@ begin
     if run("single_write") then
       buf := allocate(memory => memory, num_bytes => 2, permissions => write_only);
       mock(get_logger(bus_handle), debug);
+      set_expected_word(memory, base_address(buf), x"1122");
       write_bus(net, bus_handle, base_address(buf), x"1122");
       wait_until_idle(net, bus_handle);
       check_only_log(get_logger(bus_handle), "Wrote 0x1122 to address 0x00000000", debug);
       unmock(get_logger(bus_handle));
+      check_expected_was_written(memory);
 
     elsif run("single_read") then
       buf := allocate(memory => memory, num_bytes => 2, permissions => read_only);
