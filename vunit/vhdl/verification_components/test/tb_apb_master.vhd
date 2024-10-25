@@ -43,14 +43,15 @@ architecture a of tb_apb_master is
                                                 address_length => paddr'length);
   constant memory : memory_t := new_memory;
   constant slave_handle : apb_slave_t := new_apb_slave(memory => memory,
-                                                       logger => get_logger("apb slave"));
+                                                       logger => get_logger("apb slave"),
+                                                       ready_high_probability => 0.5);
 
   signal start : boolean := false;
 begin
 
   main_stim : process
     variable buf : buffer_t;
-    variable data : std_logic_vector(prdata'range);
+    variable data, data2 : std_logic_vector(prdata'range);
     variable bus_ref1, bus_ref2 : bus_reference_t;
   begin
     show(get_logger("apb slave"), display_handler, debug);
@@ -92,6 +93,25 @@ begin
       set_expected_word(memory, base_address(buf)+2, x"5678");
       write_bus(net, bus_handle, base_address(buf), x"1234");
       write_bus(net, bus_handle, base_address(buf)+2, x"5678");
+      wait_until_idle(net, bus_handle);
+      check_expected_was_written(memory);
+
+    elsif run("many_reads") then
+      for i in 1 to 100 loop
+        buf := allocate(memory => memory, num_bytes => 2, permissions => read_only);
+        data := std_logic_vector(to_unsigned(i, BUS_DATA_WIDTH));
+        write_word(memory, base_address(buf), data);
+        read_bus(net, bus_handle, base_address(buf), data2);
+        check_equal(data2, data, "Check read data.");
+      end loop;
+
+    elsif run("many_writes") then
+      for i in 1 to 100 loop
+        buf := allocate(memory => memory, num_bytes => 2, permissions => write_only);
+        data := std_logic_vector(to_unsigned(i, BUS_DATA_WIDTH));
+        set_expected_word(memory, base_address(buf), data);
+        write_bus(net, bus_handle, base_address(buf), data);
+      end loop;
       wait_until_idle(net, bus_handle);
       check_expected_was_written(memory);
 

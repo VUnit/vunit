@@ -8,6 +8,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+library osvvm;
+use osvvm.RandomPkg.RandomPType;
+
 use work.memory_pkg.all;
 use work.apb_pkg.all;
 use work.logger_pkg.all;
@@ -45,6 +48,7 @@ begin
     end procedure;
 
     variable addr : integer;
+    variable rnd : RandomPType;
   begin
     drive_outputs_invalid;
     wait until rising_edge(clk);
@@ -55,6 +59,11 @@ begin
 
       wait until psel_i = '1' and rising_edge(clk);
       -- ACCESS state
+
+      while rnd.Uniform(0.0, 1.0) > bus_handle.ready_high_probability loop
+        pready_o <= '0';
+        wait until rising_edge(clk);
+      end loop;
 
       pready_o <= '1';
 
