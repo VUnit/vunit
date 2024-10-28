@@ -12,7 +12,7 @@ library osvvm;
 use osvvm.RandomPkg.RandomPType;
 
 use work.memory_pkg.all;
-use work.apb_pkg.all;
+use work.apb_slave_pkg.all;
 use work.logger_pkg.all;
 
 entity apb_slave is

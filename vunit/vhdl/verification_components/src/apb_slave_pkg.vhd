@@ -14,7 +14,7 @@ use work.logger_pkg.all;
 use work.memory_pkg.memory_t;
 use work.memory_pkg.to_vc_interface;
 
-package apb_pkg is
+package apb_slave_pkg is
 
   type apb_slave_t is record
     ready_high_probability : real range 0.0 to 1.0;
@@ -35,7 +35,7 @@ package apb_pkg is
     constant slave_read_msg   : msg_type_t := new_msg_type("apb slave read");
 end package;
 
-package body apb_pkg is
+package body apb_slave_pkg is
 
   impure function new_apb_slave(
     memory : memory_t;

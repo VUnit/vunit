@@ -16,22 +16,21 @@ use work.queue_pkg.all;
 use work.sync_pkg.all;
 use work.logger_pkg.all;
 use work.log_levels_pkg.all;
+use work.apb_master_pkg.all;
 
 entity apb_master is
   generic (
-    bus_handle        : bus_master_t;
-    drive_invalid     : boolean := true;
-    drive_invalid_val : std_logic := 'X'
+    bus_handle        : apb_master_t
   );
   port (
     clk                 : in  std_logic;
     reset               : in  std_logic;
     psel_o              : out std_logic;
     penable_o           : out std_logic;
-    paddr_o             : out std_logic_vector(address_length(bus_handle) - 1 downto 0);
+    paddr_o             : out std_logic_vector(address_length(bus_handle.p_bus_handle) - 1 downto 0);
     pwrite_o            : out std_logic;
-    pwdata_o            : out std_logic_vector(data_length(bus_handle) - 1 downto 0);
-    prdata_i            : in  std_logic_vector(data_length(bus_handle) - 1 downto 0);
+    pwdata_o            : out std_logic_vector(data_length(bus_handle.p_bus_handle) - 1 downto 0);
+    prdata_i            : in  std_logic_vector(data_length(bus_handle.p_bus_handle) - 1 downto 0);
     pready_i            : in  std_logic
   );
 end entity;
@@ -57,7 +56,7 @@ begin
     variable msg_type : msg_type_t;
   begin    
     DISPATCH_LOOP : loop
-      receive(net, bus_handle.p_actor, request_msg);
+      receive(net, bus_handle.p_bus_handle.p_actor, request_msg);
       msg_type := message_type(request_msg);
 
       if msg_type = bus_read_msg then
@@ -78,11 +77,11 @@ begin
   BUS_PROCESS: process
     procedure drive_bus_invalid is
     begin
-      if drive_invalid then
-        penable_o <= drive_invalid_val;
-        paddr_o   <= (paddr_o'range => drive_invalid_val);
-        pwrite_o  <= drive_invalid_val;
-        pwdata_o  <= (pwdata_o'range => drive_invalid_val);
+      if bus_handle.p_drive_invalid then
+        penable_o <= bus_handle.p_drive_invalid_val;
+        paddr_o   <= (paddr_o'range => bus_handle.p_drive_invalid_val);
+        pwrite_o  <= bus_handle.p_drive_invalid_val;
+        pwdata_o  <= (pwdata_o'range => bus_handle.p_drive_invalid_val);
       end if;
     end procedure;
 
@@ -118,8 +117,8 @@ begin
         penable_o <= '1';
         wait until (pready_i and penable_o) = '1' and rising_edge(clk);
 
-        if is_visible(bus_handle.p_logger, debug) then
-          debug(bus_handle.p_logger,
+        if is_visible(bus_handle.p_bus_handle.p_logger, debug) then
+          debug(bus_handle.p_bus_handle.p_logger,
                 "Wrote 0x" & to_hstring(data_this_transaction) &
                   " to address 0x" & to_hstring(addr_this_transaction));
         end if;
