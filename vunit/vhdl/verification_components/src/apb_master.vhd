@@ -49,7 +49,7 @@ architecture behav of apb_master is
   begin
     return idle_bus;
   end function;
-  
+
 begin
 
   PROC_MAIN: process
