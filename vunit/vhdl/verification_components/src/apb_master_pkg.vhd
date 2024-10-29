@@ -22,17 +22,15 @@ package apb_master_pkg is
     p_bus_handle : bus_master_t;
     p_drive_invalid     : boolean;
     p_drive_invalid_val : std_logic;
-    p_ready_high_probability : real range 0.0 to 1.0;
   end record;
 
   impure function new_apb_master(
     data_length : natural;
     address_length : natural;
-    logger : logger_t := bus_logger;
+    logger : logger_t := null_logger;
     actor : actor_t := null_actor;
     drive_invalid : boolean := true;
-    drive_invalid_val : std_logic := 'X';
-    ready_high_probability : real := 1.0
+    drive_invalid_val : std_logic := 'X'
   ) return apb_master_t;
 
   function get_logger(bus_handle : apb_master_t) return logger_t;
@@ -116,24 +114,37 @@ package body apb_master_pkg is
   impure function new_apb_master(
     data_length : natural;
     address_length : natural;
-    logger : logger_t := bus_logger;
+    logger : logger_t := null_logger;
     actor : actor_t := null_actor;
     drive_invalid : boolean := true;
-    drive_invalid_val : std_logic := 'X';
-    ready_high_probability : real := 1.0
+    drive_invalid_val : std_logic := 'X'
   ) return apb_master_t is
-    variable bus_handle : bus_master_t := new_bus(
-      data_length => data_length,
-      address_length => address_length,
-      logger => logger,
-      actor => actor
-    );    
+    impure function create_bus (logger : logger_t; actor : actor_t) return bus_master_t is
+    begin
+      return new_bus(
+        data_length => data_length,
+        address_length => address_length,
+        logger => logger,
+        actor => actor
+      );
+    end function;
+    variable actor_tmp : actor_t := null_actor;
+    variable logger_tmp : logger_t := null_logger;
   begin
+    if actor = null_actor then
+      actor_tmp := new_actor;
+    else
+      actor_tmp := actor;
+    end if;
+    if logger = null_logger then
+      logger_tmp := bus_logger;
+    else
+      logger_tmp := logger;
+    end if;
     return (
-      p_bus_handle => bus_handle,
+      p_bus_handle => create_bus(logger_tmp, actor_tmp),
       p_drive_invalid => drive_invalid,
-      p_drive_invalid_val => drive_invalid_val,
-      p_ready_high_probability => ready_high_probability
+      p_drive_invalid_val => drive_invalid_val
     );
   end;
 
