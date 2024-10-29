@@ -8,6 +8,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+use work.bus_master_pkg.all;
 use work.com_pkg.all;
 use work.com_types_pkg.all;
 use work.logger_pkg.all;
@@ -17,18 +18,23 @@ use work.memory_pkg.to_vc_interface;
 package apb_slave_pkg is
 
   type apb_slave_t is record
-    ready_high_probability : real range 0.0 to 1.0;
     -- Private
     p_actor : actor_t;
     p_memory : memory_t;
     p_logger : logger_t;
+    p_drive_invalid     : boolean;
+    p_drive_invalid_val : std_logic;
+    p_ready_high_probability : real range 0.0 to 1.0;
   end record;
 
   constant apb_slave_logger : logger_t := get_logger("vunit_lib:apb_slave_pkg");
   impure function new_apb_slave(
     memory : memory_t;
-    ready_high_probability : real := 1.0;
-    logger : logger_t := apb_slave_logger)
+    logger : logger_t := bus_logger;
+    actor : actor_t := null_actor;
+    drive_invalid : boolean := true;
+    drive_invalid_val : std_logic := 'X';
+    ready_high_probability : real := 1.0)
     return apb_slave_t;
 
     constant slave_write_msg  : msg_type_t := new_msg_type("apb slave write");
@@ -39,15 +45,21 @@ package body apb_slave_pkg is
 
   impure function new_apb_slave(
     memory : memory_t;
-    ready_high_probability : real := 1.0;
-    logger : logger_t := apb_slave_logger)
+    logger : logger_t := bus_logger;
+    actor : actor_t := null_actor;
+    drive_invalid : boolean := true;
+    drive_invalid_val : std_logic := 'X';
+    ready_high_probability : real := 1.0)
     return apb_slave_t is
   begin
-    return (p_actor => new_actor,
-            p_memory => to_vc_interface(memory, logger),
-            p_logger => logger,
-            ready_high_probability => ready_high_probability
-        );
+    return (
+      p_memory => to_vc_interface(memory, logger),
+      p_logger => logger,
+      p_actor => new_actor,
+      p_drive_invalid => drive_invalid,
+      p_drive_invalid_val => drive_invalid_val,
+      p_ready_high_probability => ready_high_probability
+    );
   end;
   
 end package body;

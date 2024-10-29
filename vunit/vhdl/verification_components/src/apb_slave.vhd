@@ -17,9 +17,7 @@ use work.logger_pkg.all;
 
 entity apb_slave is
   generic (
-    bus_handle        : apb_slave_t;
-    drive_invalid     : boolean := true;
-    drive_invalid_val : std_logic := 'X'
+    bus_handle        : apb_slave_t
   );
   port (
     clk                 : in  std_logic;
@@ -41,9 +39,9 @@ begin
   PROC_MAIN: process
     procedure drive_outputs_invalid is
     begin
-      if drive_invalid then
-        prdata_o <= (prdata_o'range => drive_invalid_val);
-        pready_o <= drive_invalid_val;
+      if bus_handle.p_drive_invalid then
+        prdata_o <= (prdata_o'range => bus_handle.p_drive_invalid_val);
+        pready_o <= bus_handle.p_drive_invalid_val;
       end if;
     end procedure;
 
@@ -60,7 +58,7 @@ begin
       wait until psel_i = '1' and rising_edge(clk);
       -- ACCESS state
 
-      while rnd.Uniform(0.0, 1.0) > bus_handle.ready_high_probability loop
+      while rnd.Uniform(0.0, 1.0) > bus_handle.p_ready_high_probability loop
         pready_o <= '0';
         wait until rising_edge(clk);
       end loop;
