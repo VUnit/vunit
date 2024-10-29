@@ -30,7 +30,7 @@ package apb_slave_pkg is
   constant apb_slave_logger : logger_t := get_logger("vunit_lib:apb_slave_pkg");
   impure function new_apb_slave(
     memory : memory_t;
-    logger : logger_t := bus_logger;
+    logger : logger_t := null_logger;
     actor : actor_t := null_actor;
     drive_invalid : boolean := true;
     drive_invalid_val : std_logic := 'X';
@@ -45,17 +45,29 @@ package body apb_slave_pkg is
 
   impure function new_apb_slave(
     memory : memory_t;
-    logger : logger_t := bus_logger;
+    logger : logger_t := null_logger;
     actor : actor_t := null_actor;
     drive_invalid : boolean := true;
     drive_invalid_val : std_logic := 'X';
     ready_high_probability : real := 1.0)
     return apb_slave_t is
+    variable actor_tmp : actor_t := null_actor;
+    variable logger_tmp : logger_t := null_logger;
   begin
+    if actor = null_actor then
+      actor_tmp := new_actor;
+    else
+      actor_tmp := actor;
+    end if;
+    if logger = null_logger then
+      logger_tmp := bus_logger;
+    else
+      logger_tmp := logger;
+    end if;
     return (
       p_memory => to_vc_interface(memory, logger),
-      p_logger => logger,
-      p_actor => new_actor,
+      p_logger => logger_tmp,
+      p_actor => actor_tmp,
       p_drive_invalid => drive_invalid,
       p_drive_invalid_val => drive_invalid_val,
       p_ready_high_probability => ready_high_probability
