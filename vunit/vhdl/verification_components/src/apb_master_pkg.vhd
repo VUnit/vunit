@@ -119,7 +119,7 @@ package body apb_master_pkg is
     drive_invalid : boolean := true;
     drive_invalid_val : std_logic := 'X'
   ) return apb_master_t is
-    impure function create_bus (logger : logger_t; actor : actor_t) return bus_master_t is
+    impure function create_bus (logger : logger_t) return bus_master_t is
     begin
       return new_bus(
         data_length => data_length,
@@ -128,21 +128,15 @@ package body apb_master_pkg is
         actor => actor
       );
     end function;
-    variable actor_tmp : actor_t := null_actor;
     variable logger_tmp : logger_t := null_logger;
   begin
-    if actor = null_actor then
-      actor_tmp := new_actor;
-    else
-      actor_tmp := actor;
-    end if;
     if logger = null_logger then
       logger_tmp := bus_logger;
     else
       logger_tmp := logger;
     end if;
     return (
-      p_bus_handle => create_bus(logger_tmp, actor_tmp),
+      p_bus_handle => create_bus(logger_tmp),
       p_drive_invalid => drive_invalid,
       p_drive_invalid_val => drive_invalid_val
     );
