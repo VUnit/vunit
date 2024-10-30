@@ -316,6 +316,46 @@ class TestModelSimInterface(unittest.TestCase):
         with open(modelsim_ini, "r") as fptr:
             self.assertEqual(fptr.read(), "user")
 
+    def test_hierarchical_library_mapping(self):
+        modelsim_ini = str(Path(self.test_path) / "modelsim.ini")
+        sub_modelsim_ini = str(Path(self.test_path) / "sub_modelsim.ini")
+        sub_sub_modelsim_ini = str(Path(self.test_path) / "sub_sub_modelsim.ini")
+
+        with open(modelsim_ini, "w") as fptr:
+            fptr.write("\n".join([
+                "[Library]",
+                "top_lib=top_lib_path",
+                "others=" + sub_modelsim_ini,
+            ]))
+
+        with open(sub_modelsim_ini, "w") as fptr:
+            fptr.write("\n".join([
+                "[Library]",
+                "top_lib=ignore",
+                "sub_lib=sub_lib_path",
+                "others=" + sub_sub_modelsim_ini,
+            ]))
+
+        with open(sub_sub_modelsim_ini, "w") as fptr:
+            fptr.write("\n".join([
+                "[Library]",
+                "top_lib=ignore",
+                "sub_lib=ignore",
+                "sub_sub_lib=sub_sub_lib_path",
+            ]))
+
+        with set_env(VUNIT_MODELSIM_INI=modelsim_ini):
+            simif = ModelSimInterface(prefix=self.prefix_path, output_path=self.output_path, persistent=False)
+
+        project = Project()
+        num_std_libs = len(project._builtin_libraries)
+        simif.compile_project(project)
+
+        self.assertIn("top_lib", project._builtin_libraries)
+        self.assertIn("sub_lib", project._builtin_libraries)
+        self.assertIn("sub_sub_lib", project._builtin_libraries)
+        self.assertEqual(3, len(project._builtin_libraries) - num_std_libs)
+
     def setUp(self):
         self.test_path = str(Path(__file__).parent / "test_modelsim_out")
 
