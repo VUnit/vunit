@@ -15,6 +15,9 @@ use work.com_types_pkg.all;
 use work.queue_pkg.all;
 use work.sync_pkg.all;
 use work.logger_pkg.all;
+use work.runner_pkg.all;
+use work.run_pkg.all;
+use work.run_types_pkg.all;
 use work.log_levels_pkg.all;
 use work.apb_master_pkg.all;
 
@@ -89,14 +92,17 @@ begin
     variable msg_type : msg_type_t;
     variable addr_this_transaction : std_logic_vector(paddr_o'range) := (others => '0');
     variable data_this_transaction : std_logic_vector(prdata_i'range) := (others => '0');
+    constant key : key_t := get_entry_key(test_runner_cleanup);
   begin
     loop
       drive_bus_invalid;
       psel_o <= '0';
 
       if is_empty(message_queue) then
+        unlock(runner, key);
         wait until rising_edge(clk) and not is_empty(message_queue);
       end if;
+      lock(runner, key);
       idle_bus <= false;
       wait for 0 ns;
 
