@@ -12,6 +12,7 @@ use work.bus_master_pkg.all;
 use work.com_pkg.all;
 use work.com_types_pkg.all;
 use work.logger_pkg.all;
+use work.sync_pkg.all;
 use work.memory_pkg.memory_t;
 use work.memory_pkg.to_vc_interface;
 
@@ -48,9 +49,6 @@ package apb_master_pkg is
                       constant data : std_logic_vector;
                       -- default byte enable is all bytes
                       constant byte_enable : std_logic_vector := "");
-
-  procedure wait_until_idle(signal net : inout network_t;
-                            bus_handle : apb_master_t);
 
   -- Non blocking: Read the bus returning a reference to the future reply
   procedure read_bus(signal net : inout network_t;
@@ -107,6 +105,14 @@ package apb_master_pkg is
     value        : std_logic;
     timeout      : delay_length := delay_length'high;
     msg    : string       := "");
+
+  procedure wait_until_idle(signal net : inout network_t;
+                            handle     :       apb_master_t;
+                            timeout    :       delay_length := max_timeout);
+
+  procedure wait_for_time(signal net : inout network_t;
+                            handle     :       apb_master_t;
+                            delay      :       delay_length);
 end package;
 
 package body apb_master_pkg is
@@ -166,12 +172,6 @@ package body apb_master_pkg is
                       constant byte_enable : std_logic_vector := "") is
   begin
     write_bus(net, bus_handle.p_bus_handle, address, data, byte_enable);
-  end procedure;
-
-  procedure wait_until_idle(signal net : inout network_t;
-                            bus_handle : apb_master_t) is
-  begin
-    wait_until_idle(net, bus_handle.P_bus_handle);
   end procedure;
 
   -- Blocking: read bus with immediate reply
@@ -251,5 +251,19 @@ package body apb_master_pkg is
     msg    : string       := "") is
   begin
     wait_until_read_bit_equals(net, bus_handle.p_bus_handle, addr, idx, value, timeout, msg);
+  end procedure;
+
+  procedure wait_until_idle(signal net : inout network_t;
+                            handle     :       apb_master_t;
+                            timeout    :       delay_length := max_timeout) is
+  begin
+    wait_until_idle(net, handle.p_bus_handle.p_actor, timeout);
+  end procedure;
+
+  procedure wait_for_time(signal net : inout network_t;
+                          handle     :       apb_master_t;
+                          delay      :       delay_length) is
+  begin
+    wait_for_time(net, handle.p_bus_handle.p_actor, delay);
   end procedure;
 end package body;

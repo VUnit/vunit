@@ -116,6 +116,16 @@ begin
       wait_until_idle(net, bus_handle);
       check_expected_was_written(memory);
 
+    elsif run("wait_between_writes") then
+      buf := allocate(memory => memory, num_bytes => 4, permissions => write_only);
+      set_expected_word(memory, base_address(buf), x"1234");
+      set_expected_word(memory, base_address(buf)+2, x"5678");
+      write_bus(net, bus_handle, base_address(buf), x"1234");
+      wait_for_time(net, bus_handle, 500 ns);
+      write_bus(net, bus_handle, base_address(buf)+2, x"5678");
+      wait_until_idle(net, bus_handle);
+      check_expected_was_written(memory);
+
     end if;
 
     wait for 100 ns;

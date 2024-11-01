@@ -71,6 +71,8 @@ begin
           wait until is_idle and queues_empty and rising_edge(clk);
         end if;
         handle_wait_until_idle(net, msg_type, request_msg);
+      elsif msg_type = wait_for_time_msg then
+        push(message_queue, request_msg);
       else
         unexpected_msg_type(msg_type);
       end if;
@@ -144,6 +146,11 @@ begin
         reply_msg := new_msg;
         push_std_ulogic_vector(reply_msg, prdata_i);
         reply(net, request_msg, reply_msg);
+
+      elsif msg_type = wait_for_time_msg then
+        handle_wait_for_time(net, msg_type, request_msg);
+        -- Re-align with the clock when a wait for time message was handled, because this breaks edge alignment.
+        wait until rising_edge(clk);
       end if;
 
       idle_bus <= true;
