@@ -57,7 +57,7 @@ begin
   PROC_MAIN: process
     variable request_msg : msg_t;
     variable msg_type : msg_type_t;
-  begin    
+  begin
     DISPATCH_LOOP : loop
       receive(net, bus_handle.p_bus_handle.p_actor, request_msg);
       msg_type := message_type(request_msg);
@@ -133,16 +133,16 @@ begin
 
       elsif msg_type = bus_read_msg then
         addr_this_transaction := pop_std_ulogic_vector(request_msg);
-        
+
         psel_o <= '1';
         penable_o <= '0';
         pwrite_o <= '0';
         paddr_o <= addr_this_transaction;
-        
+
         wait until rising_edge(clk);
         penable_o <= '1';
         wait until (pready_i and penable_o) = '1' and rising_edge(clk);
-        
+
         reply_msg := new_msg;
         push_std_ulogic_vector(reply_msg, prdata_i);
         reply(net, request_msg, reply_msg);

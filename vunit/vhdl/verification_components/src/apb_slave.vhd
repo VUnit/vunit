@@ -33,7 +33,7 @@ entity apb_slave is
 end entity;
 
 architecture a of apb_slave is
-    
+
 begin
 
   PROC_MAIN: process
@@ -77,7 +77,7 @@ begin
 
       if penable_i = '0' then
         failure(bus_handle.p_logger, "penable_i must be active in the ACCESS phase.");
-      end if; 
+      end if;
     end loop;
   end process;
 

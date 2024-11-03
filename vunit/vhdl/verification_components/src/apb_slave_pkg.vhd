@@ -73,5 +73,4 @@ package body apb_slave_pkg is
       p_ready_high_probability => ready_high_probability
     );
   end;
-  
 end package body;

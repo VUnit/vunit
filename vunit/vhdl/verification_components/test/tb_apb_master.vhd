@@ -137,7 +137,7 @@ begin
 
   U_DUT_MASTER: entity work.apb_master
     generic map (
-      bus_handle => bus_handle 
+      bus_handle => bus_handle
     )
     port map (
       clk         => clk,
@@ -153,7 +153,7 @@ begin
 
   U_DUT_SLAVE: entity work.apb_slave
     generic map (
-      bus_handle  => slave_handle 
+      bus_handle  => slave_handle
     )
     port map (
       clk         => clk,

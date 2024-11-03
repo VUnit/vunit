@@ -66,7 +66,7 @@ package apb_master_pkg is
                      constant bus_handle : apb_master_t;
                      constant address : std_logic_vector;
                      variable data : inout std_logic_vector);
-                     
+
   procedure read_bus(signal net : inout network_t;
                      constant bus_handle : apb_master_t;
                      constant address : natural;
@@ -78,7 +78,7 @@ package apb_master_pkg is
                       constant address : std_logic_vector;
                       constant expected : std_logic_vector;
                       constant msg : string := "");
-                      
+
   procedure check_bus(signal net : inout network_t;
                       constant bus_handle : apb_master_t;
                       constant address : natural;
@@ -225,7 +225,7 @@ package body apb_master_pkg is
   begin
     check_bus(net, bus_handle.p_bus_handle, address, expected, msg);
   end procedure;
-  
+
   -- Blocking: Wait until a read from address equals the value using
   -- std_match If timeout is reached error with msg
   procedure wait_until_read_equals(
