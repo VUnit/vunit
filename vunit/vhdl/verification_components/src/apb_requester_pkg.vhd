@@ -16,35 +16,35 @@ use work.sync_pkg.all;
 use work.memory_pkg.memory_t;
 use work.memory_pkg.to_vc_interface;
 
-package apb_master_pkg is
+package apb_requester_pkg is
 
-  type apb_master_t is record
+  type apb_requester_t is record
     -- Private
     p_bus_handle : bus_master_t;
     p_drive_invalid     : boolean;
     p_drive_invalid_val : std_logic;
   end record;
 
-  impure function new_apb_master(
+  impure function new_apb_requester(
     data_length : natural;
     address_length : natural;
     logger : logger_t := null_logger;
     actor : actor_t := null_actor;
     drive_invalid : boolean := true;
     drive_invalid_val : std_logic := 'X'
-  ) return apb_master_t;
+  ) return apb_requester_t;
 
-  function get_logger(bus_handle : apb_master_t) return logger_t;
+  function get_logger(bus_handle : apb_requester_t) return logger_t;
 
   -- Blocking: Write the bus
   procedure write_bus(signal net : inout network_t;
-                      constant bus_handle : apb_master_t;
+                      constant bus_handle : apb_requester_t;
                       constant address : std_logic_vector;
                       constant data : std_logic_vector;
                       -- default byte enable is all bytes
                       constant byte_enable : std_logic_vector := "");
   procedure write_bus(signal net : inout network_t;
-                      constant bus_handle : apb_master_t;
+                      constant bus_handle : apb_requester_t;
                       constant address : natural;
                       constant data : std_logic_vector;
                       -- default byte enable is all bytes
@@ -52,35 +52,35 @@ package apb_master_pkg is
 
   -- Non blocking: Read the bus returning a reference to the future reply
   procedure read_bus(signal net : inout network_t;
-                     constant bus_handle : apb_master_t;
+                     constant bus_handle : apb_requester_t;
                      constant address : std_logic_vector;
                      variable reference : inout bus_reference_t);
 
   procedure read_bus(signal net : inout network_t;
-                     constant bus_handle : apb_master_t;
+                     constant bus_handle : apb_requester_t;
                      constant address : natural;
                      variable reference : inout bus_reference_t);
 
   -- Blocking: read bus with immediate reply
   procedure read_bus(signal net : inout network_t;
-                     constant bus_handle : apb_master_t;
+                     constant bus_handle : apb_requester_t;
                      constant address : std_logic_vector;
                      variable data : inout std_logic_vector);
 
   procedure read_bus(signal net : inout network_t;
-                     constant bus_handle : apb_master_t;
+                     constant bus_handle : apb_requester_t;
                      constant address : natural;
                      variable data : inout std_logic_vector);
 
   -- Blocking: Read bus and check result against expected data
   procedure check_bus(signal net : inout network_t;
-                      constant bus_handle : apb_master_t;
+                      constant bus_handle : apb_requester_t;
                       constant address : std_logic_vector;
                       constant expected : std_logic_vector;
                       constant msg : string := "");
 
   procedure check_bus(signal net : inout network_t;
-                      constant bus_handle : apb_master_t;
+                      constant bus_handle : apb_requester_t;
                       constant address : natural;
                       constant expected : std_logic_vector;
                       constant msg : string := "");
@@ -89,7 +89,7 @@ package apb_master_pkg is
   -- std_match If timeout is reached error with msg
   procedure wait_until_read_equals(
     signal net : inout network_t;
-    bus_handle   : apb_master_t;
+    bus_handle   : apb_requester_t;
     addr         : std_logic_vector;
     value        : std_logic_vector;
     timeout      : delay_length := delay_length'high;
@@ -99,7 +99,7 @@ package apb_master_pkg is
   -- index set to value If timeout is reached error with msg
   procedure wait_until_read_bit_equals(
     signal net : inout network_t;
-    bus_handle   : apb_master_t;
+    bus_handle   : apb_requester_t;
     addr         : std_logic_vector;
     idx          : natural;
     value        : std_logic;
@@ -107,24 +107,24 @@ package apb_master_pkg is
     msg    : string       := "");
 
   procedure wait_until_idle(signal net : inout network_t;
-                            handle     :       apb_master_t;
+                            handle     :       apb_requester_t;
                             timeout    :       delay_length := max_timeout);
 
   procedure wait_for_time(signal net : inout network_t;
-                            handle     :       apb_master_t;
+                            handle     :       apb_requester_t;
                             delay      :       delay_length);
 end package;
 
-package body apb_master_pkg is
+package body apb_requester_pkg is
 
-  impure function new_apb_master(
+  impure function new_apb_requester(
     data_length : natural;
     address_length : natural;
     logger : logger_t := null_logger;
     actor : actor_t := null_actor;
     drive_invalid : boolean := true;
     drive_invalid_val : std_logic := 'X'
-  ) return apb_master_t is
+  ) return apb_requester_t is
     impure function create_bus (logger : logger_t) return bus_master_t is
     begin
       return new_bus(
@@ -148,14 +148,14 @@ package body apb_master_pkg is
     );
   end;
 
-  function get_logger(bus_handle : apb_master_t) return logger_t is
+  function get_logger(bus_handle : apb_requester_t) return logger_t is
   begin
     return get_logger(bus_handle.p_bus_handle);
   end function;
 
   -- Blocking: Write the bus
   procedure write_bus(signal net : inout network_t;
-                      constant bus_handle : apb_master_t;
+                      constant bus_handle : apb_requester_t;
                       constant address : std_logic_vector;
                       constant data : std_logic_vector;
                       -- default byte enable is all bytes
@@ -165,7 +165,7 @@ package body apb_master_pkg is
   end procedure;
 
   procedure write_bus(signal net : inout network_t;
-                      constant bus_handle : apb_master_t;
+                      constant bus_handle : apb_requester_t;
                       constant address : natural;
                       constant data : std_logic_vector;
                       -- default byte enable is all bytes
@@ -176,7 +176,7 @@ package body apb_master_pkg is
 
   -- Blocking: read bus with immediate reply
   procedure read_bus(signal net : inout network_t;
-                     constant bus_handle : apb_master_t;
+                     constant bus_handle : apb_requester_t;
                      constant address : std_logic_vector;
                      variable data : inout std_logic_vector) is
   begin
@@ -184,7 +184,7 @@ package body apb_master_pkg is
   end procedure;
 
   procedure read_bus(signal net : inout network_t;
-                     constant bus_handle : apb_master_t;
+                     constant bus_handle : apb_requester_t;
                      constant address : natural;
                      variable data : inout std_logic_vector) is
   begin
@@ -192,7 +192,7 @@ package body apb_master_pkg is
   end procedure;
 
   procedure read_bus(signal net : inout network_t;
-                     constant bus_handle : apb_master_t;
+                     constant bus_handle : apb_requester_t;
                      constant address : natural;
                      variable reference : inout bus_reference_t) is
   begin
@@ -200,7 +200,7 @@ package body apb_master_pkg is
   end procedure;
 
   procedure read_bus(signal net : inout network_t;
-                     constant bus_handle : apb_master_t;
+                     constant bus_handle : apb_requester_t;
                      constant address : std_logic_vector;
                      variable reference : inout bus_reference_t) is
   begin
@@ -209,7 +209,7 @@ package body apb_master_pkg is
 
   -- Blocking: Read bus and check result against expected data
   procedure check_bus(signal net : inout network_t;
-                      constant bus_handle : apb_master_t;
+                      constant bus_handle : apb_requester_t;
                       constant address : std_logic_vector;
                       constant expected : std_logic_vector;
                       constant msg : string := "") is
@@ -218,7 +218,7 @@ package body apb_master_pkg is
   end procedure;
 
   procedure check_bus(signal net : inout network_t;
-                      constant bus_handle : apb_master_t;
+                      constant bus_handle : apb_requester_t;
                       constant address : natural;
                       constant expected : std_logic_vector;
                       constant msg : string := "") is
@@ -230,7 +230,7 @@ package body apb_master_pkg is
   -- std_match If timeout is reached error with msg
   procedure wait_until_read_equals(
     signal net : inout network_t;
-    bus_handle   : apb_master_t;
+    bus_handle   : apb_requester_t;
     addr         : std_logic_vector;
     value        : std_logic_vector;
     timeout      : delay_length := delay_length'high;
@@ -243,7 +243,7 @@ package body apb_master_pkg is
   -- index set to value If timeout is reached error with msg
   procedure wait_until_read_bit_equals(
     signal net : inout network_t;
-    bus_handle   : apb_master_t;
+    bus_handle   : apb_requester_t;
     addr         : std_logic_vector;
     idx          : natural;
     value        : std_logic;
@@ -254,14 +254,14 @@ package body apb_master_pkg is
   end procedure;
 
   procedure wait_until_idle(signal net : inout network_t;
-                            handle     :       apb_master_t;
+                            handle     :       apb_requester_t;
                             timeout    :       delay_length := max_timeout) is
   begin
     wait_until_idle(net, handle.p_bus_handle.p_actor, timeout);
   end procedure;
 
   procedure wait_for_time(signal net : inout network_t;
-                          handle     :       apb_master_t;
+                          handle     :       apb_requester_t;
                           delay      :       delay_length) is
   begin
     wait_for_time(net, handle.p_bus_handle.p_actor, delay);

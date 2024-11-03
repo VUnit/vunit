@@ -12,20 +12,20 @@ context work.vunit_context;
 context work.com_context;
 use work.memory_pkg.all;
 use work.bus_master_pkg.all;
-use work.apb_slave_pkg.all;
-use work.apb_master_pkg.all;
+use work.apb_completer_pkg.all;
+use work.apb_requester_pkg.all;
 use work.logger_pkg.all;
 
 library osvvm;
 use osvvm.RandomPkg.all;
 
-entity tb_apb_master is
+entity tb_apb_requester is
   generic (
     runner_cfg : string
   );
 end entity;
 
-architecture a of tb_apb_master is
+architecture a of tb_apb_requester is
 
   constant BUS_DATA_WIDTH    : natural := 16;
   constant BUS_ADDRESS_WIDTH : natural := 32;
@@ -40,10 +40,10 @@ architecture a of tb_apb_master is
   signal prdata  : std_logic_vector(BUS_DATA_WIDTH-1 downto 0);
   signal pready  : std_logic := '0';
 
-  constant bus_handle : apb_master_t := new_apb_master(data_length => pwdata'length,
+  constant bus_handle : apb_requester_t := new_apb_requester(data_length => pwdata'length,
                                                        address_length => paddr'length);
   constant memory : memory_t := new_memory;
-  constant slave_handle : apb_slave_t := new_apb_slave(memory => memory,
+  constant slave_handle : apb_completer_t := new_apb_completer(memory => memory,
                                                        logger => get_logger("apb slave"),
                                                        ready_high_probability => 0.5);
 
@@ -135,7 +135,7 @@ begin
   end process;
   test_runner_watchdog(runner, 100 us);
 
-  U_DUT_MASTER: entity work.apb_master
+  U_DUT_MASTER: entity work.apb_requester
     generic map (
       bus_handle => bus_handle
     )
@@ -151,7 +151,7 @@ begin
       pready_i    => pready
     );
 
-  U_DUT_SLAVE: entity work.apb_slave
+  U_DUT_SLAVE: entity work.apb_completer
     generic map (
       bus_handle  => slave_handle
     )

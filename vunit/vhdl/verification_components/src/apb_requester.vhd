@@ -19,11 +19,11 @@ use work.runner_pkg.all;
 use work.run_pkg.all;
 use work.run_types_pkg.all;
 use work.log_levels_pkg.all;
-use work.apb_master_pkg.all;
+use work.apb_requester_pkg.all;
 
-entity apb_master is
+entity apb_requester is
   generic (
-    bus_handle        : apb_master_t
+    bus_handle        : apb_requester_t
   );
   port (
     clk                 : in  std_logic;
@@ -38,7 +38,7 @@ entity apb_master is
   );
 end entity;
 
-architecture behav of apb_master is
+architecture behav of apb_requester is
   constant message_queue : queue_t := new_queue;
   signal idle_bus : boolean := true;
 

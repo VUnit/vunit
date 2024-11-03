@@ -12,12 +12,12 @@ library osvvm;
 use osvvm.RandomPkg.RandomPType;
 
 use work.memory_pkg.all;
-use work.apb_slave_pkg.all;
+use work.apb_completer_pkg.all;
 use work.logger_pkg.all;
 
-entity apb_slave is
+entity apb_completer is
   generic (
-    bus_handle        : apb_slave_t
+    bus_handle        : apb_completer_t
   );
   port (
     clk                 : in  std_logic;
@@ -32,7 +32,7 @@ entity apb_slave is
   );
 end entity;
 
-architecture a of apb_slave is
+architecture a of apb_completer is
 
 begin
 
