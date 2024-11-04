@@ -28,7 +28,7 @@ jobs:
     - name: '🐍 Setup Python'
       uses: actions/setup-python@v5
       with:
-        python-version: '3.12'
+        python-version: '3.13'
 
     - name: '🐍 Install dependencies'
       run: |
@@ -36,7 +36,7 @@ jobs:
         pip install -U virtualenv tox --progress-bar off
 
     - name: '🐍 Run black'
-      run: tox -e py312-fmt -- --diff --color
+      run: tox -e py313-fmt -- --diff --color
 
 #
 # Linux linting and unit tests
@@ -48,9 +48,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { py: '3.12' , task: 312-lint }
+          - { py: '3.13' , task: 313-lint }
           - { py: '3.7'  , task: 37-unit }
-          - { py: '3.12' , task: 312-unit }
+          - { py: '3.13' , task: 313-unit }
     name: '🐧 Ubuntu · ${{ matrix.task }}'
     steps:
 
@@ -80,8 +80,8 @@ jobs:
       fail-fast: false
       matrix:
         task: [
-          {do: 312-acceptance,  tag: llvm},
-          {do: 312-vcomponents, tag: mcode},
+          {do: 313-acceptance,  tag: llvm},
+          {do: 313-vcomponents, tag: mcode},
         ]
     name: '🛳️ Container · ${{ matrix.task.do }} · ${{ matrix.task.tag }}'
     steps:
@@ -188,7 +188,7 @@ jobs:
     - name: '🐍 Setup Python'
       uses: actions/setup-python@v5
       with:
-        python-version: '3.12'
+        python-version: '3.13'
 
     - name: '🐍 Install dependencies'
       run: |
