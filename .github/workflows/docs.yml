@@ -22,7 +22,7 @@ jobs:
 
     - uses: actions/setup-python@v5
       with:
-        python-version: '3.12'
+        python-version: '3.13'
 
     - name: Install dependencies
       run: |
@@ -30,12 +30,12 @@ jobs:
         pip install -U virtualenv tox --progress-bar off
 
     - name: Build docs
-      run: tox -e py312-docs -- --color
+      run: tox -e py313-docs -- --color
 
     - uses: actions/upload-artifact@v4
       with:
         name: VUnit-site
-        path: .tox/py312-docs/tmp/docsbuild/
+        path: .tox/py313-docs/tmp/docsbuild/
 
     - name: '🚀 Publish site'
       if: github.event_name != 'pull_request' && github.ref_name == 'master'
