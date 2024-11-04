@@ -113,11 +113,14 @@ htmlhelp_basename = "VUnitDoc"
 # -- InterSphinx --------------------------------------------------------------
 
 intersphinx_mapping = {
-    "python": ("https://docs.python.org/3.8/", None),
+    "python": ("https://docs.python.org/3.13/", None),
     "pytest": ("https://docs.pytest.org/en/latest/", None),
     "osvb": ("https://umarcor.github.io/osvb", None),
 }
 
+nitpick_ignore_regex = [
+    ("py:class", r".*"),
+]
 # -- ExtLinks -----------------------------------------------------------------
 
 extlinks = {
