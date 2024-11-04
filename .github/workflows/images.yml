@@ -57,7 +57,7 @@ jobs:
     - name: '🛳️ Build container image'
       run: |
         docker build -t ghcr.io/vunit/dev/nvc -<<EOF
-        FROM gcr.io/hdl-containers/nvc
+        FROM hdlc/nvc
 
         RUN apt-get update -qq \
          && DEBIAN_FRONTEND=noninteractive apt-get -y install --no-install-recommends \
