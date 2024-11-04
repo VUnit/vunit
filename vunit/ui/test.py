@@ -27,7 +27,7 @@ class Test(object):
         """
         return self._test_case.name
 
-    def add_config(  # pylint: disable=too-many-arguments
+    def add_config(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         name,
         generics=None,

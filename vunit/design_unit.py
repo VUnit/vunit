@@ -52,6 +52,7 @@ class VHDLDesignUnit(DesignUnit):
         name,
         source_file,
         unit_type,
+        *,
         is_primary=True,
         primary_design_unit=None,
     ):
@@ -66,7 +67,7 @@ class Entity(VHDLDesignUnit):
     """
 
     def __init__(self, name, source_file, generic_names=None):
-        VHDLDesignUnit.__init__(self, name, source_file, "entity", True)
+        VHDLDesignUnit.__init__(self, name, source_file, "entity", is_primary=True)
         self.generic_names = [] if generic_names is None else generic_names
         self._add_architecture_callback = None
         self._architecture_names = {}

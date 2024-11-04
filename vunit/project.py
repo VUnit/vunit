@@ -113,6 +113,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         self,
         file_name,
         library_name,
+        *,
         file_type="vhdl",
         include_dirs=None,
         defines=None,

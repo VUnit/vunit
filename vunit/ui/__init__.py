@@ -518,7 +518,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         return SourceFileList(results)
 
-    def add_source_files(  # pylint: disable=too-many-arguments
+    def add_source_files(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         pattern,
         library_name: str,
@@ -563,7 +563,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
             file_type=file_type,
         )
 
-    def add_source_file(  # pylint: disable=too-many-arguments
+    def add_source_file(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         file_name: Union[str, Path],
         library_name: str,

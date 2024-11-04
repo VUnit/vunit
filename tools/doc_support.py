@@ -66,6 +66,7 @@ def highlight_code(
     code_path,
     output_path,
     snippet_name=None,
+    *,
     line_no_offset=None,
     functions=None,
     types=None,

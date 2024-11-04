@@ -34,6 +34,7 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
         self,
         name,
         design_unit,
+        *,
         generics=None,
         sim_options=None,
         pre_config=None,
@@ -282,6 +283,7 @@ class ConfigurationVisitor(object):
     def add_config(  # pylint: disable=too-many-arguments
         self,
         name,
+        *,
         generics=None,
         pre_config=None,
         post_check=None,
