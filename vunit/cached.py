@@ -13,7 +13,7 @@ from vunit.hashing import hash_string
 from vunit.ostools import read_file
 
 
-def cached(key, function, file_name, encoding, database=None, newline=None):
+def cached(key, function, file_name, encoding, *, database=None, newline=None):
     """
     Call function with file content if an update is needed
     """

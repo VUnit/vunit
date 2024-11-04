@@ -93,6 +93,7 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
         self,
         output_path,
         prefix,
+        *,
         gui=False,
         viewer_fmt=None,
         viewer_args="",
@@ -286,7 +287,7 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
 
     def _get_command(
         self, config, output_path, elaborate_only, ghdl_e, test_suite_name, wave_file
-    ):  # pylint: disable=too-many-branches,too-many-arguments
+    ):  # pylint: disable=too-many-branches,too-many-arguments,too-many-positional-arguments
         """
         Return GHDL simulation command
         """
@@ -392,9 +393,12 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
             status = False
 
         if config.sim_options.get(self.name + ".gtkwave_script.gui", None):
-            LOGGER.warning("%s.gtkwave_script.gui is deprecated and will be removed "
-                           "in a future version, use %s.viewer_script.gui instead",
-                           self.name, self.name)
+            LOGGER.warning(
+                "%s.gtkwave_script.gui is deprecated and will be removed "
+                "in a future version, use %s.viewer_script.gui instead",
+                self.name,
+                self.name,
+            )
 
         if self._gui and not elaborate_only:
             cmd = [self._get_viewer(config)] + shlex.split(self._viewer_args) + [data_file_name]

@@ -49,6 +49,7 @@ class VHDLDesignFile(object):  # pylint: disable=too-many-instance-attributes
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
+        *,
         entities=None,
         packages=None,
         package_bodies=None,

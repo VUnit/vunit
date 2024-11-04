@@ -129,6 +129,7 @@ class VerilogSourceFile(SourceFile):
         file_type,
         name,
         library,
+        *,
         verilog_parser,
         database,
         include_dirs=None,
@@ -206,6 +207,7 @@ class VHDLSourceFile(SourceFile):
         self,
         name: Union[str, Path],
         library: Library,
+        *,
         vhdl_parser,
         database,
         vhdl_standard: VHDLStandard,
@@ -311,8 +313,8 @@ class VHDLSourceFile(SourceFile):
                     architecture.identifier,
                     self,
                     "architecture",
-                    False,
-                    architecture.entity,
+                    is_primary=False,
+                    primary_design_unit=architecture.entity,
                 )
             )
 
@@ -320,7 +322,11 @@ class VHDLSourceFile(SourceFile):
             result.append(VHDLDesignUnit(configuration.identifier, self, "configuration"))
 
         for body in design_file.package_bodies:
-            result.append(VHDLDesignUnit(body.identifier, self, "package body", False, body.identifier))
+            result.append(
+                VHDLDesignUnit(
+                    body.identifier, self, "package body", is_primary=False, primary_design_unit=body.identifier
+                )
+            )
 
         return result
 
