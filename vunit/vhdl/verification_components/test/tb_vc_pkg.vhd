@@ -41,21 +41,21 @@ begin
       elsif run("Test standard config with specified id") then
         id := get_id("id");
         std_cfg := create_std_cfg(id => id);
-        check(std_cfg.p_id = id);
-        check(std_cfg.p_actor = find(id, enable_deferred_creation => false));
-        check(std_cfg.p_logger = get_logger(id));
-        check(get_logger(std_cfg.p_checker) = get_logger(id));
-        check(std_cfg.p_unexpected_msg_type_policy = fail);
+        check(get_id(std_cfg) = id);
+        check(get_actor(std_cfg) = find(id, enable_deferred_creation => false));
+        check(get_logger(std_cfg) = get_logger(id));
+        check(get_logger(get_checker(std_cfg)) = get_logger(id));
+        check(unexpected_msg_type_policy(std_cfg) = fail);
 
       elsif run("Test standard config with null_id") then
         for instance in 1 to 3 loop
           std_cfg := create_std_cfg(provider => "provider", vc_name => "vc_name");
-          id := std_cfg.p_id;
+          id := get_id(std_cfg);
           check(id = get_id("provider:vc_name:" & to_string(instance)));
-          check(std_cfg.p_actor = find(id, enable_deferred_creation => false));
-          check(std_cfg.p_logger = get_logger(id));
-          check(get_logger(std_cfg.p_checker) = get_logger(id));
-          check(std_cfg.p_unexpected_msg_type_policy = fail);
+          check(get_actor(std_cfg) = find(id, enable_deferred_creation => false));
+          check(get_logger(std_cfg) = get_logger(id));
+          check(get_logger(get_checker(std_cfg)) = get_logger(id));
+          check(unexpected_msg_type_policy(std_cfg) = fail);
         end loop;
 
       elsif run("Test standard config with specified unexpected message type policy") then
@@ -64,12 +64,12 @@ begin
           vc_name => "vc_name",
           unexpected_msg_type_policy => ignore
           );
-        id := std_cfg.p_id;
+        id := get_id(std_cfg);
         check(id = get_id("provider:vc_name:1"));
-        check(std_cfg.p_actor = find(id, enable_deferred_creation => false));
-        check(std_cfg.p_logger = get_logger(id));
-        check(get_logger(std_cfg.p_checker) = get_logger(id));
-        check(std_cfg.p_unexpected_msg_type_policy = ignore);
+        check(get_actor(std_cfg) = find(id, enable_deferred_creation => false));
+        check(get_logger(std_cfg) = get_logger(id));
+        check(get_logger(get_checker(std_cfg)) = get_logger(id));
+        check(unexpected_msg_type_policy(std_cfg) = ignore);
 
       elsif run("Test failing on reused actor") then
         mock(vc_pkg_logger, error);
@@ -82,15 +82,15 @@ begin
       elsif run("Test failing on unexpected message") then
         id := get_id("id");
         std_cfg := create_std_cfg(id => id);
-        mock(get_logger(id), failure);
+        mock(get_logger(id), error);
         unexpected_msg_type(unknown_msg_type, std_cfg);
-        check_only_log(get_logger(id), "Got unexpected message unknown_msg", failure);
+        check_only_log(get_logger(id), "Got unexpected message unknown_msg", error);
         unmock(get_logger(id));
 
       elsif run("Test ignoring unexpected message") then
         id := get_id("id");
         std_cfg := create_std_cfg(id => id, unexpected_msg_type_policy => ignore);
-        mock(get_logger(id), failure);
+        mock(get_logger(id), error);
         unexpected_msg_type(unknown_msg_type, std_cfg);
         check_no_log;
         unmock(get_logger(id));

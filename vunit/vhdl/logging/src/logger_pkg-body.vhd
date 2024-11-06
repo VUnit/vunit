@@ -36,6 +36,11 @@ package body logger_pkg is
     return to_integer(logger.p_data);
   end;
 
+  impure function to_logger(value : integer) return logger_t is
+  begin
+    return (p_data => to_integer_vector_ptr(value));
+  end;
+
   procedure add_child(logger : logger_t; child : logger_t) is
     constant children : integer_vector_ptr_t := to_integer_vector_ptr(get(logger.p_data, children_idx));
   begin

@@ -944,6 +944,10 @@ begin
        check_log_file(file_handlers(i), log_file_name & integer'image(i), entries);
      end loop;
 
+   elsif run("Test logger to/from integer conversion") then
+     assert_true(to_logger(to_integer(logger)) = logger);
+     assert_true(to_logger(to_integer(null_logger)) = null_logger);
+
     end if;
 
     test_runner_cleanup(runner);

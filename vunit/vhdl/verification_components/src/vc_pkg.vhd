@@ -13,19 +13,11 @@ package vc_pkg is
   type unexpected_msg_type_policy_t is (fail, ignore);
 
   type std_cfg_t is record
-    p_id : id_t;
-    p_actor : actor_t;
-    p_logger : logger_t;
-    p_checker : checker_t;
-    p_unexpected_msg_type_policy : unexpected_msg_type_policy_t;
+    p_data : integer_vector_ptr_t;
   end record;
 
   constant null_std_cfg : std_cfg_t := (
-    p_id => null_id,
-    p_actor => null_actor,
-    p_logger => null_logger,
-    p_checker => null_checker,
-    p_unexpected_msg_type_policy => ignore
+    p_data => null_integer_vector_ptr
   );
 
   -- Creates a standard VC configuration with an id, an actor, a logger, a
@@ -46,6 +38,8 @@ package vc_pkg is
     unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail
   ) return std_cfg_t;
 
+  impure function enumerate(parent : id_t; start : integer := 1) return id_t;
+
   -- These functions extracts information from the standard VC configuration
   impure function get_id(std_cfg : std_cfg_t) return id_t;
   impure function get_actor(std_cfg : std_cfg_t) return actor_t;
@@ -62,18 +56,35 @@ package body vc_pkg is
   constant vc_pkg_logger  : logger_t  := get_logger("vunit_lib:vc_pkg");
   constant vc_pkg_checker : checker_t := new_checker(vc_pkg_logger);
 
+  constant id_idx : natural := 0;
+  constant actor_idx : natural := 1;
+  constant logger_idx : natural := 2;
+  constant checker_idx : natural := 3;
+  constant unexpected_msg_type_policy_idx : natural := 4;
+  constant std_cfg_length : natural := unexpected_msg_type_policy_idx + 1;
+
+  impure function enumerate(parent : id_t; start : integer := 1) return id_t is
+  begin
+    return get_id(to_string(num_children(parent) + 1), parent => parent);
+  end;
+
   impure function create_std_cfg(
     id : id_t := null_id;
     provider : string := "";
     vc_name : string := "";
     unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail
   ) return std_cfg_t is
-    variable result : std_cfg_t;
+    variable std_cfg : std_cfg_t;
     variable provider_id : id_t;
     variable vc_id : id_t;
+    variable instance_id : id_t;
+    variable actor : actor_t;
+    variable logger : logger_t;
   begin
+    std_cfg.p_data := new_integer_vector_ptr(std_cfg_length);
+
     if id /= null_id then
-      result.p_id := id;
+      instance_id := id;
     else
       if provider = "" then
         check_failed(vc_pkg_checker, "A provider must be provided.");
@@ -91,53 +102,75 @@ package body vc_pkg is
 
       provider_id := get_id(provider);
       vc_id := get_id(vc_name, parent => provider_id);
-      result.p_id := get_id(to_string(num_children(vc_id) + 1), parent => vc_id);
+      instance_id := enumerate(vc_id);
     end if;
+    set(std_cfg.p_data, id_idx, to_integer(instance_id));
 
-    result.p_unexpected_msg_type_policy := unexpected_msg_type_policy;
+    if find(instance_id, enable_deferred_creation => false) /= null_actor then
+      check_failed(vc_pkg_checker, "An actor already exists for " & full_name(instance_id) & ".");
 
-    if find(result.p_id, enable_deferred_creation => false) /= null_actor then
-      check_failed(vc_pkg_checker, "An actor already exists for " & full_name(result.p_id) & ".");
+      -- Simplifies testing when vc_pkg_checker logger is mocked
+      return null_std_cfg;
     else
-      result.p_actor := new_actor(result.p_id);
+      actor := new_actor(instance_id);
     end if;
+    set(std_cfg.p_data, actor_idx, to_integer(actor));
 
-    result.p_logger := get_logger(result.p_id);
-    result.p_checker := new_checker(result.p_logger);
+    logger := get_logger(instance_id);
+    set(std_cfg.p_data, logger_idx, to_integer(logger));
 
-    return result;
+    set(std_cfg.p_data, checker_idx, to_integer(new_checker(logger)));
+
+    set(
+      std_cfg.p_data,
+      unexpected_msg_type_policy_idx,
+      unexpected_msg_type_policy_t'pos(unexpected_msg_type_policy)
+    );
+
+    return std_cfg;
   end;
 
   impure function get_id(std_cfg : std_cfg_t) return id_t is
   begin
-    return std_cfg.p_id;
+    return to_id(get(std_cfg.p_data, id_idx));
   end;
 
   impure function get_actor(std_cfg : std_cfg_t) return actor_t is
   begin
-    return std_cfg.p_actor;
+    return to_actor(get(std_cfg.p_data, actor_idx));
   end;
 
   impure function get_logger(std_cfg : std_cfg_t) return logger_t is
   begin
-    return std_cfg.p_logger;
+    return to_logger(get(std_cfg.p_data, logger_idx));
   end;
 
   impure function get_checker(std_cfg : std_cfg_t) return checker_t is
   begin
-    return std_cfg.p_checker;
+    return to_checker(get(std_cfg.p_data, checker_idx));
   end;
 
   impure function unexpected_msg_type_policy(std_cfg : std_cfg_t) return unexpected_msg_type_policy_t is
   begin
-    return std_cfg.p_unexpected_msg_type_policy;
+    return unexpected_msg_type_policy_t'val(get(std_cfg.p_data, unexpected_msg_type_policy_idx));
   end;
 
   procedure unexpected_msg_type(msg_type : msg_type_t;
                                 std_cfg : std_cfg_t) is
+    constant code : integer := msg_type.p_code;
   begin
-    if unexpected_msg_type_policy(std_cfg) = fail then
-      unexpected_msg_type(msg_type, get_logger(std_cfg));
+    if is_already_handled(msg_type) or unexpected_msg_type_policy(std_cfg) = ignore then
+      null;
+    elsif is_valid(code) then
+      check_failed(
+        get_checker(std_cfg),
+        "Got unexpected message " & to_string(to_string_ptr(get(p_msg_types.p_name_ptrs, code)))
+      );
+    else
+      check_failed(
+        get_checker(std_cfg),
+        "Got invalid message with code " & to_string(code)
+      );
     end if;
-  end;
+  end procedure;
 end package body;

@@ -312,4 +312,14 @@ package body checker_pkg is
             ")");
   end function;
 
+  impure function to_integer(checker : checker_t) return integer is
+  begin
+    return to_integer(checker.p_data);
+  end;
+
+  impure function to_checker(value : integer) return checker_t is
+  begin
+    return (p_data => to_integer_vector_ptr(value));
+  end;
+
 end package body;

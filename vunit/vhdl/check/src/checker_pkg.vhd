@@ -106,6 +106,9 @@ package checker_pkg is
   procedure get_checker_stat(checker       :     checker_t;
                              variable stat : out checker_stat_t);
 
+  impure function to_integer(checker : checker_t) return integer;
+  impure function to_checker(value : integer) return checker_t;
+
   -- Private
   impure function p_has_unhandled_checks return boolean;
   impure function p_register_unhandled_check(checker : checker_t) return unhandled_check_id_t;
