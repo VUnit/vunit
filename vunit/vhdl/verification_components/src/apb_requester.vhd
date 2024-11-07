@@ -34,7 +34,8 @@ entity apb_requester is
     pwrite_o            : out std_logic;
     pwdata_o            : out std_logic_vector(data_length(bus_handle.p_bus_handle) - 1 downto 0);
     prdata_i            : in  std_logic_vector(data_length(bus_handle.p_bus_handle) - 1 downto 0);
-    pready_i            : in  std_logic
+    pready_i            : in  std_logic;
+    pslverr_i           : in  std_logic := '0'
   );
 end entity;
 
@@ -62,9 +63,8 @@ begin
       receive(net, bus_handle.p_bus_handle.p_actor, request_msg);
       msg_type := message_type(request_msg);
 
-      if msg_type = bus_read_msg then
-        push(message_queue, request_msg);
-      elsif msg_type = bus_write_msg then
+      if msg_type = bus_read_msg or msg_type = apb_read_msg
+         or msg_type = bus_write_msg or msg_type = apb_write_msg then
         push(message_queue, request_msg);
       elsif msg_type = wait_until_idle_msg then
         if not is_idle or not queues_empty then
@@ -94,6 +94,8 @@ begin
     variable msg_type : msg_type_t;
     variable addr_this_transaction : std_logic_vector(paddr_o'range) := (others => '0');
     variable data_this_transaction : std_logic_vector(prdata_i'range) := (others => '0');
+    variable byte_enable_this_transaction : std_logic_vector(byte_enable_length(bus_handle)-1 downto 0);
+    variable error_this_transaction : std_logic := '0';
     constant key : key_t := get_entry_key(test_runner_cleanup);
   begin
     loop
@@ -111,9 +113,11 @@ begin
       request_msg := pop(message_queue);
       msg_type := message_type(request_msg);
 
-      if msg_type = bus_write_msg then
+      if msg_type = apb_write_msg then
         addr_this_transaction := pop_std_ulogic_vector(request_msg);
         data_this_transaction := pop_std_ulogic_vector(request_msg);
+        byte_enable_this_transaction := pop_std_ulogic_vector(request_msg);
+        error_this_transaction := pop_std_ulogic(request_msg);
 
         psel_o <= '1';
         penable_o <= '0';
@@ -125,14 +129,20 @@ begin
         penable_o <= '1';
         wait until (pready_i and penable_o) = '1' and rising_edge(clk);
 
+        check_equal(pslverr_i, error_this_transaction, "Unexpected error response.");
+
         if is_visible(bus_handle.p_bus_handle.p_logger, debug) then
           debug(bus_handle.p_bus_handle.p_logger,
                 "Wrote 0x" & to_hstring(data_this_transaction) &
                   " to address 0x" & to_hstring(addr_this_transaction));
         end if;
 
-      elsif msg_type = bus_read_msg then
+        reply_msg := new_msg;
+        reply(net, request_msg, reply_msg);
+
+      elsif msg_type = apb_read_msg then
         addr_this_transaction := pop_std_ulogic_vector(request_msg);
+        error_this_transaction := pop_std_ulogic(request_msg);
 
         psel_o <= '1';
         penable_o <= '0';
@@ -142,6 +152,8 @@ begin
         wait until rising_edge(clk);
         penable_o <= '1';
         wait until (pready_i and penable_o) = '1' and rising_edge(clk);
+
+        check_equal(pslverr_i, error_this_transaction, "Unexpected error response.");
 
         reply_msg := new_msg;
         push_std_ulogic_vector(reply_msg, prdata_i);

@@ -36,17 +36,21 @@ package apb_requester_pkg is
 
   function get_logger(bus_handle : apb_requester_t) return logger_t;
 
+  impure function byte_enable_length(bus_handle : apb_requester_t) return natural;
+
   -- Blocking: Write the bus
   procedure write_bus(signal net : inout network_t;
                       constant bus_handle : apb_requester_t;
                       constant address : std_logic_vector;
                       constant data : std_logic_vector;
+                      variable expected_error : std_logic := '0';
                       -- default byte enable is all bytes
                       constant byte_enable : std_logic_vector := "");
   procedure write_bus(signal net : inout network_t;
                       constant bus_handle : apb_requester_t;
                       constant address : natural;
                       constant data : std_logic_vector;
+                      variable expected_error : std_logic := '0';
                       -- default byte enable is all bytes
                       constant byte_enable : std_logic_vector := "");
 
@@ -54,23 +58,27 @@ package apb_requester_pkg is
   procedure read_bus(signal net : inout network_t;
                      constant bus_handle : apb_requester_t;
                      constant address : std_logic_vector;
-                     variable reference : inout bus_reference_t);
+                     variable reference : inout bus_reference_t;
+                     variable expected_error : std_logic := '0');
 
   procedure read_bus(signal net : inout network_t;
                      constant bus_handle : apb_requester_t;
                      constant address : natural;
-                     variable reference : inout bus_reference_t);
+                     variable reference : inout bus_reference_t;
+                     variable expected_error : std_logic := '0');
 
   -- Blocking: read bus with immediate reply
   procedure read_bus(signal net : inout network_t;
                      constant bus_handle : apb_requester_t;
                      constant address : std_logic_vector;
-                     variable data : inout std_logic_vector);
+                     variable data : inout std_logic_vector;
+                     variable expected_error : std_logic := '0');
 
   procedure read_bus(signal net : inout network_t;
                      constant bus_handle : apb_requester_t;
                      constant address : natural;
-                     variable data : inout std_logic_vector);
+                     variable data : inout std_logic_vector;
+                     variable expected_error : std_logic := '0');
 
   -- Blocking: Read bus and check result against expected data
   procedure check_bus(signal net : inout network_t;
@@ -113,6 +121,9 @@ package apb_requester_pkg is
   procedure wait_for_time(signal net : inout network_t;
                             handle     :       apb_requester_t;
                             delay      :       delay_length);
+
+  constant apb_write_msg : msg_type_t := new_msg_type("write apb bus");
+  constant apb_read_msg : msg_type_t := new_msg_type("read apb bus");
 end package;
 
 package body apb_requester_pkg is
@@ -153,58 +164,109 @@ package body apb_requester_pkg is
     return get_logger(bus_handle.p_bus_handle);
   end function;
 
+  impure function address_length(bus_handle : apb_requester_t) return natural is
+  begin
+    return bus_handle.p_bus_handle.p_address_length;
+  end;
+
+  impure function byte_enable_length(bus_handle : apb_requester_t) return natural is
+  begin
+    return (bus_handle.p_bus_handle.p_data_length + bus_handle.p_bus_handle.p_byte_length - 1)
+           / bus_handle.p_bus_handle.p_byte_length;
+  end;
+
+  impure function to_address(constant bus_handle : apb_requester_t; address : natural) return std_logic_vector is
+  begin
+    return std_logic_vector(to_unsigned(address, address_length(bus_handle)));
+  end;
+
   -- Blocking: Write the bus
   procedure write_bus(signal net : inout network_t;
                       constant bus_handle : apb_requester_t;
                       constant address : std_logic_vector;
                       constant data : std_logic_vector;
+                      variable expected_error : std_logic := '0';
                       -- default byte enable is all bytes
                       constant byte_enable : std_logic_vector := "") is
+    variable request_msg : msg_t := new_msg(apb_write_msg);
+    variable full_data : std_logic_vector(bus_handle.p_bus_handle.p_data_length-1 downto 0) := (others => '0');
+    variable full_address : std_logic_vector(bus_handle.p_bus_handle.p_address_length-1 downto 0) := (others => '0');
+    variable full_byte_enable : std_logic_vector(byte_enable_length(bus_handle)-1 downto 0);
   begin
-    write_bus(net, bus_handle.p_bus_handle, address, data, byte_enable);
+    full_address(address'length-1 downto 0) := address;
+    push_std_ulogic_vector(request_msg, full_address);
+
+    full_data(data'length-1 downto 0) := data;
+    push_std_ulogic_vector(request_msg, full_data);
+
+    if byte_enable = "" then
+      full_byte_enable := (others => '1');
+    else
+      full_byte_enable(byte_enable'length-1 downto 0) := byte_enable;
+    end if;
+    push_std_ulogic_vector(request_msg, full_byte_enable);
+    push_std_ulogic(request_msg, expected_error);
+
+    send(net, bus_handle.p_bus_handle.p_actor, request_msg);
   end procedure;
 
   procedure write_bus(signal net : inout network_t;
                       constant bus_handle : apb_requester_t;
                       constant address : natural;
                       constant data : std_logic_vector;
+                      variable expected_error : std_logic := '0';
                       -- default byte enable is all bytes
                       constant byte_enable : std_logic_vector := "") is
   begin
-    write_bus(net, bus_handle.p_bus_handle, address, data, byte_enable);
+    write_bus(net, bus_handle, to_address(bus_handle, address), data, expected_error, byte_enable);
   end procedure;
 
   -- Blocking: read bus with immediate reply
   procedure read_bus(signal net : inout network_t;
                      constant bus_handle : apb_requester_t;
                      constant address : std_logic_vector;
-                     variable data : inout std_logic_vector) is
+                     variable data : inout std_logic_vector;
+                     variable expected_error : std_logic := '0') is
+    variable reference : bus_reference_t;
   begin
-    read_bus(net, bus_handle.p_bus_handle, address, data);
+    read_bus(net, bus_handle, address, reference, expected_error);
+    await_read_bus_reply(net, reference, data);
   end procedure;
 
   procedure read_bus(signal net : inout network_t;
                      constant bus_handle : apb_requester_t;
                      constant address : natural;
-                     variable data : inout std_logic_vector) is
+                     variable data : inout std_logic_vector;
+                     variable expected_error : std_logic := '0') is
+    variable reference : bus_reference_t;
   begin
-    read_bus(net, bus_handle.p_bus_handle, address, data);
+    read_bus(net, bus_handle, to_address(bus_handle, address), reference, expected_error);
+    await_read_bus_reply(net, reference, data);
   end procedure;
 
+   -- Non blocking read with delayed reply
   procedure read_bus(signal net : inout network_t;
                      constant bus_handle : apb_requester_t;
                      constant address : natural;
-                     variable reference : inout bus_reference_t) is
+                     variable reference : inout bus_reference_t;
+                     variable expected_error : std_logic := '0') is
   begin
-    read_bus(net, bus_handle.p_bus_handle, address, reference);
+    read_bus(net, bus_handle, to_address(bus_handle, address), reference, expected_error);
   end procedure;
 
   procedure read_bus(signal net : inout network_t;
                      constant bus_handle : apb_requester_t;
                      constant address : std_logic_vector;
-                     variable reference : inout bus_reference_t) is
+                     variable reference : inout bus_reference_t;
+                     variable expected_error : std_logic := '0') is
+    variable full_address : std_logic_vector(bus_handle.p_bus_handle.p_address_length-1 downto 0) := (others => '0');
+    alias request_msg : msg_t is reference;
   begin
-    read_bus(net, bus_handle.p_bus_handle, address, reference);
+    request_msg := new_msg(apb_read_msg);
+    full_address(address'length-1 downto 0) := address;
+    push_std_ulogic_vector(request_msg, full_address);
+    push_std_ulogic(request_msg, expected_error);
+    send(net, bus_handle.p_bus_handle.p_actor, request_msg);
   end procedure;
 
   -- Blocking: Read bus and check result against expected data
