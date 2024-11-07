@@ -129,7 +129,7 @@ begin
         penable_o <= '1';
         wait until (pready_i and penable_o) = '1' and rising_edge(clk);
 
-        check_equal(pslverr_i, error_this_transaction, "Unexpected error response.");
+        check_equal(pslverr_i, error_this_transaction, "Unexpected pslverror response for write request.");
 
         if is_visible(bus_handle.p_bus_handle.p_logger, debug) then
           debug(bus_handle.p_bus_handle.p_logger,
@@ -153,7 +153,7 @@ begin
         penable_o <= '1';
         wait until (pready_i and penable_o) = '1' and rising_edge(clk);
 
-        check_equal(pslverr_i, error_this_transaction, "Unexpected error response.");
+        check_equal(pslverr_i, error_this_transaction, "Unexpected pslverror response for read request.");
 
         reply_msg := new_msg;
         push_std_ulogic_vector(reply_msg, prdata_i);

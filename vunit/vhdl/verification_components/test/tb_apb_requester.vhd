@@ -126,6 +126,25 @@ begin
       wait_until_idle(net, bus_handle);
       check_expected_was_written(memory);
 
+    elsif run("pslverror_during_read") then
+      buf := allocate(memory => memory, num_bytes => 2, permissions => read_only);
+      write_word(memory, base_address(buf), x"1234");
+      mock(get_logger("check"), error);
+      read_bus(net, bus_handle, base_address(buf), data, '1');
+      wait_until_idle(net, bus_handle);
+      check_only_log(get_logger("check"),
+        "Unexpected pslverror response for read request. - Got 0. Expected 1.", error);
+      unmock(get_logger("check"));
+    
+    elsif run("pslverror_during_write") then
+      buf := allocate(memory => memory, num_bytes => 2, permissions => write_only);
+      mock(get_logger("check"), error);
+      write_bus(net, bus_handle, base_address(buf), x"1122", '1');
+      wait_until_idle(net, bus_handle);
+      check_only_log(get_logger("check"),
+        "Unexpected pslverror response for write request. - Got 0. Expected 1.", error);
+      unmock(get_logger("check"));
+
     end if;
 
     wait for 100 ns;
