@@ -13,6 +13,8 @@ use work.com_pkg.all;
 use work.com_types_pkg.all;
 use work.logger_pkg.all;
 use work.sync_pkg.all;
+use work.id_pkg.all;
+use work.vc_pkg.all;
 use work.memory_pkg.memory_t;
 use work.memory_pkg.to_vc_interface;
 
@@ -20,16 +22,20 @@ package apb_requester_pkg is
 
   type apb_requester_t is record
     -- Private
+    p_id : id_t;
     p_bus_handle : bus_master_t;
     p_drive_invalid     : boolean;
     p_drive_invalid_val : std_logic;
+    p_unexpected_msg_type_policy : unexpected_msg_type_policy_t;
   end record;
 
   impure function new_apb_requester(
+    id : id_t := null_id;
     data_length : natural;
     address_length : natural;
     logger : logger_t := null_logger;
     actor : actor_t := null_actor;
+    unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail;
     drive_invalid : boolean := true;
     drive_invalid_val : std_logic := 'X'
   ) return apb_requester_t;
@@ -129,10 +135,12 @@ end package;
 package body apb_requester_pkg is
 
   impure function new_apb_requester(
+    id : id_t := null_id;
     data_length : natural;
     address_length : natural;
     logger : logger_t := null_logger;
     actor : actor_t := null_actor;
+    unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail;
     drive_invalid : boolean := true;
     drive_invalid_val : std_logic := 'X'
   ) return apb_requester_t is
@@ -146,16 +154,25 @@ package body apb_requester_pkg is
       );
     end function;
     variable logger_tmp : logger_t := null_logger;
+    variable id_tmp : id_t := null_id;
+    constant parent : id_t := get_id("vunit_lib:apb_requester");
   begin
+    if id = null_id then
+      id_tmp := get_id(to_string(num_children(parent) + 1), parent);
+    else
+      id_tmp := id;
+    end if;
     if logger = null_logger then
-      logger_tmp := bus_logger;
+      logger_tmp := get_logger(id_tmp);
     else
       logger_tmp := logger;
     end if;
     return (
+      p_id => id_tmp,
       p_bus_handle => create_bus(logger_tmp),
       p_drive_invalid => drive_invalid,
-      p_drive_invalid_val => drive_invalid_val
+      p_drive_invalid_val => drive_invalid_val,
+      p_unexpected_msg_type_policy => unexpected_msg_type_policy
     );
   end;
 

@@ -15,6 +15,7 @@ use work.com_types_pkg.all;
 use work.queue_pkg.all;
 use work.sync_pkg.all;
 use work.logger_pkg.all;
+use work.vc_pkg.all;
 use work.runner_pkg.all;
 use work.run_pkg.all;
 use work.run_types_pkg.all;
@@ -74,7 +75,9 @@ begin
       elsif msg_type = wait_for_time_msg then
         push(message_queue, request_msg);
       else
-        unexpected_msg_type(msg_type);
+        if bus_handle.p_unexpected_msg_type_policy = fail then
+          unexpected_msg_type(msg_type);
+        end if;
       end if;
     end loop;
   end process;

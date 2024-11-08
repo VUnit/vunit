@@ -54,6 +54,8 @@ begin
     variable buf : buffer_t;
     variable data, data2 : std_logic_vector(prdata'range);
     variable bus_ref1, bus_ref2 : bus_reference_t;
+    constant unexpected_message_type : msg_type_t := new_msg_type("unexpected message");
+    variable unexpected_message : msg_t := new_msg(unexpected_message_type);
   begin
     show(get_logger("apb slave"), display_handler, debug);
 
@@ -144,6 +146,13 @@ begin
       check_only_log(get_logger("check"),
         "Unexpected pslverror response for write request. - Got 0. Expected 1.", error);
       unmock(get_logger("check"));
+
+    elsif run("unexpected_msg_type_policy_fail") then
+      mock(get_logger("vunit_lib:com"), failure);
+      send(net, bus_handle.p_bus_handle.p_actor, unexpected_message);
+      check_only_log(get_logger("vunit_lib:com"),
+        "Got unexpected message unexpected message", failure);
+      unmock(get_logger("vunit_lib:com"));
 
     end if;
 
