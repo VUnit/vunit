@@ -154,7 +154,7 @@ begin
   end process;
   test_runner_watchdog(runner, 100 us);
 
-  U_DUT_MASTER: entity work.apb_requester
+  U_DUT_REQUESTER: entity work.apb_requester
     generic map (
       bus_handle => bus_handle
     )
@@ -170,7 +170,7 @@ begin
       pready_i    => pready
     );
 
-  U_DUT_SLAVE: entity work.apb_completer
+  U_DUT_COMPLETER: entity work.apb_completer
     generic map (
       bus_handle  => slave_handle
     )
