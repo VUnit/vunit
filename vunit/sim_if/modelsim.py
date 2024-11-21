@@ -218,13 +218,17 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         cfg.set("Library", library_name, path)
         write_modelsimini(cfg, self._sim_cfg_file_name)
 
-    def _get_mapped_libraries(self):
+    def _get_mapped_libraries(self, cfg_file_name=None):
         """
         Get mapped libraries from modelsim.ini file
         """
-        cfg = parse_modelsimini(self._sim_cfg_file_name)
+        cfg_file_name = cfg_file_name if cfg_file_name is not None else self._sim_cfg_file_name
+        cfg = parse_modelsimini(cfg_file_name)
         libraries = dict(cfg.items("Library"))
         if "others" in libraries:
+            other_libraries = self._get_mapped_libraries(libraries["others"])
+            # current mappings take precedence over others
+            libraries = {**other_libraries, **libraries}
             del libraries["others"]
         return libraries
 
