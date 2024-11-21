@@ -18,6 +18,11 @@ VUnit comes with a number of convenient data types included:
     append and reshape operations, and reading/writing data to/from
     *.csv* or *.raw* byte files.
 
+VUnit **queue_t** (:ref:`Queue API <queue_pkg>`) functionality is built
+on top of the **codec** (:ref:`Codec API <codec_pkg>`) package. The
+codec (:ref:`Codec API <codec_pkg>`) package enable to encode any
+predefined type into a unique type (each type is encoded into a string).
+
 .. toctree::
    :hidden:
 
