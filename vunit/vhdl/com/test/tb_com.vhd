@@ -1384,6 +1384,11 @@ begin
 
         unmock(com_logger);
 
+      elsif run("Test actor to/from integer conversion") then
+        actor := new_actor;
+        check(to_actor(to_integer(actor)) = actor);
+        check(to_actor(to_integer(null_actor)) = null_actor);
+
       -- Deprecated APIs
       elsif run("Test that use of deprecated API leads to an error") then
         mock(com_logger);
