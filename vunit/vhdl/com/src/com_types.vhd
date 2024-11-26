@@ -400,6 +400,9 @@ package com_types_pkg is
   alias push_dict_t_ref is push_ref[msg_t, dict_t];
   alias pop_dict_t_ref is pop_ref[msg_t return dict_t];
 
+  -- Misc
+  impure function to_integer(actor : actor_t) return integer;
+  impure function to_actor(value : integer) return actor_t;
 end package;
 
 package body com_types_pkg is
@@ -870,5 +873,17 @@ package body com_types_pkg is
     return pop_ref(msg.data);
   end;
 
+  -----------------------------------------------------------------------------
+  -- Misc
+  -----------------------------------------------------------------------------
+  impure function to_integer(actor : actor_t) return integer is
+  begin
+    return actor.p_id_number;
+  end;
+
+  impure function to_actor(value : integer) return actor_t is
+  begin
+    return (p_id_number => value);
+  end;
 
 end package body com_types_pkg;
