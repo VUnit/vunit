@@ -19,6 +19,7 @@ context vc_context is
   use vunit_lib.stream_slave_pkg.all;
   use vunit_lib.sync_pkg.all;
   use vunit_lib.uart_pkg.all;
+  use vunit_lib.vc_pkg.all;
   use vunit_lib.wishbone_pkg.all;
   context vunit_lib.com_context;
 end context;

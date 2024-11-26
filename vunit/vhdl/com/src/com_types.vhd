@@ -403,6 +403,9 @@ package com_types_pkg is
   -- Misc
   impure function to_integer(actor : actor_t) return integer;
   impure function to_actor(value : integer) return actor_t;
+
+  -- Private
+  impure function is_valid(code : integer) return boolean;
 end package;
 
 package body com_types_pkg is
