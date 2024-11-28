@@ -149,7 +149,7 @@ class TestRun(object):
     A single simulation run yielding the results for one or several test cases
     """
 
-    def __init__(self, simulator_if, config, elaborate_only, test_suite_name, test_cases):
+    def __init__(self, *, simulator_if, config, elaborate_only, test_suite_name, test_cases):
         self._simulator_if = simulator_if
         self._config = config
         self._elaborate_only = elaborate_only

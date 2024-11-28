@@ -84,7 +84,7 @@ class IncisiveInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         return False
 
     def __init__(  # pylint: disable=too-many-arguments
-        self, prefix, output_path, gui=False, log_level=None, cdslib=None, hdlvar=None
+        self, prefix, output_path, *, gui=False, log_level=None, cdslib=None, hdlvar=None
     ):
         SimulatorInterface.__init__(self, output_path, gui)
         self._prefix = prefix

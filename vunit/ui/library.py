@@ -329,7 +329,7 @@ class Library(object):
         """
         return self._parent.get_source_files(pattern, self._library_name, allow_empty)
 
-    def add_source_files(  # pylint: disable=too-many-arguments
+    def add_source_files(  # pylint: disable=too-many-arguments, too-many-positional-arguments
         self,
         pattern,
         preprocessors=None,
@@ -375,7 +375,7 @@ class Library(object):
             ]
         )
 
-    def add_source_file(  # pylint: disable=too-many-arguments
+    def add_source_file(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         file_name,
         preprocessors=None,

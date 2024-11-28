@@ -164,6 +164,7 @@ class VerilogDesignFile(object):
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
+        *,
         modules=None,
         packages=None,
         imports=None,

@@ -229,6 +229,7 @@ class TestBench(ConfigurationVisitor):
     def add_config(  # pylint: disable=too-many-arguments
         self,
         name,
+        *,
         generics=None,
         pre_config=None,
         post_check=None,
@@ -257,7 +258,15 @@ class TestBench(ConfigurationVisitor):
                 self._individual_tests = not run_all_in_same_sim and len(self._test_cases) > 0
                 del attributes["run_all_in_same_sim"]
 
-        super().add_config(name, generics, pre_config, post_check, sim_options, attributes, vhdl_configuration_name)
+        super().add_config(
+            name,
+            generics=generics,
+            pre_config=pre_config,
+            post_check=post_check,
+            sim_options=sim_options,
+            attributes=attributes,
+            vhdl_configuration_name=vhdl_configuration_name,
+        )
 
 
 class FileLocation(object):

@@ -39,6 +39,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         self,
         report,
         output_path,
+        *,
         verbosity=VERBOSITY_NORMAL,
         num_threads=1,
         fail_fast=False,
@@ -193,7 +194,9 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
 
         return str(Path(output_path) / full_name)
 
-    def _add_skipped_tests(self, test_suite, results, start_time, num_tests, output_file_name):
+    def _add_skipped_tests(
+        self, test_suite, results, start_time, num_tests, output_file_name
+    ):  # pylint: disable=too-many-positional-arguments
         """
         Add skipped tests
         """
@@ -203,7 +206,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
 
     def _run_test_suite(  # pylint: disable=too-many-locals
         self, test_suite, write_stdout, num_tests, output_path, output_file_name
-    ):
+    ):  # pylint: disable=too-many-positional-arguments
         """
         Run the actual test suite
         """
@@ -313,7 +316,9 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
             for line in fread.readlines():
                 self._stdout_ansi.write(line)
 
-    def _add_results(self, test_suite, results, start_time, num_tests, output_file_name):
+    def _add_results(
+        self, test_suite, results, start_time, num_tests, output_file_name
+    ):  # pylint: disable=too-many-positional-arguments
         """
         Add results to test report
         """
