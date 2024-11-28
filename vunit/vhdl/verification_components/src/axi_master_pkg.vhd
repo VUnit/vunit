@@ -12,28 +12,35 @@ use ieee.numeric_std.all;
 
 use work.axi_pkg.all;
 use work.bus_master_pkg.all;
-use work.com_pkg.send;
+use work.com_pkg.all;
 use work.com_types_pkg.all;
 use work.logger_pkg.all;
+use work.id_pkg.all;
 use work.queue_pkg.all;
+use work.vc_pkg.all;
 
 package axi_master_pkg is
 
   -- Handle to VC instance
   type axi_master_t is record
-    -- These fields are private, do not use directly
+    -- Private
+    p_id : id_t;
     p_bus_handle : bus_master_t;
     p_drive_invalid : boolean;
     p_drive_invalid_val : std_logic;
     p_write_high_probability : real range 0.0 to 1.0;
     p_read_high_probability : real range 0.0 to 1.0;
+    p_unexpected_msg_type_policy : unexpected_msg_type_policy_t;
   end record;
 
-  impure function new_axi_master(data_length : natural;
+  impure function new_axi_master(
+                                  id : id_t := null_id;
+                                  data_length : natural;
                                   address_length : natural;
                                   byte_length : natural := 8;
                                   logger : logger_t := bus_logger;
                                   actor : actor_t := null_actor;
+                                  unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail;
                                   drive_invalid : boolean := true;
                                   drive_invalid_val : std_logic :=  'X';
                                   write_high_probability : real := 1.0;
@@ -141,30 +148,51 @@ package axi_master_pkg is
 end package;
 
 package body axi_master_pkg is
-  impure function new_axi_master(data_length : natural;
+  impure function new_axi_master(
+                                  id : id_t := null_id;
+                                  data_length : natural;
                                   address_length : natural;
                                   byte_length : natural := 8;
                                   logger : logger_t := bus_logger;
                                   actor : actor_t := null_actor;
+                                  unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail;
                                   drive_invalid : boolean := true;
                                   drive_invalid_val : std_logic :=  'X';
                                   write_high_probability : real := 1.0;
                                   read_high_probability : real := 1.0
   ) return axi_master_t is
-    variable bus_handle : bus_master_t := new_bus(
-      data_length,
-      address_length,
-      byte_length,
-      logger,
-      actor
-    );
+    impure function create_bus (logger : logger_t) return bus_master_t is
+      begin
+        return new_bus(
+          data_length => data_length,
+          address_length => address_length,
+          logger => logger,
+          actor => actor
+        );
+    end function;
+    variable logger_tmp : logger_t := null_logger;
+    variable id_tmp : id_t := null_id;
+    constant parent : id_t := get_id("vunit_lib:axi_master");
   begin
+    if id = null_id then
+      id_tmp := get_id(to_string(num_children(parent) + 1), parent);
+    else
+      id_tmp := id;
+    end if;
+    if logger = null_logger then
+      logger_tmp := get_logger(id_tmp);
+    else
+      logger_tmp := logger;
+    end if;
     return (
-      p_bus_handle => bus_handle,
+      p_id => id_tmp,
+      p_bus_handle => create_bus(logger_tmp),
       p_drive_invalid => drive_invalid,
       p_drive_invalid_val => drive_invalid_val,
       p_write_high_probability => write_high_probability,
-      p_read_high_probability => read_high_probability);
+      p_read_high_probability => read_high_probability,
+      p_unexpected_msg_type_policy => unexpected_msg_type_policy
+    );
   end;
 
   procedure write_axi(signal net : inout network_t;

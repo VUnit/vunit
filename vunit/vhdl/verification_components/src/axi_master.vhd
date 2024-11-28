@@ -27,6 +27,10 @@ use work.log_levels_pkg.all;
 use work.logger_pkg.all;
 use work.queue_pkg.all;
 use work.sync_pkg.all;
+use work.vc_pkg.all;
+use work.runner_pkg.all;
+use work.run_pkg.all;
+use work.run_types_pkg.all;
 
 entity axi_master is
   generic (
@@ -92,7 +96,9 @@ begin
       end if;
       handle_wait_until_idle(net, msg_type, request_msg);
     else
-      unexpected_msg_type(msg_type);
+      if axi_master_handle.p_unexpected_msg_type_policy = fail then
+        unexpected_msg_type(msg_type);
+      end if;
     end if;
   end process;
 
@@ -162,13 +168,19 @@ begin
     variable burst : std_logic_vector(arburst'range) := (others => '0');
     variable byteenable : std_logic_vector(wstrb'range) := (others => '0');
     variable resp : axi_resp_t;
+    constant key : key_t := get_entry_key(test_runner_cleanup);
   begin
     -- Initialization
     rnd.InitSeed(rnd'instance_name);
     drive_idle;
 
     loop
-      wait until rising_edge(aclk) and not is_empty(message_queue) and areset_n = '1';
+      if is_empty(message_queue) then
+        unlock(runner, key);
+        wait until rising_edge(aclk) and not is_empty(message_queue) and areset_n = '1';
+      end if;
+      lock(runner, key);
+      
       idle <= false;
       wait for 0 ps;
 
