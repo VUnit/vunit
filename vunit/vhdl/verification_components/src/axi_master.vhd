@@ -88,6 +88,8 @@ begin
     receive(net, axi_master_handle.p_bus_handle.p_actor, request_msg);
     msg_type := message_type(request_msg);
 
+    handle_sync_message(net, msg_type, request_msg);
+
     if is_read(msg_type) or is_write(msg_type) then
       push(message_queue, request_msg);
     elsif msg_type = wait_until_idle_msg then
