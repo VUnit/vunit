@@ -143,33 +143,44 @@ proc vunit_restart {} {
 proc vunit_help {} {
     puts {List of VUnit commands:}
     puts {vunit_help}
-    puts {  - Prints this help}
+    puts {  - Prints this help}"""
+
+        if not self._early_load_in_gui_mode():
+            tcl += """
     puts {vunit_load [vsim_extra_args]}
-    puts {  - Load design with correct generics for the test}
+    puts {  - Loads design with correct generics for the test(s)    }
     puts {  - Optional first argument are passed as extra flags to vsim}
+    puts {  - Re-runs the user-defined after_load init file}"""
+        else:
+            tcl += """
+    puts {vunit_load}
+    puts {  - Re-runs the user-defined after_load init file}"""
+
+        tcl += """
     puts {vunit_user_init}
-    puts {  - Re-runs the user defined init file}
+    puts {  - Re-runs the user-defined GUI init file}
     puts {vunit_run}
-    puts {  - Run test, must do vunit_load first}
+    puts {  - Runs the user-defined before_load init file}
+    puts {  - Runs the test(s)}
     puts {vunit_compile}
-    puts {  - Recompiles the source files}"""
+    puts {  - Re-compiles the source files}"""
 
         if optimize_design:
             tcl += """
     puts {vunit_optimize [vopt_extra_args]}
-    puts {  - Optimizes the design. Must be done after vunit_compile}
+    puts {  - Re-optimizes the design. Must be done after vunit_compile}
     puts {  - Optional first argument are passed as extra flags to vopt}"""
 
         if optimize_design:
             tcl += """
     puts {vunit_restart}
-    puts {  - Recompiles the source files}
-    puts {  - Reoptimizes the design if the compile was successful}
+    puts {  - Re-compiles the source files}
+    puts {  - Re-optimizes the design if the compile was successful}
     puts {  - and re-runs the simulation if the compile and optimize were successful}"""
         else:
             tcl += """
     puts {vunit_restart}
-    puts {  - Recompiles the source files}
+    puts {  - Re-compiles the source files}
     puts {  - and re-runs the simulation if the compile was successful}"""
 
         tcl += """
@@ -300,9 +311,10 @@ proc vunit_run {} {
         tcl += "  vunit_user_init\n"
         tcl += "  vunit_help\n"
         tcl += "}\n"
+
         return tcl
 
-    def _run_batch_file(self, batch_file_name, gui=False):
+    def _run_batch_file(self, batch_file_name, gui=False, extra_args=None):
         """
         Run a test bench in batch by invoking a new vsim process from the command line
         """
@@ -316,6 +328,9 @@ proc vunit_run {} {
                 "-do",
                 f'source "{fix_path(batch_file_name)!s}"',
             ]
+
+            if extra_args:
+                args += extra_args
 
             proc = Process(args, cwd=str(Path(self._sim_cfg_file_name).parent))
             proc.consume_output()
@@ -354,6 +369,23 @@ proc vunit_run {} {
         """
         return False
 
+    def _early_load_in_gui_mode(self):  # pylint: disable=unused-argument
+        """
+        Return True if design is to be loaded on the first vsim call rather than
+        in the second vsim call embedded in the script file.
+
+        This is required for Questa Visualizer.
+        """
+        return False
+
+    def _get_load_flags(self, config, output_path, optimize_design):  # pylint: disable=unused-argument
+        """
+        Return extra flags needed for the first vsim call in GUI mode when early load is enabled.
+
+        This is required for Questa Visualizer.
+        """
+        return []
+
     def simulate(self, output_path, test_suite_name, config, elaborate_only):
         """
         Run a test bench
@@ -375,14 +407,23 @@ proc vunit_run {} {
                 test_suite_name, config, script_path, output_path, optimize_design=optimize_design
             ),
         )
-        write_file(str(gui_file_name), self._create_gui_script(str(common_file_name), config))
+
+        write_file(
+            str(gui_file_name),
+            self._create_gui_script(str(common_file_name), config),
+        )
         write_file(
             str(batch_file_name),
             self._create_batch_script(str(common_file_name), elaborate_only),
         )
 
         if self._gui:
-            return self._run_batch_file(str(gui_file_name), gui=True)
+            early_load = self._gui and self._early_load_in_gui_mode()
+            return self._run_batch_file(
+                str(gui_file_name),
+                gui=True,
+                extra_args=self._get_load_flags(config, output_path, optimize_design) if early_load else None,
+            )
 
         if self._persistent_shell is not None:
             return self._run_persistent(str(common_file_name), load_only=elaborate_only)
