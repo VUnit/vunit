@@ -328,7 +328,7 @@ class TestModelSimInterface(unittest.TestCase):
         write_file("file.vhd", "")
         project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("2008"))
         simif.compile_project(project)
-        config = make_config(sim_options={"modelsim.three_step_flow":True})
+        config = make_config(sim_options={"modelsim.three_step_flow": True})
 
         # First call should optimize design
         simif.simulate(self.simulation_output_path, "test_suite_name", config, False)
@@ -351,13 +351,14 @@ class TestModelSimInterface(unittest.TestCase):
         LOGGER.reset_mock()
         simif._optimized_designs[design_to_optimize]["optimized_design"] = None
         simif.simulate(self.simulation_output_path, "test_suite_name", config, False)
-        expected_calls = [
-            mock.call("Waiting for %s to be optimized.", design_to_optimize),
-            mock.call("Done waiting for %s to be optimized.", design_to_optimize),
+        expected_debug_calls = [mock.call("Waiting for %s to be optimized.", design_to_optimize)]
+        self.assertEqual(LOGGER.debug.call_count, len(expected_debug_calls))
+        LOGGER.debug.assert_has_calls(expected_debug_calls)
+        expected_error_calls = [
+            mock.call("Failed waiting for %s to be optimized (optimization failed).", design_to_optimize)
         ]
-        self.assertEqual(LOGGER.debug.call_count, len(expected_calls))
-        LOGGER.debug.assert_has_calls(expected_calls)
-
+        self.assertEqual(LOGGER.error.call_count, len(expected_error_calls))
+        LOGGER.error.assert_has_calls(expected_error_calls)
 
     def setUp(self):
         self.test_path = str(Path(__file__).parent / "test_modelsim_out")
@@ -381,6 +382,7 @@ class TestModelSimInterface(unittest.TestCase):
         os.chdir(self.cwd)
         if Path(self.test_path).exists():
             rmtree(self.test_path)
+
 
 def make_config(sim_options=None, generics=None, verilog=False):
     """
