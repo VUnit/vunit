@@ -581,18 +581,37 @@ package body queue_pkg is
 
   impure function pop_ref (
     queue : queue_t
-  ) return integer_array_t is begin
+    ) return integer_array_t is
+    variable length, width, height, depth, bit_width : natural;
+    variable is_signed : boolean;
+    variable lower_limit, upper_limit : integer;
+    variable data : integer_vector_ptr_t;
+
+  begin
     check_type(queue, vunit_integer_array_t);
+
+    -- Assigning values to temporary varibles solves
+    -- a Questa bug.
+    length      := unsafe_pop(queue);
+    width       := unsafe_pop(queue);
+    height      := unsafe_pop(queue);
+    depth       := unsafe_pop(queue);
+    bit_width   := unsafe_pop(queue);
+    is_signed   := unsafe_pop(queue);
+    lower_limit := unsafe_pop(queue);
+    upper_limit := unsafe_pop(queue);
+    data        := unsafe_pop(queue);
+
     return (
-      length      => unsafe_pop(queue),
-      width       => unsafe_pop(queue),
-      height      => unsafe_pop(queue),
-      depth       => unsafe_pop(queue),
-      bit_width   => unsafe_pop(queue),
-      is_signed   => unsafe_pop(queue),
-      lower_limit => unsafe_pop(queue),
-      upper_limit => unsafe_pop(queue),
-      data        => unsafe_pop(queue)
+      length      => length,
+      width       => width,
+      height      => height,
+      depth       => depth,
+      bit_width   => bit_width,
+      is_signed   => is_signed,
+      lower_limit => lower_limit,
+      upper_limit => upper_limit,
+      data        => data
     );
   end;
 
