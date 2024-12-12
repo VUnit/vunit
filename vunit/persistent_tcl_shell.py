@@ -73,7 +73,7 @@ class PersistentTclShell(object):
         return consumer.var
 
     def read_bool(self, varname):
-        result = self.read_var(varname)
+        result = self.read_var(varname).lower()
         assert result in ("true", "false")
         return result == "true"
 

@@ -1,2 +1,0 @@
-Added timeout parameter to the `wait_until_idle` procedure in the synchronization verification component interface.
-A timeout will result in a failure.

@@ -140,6 +140,19 @@ The following simulation options are known.
    Additionally, the ``vunit_tb_name`` variable is defined as the name of the test bench.
    Must be a string.
 
+``modelsim.three_step_flow``
+   Enable 3-step flow where a separate ``vopt`` step is executed before ``vsim`` is called.
+   Must be a boolean value. Default is False.
+
+``modelsim.vopt_flags``
+   Extra arguments passed to ``vopt`` when ``modelsim.three_step_flow`` is ``True``.
+   Must be a list of strings.
+
+``modelsim.vsim_flags.gui``
+   Extra arguments passed to ``vopt`` when ``modelsim.three_step_flow`` is ``True`` and
+   GUI mode is enabled. Takes precedence over ``modelsim.vopt_flags``. Must be a list of
+   strings.
+
 ``rivierapro.vsim_flags``
    Extra arguments passed to ``vsim`` when loading the design.
    Must be a list of strings.
