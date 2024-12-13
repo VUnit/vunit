@@ -307,6 +307,14 @@ proc vunit_run {} {
         """
         tcl = f'source "{fix_path(common_file_name)!s}"\n'
         tcl += self._create_user_init_function(config)
+        tcl += 'add_menu "" VUnit\n'
+        tcl += 'add_menuitem "" VUnit "VUnit User Init" vunit_user_init\n'
+        tcl += 'add_menuitem "" VUnit "VUnit Compile" vunit_compile\n'
+        tcl += 'add_menuitem "" VUnit "VUnit Load" vunit_load\n'
+        tcl += 'add_menuitem "" VUnit "VUnit Run" vunit_run\n'
+        tcl += 'add_menuitem "" VUnit "VUnit Restart" vunit_restart\n'
+        tcl += 'add_separator "" VUnit\n'
+        tcl += 'add_menuitem "" VUnit "VUnit Help" vunit_help\n'
         tcl += "if {![vunit_load]} {\n"
         tcl += "  vunit_user_init\n"
         tcl += "  vunit_help\n"
