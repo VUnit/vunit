@@ -121,7 +121,7 @@ The following simulation options are known.
    A list of user defined DO/TCL-files that is sourced after the design has been loaded.
    They will be executed during ``vunit_load``, after the top level has been loaded
    using the ``vsim`` command.
-   During script evaluation the ``vunit_tb_path`` variable is defined
+   During script and file path evaluation the ``vunit_tb_path`` variable is defined
    as the path of the folder containing the test bench.
    Additionally, the ``vunit_tb_name`` variable is defined as the name of the test bench.
    Must be a list of strings.
@@ -135,7 +135,7 @@ The following simulation options are known.
 ``modelsim.init_file.gui``
    A user defined TCL-file that is sourced after the design has been loaded in the GUI.
    For example this can be used to configure the waveform viewer.
-   During script evaluation the ``vunit_tb_path`` variable is defined
+   During script and file path evaluation the ``vunit_tb_path`` variable is defined
    as the path of the folder containing the test bench.
    Additionally, the ``vunit_tb_name`` variable is defined as the name of the test bench.
    Must be a string.
@@ -166,7 +166,7 @@ The following simulation options are known.
    A list of user defined DO/TCL-files that is sourced after the design has been loaded.
    They will be executed during ``vunit_load``, after the top level has been loaded
    using the ``vsim`` command.
-   During script evaluation the ``vunit_tb_path`` variable is defined
+   During script and file path evaluation the ``vunit_tb_path`` variable is defined
    as the path of the folder containing the test bench.
    Additionally, the ``vunit_tb_name`` variable is defined as the name of the test bench.
    Must be a list of strings.
@@ -180,7 +180,7 @@ The following simulation options are known.
 ``rivierapro.init_file.gui``
    A user defined TCL-file that is sourced after the design has been loaded in the GUI.
    For example this can be used to configure the waveform viewer.
-   During script evaluation the ``vunit_tb_path`` variable is defined
+   During script and file path evaluation the ``vunit_tb_path`` variable is defined
    as the path of the folder containing the test bench.
    Additionally, the ``vunit_tb_name`` variable is defined as the name of the test bench.
    Must be a string.
@@ -197,7 +197,7 @@ The following simulation options are known.
 ``activehdl.init_file.gui``
    A user defined TCL-file that is sourced after the design has been loaded in the GUI.
    For example this can be used to configure the waveform viewer.
-   During script evaluation the ``vunit_tb_path`` variable is defined
+   During script and file path evaluation the ``vunit_tb_path`` variable is defined
    as the path of the folder containing the test bench.
    Additionally, the ``vunit_tb_name`` variable is defined as the name of the test bench.
    Must be a string.

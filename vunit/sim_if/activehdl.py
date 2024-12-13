@@ -463,13 +463,22 @@ proc vunit_help {} {
         simulator_name.init_file.gui.
         Also defines the vunit_tb_path and the vunit_tb_name variable.
         """
+
         opt_name = self.name + ".init_file.gui"
         init_file = config.sim_options.get(opt_name, None)
+
         tcl = "proc vunit_user_init {} {\n"
         if init_file is not None:
+            # Do not resolve paths starting with $vunit_tb_path but
+            # leave that to TCL variable expansion
+            init_file_path = Path(init_file)
+            if not init_file.startswith("$vunit_tb_path"):
+                init_file_path = init_file_path.resolve()
+            init_file_path = fix_path(str(init_file_path))
+
             tcl += f"set vunit_tb_name {config.design_unit_name}\n"
             tcl += f"set vunit_tb_path {fix_path(str(Path(config.tb_path).resolve()))}\n"
-            tcl += f'source "{fix_path(str(Path(init_file).resolve()))!s}"\n'
+            tcl += f'source "{init_file_path}"\n'
         tcl += "    return 0\n"
         tcl += "}\n"
         return tcl

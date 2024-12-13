@@ -280,8 +280,15 @@ proc vunit_run {} {
         Create TCL to source a file and catch errors
         Also defines the vunit_tb_path variable as the config.tb_path
         and the vunit_tb_name variable as the config.design_unit_name
-
         """
+
+        # Do not resolve paths starting with $vunit_tb_path but
+        # leave that to TCL variable expansion
+        file_name_path = Path(file_name)
+        if not file_name.startswith("$vunit_tb_path"):
+            file_name_path = file_name_path.resolve()
+        file_name_path = fix_path(str(file_name_path))
+
         template = """
     set vunit_tb_path "%s"
     set vunit_tb_name "%s"
@@ -296,7 +303,7 @@ proc vunit_run {} {
         tcl = template % (
             fix_path(str(Path(config.tb_path).resolve())),
             config.design_unit_name,
-            fix_path(str(Path(file_name).resolve())),
+            file_name_path,
             message,
         )
         return tcl
