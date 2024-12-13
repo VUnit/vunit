@@ -29,6 +29,6 @@ SRC_PATH = Path(__file__).parent / "src"
 
 VU.add_library("lib").add_source_files([SRC_PATH / "*.vhd", SRC_PATH / "**" / "*.vhd"])
 
-# VU.set_sim_option('modelsim.init_files.after_load',['runall_addwave.do'])
+VU.set_sim_option("modelsim.init_file.gui", "runall_addwave.do")
 
 VU.main()
