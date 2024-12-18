@@ -310,6 +310,9 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
 
         vsim_flags += ["-lib", config.library_name]
 
+        for library in self._libraries:
+            vsim_flags += ["-L", library.name]
+
         if config.vhdl_configuration_name is None:
             # Add the the testbench top-level unit last as coverage is
             # only collected for the top-level unit specified last
