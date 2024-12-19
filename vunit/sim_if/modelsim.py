@@ -10,6 +10,7 @@ Interface towards Mentor Graphics ModelSim
 
 from pathlib import Path
 import os
+import re
 import logging
 from threading import Lock, Event
 from time import sleep
@@ -84,11 +85,11 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         """
         Find first valid modelsim toolchain prefix
         """
-
-        def has_modelsim_ini(path):
-            return os.path.isfile(str(Path(path).parent / "modelsim.ini"))
-
-        return cls.find_toolchain(["vsim"], constraints=[has_modelsim_ini])
+        def not_aldec_simulator(path):  # pylint: disable=unused-argument
+            is_active_hdl = cls.find_toolchain(["vsim", "avhdl"]) is not None
+            is_riviera = cls.find_toolchain(["vsim", "vsimsa"]) is not None
+            return not (is_active_hdl or is_riviera)
+        return cls.find_toolchain(["vsim"], constraints=[not_aldec_simulator])
 
     @classmethod
     def supports_vhdl_package_generics(cls):
@@ -126,6 +127,32 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         # Lock to access the two shared variables above
         self._shared_state_lock = Lock()
 
+    def _get_modelsim_ini_from_vmap(self):
+        """
+        Get the path to modelsim.ini, as used by vmap.
+
+        This means it listens to the MODELSIM environment variable, allowing
+        both vunit and other code/scripts to use the same modelsim.ini.
+        """
+        vmap_output = []
+        proc = Process([str(Path(self._prefix) / "vmap")])
+        try:
+            proc.consume_output(callback=vmap_output.append)
+        except Process.NonZeroExitCode:
+            # The responsibility of this code is only detecting where
+            # modelsim.ini is, not to check that all libraries defined in it
+            # exist. So suppress non-zero exit codes.
+            pass
+        for line in vmap_output:
+            match = re.match(r"Reading (.*modelsim\.ini)", line)
+            if match is None:
+                continue
+            modelsim_ini = Path(match.group(1)).resolve()
+            if not modelsim_ini.exists():
+                raise FileNotFoundError(modelsim_ini)
+            return modelsim_ini
+        raise Exception("Failed to get the path to modelsim.ini from vmap")
+
     def _create_modelsim_ini(self):
         """
         Create the modelsim.ini file
@@ -134,7 +161,11 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         if not file_exists(parent):
             os.makedirs(parent)
 
-        original_modelsim_ini = os.environ.get("VUNIT_MODELSIM_INI", str(Path(self._prefix).parent / "modelsim.ini"))
+        # Try vunit specific environment variable first, then query vmap, which
+        # reads the MODELSIM environment variable if it exists, then checks the
+        # current working directory and eventually falls back to modelsim.ini
+        # bundled with ModelSim.
+        original_modelsim_ini = os.environ.get("VUNIT_MODELSIM_INI", str(self._get_modelsim_ini_from_vmap()))
         with Path(original_modelsim_ini).open("rb") as fread:
             with Path(self._sim_cfg_file_name).open("wb") as fwrite:
                 fwrite.write(fread.read())
