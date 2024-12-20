@@ -668,7 +668,11 @@ proc vunit_load {{vsim_extra_args ""}} {"""
 
         set_generic_str = " ".join(
             (
-                f"-g/{config.entity_name!s}/{name!s}={encode_generic_value_for_args(value)!s}"
+                # -g should be followed by a / to denote an absolute path from the top. However, a bug
+                # in Visualizer causes that format to fail on restart. Without / we could theoretically
+                # match a lower level relative path but that is probably not very likely. Should that
+                # happen one can switch to the original debugger that doesn't use the early load
+                f"-g{config.entity_name!s}/{name!s}={encode_generic_value_for_args(value)!s}"
                 for name, value in config.generics.items()
             )
         )
