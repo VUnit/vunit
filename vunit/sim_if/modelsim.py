@@ -616,6 +616,11 @@ proc vunit_load {{vsim_extra_args ""}} {"""
             "-work",
             f"{config.library_name}",
             "-quiet",
+            "-t",
+            "ps",
+            # for correct handling of Verilog fatal/finish
+            "-onfinish",
+            "stop",
             coverage_args,
             self._vsim_extra_args(config),
         ]
@@ -649,9 +654,6 @@ proc vunit_load {{vsim_extra_args ""}} {"""
             f"{{{fix_path(str(Path(output_path) / 'vsim.wlf'))}}}",
             pli_str,
             set_generic_str,
-            "-t ps",
-            # for correct handling of Verilog fatal/finish
-            "-onfinish stop",
         ]
 
         return vsim_flags
