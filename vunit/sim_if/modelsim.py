@@ -117,6 +117,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         assert not (persistent and gui)
         self._create_modelsim_ini()
         self._debugger = debugger
+        self._vopt_retries = 3
         # Contains design already optimized, i.e. the optimized design can be reused
         self._optimized_designs = {}
         # Contains locks for each library. If locked, a design belonging to the library
@@ -435,6 +436,19 @@ proc vunit_optimize {{vopt_extra_args ""}} {"""
             self._wait_for_file_lock(library)
             self._library_locks[config.library_name].release()
 
+    @staticmethod
+    def _execute_with_retries(retries, error_msg, func, *args, **kwargs):
+        """
+        Execute provided function and allow for retries if it fails.
+        """
+        status = func(*args, **kwargs)
+        while not status and retries > 0:
+            LOGGER.error("%s Remaining retries: %d.", error_msg, retries)
+            status = func(*args, **kwargs)
+            retries -= 1
+
+        return status
+
     def _optimize(self, config, script_path):
         """
         Optimize design and return simulation target or False if optimization failed.
@@ -470,7 +484,13 @@ proc vunit_optimize {{vopt_extra_args ""}} {"""
             write_file(str(optimize_file_name), self._create_optimize_function(config))
 
             if self._persistent_shell is not None:
-                status = self._run_persistent_optimize(optimize_file_name)
+                # vopt is known to occasionally fail. Execute with retries.
+                status = self._execute_with_retries(
+                    self._vopt_retries,
+                    f"Failed to optimize {design_to_optimize}.",
+                    self._run_persistent_optimize,
+                    optimize_file_name,
+                )
 
             else:
                 tcl = f"""\
@@ -483,7 +503,14 @@ quit -code 0
                 batch_file_name = script_path / "batch_optimize.do"
                 write_file(str(batch_file_name), tcl)
 
-                status = self._run_optimize_batch_file(batch_file_name, script_path)
+                # vopt is known to occasionally fail. Execute with retries.
+                status = self._execute_with_retries(
+                    self._vopt_retries,
+                    f"Failed to optimize {design_to_optimize}.",
+                    self._run_optimize_batch_file,
+                    batch_file_name,
+                    script_path,
+                )
 
             self._release_library_lock(library, config)
 
