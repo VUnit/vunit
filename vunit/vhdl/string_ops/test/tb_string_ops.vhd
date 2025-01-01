@@ -65,6 +65,7 @@ begin
     variable ascending_vector : std_logic_vector(3 to 11);
     variable descending_vector : std_logic_vector(13 downto 5);
     variable l : lines_t;
+    constant hex_characters : string(1 to 16) := "0123456789abcdef";
     constant offset_string :string(10 to 16) := "foo bar";
     constant reverse_string :string(16 downto 10) := "foo bar";
     constant reversed_vector :unsigned(16 downto 4) := "1011010101001";
@@ -180,6 +181,14 @@ begin
         check(hex_image(ascending_vector) = "x""15X""", "Should handle ascending vector range");
         descending_vector := "10101U101";
         check(hex_image(descending_vector) = "x""15X""", "Should handle descending vector range");
+
+      elsif run("Test from_hex") then
+        for value in 0 to 15 loop
+          check(from_hex((1 => hex_characters(value + 1))) = std_logic_vector(to_unsigned(value, 4)),
+                "Should return """ & to_nibble_string(to_unsigned(value, 4)) & """ on from_hex(""" & hex_characters(value + 1) & """), got """ &
+                to_nibble_string(from_hex((1 => hex_characters(value + 1)))) & """.");
+        end loop;
+        check(from_hex("ABCDEF") = "101010111100110111101111", "Should handle upper case letters");
 
       elsif run("Test replace") then
         check(replace("", 'a', 'b') = "", "Should return empty string on empty input string.");

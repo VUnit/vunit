@@ -9,6 +9,9 @@ Contains different kinds of test suites
 """
 
 from pathlib import Path
+from time import time
+from hashlib import blake2b
+from threading import get_ident
 from .. import ostools
 from .report import PASSED, SKIPPED, FAILED
 
@@ -18,7 +21,7 @@ class IndependentSimTestCase(object):
     A test case to be run in an independent simulation
     """
 
-    def __init__(self, test, config, simulator_if, elaborate_only=False):
+    def __init__(self, test, config, simulator_if, seed, *, elaborate_only=False):
         self._name = f"{config.library_name!s}.{config.design_unit_name!s}"
 
         if not config.is_default:
@@ -40,6 +43,7 @@ class IndependentSimTestCase(object):
             elaborate_only=elaborate_only,
             test_suite_name=self._name,
             test_cases=[test.name],
+            seed=seed,
         )
 
     @property
@@ -78,7 +82,7 @@ class SameSimTestSuite(object):
     A test suite where multiple test cases are run within the same simulation
     """
 
-    def __init__(self, tests, config, simulator_if, elaborate_only=False):
+    def __init__(self, tests, config, simulator_if, seed, *, elaborate_only=False):
         self._name = f"{config.library_name!s}.{config.design_unit_name!s}"
 
         if not config.is_default:
@@ -93,6 +97,7 @@ class SameSimTestSuite(object):
             elaborate_only=elaborate_only,
             test_suite_name=self._name,
             test_cases=[test.name for test in tests],
+            seed=seed,
         )
 
     @property
@@ -149,12 +154,13 @@ class TestRun(object):
     A single simulation run yielding the results for one or several test cases
     """
 
-    def __init__(self, *, simulator_if, config, elaborate_only, test_suite_name, test_cases):
+    def __init__(self, *, simulator_if, config, elaborate_only, test_suite_name, test_cases, seed):  # pylint: disable=too-many-arguments
         self._simulator_if = simulator_if
         self._config = config
         self._elaborate_only = elaborate_only
         self._test_suite_name = test_suite_name
         self._test_cases = test_cases
+        self._args_seed = seed
 
     def set_test_cases(self, test_cases):
         self._test_cases = test_cases
@@ -218,6 +224,17 @@ class TestRun(object):
 
         config = self._config.copy()
 
+        if self._args_seed:
+            seed = self._args_seed
+        elif "seed" in config.sim_options:
+            seed = config.sim_options["seed"]
+        else:
+            now_us = str(int(time() * 1e6)).encode()
+            thread_id = get_ident().to_bytes(8, byteorder="little")
+            seed = blake2b(now_us, digest_size=8, salt=thread_id).hexdigest()
+
+        print(f"Seed for {self._test_suite_name}: {seed}")
+
         if "output_path" in config.generic_names and "output_path" not in config.generics:
             config.generics["output_path"] = str(output_path.replace("\\", "/")) + "/"
 
@@ -229,6 +246,7 @@ class TestRun(object):
             "output path": output_path.replace("\\", "/") + "/",
             "active python runner": True,
             "tb path": config.tb_path.replace("\\", "/") + "/",
+            "seed": seed,
         }
 
         # @TODO Warn if runner cfg already set?

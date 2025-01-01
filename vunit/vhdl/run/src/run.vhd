@@ -6,7 +6,6 @@
 --
 -- Copyright (c) 2014-2025, Lars Asplund lars.anders.asplund@gmail.com
 
-use work.logger_pkg.all;
 use work.log_levels_pkg.all;
 use work.log_handler_pkg.all;
 use work.ansi_pkg.enable_colors;
@@ -16,7 +15,6 @@ use work.path.all;
 use work.core_pkg;
 use std.textio.all;
 use work.event_common_pkg.all;
-use work.event_private_pkg.all;
 use work.checker_pkg.all;
 use work.dict_pkg.all;
 
@@ -34,6 +32,9 @@ package body run_pkg is
                              (active_python_runner(runner_cfg) and not has_key(runner_cfg, "fake active python runner")));
 
     if has_active_python_runner(runner_state) then
+      if has_key(runner_cfg, "seed") then
+        set_base_seed(runner_state, get(runner_cfg, "seed"));
+      end if;
       core_pkg.setup(output_path(runner_cfg) & "vunit_results");
       hide(runner_trace_logger, display_handler, info);
     end if;
@@ -137,6 +138,107 @@ package body run_pkg is
   return integer is
   begin
     return get_num_of_test_cases(runner_state);
+  end;
+
+  function fnv_1a_64(str : string) return unsigned is
+    variable hash : unsigned(63 downto 0) := x"cbf29ce484222325";
+    variable product : unsigned(104 downto 0);
+  begin
+    for idx in str'range loop
+      hash(7 downto 0) := hash(7 downto 0) xor to_unsigned(character'pos(str(idx)), 8);
+
+      -- This is a performance optimized version of product := hash * fnv_prime
+      -- where fnv_prime = 0x00000100000001b3.
+      product := to_unsigned(to_integer(hash(15 downto 0)) * 435, 105) +
+      (to_unsigned(to_integer(hash(31 downto 16)) * 435, 105) sll 16) +
+      (to_unsigned(to_integer(hash(47 downto 32)) * 435, 105) sll 32) +
+      (to_unsigned(to_integer(hash(63 downto 48)) * 435, 105) sll 48) +
+      (hash sll 40);
+
+      hash := product(63 downto 0);
+    end loop;
+
+    return hash;
+  end;
+
+  impure function get_seed(runner_cfg : string; salt : string := "") return unsigned is
+  begin
+    if has_key(runner_cfg, "seed") then
+      return fnv_1a_64(get(runner_cfg, "seed") & salt);
+    end if;
+
+    core_pkg.core_failure("Seed not found in runner_cfg = " & runner_cfg);
+    return "";
+  end;
+
+  impure function get_seed(runner_cfg : string; salt : string := "") return signed is
+    constant seed : unsigned := get_seed(runner_cfg, salt);
+  begin
+    return signed(seed);
+  end;
+
+  impure function get_seed(runner_cfg : string; salt : string := "") return integer is
+    constant seed : unsigned := get_seed(runner_cfg, salt);
+  begin
+    return to_integer(signed(seed(31 downto 0)));
+  end;
+
+  impure function get_seed(runner_cfg : string; salt : string := "") return string is
+    variable seed : unsigned(63 downto 0);
+    variable seed_image : string(1 to 19);
+  begin
+    seed := get_seed(runner_cfg, salt);
+    seed_image := hex_image(std_logic_vector(seed));
+
+    return seed_image(3 to 18);
+  end;
+
+  procedure wait_until_test_runner_is_setup is
+  begin
+    if get_phase(runner_state) <= test_runner_setup then
+      wait on runner until get_phase(runner_state) > test_runner_setup;
+    end if;
+  end;
+
+  procedure get_seed(seed : out unsigned; salt : string := "") is
+  begin
+    wait_until_test_runner_is_setup;
+
+    seed := fnv_1a_64(get_base_seed(runner_state) & salt);
+  end;
+
+  procedure get_seed(seed : out signed; salt : string := "") is
+    variable seed_unsigned : unsigned(63 downto 0);
+  begin
+    get_seed(seed_unsigned, salt);
+    seed := signed(seed_unsigned);
+  end;
+
+  procedure get_seed(seed : out integer; salt : string := "") is
+    variable seed_unsigned : unsigned(63 downto 0);
+  begin
+    get_seed(seed_unsigned, salt);
+    seed := to_integer(signed(seed_unsigned(31 downto 0)));
+  end;
+
+  procedure get_seed(seed : out string; salt : string := "") is
+    variable unsigned_seed : unsigned(63 downto 0);
+    variable unsigned_seed_image : string(1 to 19);
+  begin
+    get_seed(unsigned_seed, salt);
+    unsigned_seed_image := hex_image(std_logic_vector(unsigned_seed));
+    seed := unsigned_seed_image(3 to 18);
+  end;
+
+  procedure get_uniform_seed(seed1, seed2 : out positive; salt : string := "") is
+    variable hash : unsigned(63 downto 0);
+  begin
+    wait_until_test_runner_is_setup;
+
+    hash := fnv_1a_64(get_base_seed(runner_state) & salt);
+    -- The math_real.uniform procedure requires 1 <= seed11 <= 2147483562; 1 <= seed2 <= 2147483398.
+    seed1 := 1 + (to_integer(hash(62 downto 32)) mod 2147483562);
+    seed2 := 1 + (to_integer(hash(30 downto 0)) mod 2147483398);
   end;
 
   impure function enabled(

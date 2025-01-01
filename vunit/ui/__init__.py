@@ -728,7 +728,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         Create the test cases
         """
         self._test_bench_list.warn_when_empty()
-        test_list = self._test_bench_list.create_tests(simulator_if, self._args.elaborate)
+        test_list = self._test_bench_list.create_tests(simulator_if, self._args.seed, self._args.elaborate)
         test_list.keep_matches(self._test_filter)
         return test_list
 

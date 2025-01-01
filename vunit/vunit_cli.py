@@ -246,6 +246,12 @@ def _create_argument_parser(description=None, for_documentation=False):
 
     parser.add_argument("--version", action="version", version=version())
 
+    parser.add_argument(
+        "--seed",
+        default=None,
+        help="Base seed provided to the simulation. Must be 16 hex digits. Default seed is generated from system time.",
+    )
+
     SIMULATOR_FACTORY.add_arguments(parser)
 
     return parser

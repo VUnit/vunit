@@ -14,6 +14,7 @@ use work.event_private_pkg.all;
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 package run_pkg is
   signal runner : runner_sync_t := new_basic_event(runner_phase_event) & new_basic_event(runner_timeout_update_event) &
@@ -31,6 +32,18 @@ package run_pkg is
 
   impure function num_of_enabled_test_cases
     return integer;
+
+  impure function get_seed(runner_cfg : string; salt : string := "") return string;
+  impure function get_seed(runner_cfg : string; salt : string := "") return unsigned;
+  impure function get_seed(runner_cfg : string; salt : string := "") return signed;
+  impure function get_seed(runner_cfg : string; salt : string := "") return integer;
+
+  procedure get_seed(seed : out string; salt : string := "");
+  procedure get_seed(seed : out unsigned; salt : string := "");
+  procedure get_seed(seed : out signed; salt : string := "");
+  procedure get_seed(seed : out integer; salt : string := "");
+
+  procedure get_uniform_seed(seed1, seed2 : out positive; salt : string := "");
 
   impure function enabled (
     constant name : string)

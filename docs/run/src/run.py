@@ -126,8 +126,23 @@ def extract_snippets():
             snippet,
         )
 
+    for snippet in [
+        "get_seed_and_runner_cfg",
+        "get_seed_wo_runner_cfg",
+        "get_uniform_seed",
+    ]:
+        highlight_code(
+            root / "tb_seed.vhd",
+            root / ".." / "img" / f"{snippet}.html",
+            snippet,
+        )
+
 
 extract_snippets()
+
+seed_option_path = root / "seed_option.txt"
+seed_option_path.write_text('> python run.py "lib.tb_seed.Test that fails" --seed fb19f3cca859d69c')
+highlight_log(seed_option_path, root / ".." / "img" / "seed_option.html")
 
 
 def post_run(log_registry):
@@ -142,6 +157,8 @@ test_name_re = re.compile(r"Starting\s+(?P<test_case_name>.*?)$", re.MULTILINE |
 cli = VUnitCLI()
 args = cli.parse_args()
 
+print(args.test_patterns)
+
 if args.compile or args.list:
     test_patterns = ["*"]
 elif args.test_patterns[0] != "*":
@@ -155,6 +172,7 @@ else:
         "lib.tb_with_watchdog*",
         "lib.tb_stopping_failure*",
         "lib.tb_stop_level*",
+        "lib.tb_seed*",
         "lib.tb_magic_paths*",
     ]
 
@@ -180,6 +198,8 @@ for test_pattern in test_patterns:
     lib.add_source_files(root / "*.vhd")
     tb_with_lower_level_control = lib.test_bench("tb_with_lower_level_control")
     tb_with_lower_level_control.scan_tests_from_file(root / "test_control.vhd")
+
+    lib.test_bench("tb_seed").test("Test that fails").set_sim_option("seed", "fb19f3cca859d69c")
 
     log_registry = LogRegistry()
 
