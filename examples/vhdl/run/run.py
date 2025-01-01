@@ -16,13 +16,13 @@ Demonstrates the VUnit run library.
 from pathlib import Path
 from vunit import VUnit
 
-ROOT = Path(__file__).parent
+root = Path(__file__).parent
 
-VU = VUnit.from_argv()
-VU.add_vhdl_builtins()
+vu = VUnit.from_argv()
+vu.add_vhdl_builtins()
 
-LIB = VU.add_library("lib")
-LIB.add_source_files(ROOT / "*.vhd")
-LIB.entity("tb_with_lower_level_control").scan_tests_from_file(ROOT / "test_control.vhd")
+lib = vu.add_library("lib")
+lib.add_source_files(root / "*.vhd")
+lib.test_bench("tb_with_lower_level_control").scan_tests_from_file(root / "test_control.vhd")
 
-VU.main()
+vu.main()

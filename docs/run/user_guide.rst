@@ -174,7 +174,7 @@ The ``run_all_in_same_sim`` attribute can also be set from the run script, see :
 .. important::
    When setting ``run_all_in_same_sim`` from the run script, the setting must be identical for all configurations
    of the testbench.
-	   
+
 The VUnit Watchdog
 ------------------
 
@@ -237,6 +237,63 @@ failure by setting the ``fail_on_warning`` flag.
 
 .. raw:: html
     :file: img/tb_stop_level_stdout.html
+
+Seeds for Random Number Generation
+----------------------------------
+
+The Python test runner automatically generates a 64-bit base seed, which serves as the foundation for deriving new seeds
+to initialize one or more random number generators (RNGs) within the simulation. This base seed is calculated using the
+system time and a thread identifier, ensuring that it varies between simulations. This variability enhances test
+coverage since randomized test will cover different areas in each simulation. By running the same randomized test in
+several parallel threads but with different base seeds we can also shorten the execution time while maintaining the same
+level of test coverage.
+
+.. note::
+    VHDL-2019 introduces an interface for obtaining the system time. However, as of this writing, support for this
+    feature is limited, and where available, it only offers second-level resolution. If used for base seed generation,
+    simulations in parallel threads would receive the same base seed when started simultaneously.
+
+    To address this, the Python test runner uses system time with microsecond resolution combined with an additional
+    thread identifier as the source of entropy. This approach ensures the uniqueness of base seeds across parallel threads.
+
+The base seed is provided via the ``runner_cfg`` generic and new derived seeds can be obtained by calling the
+``get_seed`` function with ``runner_cfg`` and a salt string. The salt string is hashed together with the base seed to
+ensure the uniqueness of each derived seed (with very high probability). The ``salt`` parameter can be omitted if only a
+single seed is needed:
+
+.. raw:: html
+    :file: img/get_seed_and_runner_cfg.html
+
+A seed can also be obtained without referencing ``runner_cfg``, which is particularly useful when the seed is created
+within a process that is not part of the top-level testbench. However, this is only possible **after**
+``test_runner_setup`` has been executed. To prevent race conditions, the ``get_seed`` procedure will block execution
+until ``test_runner_setup`` has completed.
+
+.. raw:: html
+    :file: img/get_seed_wo_runner_cfg.html
+
+In the previous examples, the ``get_seed`` subprograms returned seeds as strings. However, ``get_seed`` subprograms are
+also available for ``integer`` seeds and 64-bit seeds of ``unsigned`` and ``signed`` type. To avoid any ambiguity that
+may arise, the following function aliases are defined: ``get_string_seed``, ``get_integer_seed``, ``get_unsigned_seed``,
+and ``get_signed_seed``. Additionally, the ``get_uniform_seed`` procedure is provided to support the standard
+``uniform`` procedure in ``ieee.math_real``. The ``uniform`` procedure requires two ``positive`` seeds, ``seed1`` and
+``seed2``, each with its own specific legal range that is smaller than the full ``positive`` range.
+
+.. raw:: html
+    :file: img/get_uniform_seed.html
+
+Reproducibility
+~~~~~~~~~~~~~~~
+
+The seed used for a test is logged in the test output file (``<output path>/output.txt``) and, in the event of a test failure, it is also displayed on the console:
+
+.. raw:: html
+    :file: img/tb_seed_stdout.html
+
+To reproduce the failing test setup and verify a bug fix, the failing seed can be specified using the ``--seed`` option:
+
+.. raw:: html
+    :file: img/seed_option.html
 
 Running A VUnit Testbench Standalone
 ------------------------------------

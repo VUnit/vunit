@@ -21,6 +21,7 @@ use vunit_lib.event_common_pkg.all;
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 entity run_tests is
   generic (output_path : string);
@@ -29,10 +30,12 @@ end entity;
 architecture test_fixture of run_tests is
   constant locking_proc1_logger : logger_t := get_logger("locking_proc1_logger");
   constant locking_proc2_logger : logger_t := get_logger("locking_proc2");
+  constant c : checker_t := new_checker("checker_t", default_log_level => failure);
   signal start_test_process, start_test_process2 : boolean := false;
   signal test_process_completed : boolean := false;
   signal start_locking_process : boolean := false;
   signal start_test_runner_watchdog, test_runner_watchdog_completed : boolean := false;
+  signal start_seed_process : boolean := false;
 
   impure function get_phase return runner_phase_t is
   begin
@@ -156,6 +159,20 @@ begin
     runner(runner_exit_status_idx) <= runner_exit_with_errors;
   end process watchdog;
 
+  seed_process : process is
+    variable seed : string(1 to 16);
+    variable timestamp : time;
+  begin
+    wait until start_seed_process;
+    timestamp := now;
+    get_seed(seed);
+    check(c, now - timestamp = 1 ns, "Expected delay = 1 ns but got " & time'image(now - timestamp));
+    timestamp := now;
+    get_seed(seed, "salt");
+    check(c, now - timestamp = 0 ns, "Expected no delay but got " & time'image(now - timestamp));
+    wait;
+  end process;
+
   test_runner : process
     procedure banner (
       constant s : in string) is
@@ -176,8 +193,6 @@ begin
       notify(runner_phase);
     end;
 
-    constant c : checker_t := new_checker("checker_t", default_log_level => failure);
-
     procedure test_case_cleanup is
       variable stat : checker_stat_t;
     begin
@@ -196,6 +211,11 @@ begin
     variable t_start : time;
     variable runner_cfg : line;
     variable passed : boolean;
+    variable seed : string_seed_t;
+    variable seed_unsigned : unsigned_seed_t;
+    variable seed_signed : signed_seed_t;
+    variable seed_int : integer;
+    variable seed1, seed2 : positive;
     constant test_case_setup_entry_key : key_t := get_entry_key(test_case_setup);
     constant test_case_setup_exit_key : key_t := get_exit_key(test_case_setup);
 
@@ -852,7 +872,8 @@ begin
     if runner_cfg /= null then
       deallocate(runner_cfg);
     end if;
-    write(runner_cfg, string'("active python runner : true, enabled_test_cases : foo,, bar, output path : some_dir/out, tb path : some_other_dir/test"));
+    write(runner_cfg,
+          string'("active python runner : true, enabled_test_cases : foo,, bar, output path : some_dir/out, tb path : some_other_dir/test"));
     check(c, active_python_runner(runner_cfg.all), "Expected active python runner to be true");
     passed := vunit_lib.run_pkg.output_path(runner_cfg.all) = "some_dir/out";
     check(c, passed, "Expected output path to be ""some_dir/out"" but got " & vunit_lib.run_pkg.output_path(runner_cfg.all));
@@ -868,12 +889,89 @@ begin
     check(c, passed, "Expected enabled_test_cases to be ""__all__"" but got " & enabled_test_cases(""));
     passed := vunit_lib.run_pkg.tb_path("") = "";
     check(c, passed, "Expected tb path to be """" but got " & vunit_lib.run_pkg.tb_path(""));
-    test_case_cleanup;
 
     ---------------------------------------------------------------------------
     banner("Should recognize runner_cfg_t for backward compatibility");
     test_case_setup;
     check(runner_cfg_t'("foo") = string'("foo"));
+    test_case_cleanup;
+
+    ---------------------------------------------------------------------------
+    banner("Should dervive seeds");
+    test_case_setup;
+
+    -- Golden values retrieved from https://md5calc.com/hash/fnv1a64
+    seed := vunit_lib.run_pkg.get_seed("active python runner : true,enabled_test_cases : foo,seed : dbe809ff2fc90f23");
+    passed := seed = "ea8ad912addacf64";
+    check(c, passed, "Expected seed from runner_cfg to be ""ea8ad912addacf64"" but got """ & seed & """");
+
+    seed := vunit_lib.run_pkg.get_string_seed("active python runner : true,enabled_test_cases : foo,seed : 075bd4fa7dc381cb", "Adding some salt");
+    passed := seed = "30b243ae942e63d8";
+    check(c, passed, "Expected seed from runner_cfg to be ""30b243ae942e63d8"" but got """ & seed & """");
+
+    seed := vunit_lib.run_pkg.get_seed("active python runner : true,enabled_test_cases : foo,seed : &");
+    passed := seed = "af639b4c86017e19";
+    check(c, passed, "Expected seed from runner_cfg to be ""af639b4c86017e19"" but got """ & seed & """");
+
+    seed := vunit_lib.run_pkg.get_seed("active python runner : true,enabled_test_cases : foo,seed : kjdabhsdye3773hllajhhd88JKK8");
+    passed := seed = "20f0a7bc0a0413d9";
+    check(c, passed, "Expected seed from runner_cfg to be ""20f0a7bc0a0413d9"" but got """ & seed & """");
+
+    seed_unsigned := vunit_lib.run_pkg.get_unsigned_seed("active python runner : true,enabled_test_cases : foo,seed : 075bd4fa7dc381cb", "Adding some salt");
+    passed := seed_unsigned = x"30b243ae942e63d8";
+    check(c, passed, "Expected seed from runner_cfg to be x""30b243ae942e63d8"" but got """ &
+          hex_image(std_logic_vector(seed_unsigned)) & """");
+
+    seed_signed := vunit_lib.run_pkg.get_signed_seed("active python runner : true,enabled_test_cases : foo,seed : 075bd4fa7dc381cb", "Adding some salt");
+    passed := seed_signed = x"30b243ae942e63d8";
+    check(c, passed, "Expected seed from runner_cfg to be x""30b243ae942e63d8"" but got """ &
+          hex_image(std_logic_vector(seed_signed)) & """");
+
+    seed_int := vunit_lib.run_pkg.get_integer_seed("active python runner : true,enabled_test_cases : foo,seed : 075bd4fa7dc381cb", "Adding some salt");
+    passed := seed_int = -1808899112;
+    check(c, passed, "Expected seed from runner_cfg to be -1808899112 but got " & integer'image(seed_int));
+
+    start_seed_process <= true;
+    wait for 1 ns;
+
+    test_runner_setup(runner, "active python runner : true,enabled_test_cases : foo,seed : ce29981ce6db0c97");
+
+    get_seed(seed);
+    passed := seed = "e288ad7e1c4dbcb5";
+    check(c, passed, "Expected seed to be ""e288ad7e1c4dbcb5"" but got """ & seed & """");
+
+    get_seed(seed, "Another seed");
+    passed := seed = "0237b40b3d893879";
+    check(c, passed, "Expected seed to be ""0237b40b3d893879"" but got """ & seed & """");
+
+    get_seed(seed_unsigned, "Another seed");
+    passed := seed_unsigned = x"0237b40b3d893879";
+    check(c, passed, "Expected seed to be x""0237b40b3d893879"" but got """ &
+          hex_image(std_logic_vector(seed_unsigned)) & """");
+
+    get_seed(seed_signed, "Another seed");
+    passed := seed_signed = x"0237b40b3d893879";
+    check(c, passed, "Expected seed to be x""0237b40b3d893879"" but got """ &
+          hex_image(std_logic_vector(seed_signed)) & """");
+
+    get_seed(seed_int, "Another seed");
+    passed := seed_int = 1032403065;
+    check(c, passed, "Expected seed to be 1032403065 but got " & integer'image(seed_int));
+
+    get_uniform_seed(seed1, seed2);
+    passed := seed1 = 1653124479;
+    check(c, passed, "Expected seed1 to be 1653124479 but got " & integer'image(seed1));
+    passed := seed2 = 474856630;
+    check(c, passed, "Expected seed2 to be 474856630 but got " & integer'image(seed2));
+
+    get_uniform_seed(seed1, seed2, "Some seed!");
+    passed := seed1 = 481347971;
+    check(c, passed, "Expected seed1 to be 481347971 but got " & integer'image(seed1));
+    passed := seed2 = 80218126;
+    check(c, passed, "Expected seed2 to be 80218126 but got " & integer'image(seed2));
+
+    p_disable_simulation_exit(runner_state);
+    test_runner_cleanup(runner);
     test_case_cleanup;
 
     ---------------------------------------------------------------------------

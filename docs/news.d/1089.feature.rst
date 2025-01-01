@@ -1,0 +1,4 @@
+Provided a unique base seed to every simulation. From that base seed any number of unique seed can derived
+to initialize the random number generators in the testbench. Unique seeds increase the test coverage for
+randomized tests over time as they are executed repeatedly by the user and the CI. The seed can be overrideen
+from the command line with the --seed option in order to reproduce failing tests.

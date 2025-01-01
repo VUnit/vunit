@@ -15,7 +15,7 @@ from .incisive import IncisiveInterface
 from .modelsim import ModelSimInterface
 from .nvc import NVCInterface
 from .rivierapro import RivieraProInterface
-from . import BooleanOption, ListOfStringOption, VHDLAssertLevelOption
+from . import BooleanOption, ListOfStringOption, VHDLAssertLevelOption, StringOption
 
 
 class SimulatorFactory(object):
@@ -62,6 +62,7 @@ class SimulatorFactory(object):
                 BooleanOption("disable_ieee_warnings"),
                 BooleanOption("enable_coverage"),
                 ListOfStringOption("pli"),
+                StringOption("seed"),
             ]
         )
 
