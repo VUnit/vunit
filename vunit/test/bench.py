@@ -74,7 +74,7 @@ class TestBench(ConfigurationVisitor):
             raise RuntimeError(f"Test bench {self.library_name!s}.{self.name!s} has individually configured tests")
         return self._configs[DEFAULT_NAME]
 
-    def create_tests(self, simulator_if, elaborate_only, test_list=None):
+    def create_tests(self, simulator_if, seed, elaborate_only, test_list=None):
         """
         Create all test cases from this test bench
         """
@@ -86,7 +86,7 @@ class TestBench(ConfigurationVisitor):
 
         if self._individual_tests:
             for test_case in self._test_cases:
-                test_case.create_tests(simulator_if, elaborate_only, test_list)
+                test_case.create_tests(simulator_if, seed, elaborate_only, test_list)
         elif self._implicit_test:
             for config in self._get_configurations_to_run():
                 test_list.add_test(
@@ -94,6 +94,7 @@ class TestBench(ConfigurationVisitor):
                         test=self._implicit_test,
                         config=config,
                         simulator_if=simulator_if,
+                        seed=seed,
                         elaborate_only=elaborate_only,
                     )
                 )
@@ -104,6 +105,7 @@ class TestBench(ConfigurationVisitor):
                         tests=[test.test for test in self._test_cases],
                         config=config,
                         simulator_if=simulator_if,
+                        seed=seed,
                         elaborate_only=elaborate_only,
                     )
                 )
@@ -412,7 +414,7 @@ class TestConfigurationVisitor(ConfigurationVisitor):
             del configs[DEFAULT_NAME]
         return configs.values()
 
-    def create_tests(self, simulator_if, elaborate_only, test_list=None):
+    def create_tests(self, simulator_if, seed, elaborate_only, test_list=None):
         """
         Create all tests from this test case which may be several depending on the number of configurations
         """
@@ -422,6 +424,7 @@ class TestConfigurationVisitor(ConfigurationVisitor):
                     test=self._test,
                     config=config,
                     simulator_if=simulator_if,
+                    seed=seed,
                     elaborate_only=elaborate_only,
                 )
             )

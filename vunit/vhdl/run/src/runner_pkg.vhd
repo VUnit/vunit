@@ -40,6 +40,9 @@ package runner_pkg is
   procedure set_active_python_runner(runner : runner_t; value : boolean);
   impure function has_active_python_runner(runner : runner_t) return boolean;
 
+  impure function get_base_seed(runner : runner_t) return string;
+  procedure set_base_seed(runner : runner_t; value : string);
+
   impure function get_entry_key(runner : runner_t; phase : runner_legal_phase_t) return key_t;
   impure function get_exit_key(runner : runner_t; phase : runner_legal_phase_t) return key_t;
   impure function is_locked(runner : runner_t; key : key_t) return boolean;
@@ -156,7 +159,8 @@ package body runner_pkg is
   constant exit_locks_idx : natural := 18;
   constant timeout_idx : natural := 19;
   constant is_within_gates_idx : natural := 20;
-  constant runner_length : natural := 21;
+  constant base_seed_idx : natural := 21;
+  constant runner_length : natural := base_seed_idx + 1;
 
   constant n_locks : positive := 254;
   constant n_locked_idx : natural := 0;
@@ -227,6 +231,7 @@ package body runner_pkg is
 
     set(runner.p_data, timeout_idx, to_integer(new_string_ptr(str_pool, encode(0 ns))));
     set(runner.p_data, is_within_gates_idx, 0);
+    set(runner.p_data, base_seed_idx, to_integer(new_string_ptr(str_pool, "4dcb138c52fce0e7")));
   end;
 
   procedure set_active_python_runner(runner : runner_t; value : boolean) is
@@ -238,6 +243,16 @@ package body runner_pkg is
   begin
     return get(runner.p_data, active_python_runner_idx) = 1;
   end function;
+
+  impure function get_base_seed(runner : runner_t) return string is
+  begin
+    return to_string(to_string_ptr(get(runner.p_data, base_seed_idx)));
+  end function;
+
+  procedure set_base_seed(runner : runner_t; value : string) is
+  begin
+    set(runner.p_data, base_seed_idx, to_integer(new_string_ptr(str_pool, value)));
+  end;
 
   impure function get_entry_key(runner : runner_t; phase : runner_legal_phase_t) return key_t is
     variable key : key_t;

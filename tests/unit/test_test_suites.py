@@ -105,6 +105,7 @@ test_suite_done""",
                 elaborate_only=False,
                 test_suite_name=None,
                 test_cases=expected,
+                seed="seed"
             )
             results = run._read_test_results(file_name=file_name)  # pylint: disable=protected-access
             self.assertEqual(results, expected)
@@ -179,6 +180,7 @@ test_suite_done""",
                 elaborate_only=False,
                 test_suite_name=None,
                 test_cases=expected,
+                seed="seed"
             )
 
             results = run._read_test_results(file_name=file_name)  # pylint: disable=protected-access

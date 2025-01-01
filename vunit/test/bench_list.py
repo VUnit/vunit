@@ -60,13 +60,13 @@ class TestBenchList(object):
                 result.append(test_bench)
         return result
 
-    def create_tests(self, simulator_if, elaborate_only):
+    def create_tests(self, simulator_if, seed, elaborate_only):
         """
         Create all test cases from the test benches
         """
         test_list = TestList()
         for test_bench in self.get_test_benches():
-            test_bench.create_tests(simulator_if, elaborate_only, test_list)
+            test_bench.create_tests(simulator_if, seed, elaborate_only, test_list)
         return test_list
 
     def warn_when_empty(self):

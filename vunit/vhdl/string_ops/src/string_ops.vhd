@@ -57,6 +57,9 @@ package string_ops is
   function hex_image (
     constant data : std_logic_vector)
     return string;
+  function from_hex (
+    constant s : string)
+    return std_logic_vector;
   function replace (
     constant s      : string;
     constant old_segment : character;
@@ -260,6 +263,40 @@ package body string_ops is
     end loop;
     ret_val(1 to 2) := "x""";
     ret_val(ret_val'right) := '"';
+    return ret_val;
+  end;
+
+  function from_hex (
+    constant s : string)
+    return std_logic_vector is
+    variable ret_val : std_logic_vector(4 * s'length - 1 downto 0);
+    variable ret_val_idx : natural := 0;
+    variable nibble_value : natural;
+    variable pos : natural;
+
+    function within(c, low, high : character) return boolean is
+    begin
+      return (character'pos(c) >= character'pos(low)) and (character'pos(c) <= character'pos(high));
+    end;
+  begin
+    assert s'length > 0 report "from_hex input parameter length must be greater than 0" severity failure;
+
+    for idx in s'reverse_range loop
+      pos := character'pos(s(idx));
+      if within(s(idx), '0', '9') then
+        nibble_value := pos - character'pos('0');
+      elsif within(s(idx), 'a', 'f') then
+        nibble_value := pos - character'pos('a') + 10;
+      elsif within(s(idx), 'A', 'F') then
+        nibble_value := pos - character'pos('A') + 10;
+      else
+        report "Illegal hex digit: " & s(idx) severity failure;
+      end if;
+
+      ret_val(ret_val_idx + 3 downto ret_val_idx) := std_logic_vector(to_unsigned(nibble_value, 4));
+      ret_val_idx := ret_val_idx + 4;
+    end loop;
+
     return ret_val;
   end;
 
