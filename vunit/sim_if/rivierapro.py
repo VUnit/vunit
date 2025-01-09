@@ -310,6 +310,9 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         # only collected for the top-level unit specified last
         vsim_flags += ["-lib", config.library_name, config.entity_name]
 
+        for library in self._libraries:
+            vsim_flags += ["-L", library.name]
+
         if config.architecture_name is not None:
             vsim_flags.append(config.architecture_name)
 
