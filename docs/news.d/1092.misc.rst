@@ -1,1 +1,0 @@
-Updated the setup GHDL action used in the GitHub CI.

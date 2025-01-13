@@ -1,1 +1,0 @@
-Fixed array_axis_vcs example.
