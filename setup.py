@@ -81,7 +81,6 @@ setup(
     ],
     python_requires=">=3.8",
     install_requires=["colorama"],
-    requires=["colorama"],
     license="Mozilla Public License 2.0 (MPL 2.0)",
     author="Lars Asplund",
     author_email="lars.anders.asplund@gmail.com",
