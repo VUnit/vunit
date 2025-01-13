@@ -8,7 +8,7 @@ Requirements
 ============
 
 .. NOTE::
-  Full VUnit functionality requires Python (3.7 or higher) and a simulator
+  Full VUnit functionality requires Python (3.8 or higher) and a simulator
   supported by the VUnit Python test runner (see list below).
   However, VUnit can run with limited functionality entirely within VHDL using
   the :doc:`VHDL test runner <./run/user_guide>`.
