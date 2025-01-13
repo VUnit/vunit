@@ -49,7 +49,7 @@ jobs:
       matrix:
         include:
           - { py: '3.13' , task: 313-lint }
-          - { py: '3.7'  , task: 37-unit }
+          - { py: '3.8'  , task: 38-unit }
           - { py: '3.13' , task: 313-unit }
     name: '🐧 Ubuntu · ${{ matrix.task }}'
     steps:
