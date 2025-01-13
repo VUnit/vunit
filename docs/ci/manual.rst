@@ -19,7 +19,7 @@ There are six possible procedures to setup GHDL:
 
    * Get and extract a tarball/zipfile from the *nightly* pre-release: `github.com/ghdl/ghdl/releases/nightly <https://github.com/ghdl/ghdl/releases/nightly>`_.
 
-      * (On GitHub Actions only) Use Action `ghdl/setup-ghdl-ci <https://github.com/ghdl/setup-ghdl-ci>`_.
+      * (On GitHub Actions only) Use Action `ghdl/setup-ghdl <https://github.com/ghdl/setup-ghdl>`_.
 
 * Use one of the Docker/OCI images provided in `ghdl/docker <https://github.com/ghdl/docker>`_.
 

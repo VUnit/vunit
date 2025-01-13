@@ -144,9 +144,9 @@ jobs:
     - name: '🟦 Setup MSYS2'
       uses: msys2/setup-msys2@v2
       with:
-        msystem: MINGW64
+        msystem: mingw64
         update: true
-        install: mingw-w64-x86_64-python-pip
+        install: mingw-w64-x86_64-python-pip	
 
     - name: '🧰 Checkout'
       uses: actions/checkout@v4
@@ -154,9 +154,10 @@ jobs:
         submodules: recursive
 
     - name: '⚙️ Setup GHDL'
-      uses: ghdl/setup-ghdl-ci@master
+      uses: ghdl/setup-ghdl@main
       with:
-        backend: llvm
+        backend: mcode
+        runtime: mingw64
 
     - name: '🐍 Install dependencies'
       run: pip install -U tox --progress-bar off
