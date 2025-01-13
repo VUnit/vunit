@@ -77,6 +77,11 @@ begin
 
     variable msg, msg2 : msg_t;
 
+    -- GHDL fails on "Test that custom record type can be encoded and decoded"
+    -- unless we define the lp character position as a constant rather than using
+    -- the expression inline.
+    constant lp_pos : natural := character'pos(lp);
+
   begin
     test_runner_setup(runner, runner_cfg);
 
@@ -93,8 +98,8 @@ begin
         push_enum1_t(msg, red);
         check_relation(pop_enum1_t(msg) = red, result("for pop_enum1"));
       elsif run("Test that custom record type can be encoded and decoded") then
-        rec1 := decode(encode_record1_t((character'pos(lp), -1, -2, -3)));
-        check_relation(rec1 = (character'pos(lp), -1, -2, -3));
+        rec1 := decode(encode_record1_t((lp_pos, -1, -2, -3)));
+        check_relation(rec1 = (lp_pos, -1, -2, -3));
 
         rec2 := decode(encode_record2_t((command, 1, -1, -2, -3, '1')));
         check_relation(rec2 = (command, 1, -1, -2, -3, '1'));
