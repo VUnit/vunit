@@ -16,9 +16,11 @@ import traceback
 import logging
 import json
 import os
+from datetime import datetime
 from typing import Optional, Set, Union
 from pathlib import Path
 from fnmatch import fnmatch
+from math import log10, ceil
 
 from ..database import PickledDataBase, DataBase
 from .. import ostools
@@ -35,7 +37,7 @@ from ..parsing.encodings import HDL_FILE_ENCODING
 from ..builtins import Builtins
 from ..vhdl_standard import VHDL, VHDLStandard
 from ..test.bench_list import TestBenchList
-from ..test.report import TestReport
+from ..test.report import TestReport, get_parsed_time
 from ..test.runner import TestRunner
 
 from .common import LOGGER, TEST_OUTPUT_PATH, select_vhdl_standard, check_not_empty
@@ -749,7 +751,8 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         if self._args.compile:
             return self._main_compile_only()
 
-        all_ok = self._main_run(post_run)
+        all_ok = self._main_run(post_run, self._args.repeat)
+
         return all_ok
 
     def _create_simulator_if(self):
@@ -770,7 +773,47 @@ other preprocessors. Lowest value first. The order between preprocessors with th
 
         return self._simulator_class.from_args(args=self._args, output_path=self._simulator_output_path)
 
-    def _main_run(self, post_run):
+    def _print_repetition_report(self, iteration_status, iteration_duration, total_duration):
+        n_iterations = len(iteration_status)
+        n_passed = sum(iteration_status)
+        n_failed = n_iterations - n_passed
+
+        parsed_duration = [get_parsed_time(duration) for duration in iteration_duration]
+        max_parsed_duration = max(len(duration) for duration in parsed_duration)
+
+        first_iteration_name = "Initial test suite"
+        max_name_length = max(len(first_iteration_name), len("Repetition ") + 1 + int(ceil(log10(n_iterations - 1))))
+        max_length = 8 + max_name_length + max_parsed_duration
+        header_prefix = "==== Repetitions Summary "
+
+        self._printer.write(f"\n{header_prefix}")
+        self._printer.write("=" * (max_length - len(header_prefix)) + "\n")
+
+        for iteration, (status, duration) in enumerate(zip(iteration_status, iteration_duration)):
+            iteration_name = f"Repetition {iteration}" if iteration > 0 else first_iteration_name
+            if not status:
+                self._printer.write("fail", fg="ri")
+            else:
+                self._printer.write("pass", fg="gi")
+            self._printer.write(f" {iteration_name} ")
+            self._printer.write(" " * (max_name_length - len(iteration_name)))
+            self._printer.write(f"({get_parsed_time(duration)})\n")
+
+        self._printer.write("=" * max_length + "\n")
+        self._printer.write("pass", fg="gi")
+        self._printer.write(f" {n_passed} of {n_iterations}\n")
+        if n_failed > 0:
+            self._printer.write("fail", fg="ri")
+            self._printer.write(f" {n_failed} of {n_iterations}\n")
+        self._printer.write("=" * max_length + "\n")
+        self._printer.write(f"Total time was {get_parsed_time(total_duration)}\n")
+        self._printer.write("=" * max_length + "\n")
+        if n_failed > 0:
+            self._printer.write("Some failed!\n", fg="ri")
+        else:
+            self._printer.write("All passed!\n", fg="gi")
+
+    def _main_run(self, post_run, iteration_limit):
         """
         Main with running tests
         """
@@ -779,30 +822,60 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         self._compile(simulator_if)
         print()
 
+        iteration = 1
+        ctrl_c = False
         start_time = ostools.get_time()
-        report = TestReport(printer=self._printer)
+        iteration_status = []
+        iteration_duration = []
 
-        try:
-            self._run_test(test_list, report)
-        except KeyboardInterrupt:
-            print()
-            LOGGER.debug("_main: Caught Ctrl-C shutting down")
-        finally:
-            del test_list
+        def keep_running():
+            if ctrl_c:
+                return False
 
-        report.set_real_total_time(ostools.get_time() - start_time)
-        report.print_str()
+            if isinstance(iteration_limit, int):
+                return iteration <= iteration_limit
 
-        if post_run is not None:
-            post_run(results=Results(self._output_path, simulator_if, report))
+            return ostools.get_time() < start_time + iteration_limit.total_seconds()
 
+        while keep_running():
+            iteration_start_time = ostools.get_time()
+            if iteration > 1:
+                now = datetime.now().strftime("%H:%M:%S")
+                print(f"\n({now}) Starting repetition {iteration - 1}\n")
+
+            report = TestReport(printer=self._printer)
+
+            try:
+                self._run_test(test_list, report, iteration)
+            except KeyboardInterrupt:
+                ctrl_c = True
+                print()
+                LOGGER.debug("_main: Caught Ctrl-C shutting down")
+            finally:
+                if sys.exc_info()[0] is not None:
+                    del test_list
+
+            iteration_duration.append(ostools.get_time() - iteration_start_time)
+            report.set_real_total_time(iteration_duration[-1])
+            report.print_str()
+
+            if post_run is not None:
+                post_run(results=Results(self._output_path, simulator_if, report))
+
+            iteration_status.append(report.all_ok())
+            iteration += 1
+
+        if iteration > 1:
+            self._print_repetition_report(iteration_status, iteration_duration, ostools.get_time() - start_time)
+
+        del test_list
         del simulator_if
 
         if self._args.xunit_xml is not None:
             xml = report.to_junit_xml_str(self._args.xunit_xml_format)
             ostools.write_file(self._args.xunit_xml, xml)
 
-        return report.all_ok()
+        return sum(iteration_status) == len(iteration_status)
 
     def _main_list_only(self):
         """
@@ -938,7 +1011,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
             for file_name in tb_file_names
         ]
 
-    def _run_test(self, test_cases, report):
+    def _run_test(self, test_cases, report, iteration):
         """
         Run the test suites and return the report
         """
@@ -950,9 +1023,14 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         else:
             verbosity = TestRunner.VERBOSITY_NORMAL
 
+        full_test_output_path = Path(self._output_path) / TEST_OUTPUT_PATH
+        if iteration > 1:
+            full_test_output_path /= f"rep_{iteration - 1}"
+        full_test_output_path = str(full_test_output_path)
+
         runner = TestRunner(
             report,
-            str(Path(self._output_path) / TEST_OUTPUT_PATH),
+            full_test_output_path,
             verbosity=verbosity,
             num_threads=self._args.num_threads,
             fail_fast=self._args.fail_fast,

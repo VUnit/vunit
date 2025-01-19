@@ -37,6 +37,8 @@ has a ``parser`` field which is an `ArgumentParser` object of the
 import argparse
 from pathlib import Path
 import os
+import re
+from datetime import timedelta
 from vunit.sim_if.factory import SIMULATOR_FACTORY
 from vunit.about import version
 
@@ -252,6 +254,18 @@ def _create_argument_parser(description=None, for_documentation=False):
         help="Base seed provided to the simulation. Must be 16 hex digits. Default seed is generated from system time.",
     )
 
+    parser.add_argument(
+        "-r",
+        "--repeat",
+        type=integer_or_duration,
+        default="0",
+        help="""Repeat test suite REPEAT times if REPEAT is a non-negative integer.
+If REPEAT is on the duration format [wd][xh][ym][zs], the tests suite is repeated for the specified duration.
+w, x, y, and z corresponds to the number of days, hours, minutes, and seconds.
+Each field is optional, but at least one field must be provided.
+For example, 1h30m will repeat the test suite until the end of a test suite repetion exceeds 1 hour and 30 minutes.
+The default is no repetitions."""
+    )
     SIMULATOR_FACTORY.add_arguments(parser)
 
     return parser
@@ -267,6 +281,29 @@ def nonnegative_int(val):
         return ival
     except (ValueError, AssertionError) as exv:
         raise argparse.ArgumentTypeError(f"'{val!s}' is not a valid non-negative int") from exv
+
+
+def integer_or_duration(value):
+    """Parse value for repeat option and return number of iterations or a time delta."""
+
+    if value is None:
+        return 1
+
+    if value.isdigit():
+        return int(value) + 1
+
+    duration_re = re.compile(r"(?P<days>\d+d)?(?P<hours>\d+h)?(?P<minutes>\d+m)?(?P<seconds>\d+s)?$", re.IGNORECASE)
+    duration_match = duration_re.match(value)
+
+    if not duration_match or not duration_match.group():
+        raise argparse.ArgumentTypeError(f"'{value}' is not a valid number of repetitions, nor a duration.")
+
+    return timedelta(
+        days=int(duration_match.group("days")[:-1]) if duration_match.group("days") else 0,
+        hours=int(duration_match.group("hours")[:-1]) if duration_match.group("hours") else 0,
+        minutes=int(duration_match.group("minutes")[:-1]) if duration_match.group("minutes") else 0,
+        seconds=int(duration_match.group("seconds")[:-1]) if duration_match.group("seconds") else 0,
+    )
 
 
 def _parser_for_documentation():
