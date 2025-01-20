@@ -177,6 +177,10 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         """
         Returns the command to compile a VHDL file
         """
+        libraries = []
+        for library in self._libraries:
+            if library.name not in ["simprims_ver", "unifast_ver", "unimacro_ver", "unisims_ver"]:
+                libraries += ["-L", library.name]
 
         return (
             [
@@ -185,6 +189,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
                 "-j",
                 str(Path(self._sim_cfg_file_name).parent),
             ]
+            + libraries
             + source_file.compile_options.get("rivierapro.vcom_flags", [])
             + [
                 self._std_str(source_file.get_vhdl_standard()),
