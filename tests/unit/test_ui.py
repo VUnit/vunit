@@ -14,6 +14,7 @@ import unittest
 from string import Template
 from pathlib import Path
 from os import chdir, getcwd
+from os.path import relpath
 import json
 import re
 from re import MULTILINE
@@ -1264,6 +1265,187 @@ end architecture;
             sorted(target_files, key=lambda x: x.name),
             sorted(expected, key=lambda x: x.name),
         )
+
+    @with_tempdir
+    def test_update_test_pattern(self, tempdir):
+        relative_tempdir = Path(relpath(str(tempdir.resolve()), str(Path().cwd())))
+
+        def setup(ui):
+            "Setup the project"
+            ui.add_vhdl_builtins()
+            lib1 = ui.add_library("lib1")
+            lib2 = ui.add_library("lib2")
+
+            rtl = []
+            for i in range(4):
+                vhdl_source = f"""\
+entity rtl{i} is
+end entity;
+
+architecture a of rtl{i} is
+begin
+end architecture;
+"""
+                file_name = str(Path(tempdir) / f"rtl{i}.vhd")
+                self.create_file(file_name, vhdl_source)
+                rtl.append(lib1.add_source_file(file_name))
+
+            verilog_source = """\
+module rtl4;
+endmodule
+"""
+            file_name = str(Path(tempdir) / f"rtl4.v")
+            self.create_file(file_name, verilog_source)
+            rtl.append(lib2.add_source_file(file_name))
+
+            tb = []
+            for i in range(2):
+                file_name = str(Path(tempdir) / f"tb{i}.vhd")
+                create_vhdl_test_bench_file(
+                    f"tb{i}",
+                    file_name,
+                    tests=["Test 1"] if i == 0 else [],
+                )
+                if i == 0:
+                    tb.append(lib1.add_source_file(file_name))
+                else:
+                    tb.append(lib2.add_source_file(file_name))
+
+            rtl[1].add_dependency_on(rtl[0])
+            rtl[2].add_dependency_on(rtl[0])
+            rtl[2].add_dependency_on(rtl[4])
+            tb[0].add_dependency_on(rtl[1])
+            tb[1].add_dependency_on(rtl[2])
+
+            return rtl, tb
+
+        def check_stdout(ui, expected):
+            "Check that stdout matches expected"
+            with mock.patch("sys.stdout", autospec=True) as stdout:
+                self._run_main(ui)
+            text = "".join([call[1][0] for call in stdout.write.mock_calls])
+            # @TODO not always in the same order in Python3 due to dependency graph
+            print(text)
+            self.assertEqual(set(text.splitlines()), set(expected.splitlines()))
+
+        def restore_test_pattern():
+            ui.update_test_pattern()
+
+        ui = self._create_ui("--list")
+        rtl, tb = setup(ui)
+        ui.update_test_pattern()
+        check_stdout(ui, "lib1.tb0.Test 1\nlib2.tb1.all\nListed 2 tests")
+
+        restore_test_pattern()
+        ui.update_test_pattern(["*"])
+        check_stdout(ui, "lib1.tb0.Test 1\nlib2.tb1.all\nListed 2 tests")
+
+        restore_test_pattern()
+        ui.update_test_pattern(exclude_dependent_on=["*"])
+        check_stdout(ui, "Listed 0 tests")
+
+        restore_test_pattern()
+        ui.update_test_pattern(["*"], ["*"])
+        check_stdout(ui, "Listed 0 tests")
+
+        restore_test_pattern()
+        ui.update_test_pattern([rtl[0]._source_file.name])
+        check_stdout(ui, "lib1.tb0.Test 1\nlib2.tb1.all\nListed 2 tests")
+
+        restore_test_pattern()
+        ui.update_test_pattern([rtl[1]._source_file.name])
+        check_stdout(ui, "lib1.tb0.Test 1\nListed 1 tests")
+
+        restore_test_pattern()
+        ui.update_test_pattern([Path(rtl[2]._source_file.name)])
+        check_stdout(ui, "lib2.tb1.all\nListed 1 tests")
+
+        restore_test_pattern()
+        ui.update_test_pattern([rtl[3]._source_file.name])
+        check_stdout(ui, "Listed 0 tests")
+
+        restore_test_pattern()
+        ui.update_test_pattern([Path(rtl[4]._source_file.name)])
+        check_stdout(ui, "lib2.tb1.all\nListed 1 tests")
+
+        restore_test_pattern()
+        ui.update_test_pattern([tb[0]._source_file.name])
+        check_stdout(ui, "lib1.tb0.Test 1\nListed 1 tests")
+
+        restore_test_pattern()
+        ui.update_test_pattern([tb[1]._source_file.name])
+        check_stdout(ui, "lib2.tb1.all\nListed 1 tests")
+
+        restore_test_pattern()
+        ui.update_test_pattern([tb[1]._source_file.name, rtl[1]._source_file.name])
+        check_stdout(ui, "lib1.tb0.Test 1\nlib2.tb1.all\nListed 2 tests")
+
+        restore_test_pattern()
+        ui.update_test_pattern([tb[1]._source_file.name, "Missing file"])
+        check_stdout(ui, "lib2.tb1.all\nListed 1 tests")
+
+        restore_test_pattern()
+        a_dir = Path(tempdir) / "a_dir"
+        a_dir.mkdir()
+        ui.update_test_pattern([tb[1]._source_file.name, a_dir])
+        check_stdout(ui, "lib2.tb1.all\nListed 1 tests")
+
+        restore_test_pattern()
+        ui.update_test_pattern([relative_tempdir / "rtl1*"])
+        check_stdout(ui, "lib1.tb0.Test 1\nListed 1 tests")
+
+        restore_test_pattern()
+        ui.update_test_pattern(["./*rtl1*"])
+        check_stdout(ui, "lib1.tb0.Test 1\nListed 1 tests")
+
+        # Create a path that starts with ..
+        path = Path(rtl[0]._source_file.name).resolve()
+        path_relative_drive = path.relative_to(path.anchor)
+        relative_path_to_drive = Path("../" * len(Path(".").resolve().parents))
+        test_path = relative_path_to_drive / path_relative_drive
+        ui.update_test_pattern([test_path])
+        check_stdout(ui, "lib1.tb0.Test 1\nlib2.tb1.all\nListed 2 tests")
+
+        restore_test_pattern()
+        ui.update_test_pattern([tempdir / "rtl?.vhd"])
+        check_stdout(ui, "lib1.tb0.Test 1\nlib2.tb1.all\nListed 2 tests")
+
+        restore_test_pattern()
+        ui.update_test_pattern([rtl[0]._source_file.name], [rtl[1]._source_file.name])
+        check_stdout(ui, "lib2.tb1.all\nListed 1 tests")
+
+        restore_test_pattern()
+        ui.update_test_pattern([rtl[0]._source_file.name], [rtl[3]._source_file.name])
+        check_stdout(ui, "lib1.tb0.Test 1\nlib2.tb1.all\nListed 2 tests")
+
+        restore_test_pattern()
+        ui.update_test_pattern([rtl[0]._source_file.name], [rtl[3]._source_file.name, rtl[4]._source_file.name])
+        check_stdout(ui, "lib1.tb0.Test 1\nListed 1 tests")
+
+        restore_test_pattern()
+        ui.update_test_pattern(exclude_dependent_on=[rtl[4]._source_file.name])
+        check_stdout(ui, "lib1.tb0.Test 1\nListed 1 tests")
+
+        restore_test_pattern()
+        ui.update_test_pattern(["*.v"])
+        check_stdout(ui, "lib2.tb1.all\nListed 1 tests")
+
+        restore_test_pattern()
+        ui.update_test_pattern(exclude_dependent_on=["*.v"])
+        check_stdout(ui, "lib1.tb0.Test 1\nListed 1 tests")
+
+        restore_test_pattern()
+        ui.update_test_pattern(["*.v"], ["*.v"])
+        check_stdout(ui, "Listed 0 tests")
+
+        restore_test_pattern()
+        ui.update_test_pattern(set([rtl[0]._source_file.name]), set([rtl[3]._source_file.name]))
+        check_stdout(ui, "lib1.tb0.Test 1\nlib2.tb1.all\nListed 2 tests")
+
+        ui = self._create_ui("--list", "*tb0*")
+        rtl, tb = setup(ui)
+        ui.update_test_pattern([tb[1]._source_file.name])
+        check_stdout(ui, "lib1.tb0.Test 1\nlib2.tb1.all\nListed 2 tests")
 
     def test_get_simulator_name(self):
         ui = self._create_ui()

@@ -500,7 +500,7 @@ See https://github.com/VUnit/vunit/issues/777 and http://vunit.github.io/hdl_lib
         files_to_recompile = self._get_files_to_recompile(
             files or self.get_source_files_in_order(), dependency_graph, incremental
         )
-        return self._get_affected_files_in_compile_order(files_to_recompile, dependency_graph.get_dependent)
+        return self.get_affected_files_in_compile_order(files_to_recompile, dependency_graph.get_dependent)
 
     def _get_files_to_recompile(self, files, dependency_graph, incremental):
         """
@@ -527,15 +527,15 @@ See https://github.com/VUnit/vunit/issues/777 and http://vunit.github.io/hdl_lib
             target_files = self._source_files_in_order
 
         dependency_graph = self.create_dependency_graph(implementation_dependencies)
-        return self._get_affected_files_in_compile_order(set(target_files), dependency_graph.get_dependencies)
+        return self.get_affected_files_in_compile_order(set(target_files), dependency_graph.get_dependencies)
 
-    def _get_affected_files_in_compile_order(self, target_files, get_depend_func):
+    def get_affected_files_in_compile_order(self, target_files, get_depend_func):
         """
         Returns the affected files in compile order given a list of target files and a dependencie function
         :param target_files: The files to compile
         :param get_depend_func: one of DependencyGraph [get_dependencies, get_dependent, get_direct_dependencies]
         """
-        affected_files = self._get_affected_files(target_files, get_depend_func)
+        affected_files = self.get_affected_files(target_files, get_depend_func)
         return self._get_compile_order(affected_files, get_depend_func.__self__)
 
     def get_minimal_file_set_in_compile_order(self, target_files=None):
@@ -546,7 +546,7 @@ See https://github.com/VUnit/vunit/issues/777 and http://vunit.github.io/hdl_lib
         ###
         # First get all files that are required to fullfill the dependencies for the target files
         dependency_graph = self.create_dependency_graph(True)
-        dependency_files = self._get_affected_files(
+        dependency_files = self.get_affected_files(
             target_files or self.get_source_files_in_order(),
             dependency_graph.get_dependencies,
         )
@@ -562,7 +562,7 @@ See https://github.com/VUnit/vunit/issues/777 and http://vunit.github.io/hdl_lib
         min_file_set_to_be_compiled = [f for f in max_file_set_to_be_compiled if f in dependency_files]
         return min_file_set_to_be_compiled
 
-    def _get_affected_files(self, target_files, get_depend_func):
+    def get_affected_files(self, target_files, get_depend_func):
         """
         Get affected files given a  list of type SourceFile, if the list is None
         all files are taken into account
