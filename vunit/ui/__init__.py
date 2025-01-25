@@ -16,9 +16,10 @@ import traceback
 import logging
 import json
 import os
-from typing import Optional, Set, Union
+from typing import Optional, Set, Union, List
 from pathlib import Path
 from fnmatch import fnmatch
+from glob import glob
 
 from ..database import PickledDataBase, DataBase
 from .. import ostools
@@ -111,6 +112,22 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         """
         return cls(args, vhdl_standard=vhdl_standard)
 
+    @staticmethod
+    def _make_test_filter(args, test_patterns):
+        "Create test filter function from test patterns."
+
+        def test_filter(name, attribute_names):
+            keep = any(fnmatch(name, pattern) for pattern in test_patterns)
+
+            if args.with_attributes is not None:
+                keep = keep and set(args.with_attributes).issubset(attribute_names)
+
+            if args.without_attributes is not None:
+                keep = keep and set(args.without_attributes).isdisjoint(attribute_names)
+            return keep
+
+        return test_filter
+
     def __init__(
         self,
         args,
@@ -125,17 +142,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         else:
             self._printer = COLOR_PRINTER
 
-        def test_filter(name, attribute_names):
-            keep = any(fnmatch(name, pattern) for pattern in args.test_patterns)
-
-            if args.with_attributes is not None:
-                keep = keep and set(args.with_attributes).issubset(attribute_names)
-
-            if args.without_attributes is not None:
-                keep = keep and set(args.without_attributes).isdisjoint(attribute_names)
-            return keep
-
-        self._test_filter = test_filter
+        self._test_filter = self._make_test_filter(args, args.test_patterns)
         self._vhdl_standard: VHDLStandard = select_vhdl_standard(vhdl_standard)
 
         self._preprocessors = []  # type: ignore
@@ -161,6 +168,9 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self._test_bench_list = TestBenchList(database=database)
 
         self._builtins = Builtins(self, self._vhdl_standard, simulator_class)
+
+        self._include_in_test_pattern: Optional[List[Union[str, Path]]] = []
+        self._exclude_from_test_pattern: Optional[List[Union[str, Path]]] = []
 
     def _create_database(self):
         """
@@ -736,6 +746,8 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         """
         Base vunit main function without performing exit
         """
+        if self._include_in_test_pattern or self._exclude_from_test_pattern:
+            self._update_test_filter(self._include_in_test_pattern, self._exclude_from_test_pattern)
 
         if self._args.export_json is not None:
             return self._main_export_json(self._args.export_json)
@@ -751,6 +763,56 @@ other preprocessors. Lowest value first. The order between preprocessors with th
 
         all_ok = self._main_run(post_run)
         return all_ok
+
+    def _update_test_filter(self, include_dependencies=None, exclude_dependencies=None):
+        """
+        Update test filter to reflect included and excluded testbenches
+        """
+        # Default is to include all files and exclude none
+        include_dependencies = "*" if include_dependencies is None else include_dependencies
+
+        project = self._project
+        project_source_files = project.get_source_files_in_order()
+
+        def get_dependent_files(dependencies):
+            "Return all project files dependent on project files matching any of the dependencies."
+            if not dependencies:
+                return set()
+
+            # Get project files matching any pattern
+            dependency_files = set()
+            for source_file in project_source_files:
+                for dependency in dependencies:
+                    dependency_str = str(dependency) if isinstance(dependency, Path) else dependency
+                    dependency_str = os.path.normpath(dependency_str)
+                    if source_file.original_name.match(dependency_str):
+                        dependency_files.add(source_file)
+                    # This covers the case where the dependency is a relative path starting with ../
+                    elif source_file.original_name.match(os.path.abspath(dependency_str)):
+                        dependency_files.add(source_file)
+
+            # Get dependent files, non-testbench files included
+            dependency_graph = project.create_dependency_graph(True)
+            dependent_files = set(project.get_affected_files(dependency_files, dependency_graph.get_dependent))
+
+            return dependent_files
+
+        dependent_files = get_dependent_files(include_dependencies) - get_dependent_files(exclude_dependencies)
+
+        # Extract testbenches from dependent files and create corresponding test patterns:
+        # lib_name.tb_name*
+        test_patterns = []
+        for dependent_file in dependent_files:
+            library_name = dependent_file.library.name
+            for testbench in self._test_bench_list.get_test_benches_in_library(library_name):
+                if testbench.design_unit.source_file == dependent_file:
+                    test_patterns.append(f"{library_name}.{testbench.name}*")
+
+        # Update test filter to match test patterns
+        if isinstance(self._args.test_patterns, list):
+            test_patterns += self._args.test_patterns
+
+        self._test_filter = self._make_test_filter(self._args, test_patterns)
 
     def _create_simulator_if(self):
         """
@@ -1031,6 +1093,32 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         Add JSON-for-VHDL library
         """
         self._builtins.add("json4vhdl")
+
+    def update_test_pattern(
+        self,
+        include_dependent_on: Optional[List[Union[str, Path]]] = None,
+        exclude_dependent_on: Optional[List[Union[str, Path]]] = None,
+    ) -> None:
+        """
+        Update test pattern to include testbenches depending on source files with a file path matching any of the
+        patterns given in `include_dependent_on_file_patterns` but exclude testbenches depending on source file
+        patterns in `exclude_dependent_on_file_patterns`.
+
+        Test patterns given on the command line will add to the included test patterns. Excluded testbenches take
+        precedence over included testbenches.
+
+        :param include_dependent_on: List of :class:`str` or :class:`pathlib.Path` items,
+                                     each representing a relative, an absolute file path
+                                     pattern. Applied recursively. Default is including
+                                     all project source files.
+        :param exclude_dependent_on: List of :class:`str` or :class:`pathlib.Path` items,
+                                     each representing a relative or an absolute file path
+                                     pattern. Applied recursively. Default is excluding no
+                                     project source file.
+        :returns: None
+        """
+        self._include_in_test_pattern = include_dependent_on
+        self._exclude_from_test_pattern = exclude_dependent_on
 
     def get_compile_order(self, source_files=None):
         """
