@@ -27,6 +27,7 @@ package apb_requester_pkg is
     p_drive_invalid     : boolean;
     p_drive_invalid_val : std_logic;
     p_unexpected_msg_type_policy : unexpected_msg_type_policy_t;
+    p_std_cfg : std_cfg_t;
   end record;
 
   impure function new_apb_requester(
@@ -156,7 +157,14 @@ package body apb_requester_pkg is
     variable logger_tmp : logger_t := null_logger;
     variable id_tmp : id_t := null_id;
     constant parent : id_t := get_id("vunit_lib:apb_requester");
+    variable std_cfg : std_cfg_t;
   begin
+    std_cfg := create_std_cfg(
+      id => get_id(to_string(num_children(parent) + 1), parent),
+      provider => "vunit_lib",
+      vc_name => "apb_requester",
+      unexpected_msg_type_policy => unexpected_msg_type_policy
+    );
     if id = null_id then
       id_tmp := get_id(to_string(num_children(parent) + 1), parent);
     else
@@ -172,7 +180,8 @@ package body apb_requester_pkg is
       p_bus_handle => create_bus(logger_tmp),
       p_drive_invalid => drive_invalid,
       p_drive_invalid_val => drive_invalid_val,
-      p_unexpected_msg_type_policy => unexpected_msg_type_policy
+      p_unexpected_msg_type_policy => unexpected_msg_type_policy,
+      p_std_cfg => std_cfg
     );
   end;
 
