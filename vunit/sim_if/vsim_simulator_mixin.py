@@ -314,7 +314,7 @@ proc vunit_run {} {
 
         return tcl
 
-    def _run_batch_file(self, batch_file_name, gui=False, extra_args=None):
+    def _run_batch_file(self, batch_file_name, gui=False, gui_option="-gui", extra_args=None):
         """
         Run a test bench in batch by invoking a new vsim process from the command line
         """
@@ -322,7 +322,7 @@ proc vunit_run {} {
         try:
             args = [
                 str(Path(self._prefix) / "vsim"),
-                "-gui" if gui else "-c",
+                gui_option if gui else "-c",
                 "-l",
                 str(Path(batch_file_name).parent / "transcript"),
                 "-do",
@@ -386,6 +386,14 @@ proc vunit_run {} {
         """
         return []
 
+    def _get_gui_option(self):
+        """
+        Return the option used to start in GUI mode.
+
+        This is required to support Questa Visualizer.
+        """
+        return "-gui"
+
     def simulate(self, output_path, test_suite_name, config, elaborate_only):
         """
         Run a test bench
@@ -422,6 +430,7 @@ proc vunit_run {} {
             return self._run_batch_file(
                 str(gui_file_name),
                 gui=True,
+                gui_option=self._get_gui_option(),
                 extra_args=self._get_load_flags(config, output_path, optimize_design) if early_load else None,
             )
 
