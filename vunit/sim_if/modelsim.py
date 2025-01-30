@@ -685,6 +685,14 @@ proc vunit_load {{vsim_extra_args ""}} {"""
 
         return vsim_flags
 
+    def _get_gui_option(self):
+        """
+        Return the option used to start in GUI mode.
+
+        This is required to support Questa Visualizer.
+        """
+        return "-visualizer" if self._debugger == "visualizer" else "-gui"
+
     def _get_load_flags(self, config, output_path, optimize_design):
         """
         Return extra flags needed for the first vsim call in GUI mode when early load is enabled.
@@ -712,7 +720,6 @@ proc vunit_load {{vsim_extra_args ""}} {"""
             "-wlf",
             f"{fix_path(str(Path(output_path) / 'vsim.wlf'))}",
             pli_str,
-            "-visualizer",
             "-f",
             f"{fix_path(str(generics_file_name))}",
         ]
