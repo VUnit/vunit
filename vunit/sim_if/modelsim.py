@@ -231,6 +231,15 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         """
         mapped_libraries = mapped_libraries if mapped_libraries is not None else {}
 
+        if library_name in mapped_libraries:
+            if mapped_libraries[library_name] == path:
+                return
+            if path is None:  # use existing map
+                return
+
+        if path is None:
+            raise ValueError(f"External library {library_name!r} does not exist")
+
         apath = str(Path(path).parent.resolve())
 
         if not file_exists(apath):
@@ -239,9 +248,6 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         if not file_exists(path):
             proc = Process([str(Path(self._prefix) / "vlib"), "-unix", path], env=self.get_env())
             proc.consume_output(callback=None)
-
-        if library_name in mapped_libraries and mapped_libraries[library_name] == path:
-            return
 
         cfg = parse_modelsimini(self._sim_cfg_file_name)
         cfg.set("Library", library_name, path)
