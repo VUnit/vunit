@@ -89,6 +89,7 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
         self._coverage_test_dirs = set()
         (major, minor) = self.determine_version(prefix)
         self._supports_jit = major > 1 or (major == 1 and minor >= 9)
+        self._ieee_warnings_global = major > 1 or (major == 1 and minor >= 16)
 
         if self.use_color:
             environ["NVC_COLORS"] = "always"
@@ -263,6 +264,9 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
         else:
             wave_file = None
 
+        if self._ieee_warnings_global and config.sim_options.get("disable_ieee_warnings", False):
+            cmd += ["--ieee-warnings=off"]
+
         cmd += ["-H", config.sim_options.get("nvc.heap_size", "64m")]
         cmd += config.sim_options.get("nvc.global_flags", [])
 
@@ -285,7 +289,7 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
             cmd += config.sim_options.get("nvc.sim_flags", [])
             cmd += [f"--exit-severity={config.vhdl_assert_stop_level}"]
 
-            if config.sim_options.get("disable_ieee_warnings", False):
+            if not self._ieee_warnings_global and config.sim_options.get("disable_ieee_warnings", False):
                 cmd += ["--ieee-warnings=off"]
 
             if wave_file:
