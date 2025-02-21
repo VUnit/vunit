@@ -499,6 +499,26 @@ begin
     test_case_cleanup;
 
     ---------------------------------------------------------------------------
+    banner("Should prevent from running a test from enabled_test_case more than once.");
+    test_case_setup;
+    test_runner_setup(runner, "enabled_test_cases : Should one");
+    while test_suite loop
+      for i in 0 to 2 loop
+        case i is
+          when 0 =>
+            check(c, run("Should one"), "Expected ""Should one"" to run.");
+          when others =>
+            mock(runner_trace_logger);
+            check_false(c, run("Should one"), "Didn't expected ""Should one"" to run.");
+            check_log(runner_trace_logger, "Test case: Should one cannot be run more than once.", error);
+            unmock(runner_trace_logger);
+        end case;
+      end loop;
+    end loop;
+
+    test_case_cleanup;
+
+    ---------------------------------------------------------------------------
     --banner("Should be possible to exit a test case or test suite with an error message that can be caught afterwards.");
     --test_case_setup;
     --test_runner_setup(runner, "test a, test b");
