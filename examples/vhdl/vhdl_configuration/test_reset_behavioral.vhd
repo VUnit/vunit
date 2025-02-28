@@ -4,10 +4,16 @@
 --
 -- Copyright (c) 2014-2025, Lars Asplund lars.anders.asplund@gmail.com
 
-configuration cfg2 of tb_with_vhdl_configuration is
+configuration test_reset_behavioral of tb_selecting_test_runner_with_vhdl_configuration is
   for tb
-    for ent_inst : ent
-      use entity work.ent(arch2);
+    for test_runner_inst : test_runner
+      use entity work.test_runner(test_reset_a);
+    end for;
+
+    for test_fixture
+      for dut : dff
+        use entity work.dff(behavioral);
+      end for;
     end for;
   end for;
 end;

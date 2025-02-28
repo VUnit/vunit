@@ -241,6 +241,9 @@ class TestReport(object):
         xml = ElementTree.tostring(root, encoding="unicode")
         return xml
 
+    def __iter__(self):
+        return iter(self._test_results.values())
+
 
 class TestStatus(object):
     """
@@ -271,12 +274,16 @@ class TestResult(object):
     Represents the result of a single test case
     """
 
-    def __init__(self, name, status, time, output_file_name):
+    def __init__(
+        self, name, status, time, output_file_name, *, test_suite_name, start_time
+    ):  # pylint: disable=too-many-arguments
         assert status in (PASSED, FAILED, SKIPPED)
         self.name = name
         self._status = status
         self.time = time
         self._output_file_name = output_file_name
+        self.test_suite_name = test_suite_name
+        self.start_time = start_time
 
     @property
     def output(self):

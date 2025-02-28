@@ -4,10 +4,7 @@
 --
 -- Copyright (c) 2014-2025, Lars Asplund lars.anders.asplund@gmail.com
 
-configuration cfg2 of tb_with_vhdl_configuration is
-  for tb
-    for ent_inst : ent
-      use entity work.ent(arch2);
-    end for;
-  end for;
+architecture arch2 of ent is
+begin
+  arch <= "arch2";
 end;

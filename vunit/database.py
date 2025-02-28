@@ -124,6 +124,9 @@ class DataBase(object):
     def __contains__(self, key):
         return key in self._keys_to_nodes
 
+    def __iter__(self):
+        return iter(self._keys_to_nodes.keys())
+
 
 class PickledDataBase(object):
     """
@@ -142,3 +145,6 @@ class PickledDataBase(object):
 
     def __contains__(self, key):
         return key in self._database
+
+    def __iter__(self):
+        return iter(self._database)

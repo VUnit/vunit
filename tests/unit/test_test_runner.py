@@ -36,14 +36,21 @@ class TestTestRunner(unittest.TestCase):
         test_list.add_test(test_case1)
         test_list.add_test(test_case2)
         test_list.add_test(test_case3)
-        runner.run(test_list)
-        self.assertEqual(test_case1.output_path, runner._get_output_path("test1"))
-        self.assertEqual(test_case2.output_path, runner._get_output_path("test2"))
-        self.assertEqual(test_case3.output_path, runner._get_output_path("test3"))
-        self.assertEqual(order, ["test1", "test2", "test3"])
-        self.assertTrue(report.result_of("test1").passed)
-        self.assertTrue(report.result_of("test2").failed)
-        self.assertTrue(report.result_of("test3").passed)
+        with mock.patch("time.time", lambda: 1000):
+            runner.run(test_list)
+            self.assertEqual(test_case1.output_path, runner._get_output_path("test1"))
+            self.assertEqual(test_case2.output_path, runner._get_output_path("test2"))
+            self.assertEqual(test_case3.output_path, runner._get_output_path("test3"))
+            self.assertEqual(order, ["test1", "test2", "test3"])
+            self.assertTrue(report.result_of("test1").passed)
+            self.assertEqual(report.result_of("test1").start_time, 1000)
+            self.assertEqual(report.result_of("test1").test_suite_name, "test1")
+            self.assertTrue(report.result_of("test2").failed)
+            self.assertEqual(report.result_of("test2").start_time, 1000)
+            self.assertEqual(report.result_of("test2").test_suite_name, "test2")
+            self.assertTrue(report.result_of("test3").passed)
+            self.assertEqual(report.result_of("test3").start_time, 1000)
+            self.assertEqual(report.result_of("test3").test_suite_name, "test3")
 
     @with_tempdir
     def test_fail_fast(self, tempdir):
@@ -58,16 +65,21 @@ class TestTestRunner(unittest.TestCase):
         test_list.add_test(test_case1)
         test_list.add_test(test_case2)
         test_list.add_test(test_case3)
-        try:
-            runner.run(test_list)
-        except KeyboardInterrupt:
-            pass
-        self.assertEqual(test_case1.output_path, runner._get_output_path("test1"))
-        self.assertEqual(test_case2.output_path, runner._get_output_path("test2"))
-        self.assertEqual(test_case3.called, False)
-        self.assertEqual(order, ["test1", "test2"])
-        self.assertTrue(report.result_of("test1").passed)
-        self.assertTrue(report.result_of("test2").failed)
+        with mock.patch("time.time", lambda: 1000):
+            try:
+                runner.run(test_list)
+            except KeyboardInterrupt:
+                pass
+            self.assertEqual(test_case1.output_path, runner._get_output_path("test1"))
+            self.assertEqual(test_case2.output_path, runner._get_output_path("test2"))
+            self.assertEqual(test_case3.called, False)
+            self.assertEqual(order, ["test1", "test2"])
+            self.assertTrue(report.result_of("test1").passed)
+            self.assertEqual(report.result_of("test1").start_time, 1000)
+            self.assertEqual(report.result_of("test1").test_suite_name, "test1")
+            self.assertTrue(report.result_of("test2").failed)
+            self.assertEqual(report.result_of("test2").start_time, 1000)
+            self.assertEqual(report.result_of("test2").test_suite_name, "test2")
 
     @with_tempdir
     def test_handles_python_exeception(self, tempdir):
@@ -82,8 +94,11 @@ class TestTestRunner(unittest.TestCase):
             raise KeyError
 
         test_case.run_side_effect = side_effect
-        runner.run(test_list)
-        self.assertTrue(report.result_of("test").failed)
+        with mock.patch("time.time", lambda: 1000):
+            runner.run(test_list)
+            self.assertTrue(report.result_of("test").failed)
+            self.assertEqual(report.result_of("test").start_time, 1000)
+            self.assertEqual(report.result_of("test").test_suite_name, "test")
 
     @with_tempdir
     def test_collects_output(self, tempdir):
@@ -104,9 +119,12 @@ class TestTestRunner(unittest.TestCase):
             return True
 
         test_case.run_side_effect = side_effect
-        runner.run(test_list)
-        self.assertTrue(report.result_of("test").passed)
-        self.assertEqual(report.result_of("test").output, output)
+        with mock.patch("time.time", lambda: 1000):
+            runner.run(test_list)
+            self.assertTrue(report.result_of("test").passed)
+            self.assertEqual(report.result_of("test").output, output)
+            self.assertEqual(report.result_of("test").start_time, 1000)
+            self.assertEqual(report.result_of("test").test_suite_name, "test")
 
     @with_tempdir
     def test_can_read_output(self, tempdir):
@@ -131,9 +149,12 @@ class TestTestRunner(unittest.TestCase):
             return True
 
         test_case.run_side_effect = side_effect
-        runner.run(test_list)
-        self.assertTrue(report.result_of("test").passed)
-        self.assertEqual(report.result_of("test").output, "out1out2out3out4out5")
+        with mock.patch("time.time", lambda: 1000):
+            runner.run(test_list)
+            self.assertTrue(report.result_of("test").passed)
+            self.assertEqual(report.result_of("test").output, "out1out2out3out4out5")
+            self.assertEqual(report.result_of("test").start_time, 1000)
+            self.assertEqual(report.result_of("test").test_suite_name, "test")
 
     def test_get_output_path_on_linux(self):
         output_path = "output_path"

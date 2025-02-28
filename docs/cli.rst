@@ -37,57 +37,85 @@ The :vunit_example:`VHDL User Guide Example <vhdl/user_guide/>` can be run to pr
 .. code-block:: console
    :caption: Run all tests
 
-   > python run.py -v lib.tb_example*
-   Running test: lib.tb_example.all
-   Running test: lib.tb_example_many.test_pass
-   Running test: lib.tb_example_many.test_fail
-   Running 3 tests
+   > python run.py
+   Re-compile not needed
 
-   running lib.tb_example.all
-   Hello World!
-   pass( P=1 S=0 F=0 T=3) lib.tb_example.all (0.1 seconds)
+   (09:40:59) Starting lib.tb_example.all
+   Output file: C:\vunit\examples\vhdl\user_guide\vunit_out\test_output\lib.tb_example.all_7b5933c73ddb812488c059080644e9fd58c418d9\output.txt
+   pass (P=1 S=0 F=0 T=3) lib.tb_example.all (0.5 s)                 
 
-   running lib.tb_example.test_pass
-   This will pass
-   pass (P=2 S=0 F=0 T=3) lib.tb_example_many.test_pass (0.1 seconds)
+   (09:40:59) Starting lib.tb_example_many.test_pass
+   Output file: C:\vunit\examples\vhdl\user_guide\vunit_out\test_output\lib.tb_example_many.test_pass_aff64431373db20d8bbba18c28096f449861ccbe\output.txt
+   pass (P=2 S=0 F=0 T=3) lib.tb_example_many.test_pass (0.5 s)      
 
-   running lib.tb_example.test_fail
-   Error: It fails
-   fail (P=2 S=0 F=1 T=3) lib.tb_example_many.test_fail (0.1 seconds)
+   (09:41:00) Starting lib.tb_example_many.test_fail
+   Output file: C:\vunit\examples\vhdl\user_guide\vunit_out\test_output\lib.tb_example_many.test_fail_d8956871e3b3d178e412e37587673fe9df648faf\output.txt
+   Seed for lib.tb_example_many.test_fail: 7efb6d37186ac077      
+   C:\vunit\examples\vhdl\user_guide\tb_example_many.vhd:26:9:@0ms:(assertion error): It fails
+   ghdl:error: assertion failed                                                                 
+   ghdl:error: simulation failed
+   fail (P=2 S=0 F=1 T=3) lib.tb_example_many.test_fail (0.5 s)
 
    ==== Summary =========================================
-   pass lib.tb_example.all            (0.1 seconds)
-   pass lib.tb_example_many.test_pass (0.1 seconds)
-   fail lib.tb_example_many.test_fail (0.1 seconds)
-   ======================================================
+   pass lib.tb_example.all            (0.5 s)
+   pass lib.tb_example_many.test_pass (0.5 s)                                                                                                                  
+   fail lib.tb_example_many.test_fail (0.5 s)
+   ======================================================                                                                                                      
    pass 2 of 3
    fail 1 of 3
    ======================================================
-   Total time was 0.3 seconds
-   Elapsed time was 0.3 seconds
+   Total time was 1.5 s
+   Elapsed time was 1.5 s
    ======================================================
    Some failed!
 
+By default, test output is shown only for failing tests. To display output for all tests, use the ``-v`` option. The example below demonstrates this,
+while also selecting a subset of tests using a test pattern.
+
 .. code-block:: console
-   :caption: Run a specific test
+   :caption: Run specific test(s) matching a pattern
 
-   > python run.py -v lib.tb_example.all
-   Running test: lib.tb_example.all
-   Running 1 tests
 
-   Starting lib.tb_example.all
-   Hello world!
-   pass (P=1 S=0 F=0 T=1) lib.tb_example.all (0.1 seconds)
+   > python run.py -v lib.tb_example_many*
+   Re-compile not needed
 
-   ==== Summary ==========================
-   pass lib.tb_example.all (0.9 seconds)
-   =======================================
-   pass 1 of 1
-   =======================================
-   Total time was 0.9 seconds
-   Elapsed time was 1.2 seconds
-   =======================================
-   All passed!
+   Running test: lib.tb_example_many.test_pass
+   Running test: lib.tb_example_many.test_fail
+   Running 2 tests
+
+   (09:57:18) Starting lib.tb_example_many.test_fail
+   Output file: C:\vunit\examples\vhdl\user_guide\vunit_out\test_output\lib.tb_example_many.test_fail_d8956871e3b3d178e412e37587673fe9df648faf\output.txt
+   Seed for lib.tb_example_many.test_fail: 2c14af95ae82a231
+   C:\vunit\examples\vhdl\user_guide\tb_example_many.vhd:26:9:@0ms:(assertion error): It fails
+   ghdl:error: assertion failed
+   ghdl:error: simulation failed
+   fail (P=0 S=0 F=1 T=2) lib.tb_example_many.test_fail (3.2 s)
+
+   (09:57:22) Starting lib.tb_example_many.test_pass
+   Output file: C:\vunit\examples\vhdl\user_guide\vunit_out\test_output\lib.tb_example_many.test_pass_aff64431373db20d8bbba18c28096f449861ccbe\output.txt
+   Seed for lib.tb_example_many.test_pass: 30e3764e6f87ca85
+   C:\vunit\examples\vhdl\user_guide\tb_example_many.vhd:23:9:@0ms:(report note): This will pass
+   simulation stopped @0ms with status 0
+   pass (P=1 S=0 F=1 T=2) lib.tb_example_many.test_pass (0.5 s)
+
+   ==== Summary =========================================
+   pass lib.tb_example_many.test_pass (0.5 s)
+   fail lib.tb_example_many.test_fail (3.2 s)
+   ======================================================
+   pass 1 of 2
+   fail 1 of 2
+   ======================================================
+   Total time was 3.6 s
+   Elapsed time was 3.7 s
+   ======================================================
+   Some failed!
+
+Note that the order of test execution has changed - the failing test is now run first. VUnit reorders tests based on
+previous results and recent code changes to achieve two main goals:
+
+1. Prioritize likely failures - Tests more likely to fail are executed earlier to provide faster feedback. In this case, ``lib.tb_example_many.test_fail``
+   has a history of failing, and no relevant code changes have been made, so it is assumed to fail again and is run first.
+2. Load balancing - When tests are executed in parallel using the ``-p`` option, VUnit distributes them across threads to minimize to total execution time.
 
 Opening a Test Case in Simulator GUI
 ====================================

@@ -6,12 +6,32 @@
 
 from pathlib import Path
 from glob import glob
-from vunit import VUnit
+from vunit import VUnit, VUnitCLI
+from time import sleep
 
 root = Path(__file__).parent
+cli = VUnitCLI()
+args = cli.parse_args()
 
-vu = VUnit.from_argv()
+vu = VUnit.from_args(args=args)
 vu.add_vhdl_builtins()
+
+# Take the reference test history and update the start times
+# such that tb_test_prio_2 appear to depend on updated files
+# while tb_test_prio_1 doesn't.
+vu.import_items(root / "reference_test_history")
+reference_test_history = vu._database[b"test_history"]
+for test_suite_data in reference_test_history.values():
+    for test, test_data in test_suite_data.items():
+        if test.startswith("lib.tb_test_prio_1"):
+            test_data["start_time"] = 10e9
+
+        if test.startswith("lib.tb_test_prio_2"):
+            test_data["start_time"] = 1e9
+
+vu._database[b"test_history"] = reference_test_history
+vu.export_items(["test_history"], root / "modified_test_history")
+vu.import_items(root / "modified_test_history")
 
 lib = vu.add_library("lib")
 lib2 = vu.add_library("lib2")
@@ -117,10 +137,33 @@ def configure_tb_with_vhdl_configuration(ui):
     test_2.add_config(name="cfg2", post_check=make_post_check("arch2"))
     test_3.add_config(name="cfg3", post_check=make_post_check("arch3"), vhdl_configuration_name="cfg3")
 
+
 def configure_tb_no_fail_on_warning(ui):
     tb = ui.library("lib").test_bench("tb_no_fail_on_warning")
     tb.add_config(name="cfg1", attributes=dict(fail_on_warning=False))
     tb.add_config(name="cfg2")
+
+
+def configure_tb_test_prio(ui):
+    tb = ui.library("lib").test_bench("tb_test_prio_1")
+
+    def make_pre_config(idx, extra_time, fail):
+        def pre_config(output_path):
+            sleep(extra_time)
+
+            return not fail
+
+        return pre_config
+
+    # The fourth test is new and not in the imported history
+    for idx, (extra_time, fail) in enumerate([(1, False), (3, True), (4, False), (0, False)], 1):
+        tb.add_config(name=f"test_{idx}", pre_config=make_pre_config(idx, extra_time, fail))
+
+    tb = ui.library("lib").test_bench("tb_test_prio_2")
+
+    for idx, (extra_time, fail) in enumerate([(5, False), (2, True)], 1):
+        tb.add_config(name=f"test_{idx}", pre_config=make_pre_config(idx, extra_time, fail))
+
 
 configure_tb_with_generic_config()
 configure_tb_same_sim_all_pass(vu)
@@ -128,10 +171,42 @@ configure_tb_set_generic(vu)
 configure_tb_assert_stop_level(vu)
 configure_tb_with_vhdl_configuration(vu)
 configure_tb_no_fail_on_warning(vu)
+configure_tb_test_prio(vu)
 lib.entity("tb_no_generic_override").set_generic("g_val", False)
 lib.entity("tb_ieee_warning").test("pass").set_sim_option("disable_ieee_warnings", True)
 lib.entity("tb_other_file_tests").scan_tests_from_file(str(root / "other_file_tests.vhd"))
 lib.entity("tb_same_sim_from_python_some_fail").set_attribute("run_all_in_same_sim", True)
 lib.entity("tb_fail_on_warning_from_python").set_attribute("fail_on_warning", True)
 
-vu.main()
+
+def post_run(results):
+    if args.test_patterns != "*" and not args.changed:
+        return
+
+    start_times = {}
+    for test_suite_data in vu._database[b"test_history"].values():
+        for test, test_data in test_suite_data.items():
+            if test.startswith("lib.tb_test_prio_"):
+                start_times[test] = test_data["start_time"]
+
+    order = list(start_times.keys())
+    order.sort(key=lambda test: start_times[test])
+
+    if args.changed:
+        assert order[0:3] == [
+            "lib.tb_test_prio_2.test_2",  # Failed in history
+            "lib.tb_test_prio_1.test_4",  # New test
+            "lib.tb_test_prio_2.test_1",  # Passed in history
+        ]
+    else:
+        assert order == [
+            "lib.tb_test_prio_1.test_2",  # Failed in history and has no changes since last run
+            "lib.tb_test_prio_2.test_2",  # Failed in history but has changes
+            "lib.tb_test_prio_1.test_4",  # New test
+            "lib.tb_test_prio_2.test_1",  # Passed in history but has been changed
+            "lib.tb_test_prio_1.test_1",  # Passed without changes. Shorter than the next test
+            "lib.tb_test_prio_1.test_3",  # Passed without changes. Longer than previous test
+        ]
+
+
+vu.main(post_run)

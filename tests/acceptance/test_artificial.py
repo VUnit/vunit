@@ -52,7 +52,7 @@ class TestVunitArtificial(unittest.TestCase):
 
         elab_expected_report = []
         for status, name in EXPECTED_REPORT:
-            if name in ("lib.tb_elab_fail.all",):
+            if name in ("lib.tb_elab_fail.all", "lib.tb_test_prio_1.test_2", "lib.tb_test_prio_2.test_2"):
                 status = "failed"
             else:
                 status = "passed"
@@ -75,6 +75,17 @@ class TestVunitArtificial(unittest.TestCase):
             args=["--elaborate", "lib.tb_elab_fail.all"],
         )
         check_report(self.report_file, [("failed", "lib.tb_elab_fail.all")])
+
+    def test_artificial_changed(self):
+        self.check(self.artificial_run_vhdl, exit_code=1, args=["lib.tb_test_prio*", "--changed"])
+        check_report(
+            self.report_file,
+            [
+                ("failed", "lib.tb_test_prio_2.test_2"),
+                ("passed", "lib.tb_test_prio_1.test_4"),
+                ("passed", "lib.tb_test_prio_2.test_1"),
+            ],
+        )
 
     def _test_artificial(self, args=None):
         """
@@ -272,4 +283,10 @@ EXPECTED_REPORT = (
         "passed",
         "lib.tb_with_vhdl_configuration.cfg3.test 3",
     ),
+    ("passed", "lib.tb_test_prio_1.test_1"),
+    ("failed", "lib.tb_test_prio_1.test_2"),
+    ("passed", "lib.tb_test_prio_1.test_3"),
+    ("passed", "lib.tb_test_prio_1.test_4"),
+    ("passed", "lib.tb_test_prio_2.test_1"),
+    ("failed", "lib.tb_test_prio_2.test_2"),
 )

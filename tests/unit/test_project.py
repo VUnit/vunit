@@ -1942,7 +1942,7 @@ use builtin_lib.all;
         """
         Get the hash file name of a source_file
         """
-        return self.project._hash_file_name_of(source_file)  # pylint: disable=protected-access
+        return self.project.hash_file_name_of(source_file)
 
     def update(self, source_file):
         """
