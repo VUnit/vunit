@@ -4,11 +4,6 @@
 --
 -- Copyright (c) 2014-2025, Lars Asplund lars.anders.asplund@gmail.com
 
-architecture arch3 of ent is
-begin
-  arch <= "arch3";
-end;
-
 configuration cfg3 of tb_with_vhdl_configuration is
   for tb
     for ent_inst : ent

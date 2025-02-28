@@ -4,26 +4,22 @@
 --
 -- Copyright (c) 2014-2025, Lars Asplund lars.anders.asplund@gmail.com
 
+-- This attribute should be ignored when VHDL assert stop level is used
+-- vunit: fail_on_warning
+--
 library vunit_lib;
 context vunit_lib.vunit_context;
 
-library ieee;
-use ieee.std_logic_1164.all;
+entity tb_test_prio_2 is
+  generic (runner_cfg : string);
+end entity;
 
-architecture test_reset_a of test_runner is
+architecture tb of tb_test_prio_2 is
 begin
-  main : process
+  test_runner : process
   begin
-    test_runner_setup(runner, nested_runner_cfg);
-
-    d <= (others => '1');
-    reset <= '1';
-    wait until rising_edge(clk);
-    wait for 0 ns;
-    check_equal(q, 0);
+    test_runner_setup(runner, runner_cfg);
 
     test_runner_cleanup(runner);
   end process;
-
-  test_runner_watchdog(runner, 10 * clk_period);
-end;
+end architecture;

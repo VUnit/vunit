@@ -4,11 +4,6 @@
 --
 -- Copyright (c) 2014-2025, Lars Asplund lars.anders.asplund@gmail.com
 
-architecture arch1 of ent is
-begin
-  arch <= "arch1";
-end;
-
 configuration cfg1 of tb_with_vhdl_configuration is
   for tb
     for ent_inst : ent

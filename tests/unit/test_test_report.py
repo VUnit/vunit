@@ -288,14 +288,32 @@ Elapsed time was 1 h 1 min 40.0 s
 
     def test_junit_report_with_testcase_classname(self):
         report = self._new_report()
-        report.add_result("test", PASSED, time=1.0, output_file_name=self.output_file_name)
-        report.add_result("lib.entity", PASSED, time=1.0, output_file_name=self.output_file_name)
-        report.add_result("lib.entity.test", PASSED, time=1.0, output_file_name=self.output_file_name)
+        report.add_result(
+            "test", PASSED, time=1.0, output_file_name=self.output_file_name, test_suite_name="test", start_time=0
+        )
+        report.add_result(
+            "lib.entity",
+            PASSED,
+            time=1.0,
+            output_file_name=self.output_file_name,
+            test_suite_name="lib.entity",
+            start_time=0,
+        )
+        report.add_result(
+            "lib.entity.test",
+            PASSED,
+            time=1.0,
+            output_file_name=self.output_file_name,
+            test_suite_name="lib.entity.test",
+            start_time=0,
+        )
         report.add_result(
             "lib.entity.config.test",
             PASSED,
             time=1.0,
             output_file_name=self.output_file_name,
+            test_suite_name="lib.entity.config.test",
+            start_time=0,
         )
         root = ElementTree.fromstring(report.to_junit_xml_str())
         names = set(
@@ -347,56 +365,196 @@ Elapsed time was 1 h 1 min 40.0 s
         if not output_file_name:
             output_file_name = self.output_file_name
         report = self._new_report()
-        report.add_result("passed_test0", PASSED, time=1.0, output_file_name=output_file_name)
-        report.add_result("passed_test1", PASSED, time=2.0, output_file_name=output_file_name)
+        report.add_result(
+            "passed_test0",
+            PASSED,
+            time=1.0,
+            output_file_name=output_file_name,
+            test_suite_name="passed_test0",
+            start_time=0,
+        )
+        report.add_result(
+            "passed_test1",
+            PASSED,
+            time=2.0,
+            output_file_name=output_file_name,
+            test_suite_name="passed_test0",
+            start_time=0,
+        )
         report.set_expected_num_tests(2)
         return report
 
     def _report_with_missing_tests(self):
         "@returns A report with all passed tests"
         report = self._new_report()
-        report.add_result("passed_test0", PASSED, time=1.0, output_file_name=self.output_file_name)
-        report.add_result("passed_test1", PASSED, time=2.0, output_file_name=self.output_file_name)
+        report.add_result(
+            "passed_test0",
+            PASSED,
+            time=1.0,
+            output_file_name=self.output_file_name,
+            test_suite_name="passed_test0",
+            start_time=0,
+        )
+        report.add_result(
+            "passed_test1",
+            PASSED,
+            time=2.0,
+            output_file_name=self.output_file_name,
+            test_suite_name="passed_test0",
+            start_time=0,
+        )
         report.set_expected_num_tests(3)
         return report
 
     def _report_with_some_failed_tests(self):
         "@returns A report with some failed tests"
         report = self._new_report()
-        report.add_result("failed_test0", FAILED, time=11.12, output_file_name=self.output_file_name)
-        report.add_result("passed_test", PASSED, time=2.0, output_file_name=self.output_file_name)
-        report.add_result("failed_test1", FAILED, time=3.0, output_file_name=self.output_file_name)
+        report.add_result(
+            "failed_test0",
+            FAILED,
+            time=11.12,
+            output_file_name=self.output_file_name,
+            test_suite_name="failed_test0",
+            start_time=0,
+        )
+        report.add_result(
+            "passed_test",
+            PASSED,
+            time=2.0,
+            output_file_name=self.output_file_name,
+            test_suite_name="passed_test",
+            start_time=0,
+        )
+        report.add_result(
+            "failed_test1",
+            FAILED,
+            time=3.0,
+            output_file_name=self.output_file_name,
+            test_suite_name="failed_test1",
+            start_time=0,
+        )
         report.set_expected_num_tests(3)
         return report
 
     def _report_with_some_skipped_tests(self):
         "@returns A report with some skipped tests"
         report = self._new_report()
-        report.add_result("passed_test", PASSED, time=1.0, output_file_name=self.output_file_name)
-        report.add_result("skipped_test", SKIPPED, time=0.0, output_file_name=self.output_file_name)
-        report.add_result("failed_test", FAILED, time=3.0, output_file_name=self.output_file_name)
+        report.add_result(
+            "passed_test",
+            PASSED,
+            time=1.0,
+            output_file_name=self.output_file_name,
+            test_suite_name="passed_test",
+            start_time=0,
+        )
+        report.add_result(
+            "skipped_test",
+            SKIPPED,
+            time=0.0,
+            output_file_name=self.output_file_name,
+            test_suite_name="skipped_test",
+            start_time=0,
+        )
+        report.add_result(
+            "failed_test",
+            FAILED,
+            time=3.0,
+            output_file_name=self.output_file_name,
+            test_suite_name="failed_test",
+            start_time=0,
+        )
         report.set_expected_num_tests(3)
         return report
 
     def _report_with_mixed_length_tests(self):
         "@returns A report with various long tests"
         report = self._new_report()
-        report.add_result("passed_test0", PASSED, time=0.2, output_file_name=self.output_file_name)
-        report.add_result("passed_test1", PASSED, time=2.1, output_file_name=self.output_file_name)
-        report.add_result("passed_test2", PASSED, time=5.3, output_file_name=self.output_file_name)
-        report.add_result("passed_test3", PASSED, time=60.3, output_file_name=self.output_file_name)
+        report.add_result(
+            "passed_test0",
+            PASSED,
+            time=0.2,
+            output_file_name=self.output_file_name,
+            test_suite_name="passed_test0",
+            start_time=0,
+        )
+        report.add_result(
+            "passed_test1",
+            PASSED,
+            time=2.1,
+            output_file_name=self.output_file_name,
+            test_suite_name="passed_test1",
+            start_time=0,
+        )
+        report.add_result(
+            "passed_test2",
+            PASSED,
+            time=5.3,
+            output_file_name=self.output_file_name,
+            test_suite_name="passed_test2",
+            start_time=0,
+        )
+        report.add_result(
+            "passed_test3",
+            PASSED,
+            time=60.3,
+            output_file_name=self.output_file_name,
+            test_suite_name="passed_test3",
+            start_time=0,
+        )
         report.set_expected_num_tests(4)
         return report
 
     def _report_with_long_tests(self):
         "@returns A report with various long tests"
         report = self._new_report()
-        report.add_result("passed_test0", PASSED, time=0.2, output_file_name=self.output_file_name)
-        report.add_result("passed_test1", PASSED, time=2.1, output_file_name=self.output_file_name)
-        report.add_result("passed_test2", PASSED, time=10.3, output_file_name=self.output_file_name)
-        report.add_result("passed_test3", PASSED, time=60.1, output_file_name=self.output_file_name)
-        report.add_result("passed_test4", PASSED, time=615.1, output_file_name=self.output_file_name)
-        report.add_result("passed_test5", PASSED, time=3780.1, output_file_name=self.output_file_name)
+        report.add_result(
+            "passed_test0",
+            PASSED,
+            time=0.2,
+            output_file_name=self.output_file_name,
+            test_suite_name="passed_test0",
+            start_time=0,
+        )
+        report.add_result(
+            "passed_test1",
+            PASSED,
+            time=2.1,
+            output_file_name=self.output_file_name,
+            test_suite_name="passed_test1",
+            start_time=0,
+        )
+        report.add_result(
+            "passed_test2",
+            PASSED,
+            time=10.3,
+            output_file_name=self.output_file_name,
+            test_suite_name="passed_test2",
+            start_time=0,
+        )
+        report.add_result(
+            "passed_test3",
+            PASSED,
+            time=60.1,
+            output_file_name=self.output_file_name,
+            test_suite_name="passed_test3",
+            start_time=0,
+        )
+        report.add_result(
+            "passed_test4",
+            PASSED,
+            time=615.1,
+            output_file_name=self.output_file_name,
+            test_suite_name="passed_test4",
+            start_time=0,
+        )
+        report.add_result(
+            "passed_test5",
+            PASSED,
+            time=3780.1,
+            output_file_name=self.output_file_name,
+            test_suite_name="passed_test5",
+            start_time=0,
+        )
         report.set_expected_num_tests(6)
         return report
 

@@ -473,7 +473,7 @@ See https://github.com/VUnit/vunit/issues/777 and http://vunit.github.io/hdl_lib
             " ->\n".join(source_file.name for source_file in exception.path),
         )
 
-    def _get_compile_timestamps(self, files):
+    def get_compile_timestamps(self, files):
         """
         Return a dictionary of mapping file to the timestamp when it
         was compiled or None if it was not compiled
@@ -481,7 +481,7 @@ See https://github.com/VUnit/vunit/issues/777 and http://vunit.github.io/hdl_lib
         # Cache timestamps to avoid duplicate file operations
         timestamps = {}
         for source_file in files:
-            hash_file_name = self._hash_file_name_of(source_file)
+            hash_file_name = self.hash_file_name_of(source_file)
             if not ostools.file_exists(hash_file_name):
                 timestamps[source_file] = None
             else:
@@ -509,7 +509,7 @@ See https://github.com/VUnit/vunit/issues/777 and http://vunit.github.io/hdl_lib
         param: files: a list of type SourceFile
         param: dependency_graph: The DependencyGraph object to be used
         """
-        timestamps = self._get_compile_timestamps(files)
+        timestamps = self.get_compile_timestamps(files)
         result_list = []
         for source_file in files:
             if (not incremental) or self._needs_recompile(dependency_graph, source_file, timestamps):
@@ -614,7 +614,7 @@ See https://github.com/VUnit/vunit/issues/777 and http://vunit.github.io/hdl_lib
         """
         timestamp = timestamps[source_file]
 
-        content_hash_file_name = self._hash_file_name_of(source_file)
+        content_hash_file_name = self.hash_file_name_of(source_file)
         if timestamp is None:
             LOGGER.debug(
                 "%s has no vunit_hash file at %s and must be recompiled",
@@ -649,7 +649,7 @@ See https://github.com/VUnit/vunit/issues/777 and http://vunit.github.io/hdl_lib
 
         return False
 
-    def _hash_file_name_of(self, source_file):
+    def hash_file_name_of(self, source_file):
         """
         Returns the name of the hash file associated with the source_file
         """
@@ -663,5 +663,5 @@ See https://github.com/VUnit/vunit/issues/777 and http://vunit.github.io/hdl_lib
         to update the timestamp
         """
         new_content_hash = source_file.content_hash
-        ostools.write_file(self._hash_file_name_of(source_file), new_content_hash)
+        ostools.write_file(self.hash_file_name_of(source_file), new_content_hash)
         LOGGER.debug("Wrote %s content_hash=%s", source_file.name, new_content_hash)

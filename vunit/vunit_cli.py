@@ -166,6 +166,25 @@ def _create_argument_parser(description=None, for_documentation=False):
         help="Output path for compilation and simulation artifacts",
     )
 
+    parser.add_argument(
+        "--changed",
+        action="store_true",
+        default=False,
+        help="Include only test_patterns that depend on file changes since the last recorded test run",
+    )
+
+    parser.add_argument(
+        "--test-prio",
+        choices=["opt", "ordered"],
+        default="opt",
+        help=(
+            "Controls test priority strategy. "
+            '"opt" (default) = Optimized to increase the probability of running failing tests early and '
+            "to minimize test time through thread load-balancing. "
+            '"ordered" = Tests are executed in the order they were added.'
+        ),
+    )
+
     parser.add_argument("-x", "--xunit-xml", default=None, help="Xunit test report .xml file")
 
     parser.add_argument(

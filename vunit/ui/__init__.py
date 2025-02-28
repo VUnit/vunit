@@ -16,7 +16,9 @@ import traceback
 import logging
 import json
 import os
-from typing import Optional, Set, Union, List
+import ast
+import pickle
+from typing import Optional, Set, Union, Iterable
 from pathlib import Path
 from fnmatch import fnmatch
 from glob import glob
@@ -38,6 +40,8 @@ from ..vhdl_standard import VHDL, VHDLStandard
 from ..test.bench_list import TestBenchList
 from ..test.report import TestReport
 from ..test.runner import TestRunner
+from ..test.list import TestList
+from ..dependency_graph import CircularDependencyException
 
 from .common import LOGGER, TEST_OUTPUT_PATH, select_vhdl_standard, check_not_empty
 from .source import SourceFile, SourceFileList
@@ -159,18 +163,24 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         self._create_output_path(args.clean)
 
-        database = self._create_database()
+        self._database_version = (10, sys.version)
+        self._pickled_database_version = (self._database_version[0], pickle.HIGHEST_PROTOCOL)
+
+        self._database = self._create_database()
         self._project = Project(
-            database=database,
+            database=self._database,
             depend_on_package_body=simulator_class.package_users_depend_on_bodies,
         )
 
-        self._test_bench_list = TestBenchList(database=database)
+        self._test_bench_list = TestBenchList(database=self._database)
 
         self._builtins = Builtins(self, self._vhdl_standard, simulator_class)
 
-        self._include_in_test_pattern: Optional[List[Union[str, Path]]] = []
-        self._exclude_from_test_pattern: Optional[List[Union[str, Path]]] = []
+        self._dependency_graph = None
+        self._include_in_test_pattern: Optional[Iterable[Union[str, Path]]] = None
+        self._exclude_from_test_pattern: Optional[Iterable[Union[str, Path]]] = None
+        self._latest_dependency_updates = None
+        self._test_history = None
 
     def _create_database(self):
         """
@@ -182,7 +192,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         project_database_file_name = str(Path(self._output_path) / "project_database")
         create_new = False
         key = b"version"
-        version = str((9, sys.version)).encode()
+        version = str(self._database_version).encode()
         database = None
         try:
             database = DataBase(project_database_file_name)
@@ -773,6 +783,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
 
         project = self._project
         project_source_files = project.get_source_files_in_order()
+        self._dependency_graph = project.create_dependency_graph(True)
 
         def get_dependent_files(dependencies):
             "Return all project files dependent on project files matching any of the dependencies."
@@ -792,21 +803,20 @@ other preprocessors. Lowest value first. The order between preprocessors with th
                         dependency_files.add(source_file)
 
             # Get dependent files, non-testbench files included
-            dependency_graph = project.create_dependency_graph(True)
-            dependent_files = set(project.get_affected_files(dependency_files, dependency_graph.get_dependent))
+            dependent_files = set(project.get_affected_files(dependency_files, self._dependency_graph.get_dependent))
 
             return dependent_files
 
         dependent_files = get_dependent_files(include_dependencies) - get_dependent_files(exclude_dependencies)
 
-        # Extract testbenches from dependent files and create corresponding test patterns:
-        # lib_name.tb_name*
-        test_patterns = []
-        for dependent_file in dependent_files:
-            library_name = dependent_file.library.name
-            for testbench in self._test_bench_list.get_test_benches_in_library(library_name):
-                if testbench.design_unit.source_file == dependent_file:
-                    test_patterns.append(f"{library_name}.{testbench.name}*")
+        # Extract testbenches from dependent files
+        dependent_testbenches = []
+        for testbench in self._test_bench_list.get_test_benches():
+            if testbench.design_unit.source_file in dependent_files:
+                dependent_testbenches.append(testbench)
+
+        # Create test patterns for remaining testbenches: lib_name.tb_name*
+        test_patterns = [f"{testbench.library_name}.{testbench.name}*" for testbench in dependent_testbenches]
 
         # Update test filter to match test patterns
         if isinstance(self._args.test_patterns, list):
@@ -832,12 +842,199 @@ other preprocessors. Lowest value first. The order between preprocessors with th
 
         return self._simulator_class.from_args(args=self._args, output_path=self._simulator_output_path)
 
+    def _get_test_history(self, simulator_if):
+        """
+        Return test history from database after removing history for removed tests.
+        """
+        key = b"test_history"
+        if key not in self._database:
+            return {}
+
+        test_history = self._database[key]
+
+        # Prune removed tests from history
+        full_test_list = self._test_bench_list.create_tests(simulator_if, self._args.seed, self._args.elaborate)
+        full_test_list = {test_suite.name: test_suite for test_suite in full_test_list}
+
+        pruned_test_history = {
+            test_suite_name: test_suite_data
+            for test_suite_name, test_suite_data in test_history.items()
+            if test_suite_name in full_test_list
+        }
+        for test_suite_name, test_suite_data in pruned_test_history.items():
+            pruned_test_suite_data = {
+                test_name: test_data
+                for test_name, test_data in test_suite_data.items()
+                if test_name in full_test_list[test_suite_name].test_names
+            }
+            pruned_test_history[test_suite_name] = pruned_test_suite_data
+
+        return pruned_test_history
+
+    def _get_latest_dependency_updates(self):
+        """
+        Return the timestamp for the latest updated dependency of each file.
+        """
+        if not self._dependency_graph:
+            self._dependency_graph = self._project.create_dependency_graph(True)
+
+        source_files_in_order = self._dependency_graph.toposort()
+        source_file_timestamps = self._project.get_compile_timestamps(source_files_in_order)
+        for source_file in source_files_in_order:
+            hash_file_name = self._project.hash_file_name_of(source_file)
+            if not ostools.file_exists(hash_file_name) or (
+                ostools.read_file(hash_file_name) != source_file.content_hash
+            ):
+                source_file_timestamps[source_file] = 10e9
+
+        for source_file, timestamp in source_file_timestamps.items():
+            dependency_time_stamps = [
+                source_file_timestamps[dependency]
+                for dependency in self._dependency_graph.get_direct_dependencies(source_file)
+                if source_file_timestamps[dependency] is not None
+            ]
+
+            if timestamp is not None:
+                dependency_time_stamps.append(timestamp)
+
+            if dependency_time_stamps:
+                source_file_timestamps[source_file] = max(dependency_time_stamps)
+            else:
+                source_file_timestamps[source_file] = None
+
+        return {source_file.name: timestamp for source_file, timestamp in source_file_timestamps.items()}
+
+    def export_items(self, keys: Iterable[str], directory_path: Union[str, Path]):
+        """
+        Export items.
+
+        :param keys : List or other iterable of strings denoting the items to be exported. Valid keys are:
+                    * test_history - Exports the test history on which optimized test prioritization is based. The
+                                     exported test history can be imported to a clean project, such as a CI pipeline,
+                                     with :meth:`.import_items`.
+
+        :param directory_path: Path to the directory dedicated to the items. The directory is created if it doesn't
+                               already exists **and is cleared of all contents** if it already exists.
+        """
+        database_path = str(Path(directory_path))
+        database = DataBase(database_path, new=True)
+        pickled_database = PickledDataBase(database)
+        pickled_database[b"version"] = self._pickled_database_version
+        valid_keys = ["test_history"]
+        for key in keys:
+            if key not in valid_keys:
+                raise RuntimeError(f"{key} is not a valid key")
+            pickled_database[key.encode()] = self._database[key.encode()]
+
+    def import_items(self, directory_path: Union[str, Path]):
+        """
+        Import previously exported items, see :meth:`.export_items`.
+
+        :param directory_path: Path to the directory containing the items.
+        """
+        database_path = str(Path(directory_path))
+        if not database_path:
+            raise RuntimeError(f"Failed to find {database_path}")
+
+        try:
+            database = DataBase(database_path)
+        except KeyboardInterrupt as exk:
+            raise KeyboardInterrupt from exk
+        except:  # pylint: disable=bare-except
+            traceback.print_exc()
+            raise
+
+        pickled_database = PickledDataBase(database)
+
+        if b"version" not in pickled_database:
+            raise RuntimeError("Failed to find version of database.")
+
+        database_version = pickled_database[b"version"]
+
+        if database_version[0] != self._pickled_database_version[0]:
+            raise RuntimeError(
+                f"Database version mismatch. Got version {database_version[0]}, "
+                f"expected version {self._pickled_database_version[0]}."
+            )
+
+        if database_version[1] > self._pickled_database_version[1]:
+            raise RuntimeError(
+                f"Database pickle protocol mismatch. Got pickle protocol {database_version[1]}, "
+                f"expected pickle protocol <= {self._pickled_database_version[1]}."
+            )
+
+        for key in pickled_database:
+            if key == b"version":
+                continue
+
+            self._database[key] = pickled_database[key]
+
+    def _update_test_history(self, report, simulator_if):
+        """
+        Update the database test history with the results from the completed test run.
+        """
+        test_suite_data = {}
+        for test_result in report:
+            if test_result.test_suite_name not in test_suite_data:
+                test_suite_data[test_result.test_suite_name] = {}
+
+            if test_result.name not in test_suite_data[test_result.test_suite_name]:
+                test_suite_data[test_result.test_suite_name][test_result.name] = {}
+
+            test_suite_data[test_result.test_suite_name][test_result.name]["total_time"] = test_result.time
+            test_suite_data[test_result.test_suite_name][test_result.name]["passed"] = test_result.passed
+            test_suite_data[test_result.test_suite_name][test_result.name]["skipped"] = test_result.skipped
+            test_suite_data[test_result.test_suite_name][test_result.name]["failed"] = test_result.failed
+            test_suite_data[test_result.test_suite_name][test_result.name]["start_time"] = test_result.start_time
+
+        test_history = self._get_test_history(simulator_if)
+
+        for test_suite_name, data in test_suite_data.items():
+            if test_suite_name not in test_history:
+                test_history[test_suite_name] = {}
+
+            test_history[test_suite_name].update(data)
+
+        self._database[b"test_history"] = test_history
+
+    def _get_test_list_depending_on_change(self, test_list):
+        """
+        Extract the test suites in test_list that depends on changes.
+        """
+        if self._latest_dependency_updates is None:
+            self._latest_dependency_updates = self._get_latest_dependency_updates()
+
+        if self._test_history is None:
+            self._test_history = self._get_test_history(simulator_if=None)
+
+        def depending_on_change(test_suite):
+            latest_dependency_update = self._latest_dependency_updates[test_suite.file_name]
+            test_suite_history = self._test_history.get(test_suite.name, None)
+            if test_suite_history:
+                test_start_times = [test_data["start_time"] for test_data in test_suite_history.values()]
+                if None in test_start_times:
+                    return True
+
+                return min(test_start_times) < latest_dependency_update
+
+            return True
+
+        new_test_list = TestList()
+        for test_suite in test_list:
+            if depending_on_change(test_suite):
+                new_test_list.add_suite(test_suite)
+
+        return new_test_list
+
     def _main_run(self, post_run):
         """
         Main with running tests
         """
         simulator_if = self._create_simulator_if()
         test_list = self._create_tests(simulator_if)
+        if self._args.changed:
+            test_list = self._get_test_list_depending_on_change(test_list)
+
         self._compile(simulator_if)
         print()
 
@@ -845,7 +1042,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         report = TestReport(printer=self._printer)
 
         try:
-            self._run_test(test_list, report)
+            self._run_test(test_list, report, simulator_if)
         except KeyboardInterrupt:
             print()
             LOGGER.debug("_main: Caught Ctrl-C shutting down")
@@ -853,6 +1050,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
             del test_list
 
         report.set_real_total_time(ostools.get_time() - start_time)
+        self._update_test_history(report, simulator_if)
         report.print_str()
 
         if post_run is not None:
@@ -871,6 +1069,9 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         Main function when only listing test cases
         """
         test_list = self._create_tests(simulator_if=None)
+        if self._args.changed:
+            test_list = self._get_test_list_depending_on_change(test_list)
+
         for test_name in test_list.test_names:
             print(test_name)
         print(f"Listed {test_list.num_tests} tests")
@@ -1000,7 +1201,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
             for file_name in tb_file_names
         ]
 
-    def _run_test(self, test_cases, report):
+    def _run_test(self, test_cases, report, simulator_if):
         """
         Run the test suites and return the report
         """
@@ -1012,6 +1213,16 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         else:
             verbosity = TestRunner.VERBOSITY_NORMAL
 
+        # Ordered test priority can be achieved by not supplying
+        # any history. When no history is supplied, the latest dependency
+        # updates serves no purpose and need not to be calculated.
+        if self._args.test_prio == "ordered":
+            latest_dependency_updates = {}
+            test_history = {}
+        else:
+            latest_dependency_updates = self._get_latest_dependency_updates()
+            test_history = self._get_test_history(simulator_if)
+
         runner = TestRunner(
             report,
             str(Path(self._output_path) / TEST_OUTPUT_PATH),
@@ -1020,6 +1231,8 @@ other preprocessors. Lowest value first. The order between preprocessors with th
             fail_fast=self._args.fail_fast,
             dont_catch_exceptions=self._args.dont_catch_exceptions,
             no_color=self._args.no_color,
+            latest_dependency_updates=latest_dependency_updates,
+            test_history=test_history,
         )
         runner.run(test_cases)
 
@@ -1096,22 +1309,22 @@ other preprocessors. Lowest value first. The order between preprocessors with th
 
     def update_test_pattern(
         self,
-        include_dependent_on: Optional[List[Union[str, Path]]] = None,
-        exclude_dependent_on: Optional[List[Union[str, Path]]] = None,
+        include_dependent_on: Optional[Iterable[Union[str, Path]]] = None,
+        exclude_dependent_on: Optional[Iterable[Union[str, Path]]] = None,
     ) -> None:
         """
         Update test pattern to include testbenches depending on source files with a file path matching any of the
         patterns given in `include_dependent_on_file_patterns` but exclude testbenches depending on source file
         patterns in `exclude_dependent_on_file_patterns`.
 
-        Test patterns given on the command line will add to the included test patterns. Excluded testbenches take
-        precedence over included testbenches.
+        Excluded testbenches take precedence over included testbenches. Test patterns given on the command line take
+        precedence over excluded testbenches.
 
-        :param include_dependent_on: List of :class:`str` or :class:`pathlib.Path` items,
+        :param include_dependent_on: List or other iterable of :class:`str` or :class:`pathlib.Path` items,
                                      each representing a relative, an absolute file path
                                      pattern. Applied recursively. Default is including
                                      all project source files.
-        :param exclude_dependent_on: List of :class:`str` or :class:`pathlib.Path` items,
+        :param exclude_dependent_on: List or other iterable of :class:`str` or :class:`pathlib.Path` items,
                                      each representing a relative or an absolute file path
                                      pattern. Applied recursively. Default is excluding no
                                      project source file.
