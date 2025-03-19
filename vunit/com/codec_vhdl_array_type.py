@@ -30,6 +30,7 @@ class CodecVHDLArrayType(VHDLArrayType):
         )
         is_constrained = self.range1.range_type is None and self.range2.range_type is None
 
+        declarations += template.codec_length_declarations.substitute(type=self.identifier)
         declarations += template.codec_declarations.substitute(type=self.identifier)
         declarations += template.to_string_declarations.substitute(type=self.identifier)
         if is_constrained:
@@ -41,26 +42,33 @@ class CodecVHDLArrayType(VHDLArrayType):
                 definitions += template.constrained_2d_array_to_string_definition.substitute(type=self.identifier)
         else:
             if has_one_dimension:
-                init_value = ""
-                definitions += template.unconstrained_1d_array_definition.substitute(
-                    array_type=self.identifier,
-                    init_value=init_value,
+                definitions += template.range_encoding_definition.substitute(
+                    i = "",
+                    type=self.identifier,
                     range_type=self.range1.range_type,
                 )
-                definitions += template.unconstrained_1d_array_to_string_definition.substitute(
-                    array_type=self.identifier, range_type=self.range1.range_type
+                definitions += template.unconstrained_1d_array_definition.substitute(
+                    type=self.identifier,
+                    range_type=self.range1.range_type,
                 )
+                definitions += template.unconstrained_1d_array_to_string_definition.substitute(type=self.identifier)
             else:
+                definitions += template.range_encoding_definition.substitute(
+                    i = "1",
+                    type=self.identifier,
+                    range_type=self.range1.range_type,
+                )
+                definitions += template.range_encoding_definition.substitute(
+                    i = "2",
+                    type=self.identifier,
+                    range_type=self.range2.range_type,
+                )
                 definitions += template.unconstrained_2d_array_definition.substitute(
-                    array_type=self.identifier,
+                    type=self.identifier,
                     range_type1=self.range1.range_type,
                     range_type2=self.range2.range_type,
                 )
-                definitions += template.unconstrained_2d_array_to_string_definition.substitute(
-                    array_type=self.identifier,
-                    range_type1=self.range1.range_type,
-                    range_type2=self.range2.range_type,
-                )
+                definitions += template.unconstrained_2d_array_to_string_definition.substitute(type=self.identifier)
 
         return declarations, definitions
 
@@ -68,11 +76,19 @@ class CodecVHDLArrayType(VHDLArrayType):
 class ArrayCodecTemplate(DatatypeCodecTemplate):
     """This class contains array codec templates."""
 
+    codec_length_declarations = Template(
+        """\
+  -- Codec package extension for the type $type
+
+  function code_length_$type(data : $type) return natural;
+  alias code_length is code_length_$type[$type return natural];
+"""
+    )
+
     constrained_1d_array_to_string_definition = Template(
         """\
-  function to_string (
-    constant data : $type)
-    return string is
+  -- Printing function for the type $type
+  function to_string(data : $type) return string is
     variable element : string(1 to 2 + data'length * 32);
     variable l : line;
     variable length : natural;
@@ -82,17 +98,16 @@ class ArrayCodecTemplate(DatatypeCodecTemplate):
       append_group(l, encode(data(i)));
     end loop;
     close_group(l, element, length);
-
     return element(1 to length);
-  end function to_string;
+  end function;
 
 """
     )
 
     constrained_2d_array_to_string_definition = Template(
         """\
-  function to_string (
-    constant data : $type)
+  -- Printing function for the type $type
+  function to_string(data : $type)
     return string is
     variable element : string(1 to 2 + data'length(1) * data'length(2) * 32);
     variable l : line;
@@ -105,18 +120,16 @@ class ArrayCodecTemplate(DatatypeCodecTemplate):
       end loop;
     end loop;
     close_group(l, element, length);
-
     return element(1 to length);
-  end function to_string;
+  end function;
 
 """
     )
 
     unconstrained_1d_array_to_string_definition = Template(
         """\
-  function to_string (
-    constant data : $array_type)
-    return string is
+  -- Printing function for the type $type
+  function to_string(data : $type) return string is
     variable element : string(1 to 2 + data'length * 32);
     variable l : line;
     variable length : natural;
@@ -126,17 +139,16 @@ class ArrayCodecTemplate(DatatypeCodecTemplate):
       append_group(l, encode(data(i)));
     end loop;
     close_group(l, element, length);
-
     return create_array_group(element(1 to length), encode(data'left), encode(data'right), data'ascending);
-  end function to_string;
+  end function;
 
 """
     )
 
     unconstrained_2d_array_to_string_definition = Template(
         """\
-  function to_string (
-    constant data : $array_type)
+  -- Printing function for the type $type
+  function to_string(data : $type)
     return string is
     variable element : string(1 to 2 + data'length(1) * data'length(2) * 32);
     variable l : line;
@@ -149,51 +161,77 @@ class ArrayCodecTemplate(DatatypeCodecTemplate):
       end loop;
     end loop;
     close_group(l, element, length);
-
-    return create_array_group(element(1 to length), encode(data'left(1)), encode(data'right(1)), data'ascending(1),
-                              encode(data'left(2)), encode(data'right(2)), data'ascending(2));
-  end function to_string;
+    return create_array_group(
+      element(1 to length),
+      encode(data'left(1)),
+      encode(data'right(1)),
+      data'ascending(1),
+      encode(data'left(2)),
+      encode(data'right(2)),
+      data'ascending(2)
+    );
+  end function;
 
 """
     )
 
     constrained_1d_array_definition = Template(
         """\
-  function encode (
-    constant data : $type)
-    return string is
-    constant length : positive := get_encoded_length(encode(data(data'left)));
-    variable index : positive := 1;
-    variable ret_val : string(1 to data'length * length);
+  -----------------------------------------------------------------------------
+  -- Codec package extension for the type $type
+  -----------------------------------------------------------------------------
+
+  function code_length_$type(data : $type) return natural is
+  begin
+    if data'length = 0 then
+      return 0;
+    else
+      return code_length(data(data'left)) * data'length;
+    end if;
+  end function;
+
+  procedure encode_$type(
+    constant data  : in    $type;
+    variable index : inout code_index_t;
+    variable code  : inout code_t
+  ) is
   begin
     for i in data'range loop
-      ret_val(index to index + length - 1) := encode(data(i));
-      index := index + length;
+      encode(data(i), index, code);
     end loop;
+  end procedure;
 
-    return ret_val;
-  end function encode;
-
-  procedure decode (
-    constant code   : string;
-    variable index : inout   positive;
-    variable result : out $type) is
+  procedure decode_$type(
+    constant code   : in    code_t;
+    variable index  : inout code_index_t;
+    variable result : out   $type
+  ) is
   begin
     for i in result'range loop
       decode(code, index, result(i));
     end loop;
-  end procedure decode;
+  end procedure;
 
-  function decode (
-    constant code : string)
-    return $type is
-    variable ret_val : $type;
-    variable index : positive := code'left;
+  function encode_$type(data : $type) return code_t is
+    variable ret_val : code_t(1 to code_length_$type(data));
+    variable index   : code_index_t := ret_val'left;
   begin
-    decode(code, index, ret_val);
-
+    encode_$type(data, index, ret_val);
     return ret_val;
-  end function decode;
+  end function;
+
+  function decode_$type(code : code_t) return $type is
+    variable ret_val : $type;
+    variable index   : code_index_t := code'left;
+  begin
+    decode_$type(code, index, ret_val);
+    return ret_val;
+  end function;
+
+
+  -----------------------------------------------------------------------------
+  -- Queue package extension for the type $type
+  -----------------------------------------------------------------------------
 
   procedure push(queue : queue_t; value : $type) is
   begin
@@ -220,45 +258,65 @@ class ArrayCodecTemplate(DatatypeCodecTemplate):
 
     constrained_2d_array_definition = Template(
         """\
-  function encode (
-    constant data : $type)
-    return string is
-    constant length : positive := get_encoded_length(encode(data(data'left(1), data'left(2))));
-    variable index : positive := 1;
-    variable ret_val : string(1 to data'length(1) * data'length(2) * length);
+  -----------------------------------------------------------------------------
+  -- Codec package extension for the type $type
+  -----------------------------------------------------------------------------
+
+  function code_length_$type(data : $type) return natural is
+  begin
+    if data'length(1) = 0 or data'length(2) = 0 then
+      return 0;
+    else
+      return code_length(data(data'left(1), data'left(2))) * data'length(1) * data'length(2);
+    end if;
+  end function;
+
+  procedure encode_$type(
+    constant data  : in    $type;
+    variable index : inout code_index_t;
+    variable code  : inout code_t
+  ) is
   begin
     for i in data'range(1) loop
       for j in data'range(2) loop
-        ret_val(index to index + length - 1) := encode(data(i,j));
-        index := index + length;
+        encode(data(i,j), index, code);
       end loop;
     end loop;
+  end procedure;
 
-    return ret_val;
-  end function encode;
-
-  procedure decode (
-    constant code   : string;
-    variable index : inout   positive;
-    variable result : out $type) is
+  procedure decode_$type(
+    constant code   : in    code_t;
+    variable index  : inout code_index_t;
+    variable result : out   $type
+  ) is
   begin
     for i in result'range(1) loop
       for j in result'range(2) loop
         decode(code, index, result(i,j));
       end loop;
     end loop;
-  end procedure decode;
+  end procedure;
 
-  function decode (
-    constant code : string)
-    return $type is
-    variable ret_val : $type;
-    variable index : positive := code'left;
+  function encode_$type(data : $type) return code_t is
+    variable ret_val : code_t(1 to code_length_$type(data));
+    variable index   : code_index_t := ret_val'left;
   begin
-    decode(code, index, ret_val);
-
+    encode_$type(data, index, ret_val);
     return ret_val;
-  end function decode;
+  end function;
+
+  function decode_$type(code : code_t) return $type is
+    variable ret_val : $type;
+    variable index   : code_index_t := code'left;
+  begin
+    decode_$type(code, index, ret_val);
+    return ret_val;
+  end function;
+
+
+  -----------------------------------------------------------------------------
+  -- Queue package extension for the type $type
+  -----------------------------------------------------------------------------
 
   procedure push(queue : queue_t; value : $type) is
   begin
@@ -283,95 +341,137 @@ class ArrayCodecTemplate(DatatypeCodecTemplate):
 """
     )
 
+    # Constrained and unconstrained array are dealt the same way
+    range_encoding_definition = Template(
+        """\
+  -----------------------------------------------------------------------------
+  -- Codec package extension for the type $type: definition of the range encode/decode
+  -----------------------------------------------------------------------------
+
+  -- Type only used to ccarry the range information
+  type range${i}_${type}_t is array($range_type range <>) of bit;
+
+  function code_length_range${i}_$type(data : $range_type := $range_type'left) return natural is
+  begin
+    -- We need to encode the left and right bounds and the ascending information
+    return 2 * code_length(data) + code_length_boolean;
+  end function;
+
+  procedure encode_range${i}_$type(
+    constant range_left : $range_type;
+    constant range_right : $range_type;
+    constant is_ascending : boolean;
+    variable index : inout code_index_t;
+    variable code : inout code_t
+  ) is
+  begin
+    encode(range_left, index, code);
+    encode(range_right, index, code);
+    encode_boolean(is_ascending, index, code);
+  end procedure;
+
+  function decode_range${i}_$type(code : code_t; index : code_index_t) return range${i}_${type}_t is
+    variable code_alias : code_t(1 to code'length-index+1) := code(index to code'length);
+    constant range_left : $range_type := decode(
+      code_alias(1 to code_length($range_type'left))
+    );
+    constant range_right : $range_type := decode(
+      code_alias(1 + code_length($range_type'left) to code_length($range_type'left)*2)
+    );
+    constant is_ascending : boolean := decode_boolean(
+      code_alias(1 + code_length($range_type'left)*2 to code_length($range_type'left)*2 + code_length_boolean)
+    );
+    variable ret_val_ascending  : range${i}_${type}_t(range_left to range_right);
+    variable ret_val_descending : range${i}_${type}_t(range_left downto range_right);
+  begin
+    if is_ascending then
+      return ret_val_ascending;
+    else
+      return ret_val_descending;
+    end if;
+  end function;
+
+"""
+    )
+
+    # Constrained and unconstrained array are dealt the same way
     unconstrained_1d_array_definition = Template(
         """\
-  function encode (
-    constant data : $array_type)
-    return string is
-    function element_length (
-      constant data : $array_type)
-      return natural is
-    begin
-      if data'length = 0 then
-        return 0;
-      else
-        return get_encoded_length(encode(data(data'left)));
-      end if;
-    end;
-    constant length : natural := element_length(data);
-    constant range_length : positive := get_encoded_length(encode(data'left));
-    variable index : positive := 2 + 2 * range_length;
-    variable ret_val : string(1 to 1 + 2 * range_length + data'length * length);
+  -----------------------------------------------------------------------------
+  -- Codec package extension for the type $type
+  -----------------------------------------------------------------------------
+
+  function code_length_$type(data : $type) return natural is
   begin
-    ret_val(1 to 1 + 2 * range_length) := encode_array_header(encode(data'left),
-                                                              encode(data'right),
-                                                              encode(data'ascending));
+    if data'length = 0 then
+      return code_length_range_$type;
+    else
+      return code_length_range_$type + code_length(data(data'left)) * data'length;
+    end if;
+  end function;
+
+  procedure encode_$type(
+    constant data  : in    $type;
+    variable index : inout code_index_t;
+    variable code  : inout code_t
+  ) is
+  begin
+    encode_range_$type(data'left, data'right, data'ascending, index, code);
     for i in data'range loop
-      ret_val(index to index + length - 1) := encode(data(i));
-      index := index + length;
+      encode(data(i), index, code);
     end loop;
+  end procedure;
 
-    return ret_val;
-  end function encode;
-
-  procedure decode (
-    constant code   : string;
-    variable index : inout   positive;
-    variable result : out $array_type) is
-    constant range_length : positive := get_encoded_length(encode($range_type'left));
+  procedure decode_$type(
+    constant code   : in    code_t;
+    variable index  : inout code_index_t;
+    variable result : out   $type
+  ) is
   begin
-    index := index + 1 + 2 * range_length;
+    index := index + code_length_range_$type;
     for i in result'range loop
       decode(code, index, result(i));
     end loop;
-  end procedure decode;
+  end procedure;
 
-  function decode (
-    constant code : string)
-    return $array_type is
-    constant range_length : positive := get_encoded_length(encode($range_type'left));
-    function ret_val_range (
-      constant code : string)
-      return $array_type is
-      constant range_left : $range_type := decode(code(code'left to code'left + range_length - 1));
-      constant range_right : $range_type := decode(code(code'left + range_length to code'left + 2 * range_length - 1));
-      constant is_ascending : boolean := decode(code(code'left + 2 * range_length to code'left + 2 *range_length));
-      variable ret_val_ascending : $array_type(range_left to range_right);
-      variable ret_val_descending : $array_type(range_left downto range_right);
-    begin
-      if is_ascending then
-        return ret_val_ascending;
-      else
-        return ret_val_descending;
-      end if;
-    end function ret_val_range;
-    constant array_of_correct_range : $array_type := ret_val_range(code);
-    variable ret_val : $array_type(array_of_correct_range'range)$init_value;
-    variable index : positive := code'left + 1 + 2 * range_length;
+  function encode_$type(data : $type) return code_t is
+    variable ret_val : code_t(1 to code_length_$type(data));
+    variable index   : code_index_t := ret_val'left;
   begin
-    for i in ret_val'range loop
-      decode(code, index, ret_val(i));
-    end loop;
-
+    encode_$type(data, index, ret_val);
     return ret_val;
-  end function decode;
+  end function;
 
-  procedure push(queue : queue_t; value : $array_type) is
+  function decode_$type(code : code_t) return $type is
+    constant ret_range : range_${type}_t := decode_range_$type(code, code'left);
+    variable ret_val   : $type(ret_range'range);
+    variable index     : code_index_t := code'left;
+  begin
+    decode_$type(code, index, ret_val);
+    return ret_val;
+  end function;
+
+
+  -----------------------------------------------------------------------------
+  -- Queue package extension for the type $type
+  -----------------------------------------------------------------------------
+
+  procedure push(queue : queue_t; value : $type) is
   begin
     push_variable_string(queue, encode(value));
   end;
 
-  impure function pop(queue : queue_t) return $array_type is
+  impure function pop(queue : queue_t) return $type is
   begin
     return decode(pop_variable_string(queue));
   end;
 
-  procedure push(msg : msg_t; value : $array_type) is
+  procedure push(msg : msg_t; value : $type) is
   begin
     push(msg.data, value);
   end;
 
-  impure function pop(msg : msg_t) return $array_type is
+  impure function pop(msg : msg_t) return $type is
   begin
     return pop(msg.data);
   end;
@@ -381,126 +481,87 @@ class ArrayCodecTemplate(DatatypeCodecTemplate):
 
     unconstrained_2d_array_definition = Template(
         """\
-  function encode (
-    constant data : $array_type)
-    return string is
-    function element_length (
-      constant data : $array_type)
-      return natural is
-    begin
-      if data'length(1) * data'length(2) = 0 then
-        return 0;
-      else
-        return get_encoded_length(encode(data(data'left(1), data'left(2))));
-      end if;
-    end;
-    constant length : natural := element_length(data);
-    constant range1_length : positive := get_encoded_length(encode(data'left(1)));
-    constant range2_length : positive := get_encoded_length(encode(data'left(2)));
-    variable index : positive := 3 + 2 * range1_length + 2 * range2_length;
-    variable ret_val : string(1 to 2 + 2 * range1_length + 2 * range2_length +
-                                   data'length(1) * data'length(2) * length);
+  -----------------------------------------------------------------------------
+  -- Codec package extension for the type $type
+  -----------------------------------------------------------------------------
+
+  function code_length_$type(data : $type) return natural is
   begin
-    ret_val(1 to 2 + 2 * range1_length + 2 * range2_length) :=
-      encode_array_header(encode(data'left(1)), encode(data'right(1)), encode(data'ascending(1)),
-                          encode(data'left(2)), encode(data'right(2)), encode(data'ascending(2)));
+    if data'length(1) = 0 or data'length(2) = 0 then
+      return code_length_range1_$type + code_length_range2_$type;
+    else
+      return code_length_range1_$type + code_length_range2_$type + code_length(data(data'left(1), data'left(2))) * data'length(1) * data'length(2);
+    end if;
+  end function;
+
+  procedure encode_$type(
+    constant data  : in    $type;
+    variable index : inout code_index_t;
+    variable code  : inout code_t
+  ) is
+  begin
+    encode_range1_$type(data'left(1), data'right(1), data'ascending(1), index, code);
+    encode_range2_$type(data'left(2), data'right(2), data'ascending(2), index, code);
     for i in data'range(1) loop
       for j in data'range(2) loop
-        ret_val(index to index + length - 1) := encode(data(i,j));
-        index := index + length;
+        encode(data(i,j), index, code);
       end loop;
     end loop;
+  end procedure;
 
-    return ret_val;
-  end function encode;
-
-  procedure decode (
-    constant code   : string;
-    variable index : inout   positive;
-    variable result : out $array_type) is
-    constant range1_length : positive := get_encoded_length(encode($range_type1'left));
-    constant range2_length : positive := get_encoded_length(encode($range_type2'left));
+  procedure decode_$type(
+    constant code   : in    code_t;
+    variable index  : inout code_index_t;
+    variable result : out   $type
+  ) is
   begin
-    index := index + 2 + 2 * range1_length + 2 * range2_length;
+    index := index + code_length_range1_$type + code_length_range2_$type;
     for i in result'range(1) loop
       for j in result'range(2) loop
         decode(code, index, result(i,j));
       end loop;
     end loop;
-  end procedure decode;
+  end procedure;
 
-  function decode (
-    constant code : string)
-    return $array_type is
-    constant range1_length : positive := get_encoded_length(encode($range_type1'left));
-    constant range2_length : positive := get_encoded_length(encode($range_type2'left));
-    function ret_val_range (
-      constant code : string)
-      return $array_type is
-      constant range_left1 : $range_type1 := decode(code(code'left to code'left + range1_length - 1));
-      constant range_right1 : $range_type1 := decode(code(code'left + range1_length to
-                                                          code'left + 2 * range1_length - 1));
-      constant is_ascending1 : boolean := decode(code(code'left + 2 * range1_length to
-                                                      code'left + 2 * range1_length));
-      constant range_left2 : $range_type2 := decode(code(code'left + 2 * range1_length + 1 to
-                                                         code'left + 2 * range1_length + range2_length));
-      constant range_right2 : $range_type2 := decode(code(code'left + 2 * range1_length + range2_length + 1 to
-                                                          code'left + 2 * range1_length + 2 * range2_length));
-      constant is_ascending2 : boolean := decode(code(code'left + 2 * range1_length + 2 * range2_length + 1 to
-                                                      code'left + 2 * range1_length + 2 * range2_length + 1));
-      variable ret_val_ascending_ascending : $array_type(range_left1 to range_right1,
-                                                         range_left2 to range_right2);
-      variable ret_val_ascending_decending : $array_type(range_left1 to range_right1,
-                                                         range_left2 downto range_right2);
-      variable ret_val_decending_ascending : $array_type(range_left1 downto range_right1,
-                                                         range_left2 to range_right2);
-      variable ret_val_decending_decending : $array_type(range_left1 downto range_right1,
-                                                         range_left2 downto range_right2);
-    begin
-      if is_ascending1 then
-        if is_ascending2 then
-          return ret_val_ascending_ascending;
-        else
-          return ret_val_ascending_decending;
-        end if;
-      else
-        if is_ascending2 then
-          return ret_val_decending_ascending;
-        else
-          return ret_val_decending_decending;
-        end if;
-      end if;
-    end function ret_val_range;
-
-    constant array_of_correct_range : $array_type := ret_val_range(code);
-    variable ret_val : $array_type(array_of_correct_range'range(1), array_of_correct_range'range(2));
-    variable index : positive := code'left + 2 + 2 * range1_length + 2 * range2_length;
+  function encode_$type(data : $type) return code_t is
+    variable ret_val : code_t(1 to code_length_$type(data));
+    variable index   : code_index_t := ret_val'left;
   begin
-    for i in ret_val'range(1) loop
-      for j in ret_val'range(2) loop
-        decode(code, index, ret_val(i,j));
-      end loop;
-    end loop;
-
+    encode_$type(data, index, ret_val);
     return ret_val;
-  end function decode;
+  end function;
 
-  procedure push(queue : queue_t; value : $array_type) is
+  function decode_$type(code : code_t) return $type is
+    constant ret_range1 : range1_${type}_t := decode_range1_$type(code, code'left);
+    constant ret_range2 : range2_${type}_t := decode_range2_$type(code, code'left + code_length_range1_$type);
+    variable ret_val    : $type(ret_range1'range, ret_range2'range);
+    variable index      : code_index_t := code'left;
+  begin
+    decode_$type(code, index, ret_val);
+    return ret_val;
+  end function;
+
+
+  -----------------------------------------------------------------------------
+  -- Queue package extension for the type $type
+  -----------------------------------------------------------------------------
+
+  procedure push(queue : queue_t; value : $type) is
   begin
     push_variable_string(queue, encode(value));
   end;
 
-  impure function pop(queue : queue_t) return $array_type is
+  impure function pop(queue : queue_t) return $type is
   begin
     return decode(pop_variable_string(queue));
   end;
 
-  procedure push(msg : msg_t; value : $array_type) is
+  procedure push(msg : msg_t; value : $type) is
   begin
     push(msg.data, value);
   end;
 
-  impure function pop(msg : msg_t) return $array_type is
+  impure function pop(msg : msg_t) return $type is
   begin
     return pop(msg.data);
   end;
