@@ -10,10 +10,12 @@ Test the test suites
 
 from pathlib import Path
 from unittest import TestCase
-from tests.common import create_tempdir
+from time import sleep
+from tests.common import with_tempdir, create_tempdir
 from vunit.test.suites import TestRun
 from vunit.test.report import PASSED, SKIPPED, FAILED
 from vunit.sim_if import SimulatorInterface
+from vunit.configuration import Configuration
 
 
 class TestTestSuites(TestCase):
@@ -105,7 +107,7 @@ test_suite_done""",
                 elaborate_only=False,
                 test_suite_name=None,
                 test_cases=expected,
-                seed="seed"
+                seed="seed",
             )
             results = run._read_test_results(file_name=file_name)  # pylint: disable=protected-access
             self.assertEqual(results, expected)
@@ -180,7 +182,7 @@ test_suite_done""",
                 elaborate_only=False,
                 test_suite_name=None,
                 test_cases=expected,
-                seed="seed"
+                seed="seed",
             )
 
             results = run._read_test_results(file_name=file_name)  # pylint: disable=protected-access
@@ -188,3 +190,72 @@ test_suite_done""",
                 run._check_results(results, sim_ok),  # pylint: disable=protected-access
                 (waschecked, expected),
             )
+
+    @with_tempdir
+    def test_get_external_seed(self, tempdir):
+        design_unit = Entity(file_name=str(Path(tempdir) / "file.vhd"))
+        config = Configuration(name="config", design_unit=design_unit, sim_options=dict(seed="config_seed"))
+        run = TestRun(
+            simulator_if=None,
+            config=config,
+            elaborate_only=False,
+            test_suite_name=None,
+            test_cases=None,
+            seed="external_seed",
+        )
+
+        self.assertEqual(run.get_seed(), "external_seed")
+
+    @with_tempdir
+    def test_get_seed_from_config(self, tempdir):
+        design_unit = Entity(file_name=str(Path(tempdir) / "file.vhd"))
+        config = Configuration(name="config", design_unit=design_unit, sim_options=dict(seed="config_seed"))
+        run = TestRun(
+            simulator_if=None,
+            config=config,
+            elaborate_only=False,
+            test_suite_name=None,
+            test_cases=None,
+            seed=None,
+        )
+
+        self.assertEqual(run.get_seed(), "config_seed")
+
+    @with_tempdir
+    def test_get_generated_seed(self, tempdir):
+        design_unit = Entity(file_name=str(Path(tempdir) / "file.vhd"))
+        config = Configuration(name="config", design_unit=design_unit)
+        run = TestRun(
+            simulator_if=None,
+            config=config,
+            elaborate_only=False,
+            test_suite_name=None,
+            test_cases=None,
+            seed=None,
+        )
+
+        # Seed is "random" but do not change for an instance
+        seed = run.get_seed()
+        self.assertEqual(run.get_seed(), seed)
+
+        run = TestRun(
+            simulator_if=None,
+            config=config,
+            elaborate_only=False,
+            test_suite_name=None,
+            test_cases=None,
+            seed=None,
+        )
+
+        # New random value for a new instance if we let system time ellapse
+        sleep(0.1)
+        self.assertNotEqual(run.get_seed(), seed)
+
+class Entity(object):  # pylint: disable=too-many-instance-attributes
+    """
+    Mock Entity
+    """
+
+    def __init__(self, file_name):
+        self.generic_names = []
+        self.original_file_name = file_name

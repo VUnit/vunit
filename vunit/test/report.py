@@ -275,7 +275,7 @@ class TestResult(object):
     """
 
     def __init__(
-        self, name, status, time, output_file_name, *, test_suite_name, start_time
+        self, name, status, time, output_file_name, *, test_suite_name, start_time, seed
     ):  # pylint: disable=too-many-arguments
         assert status in (PASSED, FAILED, SKIPPED)
         self.name = name
@@ -284,6 +284,7 @@ class TestResult(object):
         self._output_file_name = output_file_name
         self.test_suite_name = test_suite_name
         self.start_time = start_time
+        self.seed = seed
 
     @property
     def output(self):

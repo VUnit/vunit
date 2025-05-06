@@ -163,7 +163,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         self._create_output_path(args.clean)
 
-        self._database_version = (10, sys.version)
+        self._database_version = (11, sys.version)
         self._pickled_database_version = (self._database_version[0], pickle.HIGHEST_PROTOCOL)
 
         self._database = self._create_database()
@@ -986,6 +986,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
             test_suite_data[test_result.test_suite_name][test_result.name]["skipped"] = test_result.skipped
             test_suite_data[test_result.test_suite_name][test_result.name]["failed"] = test_result.failed
             test_suite_data[test_result.test_suite_name][test_result.name]["start_time"] = test_result.start_time
+            test_suite_data[test_result.test_suite_name][test_result.name]["seed"] = test_result.seed
 
         test_history = self._get_test_history(simulator_if)
 

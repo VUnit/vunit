@@ -35,8 +35,9 @@ has a ``parser`` field which is an `ArgumentParser` object of the
 """
 
 import argparse
-from pathlib import Path
+import re
 import os
+from pathlib import Path
 from vunit.sim_if.factory import SIMULATOR_FACTORY
 from vunit.about import version
 
@@ -265,10 +266,28 @@ def _create_argument_parser(description=None, for_documentation=False):
 
     parser.add_argument("--version", action="version", version=version())
 
+    def valid_seed(value):
+        value = value.lower()
+
+        if value == "repeat":
+            return value
+
+        if not re.fullmatch(r"[0-9a-f]+", value):
+            raise argparse.ArgumentTypeError("""Expecting a valid 16-digit hex number or "repeat".""")
+
+        if len(value) != 16:
+            raise argparse.ArgumentTypeError(f"Expecting 16 digits. {value} is {len(value)} digits.")
+
+        return value
+
     parser.add_argument(
         "--seed",
         default=None,
-        help="Base seed provided to the simulation. Must be 16 hex digits. Default seed is generated from system time.",
+        type=valid_seed,
+        metavar="<seed>|repeat",
+        help="16 hex digits base seed provided to the simulation or repeat the previous base seed(s)."
+        """ If no previous base seed has been recorded, "repeat" will use the default base seed which is"""
+        " generated from system time.",
     )
 
     SIMULATOR_FACTORY.add_arguments(parser)

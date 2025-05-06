@@ -289,7 +289,13 @@ Elapsed time was 1 h 1 min 40.0 s
     def test_junit_report_with_testcase_classname(self):
         report = self._new_report()
         report.add_result(
-            "test", PASSED, time=1.0, output_file_name=self.output_file_name, test_suite_name="test", start_time=0
+            "test",
+            PASSED,
+            time=1.0,
+            output_file_name=self.output_file_name,
+            test_suite_name="test",
+            start_time=0,
+            seed="0123456789abcdef",
         )
         report.add_result(
             "lib.entity",
@@ -298,6 +304,7 @@ Elapsed time was 1 h 1 min 40.0 s
             output_file_name=self.output_file_name,
             test_suite_name="lib.entity",
             start_time=0,
+            seed="0123456789abcdef",
         )
         report.add_result(
             "lib.entity.test",
@@ -306,6 +313,7 @@ Elapsed time was 1 h 1 min 40.0 s
             output_file_name=self.output_file_name,
             test_suite_name="lib.entity.test",
             start_time=0,
+            seed="0123456789abcdef",
         )
         report.add_result(
             "lib.entity.config.test",
@@ -314,6 +322,7 @@ Elapsed time was 1 h 1 min 40.0 s
             output_file_name=self.output_file_name,
             test_suite_name="lib.entity.config.test",
             start_time=0,
+            seed="0123456789abcdef",
         )
         root = ElementTree.fromstring(report.to_junit_xml_str())
         names = set(
@@ -372,6 +381,7 @@ Elapsed time was 1 h 1 min 40.0 s
             output_file_name=output_file_name,
             test_suite_name="passed_test0",
             start_time=0,
+            seed="0123456789abcdef",
         )
         report.add_result(
             "passed_test1",
@@ -380,6 +390,7 @@ Elapsed time was 1 h 1 min 40.0 s
             output_file_name=output_file_name,
             test_suite_name="passed_test0",
             start_time=0,
+            seed="0123456789abcdef",
         )
         report.set_expected_num_tests(2)
         return report
@@ -394,6 +405,7 @@ Elapsed time was 1 h 1 min 40.0 s
             output_file_name=self.output_file_name,
             test_suite_name="passed_test0",
             start_time=0,
+            seed="0123456789abcdef",
         )
         report.add_result(
             "passed_test1",
@@ -402,6 +414,7 @@ Elapsed time was 1 h 1 min 40.0 s
             output_file_name=self.output_file_name,
             test_suite_name="passed_test0",
             start_time=0,
+            seed="0123456789abcdef",
         )
         report.set_expected_num_tests(3)
         return report
@@ -416,6 +429,7 @@ Elapsed time was 1 h 1 min 40.0 s
             output_file_name=self.output_file_name,
             test_suite_name="failed_test0",
             start_time=0,
+            seed="0123456789abcdef",
         )
         report.add_result(
             "passed_test",
@@ -424,6 +438,7 @@ Elapsed time was 1 h 1 min 40.0 s
             output_file_name=self.output_file_name,
             test_suite_name="passed_test",
             start_time=0,
+            seed="0123456789abcdef",
         )
         report.add_result(
             "failed_test1",
@@ -432,6 +447,7 @@ Elapsed time was 1 h 1 min 40.0 s
             output_file_name=self.output_file_name,
             test_suite_name="failed_test1",
             start_time=0,
+            seed="0123456789abcdef",
         )
         report.set_expected_num_tests(3)
         return report
@@ -446,6 +462,7 @@ Elapsed time was 1 h 1 min 40.0 s
             output_file_name=self.output_file_name,
             test_suite_name="passed_test",
             start_time=0,
+            seed="0123456789abcdef",
         )
         report.add_result(
             "skipped_test",
@@ -454,6 +471,7 @@ Elapsed time was 1 h 1 min 40.0 s
             output_file_name=self.output_file_name,
             test_suite_name="skipped_test",
             start_time=0,
+            seed="0123456789abcdef",
         )
         report.add_result(
             "failed_test",
@@ -462,6 +480,7 @@ Elapsed time was 1 h 1 min 40.0 s
             output_file_name=self.output_file_name,
             test_suite_name="failed_test",
             start_time=0,
+            seed="0123456789abcdef",
         )
         report.set_expected_num_tests(3)
         return report
@@ -476,6 +495,7 @@ Elapsed time was 1 h 1 min 40.0 s
             output_file_name=self.output_file_name,
             test_suite_name="passed_test0",
             start_time=0,
+            seed="0123456789abcdef",
         )
         report.add_result(
             "passed_test1",
@@ -484,6 +504,7 @@ Elapsed time was 1 h 1 min 40.0 s
             output_file_name=self.output_file_name,
             test_suite_name="passed_test1",
             start_time=0,
+            seed="0123456789abcdef",
         )
         report.add_result(
             "passed_test2",
@@ -492,6 +513,7 @@ Elapsed time was 1 h 1 min 40.0 s
             output_file_name=self.output_file_name,
             test_suite_name="passed_test2",
             start_time=0,
+            seed="0123456789abcdef",
         )
         report.add_result(
             "passed_test3",
@@ -500,6 +522,7 @@ Elapsed time was 1 h 1 min 40.0 s
             output_file_name=self.output_file_name,
             test_suite_name="passed_test3",
             start_time=0,
+            seed="0123456789abcdef",
         )
         report.set_expected_num_tests(4)
         return report
@@ -514,6 +537,7 @@ Elapsed time was 1 h 1 min 40.0 s
             output_file_name=self.output_file_name,
             test_suite_name="passed_test0",
             start_time=0,
+            seed="0123456789abcdef",
         )
         report.add_result(
             "passed_test1",
@@ -522,6 +546,7 @@ Elapsed time was 1 h 1 min 40.0 s
             output_file_name=self.output_file_name,
             test_suite_name="passed_test1",
             start_time=0,
+            seed="0123456789abcdef",
         )
         report.add_result(
             "passed_test2",
@@ -530,6 +555,7 @@ Elapsed time was 1 h 1 min 40.0 s
             output_file_name=self.output_file_name,
             test_suite_name="passed_test2",
             start_time=0,
+            seed="0123456789abcdef",
         )
         report.add_result(
             "passed_test3",
@@ -538,6 +564,7 @@ Elapsed time was 1 h 1 min 40.0 s
             output_file_name=self.output_file_name,
             test_suite_name="passed_test3",
             start_time=0,
+            seed="0123456789abcdef",
         )
         report.add_result(
             "passed_test4",
@@ -546,6 +573,7 @@ Elapsed time was 1 h 1 min 40.0 s
             output_file_name=self.output_file_name,
             test_suite_name="passed_test4",
             start_time=0,
+            seed="0123456789abcdef",
         )
         report.add_result(
             "passed_test5",
@@ -554,6 +582,7 @@ Elapsed time was 1 h 1 min 40.0 s
             output_file_name=self.output_file_name,
             test_suite_name="passed_test5",
             start_time=0,
+            seed="0123456789abcdef",
         )
         report.set_expected_num_tests(6)
         return report

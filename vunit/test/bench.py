@@ -84,28 +84,45 @@ class TestBench(ConfigurationVisitor):
         if test_list is None:
             test_list = TestList()
 
+        key = b"test_history"
+        if not self._database or key not in self._database:
+            test_history = {}
+        else:
+            test_history = self._database[key]
+
         if self._individual_tests:
             for test_case in self._test_cases:
-                test_case.create_tests(simulator_if, seed, elaborate_only, test_list)
+                test_case.create_tests(simulator_if, seed, elaborate_only, test_list, test_history)
         elif self._implicit_test:
             for config in self._get_configurations_to_run():
+                actual_seed = seed
+                if seed == "repeat":
+                    # Test suite name and test name are the same for implicit tests
+                    test_suite_name = test_name = IndependentSimTestCase.get_name(self._implicit_test, config)
+                    actual_seed = _get_historic_seed(test_history, test_suite_name, test_name)
+
                 test_list.add_test(
                     IndependentSimTestCase(
                         test=self._implicit_test,
                         config=config,
                         simulator_if=simulator_if,
-                        seed=seed,
+                        seed=actual_seed,
                         elaborate_only=elaborate_only,
                     )
                 )
         else:
             for config in self._get_configurations_to_run():
+                actual_seed = seed
+                if seed == "repeat":
+                    test_suite_name = SameSimTestSuite.get_name(config)
+                    actual_seed = _get_historic_seed(test_history, test_suite_name)
+
                 test_list.add_suite(
                     SameSimTestSuite(
                         tests=[test.test for test in self._test_cases],
                         config=config,
                         simulator_if=simulator_if,
-                        seed=seed,
+                        seed=actual_seed,
                         elaborate_only=elaborate_only,
                     )
                 )
@@ -414,17 +431,27 @@ class TestConfigurationVisitor(ConfigurationVisitor):
             del configs[DEFAULT_NAME]
         return configs.values()
 
-    def create_tests(self, simulator_if, seed, elaborate_only, test_list=None):
+    def create_tests(
+        self, simulator_if, seed, elaborate_only, test_list=None, test_history=None
+    ):  # pylint: disable=too-many-positional-arguments
         """
         Create all tests from this test case which may be several depending on the number of configurations
         """
+        test_history = test_history if test_history else {}
+
         for config in self._get_configurations_to_run():
+            actual_seed = seed
+            if seed == "repeat":
+                # Test suite name and test name are the same for individual tests
+                test_suite_name = test_name = IndependentSimTestCase.get_name(self._test, config)
+                actual_seed = _get_historic_seed(test_history, test_suite_name, test_name)
+
             test_list.add_test(
                 IndependentSimTestCase(
                     test=self._test,
                     config=config,
                     simulator_if=simulator_if,
-                    seed=seed,
+                    seed=actual_seed,
                     elaborate_only=elaborate_only,
                 )
             )
@@ -668,3 +695,22 @@ def _remove_verilog_comments(code):
     Remove all verilog comments
     """
     return VERILOG_REMOVE_COMMENT_RE.sub(_comment_repl, code)
+
+
+def _get_historic_seed(test_history, test_suite_name, test_name=None):
+    """Return seed from test history or None if no history exists."""
+    if test_suite_name not in test_history:
+        return None
+
+    # If there are multiple tests running in the same simulation, they all have the same seed so we take the
+    # first test.
+    if not test_name:
+        if not test_history[test_suite_name]:  # This is a precaution. Should never happen.
+            return None
+
+        test_name = next(iter(test_history[test_suite_name]))
+
+    if test_name not in test_history[test_suite_name]:
+        return None
+
+    return test_history[test_suite_name][test_name]["seed"]

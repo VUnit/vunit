@@ -328,6 +328,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         """
         runtime = ostools.get_time() - start_time
         time_per_test = runtime / len(results)
+        seed = test_suite.get_seed()
 
         for test_name in test_suite.test_names:
             status = results[test_name]
@@ -338,6 +339,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
                 output_file_name,
                 test_suite_name=test_suite.name,
                 start_time=start_time,
+                seed=seed,
             )
             self._report.print_latest_status(total_tests=num_tests)
         print()
