@@ -87,6 +87,26 @@ class TestVunitArtificial(unittest.TestCase):
             ],
         )
 
+    def test_hardcoded_seed(self):
+        self.check(self.artificial_run_vhdl, args=["lib.tb_seed*", "--seed=0123456789AbCdEf"])
+        check_report(
+            self.report_file,
+            [
+                ("passed", "lib.tb_seed.test_1"),
+                ("passed", "lib.tb_seed.test_2"),
+            ],
+        )
+
+    def test_repeated_seed(self):
+        self.check(self.artificial_run_vhdl, args=["lib.tb_seed*", "--seed=repeat"])
+        check_report(
+            self.report_file,
+            [
+                ("passed", "lib.tb_seed.test_1"),
+                ("passed", "lib.tb_seed.test_2"),
+            ],
+        )
+
     def _test_artificial(self, args=None):
         """
         Utility function to run and check the result of all test benches
@@ -289,4 +309,6 @@ EXPECTED_REPORT = (
     ("passed", "lib.tb_test_prio_1.test_4"),
     ("passed", "lib.tb_test_prio_2.test_1"),
     ("failed", "lib.tb_test_prio_2.test_2"),
+    ("passed", "lib.tb_seed.test_1"),
+    ("passed", "lib.tb_seed.test_2"),
 )

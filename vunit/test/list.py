@@ -104,3 +104,6 @@ class TestSuiteWrapper(object):
         """
         test_ok = self._test_case.run(*args, **kwargs)
         return {self._test_case.name: PASSED if test_ok else FAILED}
+
+    def get_seed(self):
+        return self._test_case.get_seed()

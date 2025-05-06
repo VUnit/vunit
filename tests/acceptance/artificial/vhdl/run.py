@@ -164,6 +164,15 @@ def configure_tb_test_prio(ui):
     for idx, (extra_time, fail) in enumerate([(5, False), (2, True)], 1):
         tb.add_config(name=f"test_{idx}", pre_config=make_pre_config(idx, extra_time, fail))
 
+def configure_tb_seed(ui):
+    tb = ui.library("lib").test_bench("tb_seed")
+
+    if args.seed == "0123456789abcdef":
+        tb.test("test_1").set_generic("expected_seed", "2e373913e5ad677d")
+        tb.test("test_2").set_generic("expected_seed", "2e373913e5ad677d")
+    elif args.seed == "repeat":
+        tb.test("test_1").set_generic("expected_seed", "ffa08cd9489aad14")
+        tb.test("test_2").set_generic("expected_seed", "9a292b3679afd081")
 
 configure_tb_with_generic_config()
 configure_tb_same_sim_all_pass(vu)
@@ -172,6 +181,7 @@ configure_tb_assert_stop_level(vu)
 configure_tb_with_vhdl_configuration(vu)
 configure_tb_no_fail_on_warning(vu)
 configure_tb_test_prio(vu)
+configure_tb_seed(vu)
 lib.entity("tb_no_generic_override").set_generic("g_val", False)
 lib.entity("tb_ieee_warning").test("pass").set_sim_option("disable_ieee_warnings", True)
 lib.entity("tb_other_file_tests").scan_tests_from_file(str(root / "other_file_tests.vhd"))

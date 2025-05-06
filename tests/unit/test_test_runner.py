@@ -256,3 +256,6 @@ class TestCaseMock(object):
         self.output_path = output_path
         self.read_output = read_output
         return self.run_side_effect(output_path=output_path, read_output=read_output)
+
+    def get_seed(self):
+        return "0123456789abcdef"

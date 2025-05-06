@@ -295,6 +295,8 @@ To reproduce the failing test setup and verify a bug fix, the failing seed can b
 .. raw:: html
     :file: img/seed_option.html
 
+``--seed`` can also be set to ``repeat``, in which case the values from the previous test run will be repeated.
+
 Running A VUnit Testbench Standalone
 ------------------------------------
 

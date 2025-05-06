@@ -27,6 +27,7 @@ from vunit.test.bench import (
     FileLocation,
     Attribute,
     LegacyAttribute,
+    _get_historic_seed,
 )
 from vunit.configuration import AttributeException
 from vunit.ostools import write_file
@@ -483,7 +484,7 @@ if run("Test 2")
 
         test_bench = TestBench(design_unit)
         test = test_bench.get_test_case("Test 1")
-        self.assertRaises(AttributeException, test.set_attribute, "run_all_in_same_sim", True)    
+        self.assertRaises(AttributeException, test.set_attribute, "run_all_in_same_sim", True)
 
     @with_tempdir
     def test_test_information(self, tempdir):
@@ -903,6 +904,19 @@ if run("Test_2")
             else:
                 self.assertEqual(test1.name, test2)
                 self.assertEqual(test1.test_names, [test2])
+
+    def test_seed_from_test_history(self):
+        test_history = dict(test_suite1=dict(test1=dict(seed="11"), test2=dict(seed="12")), test_suite2=dict())
+
+        self.assertEqual(_get_historic_seed(test_history, test_suite_name="test_suite1"), "11")
+        self.assertEqual(_get_historic_seed(test_history, test_suite_name="test_suite1", test_name="test2"), "12")
+
+    def test_no_seed_from_test_history(self):
+        test_history = dict(test_suite1=dict(test1=dict(seed="11"), test2=dict(seed="12")), test_suite2=dict())
+
+        self.assertIsNone(_get_historic_seed(test_history, test_suite_name="foo"))
+        self.assertIsNone(_get_historic_seed(test_history, test_suite_name="test_suite1", test_name="test3"))
+        self.assertIsNone(_get_historic_seed(test_history, test_suite_name="test_suite2"))
 
     @staticmethod
     def create_tests(test_bench):
