@@ -348,7 +348,7 @@ class VHDLSourceFile(SourceFile):
 # lower case representation of supported extensions
 VHDL_EXTENSIONS = (".vhd", ".vhdl", ".vho")
 VERILOG_EXTENSIONS = (".v", ".vp", ".vams", ".vo")
-SYSTEM_VERILOG_EXTENSIONS = (".sv",)
+SYSTEM_VERILOG_EXTENSIONS = (".sv", ".svp")
 VERILOG_FILE_TYPES = ("verilog", "systemverilog")
 FILE_TYPES = ("vhdl",) + VERILOG_FILE_TYPES
 
