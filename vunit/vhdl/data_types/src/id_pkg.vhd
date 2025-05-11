@@ -22,7 +22,8 @@ package id_pkg is
   end record;
   constant null_id : id_t := (p_data => null_ptr);
   type id_vec_t is array (integer range <>) of id_t;
-  constant null_id_vec : id_vec_t := (1 to 0 => null_id);
+  constant null_string : string := "";
+  constant null_id_vec : id_vec_t(null_string'range) := (others => null_id);
 
   -- root_id is a nameless and predefined ID that is the parent to
   -- all user created top-level IDs (no parent was specified at creation)
