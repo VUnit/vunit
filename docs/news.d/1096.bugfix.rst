@@ -1,1 +1,0 @@
-Updated Visualizer support to also work with Questa 2024.2.

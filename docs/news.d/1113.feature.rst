@@ -1,1 +1,0 @@
-Added support for repeating seeds from previous test run by setting the ``--seed`` option to ``repeat``.

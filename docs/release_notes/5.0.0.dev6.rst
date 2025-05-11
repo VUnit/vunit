@@ -1,0 +1,27 @@
+
+Bug Fixes
+~~~~~~~~~
+
+- Updated Visualizer support to also work with Questa 2024.2. (:vunit_issue:`1096`)
+
+
+Features
+~~~~~~~~
+
+- Added support for running testbenches depending on a set of user-provided source files.
+
+  The intended use case is to feed VUnit with files that have been changed since some point in time.
+  The changes are typically provided by the version control system. (:vunit_issue:`1095`)
+- Added support for repeating seeds from previous test run by setting the ``--seed`` option to ``repeat``. (:vunit_issue:`1113`)
+- Added support for test prioritization with two goals in mind:
+
+  1. Prioritize likely failures - Tests more likely to fail are executed earlier to provide faster feedback.
+  2. Load balancing - When tests are executed in parallel using the -p option, VUnit will try to keep the threads balanced to minimize total execution time.
+
+  Added the ``--changed`` option that limits tests to those that depend on changes made after the last test run. (:vunit_issue:`1114`)
+
+
+Miscellaneous
+~~~~~~~~~~~~~
+
+- Updated handling of ``disable_ieee_warnings`` for NVC 1.16 and later. (:vunit_issue:`1098`)

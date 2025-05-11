@@ -1,6 +1,0 @@
-Added support for test prioritization with two goals in mind:
-
-1. Prioritize likely failures - Tests more likely to fail are executed earlier to provide faster feedback.
-2. Load balancing - When tests are executed in parallel using the -p option, VUnit will try to keep the threads balanced to minimize total execution time.
-
-Added the ``--changed`` option that limits tests to those that depend on changes made after the last test run.
