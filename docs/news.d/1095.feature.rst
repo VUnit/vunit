@@ -1,0 +1,4 @@
+Added support for running testbenches depending on a set of user-provided source files.
+
+The intended use case is to feed VUnit with files that have been changed since some point in time.
+The changes are typically provided by the version control system.

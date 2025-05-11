@@ -1,0 +1,1 @@
+Updated handling of ``disable_ieee_warnings`` for NVC 1.16 and later.
