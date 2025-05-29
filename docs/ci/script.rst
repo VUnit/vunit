@@ -61,7 +61,7 @@ of your repository. The YAML file should contain, at least, the following piece 
        runs-on: ubuntu-latest
        steps:
 
-         - uses: actions/checkout@v2
+         - uses: actions/checkout@v4
 
          - uses: VUnit/vunit_action@v0.1.0
 
