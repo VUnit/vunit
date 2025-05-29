@@ -38,7 +38,7 @@ jobs:
         path: .tox/py313-docs/tmp/docsbuild/
 
     - name: '🚀 Publish site'
-      if: github.event_name != 'pull_request' && github.ref_name == 'master'
+      if: github.repository == 'VUnit/vunit' && github.event_name != 'pull_request' && github.ref_name == 'master'
       run: >-
         GH_DEPKEY='${{ secrets.VUNIT_GITHUB_IO_DEPLOY_KEY }}'
         ./.github/publish_site.sh
