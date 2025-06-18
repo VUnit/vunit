@@ -290,6 +290,13 @@ def _create_argument_parser(description=None, for_documentation=False):
         " generated from system time.",
     )
 
+    parser.add_argument(
+        "--pre-config-only",
+        action="store_true",
+        default=False,
+        help="Run the pre simulation hook",
+    )
+
     SIMULATOR_FACTORY.add_arguments(parser)
 
     return parser

@@ -756,6 +756,9 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         """
         Base vunit main function without performing exit
         """
+        if self._args.pre_config_only:
+            return self._main_pre_config_only()
+
         if self._include_in_test_pattern or self._exclude_from_test_pattern:
             self._update_test_filter(self._include_in_test_pattern, self._exclude_from_test_pattern)
 
@@ -1149,6 +1152,19 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         """
         simulator_if = self._create_simulator_if()
         self._compile(simulator_if)
+        return True
+
+    def _main_pre_config_only(self):
+        """
+        Main function when only running pre config
+        """
+        test_list = self._create_tests(simulator_if=None)
+
+        for test in test_list:
+            test_cfg = test._test_case._configuration
+            if test_cfg.pre_config:
+                print(f"Calling pre config of testcase: {test_cfg.name}")
+                test_cfg.call_pre_config(self._output_path, self._simulator_output_path)
         return True
 
     def _create_output_path(self, clean: bool):
