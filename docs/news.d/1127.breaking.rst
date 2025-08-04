@@ -1,0 +1,11 @@
+The AXI stream standard requires tdata to be a multiple of 8 bits. VUnit VCs allowed non-standard widths but the tkeep and tstrb
+signals didn't cover the most significant bits beyond the last full byte. For example, if the tdata width was 12 bits, tkeep and tstrb
+were one bit corresponding to the least significant byte in tdata. The 4 most significant bits didn't have a corresponding tkeep
+bit.
+
+Starting in VUnit v5.0.0-dev2, the check features for AXI stream were updated such that comparison of the actual tdata value with the
+expected one, only considers bytes for which tkeep and tstrb are set. As a consequence, the upper bits of non-standard width tdata,
+for which there is no tkeep and tstrb bits, were not considered for comparison.
+
+The VCs have now been updated to extend tkeep and tstrb in these cases such that all bits in tdata are considered for comparison.
+Existing testbenches using non-standard widths *and* tkeep or tstrb will have to be updated as the ports are one bit wider.

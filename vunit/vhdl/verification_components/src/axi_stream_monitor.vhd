@@ -24,8 +24,8 @@ entity axi_stream_monitor is
     tready : in std_logic := '1';
     tdata  : in std_logic_vector(data_length(monitor) - 1 downto 0);
     tlast  : in std_logic := '1';
-    tkeep  : in std_logic_vector(data_length(monitor)/8-1 downto 0) := (others => '1');
-    tstrb  : in std_logic_vector(data_length(monitor)/8-1 downto 0) := (others => 'U');
+    tkeep  : in std_logic_vector(keep_strb_length(monitor)-1 downto 0) := (others => '1');
+    tstrb  : in std_logic_vector(keep_strb_length(monitor)-1 downto 0) := (others => 'U');
     tid    : in std_logic_vector(id_length(monitor)-1 downto 0) := (others => '0');
     tdest  : in std_logic_vector(dest_length(monitor)-1 downto 0) := (others => '0');
     tuser  : in std_logic_vector(user_length(monitor)-1 downto 0) := (others => '0')
