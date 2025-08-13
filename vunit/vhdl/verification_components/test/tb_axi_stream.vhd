@@ -23,7 +23,7 @@ use osvvm.RandomPkg.all;
 entity tb_axi_stream is
   generic(
     runner_cfg    : string;
-    g_data_length : positive := 8;
+    g_data_length : natural := 8;
     g_id_length   : natural := 8;
     g_dest_length : natural := 8;
     g_user_length : natural := 8;
@@ -75,8 +75,8 @@ architecture a of tb_axi_stream is
   signal tready : std_logic;
   signal tdata : std_logic_vector(data_length(slave_axi_stream)-1 downto 0);
   signal tlast : std_logic;
-  signal tkeep, tkeep_from_master : std_logic_vector(data_length(slave_axi_stream)/8-1 downto 0);
-  signal tstrb, tstrb_from_master : std_logic_vector(data_length(slave_axi_stream)/8-1 downto 0);
+  signal tkeep, tkeep_from_master : std_logic_vector(keep_strb_length(slave_axi_stream)-1 downto 0);
+  signal tstrb, tstrb_from_master : std_logic_vector(keep_strb_length(slave_axi_stream)-1 downto 0);
   signal tid : std_logic_vector(id_length(slave_axi_stream)-1 downto 0);
   signal tdest : std_logic_vector(dest_length(slave_axi_stream)-1 downto 0);
   signal tuser : std_logic_vector(user_length(slave_axi_stream)-1 downto 0);
@@ -447,15 +447,21 @@ begin
       check_axi_stream(net, slave_axi_stream, not data, tlast => '0', tkeep => not keep, tstrb => not strb, tid => id, tdest => dest,
                        tuser => user, msg => "checking axi stream");
 
-      check_log(mocklogger, "TDATA mismatch, checking axi stream - Got " &
-                to_nibble_string(data) & " (" & to_string(to_integer(data)) & "). Expected " &
-                to_nibble_string(not data) & " (" & to_string(to_integer(not data)) & ").", error);
-      check_log(mocklogger, "TKEEP mismatch, checking axi stream - Got " &
-                to_nibble_string(keep) & " (" & to_string(to_integer(keep)) & "). Expected " &
-                to_nibble_string(not keep) & " (" & to_string(to_integer(not keep)) & ").", error);
-      check_log(mocklogger, "TSTRB mismatch, checking axi stream - Got " &
-                to_nibble_string(strb) & " (" & to_string(to_integer(strb)) & "). Expected " &
-                to_nibble_string(not strb) & " (" & to_string(to_integer(not strb)) & ").", error);
+      if data'length > 0 then
+        check_log(mocklogger, "TDATA mismatch, checking axi stream - Got " &
+                  to_nibble_string(data) & " (" & to_string(to_integer(data)) & "). Expected " &
+                  to_nibble_string(not data) & " (" & to_string(to_integer(not data)) & ").", error);
+      end if;
+      if tkeep'length > 0 then
+        check_log(mocklogger, "TKEEP mismatch, checking axi stream - Got " &
+                  to_nibble_string(keep) & " (" & to_string(to_integer(keep)) & "). Expected " &
+                  to_nibble_string(not keep) & " (" & to_string(to_integer(not keep)) & ").", error);
+      end if;
+      if tstrb'length > 0 then
+        check_log(mocklogger, "TSTRB mismatch, checking axi stream - Got " &
+                  to_nibble_string(strb) & " (" & to_string(to_integer(strb)) & "). Expected " &
+                  to_nibble_string(not strb) & " (" & to_string(to_integer(not strb)) & ").", error);
+      end if;
       check_log(mocklogger, "TLAST mismatch, checking axi stream - Got 1. Expected 0.", error);
       if id'length > 0 then
         check_log(mocklogger, "TID mismatch, checking axi stream - Got 0010_0010 (34). Expected 0010_0011 (35).", error);
@@ -587,15 +593,21 @@ begin
       wait until rising_edge(aclk) and tvalid = '1';
       wait for 1 ps;
 
-      check_log(mocklogger, "TDATA mismatch, check non-blocking - Got " &
-                to_nibble_string(data) & " (" & to_string(to_integer(data)) & "). Expected " &
-                to_nibble_string(not data) & " (" & to_string(to_integer(not data)) & ").", error);
-      check_log(mocklogger, "TKEEP mismatch, check non-blocking - Got " &
-                to_nibble_string(keep) & " (" & to_string(to_integer(keep)) & "). Expected " &
-                to_nibble_string(not keep) & " (" & to_string(to_integer(not keep)) & ").", error);
-      check_log(mocklogger, "TSTRB mismatch, check non-blocking - Got " &
-                to_nibble_string(keep) & " (" & to_string(to_integer(keep)) & "). Expected " &
-                to_nibble_string(not keep) & " (" & to_string(to_integer(not keep)) & ").", error);
+      if data'length > 0 then
+        check_log(mocklogger, "TDATA mismatch, check non-blocking - Got " &
+                  to_nibble_string(data) & " (" & to_string(to_integer(data)) & "). Expected " &
+                  to_nibble_string(not data) & " (" & to_string(to_integer(not data)) & ").", error);
+      end if;
+      if tkeep'length > 0 then
+        check_log(mocklogger, "TKEEP mismatch, check non-blocking - Got " &
+                  to_nibble_string(keep) & " (" & to_string(to_integer(keep)) & "). Expected " &
+                  to_nibble_string(not keep) & " (" & to_string(to_integer(not keep)) & ").", error);
+      end if;
+      if tstrb'length > 0 then
+        check_log(mocklogger, "TSTRB mismatch, check non-blocking - Got " &
+                  to_nibble_string(strb) & " (" & to_string(to_integer(strb)) & "). Expected " &
+                  to_nibble_string(not strb) & " (" & to_string(to_integer(not strb)) & ").", error);
+      end if;
       check_log(mocklogger, "TLAST mismatch, check non-blocking - Got 1. Expected 0.", error);
       if id'length > 0 then
         check_log(mocklogger, "TID mismatch, check non-blocking - Got 0010_1010 (42). Expected 0010_1100 (44).", error);
@@ -685,7 +697,7 @@ begin
   tkeep <= tkeep_from_master when connected_tkeep else (others => '1');
   tstrb <= tstrb_from_master when connected_tstrb else (others => 'U');
 
- not_valid <= not tvalid;
+ not_valid <= not tvalid when g_data_length > 0 else '0';
 
  not_valid_data <= '1' when is_x(tdata) else '0';
  check_true(aclk, not_valid, not_valid_data, "Invalid data not X");

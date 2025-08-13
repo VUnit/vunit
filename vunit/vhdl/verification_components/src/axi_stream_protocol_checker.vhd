@@ -30,8 +30,8 @@ entity axi_stream_protocol_checker is
     tready   : in std_logic := '1';
     tdata    : in std_logic_vector(data_length(protocol_checker) - 1 downto 0);
     tlast    : in std_logic                                                    := '1';
-    tkeep    : in std_logic_vector(data_length(protocol_checker)/8-1 downto 0) := (others => '1');
-    tstrb    : in std_logic_vector(data_length(protocol_checker)/8-1 downto 0) := (others => 'U');
+    tkeep    : in std_logic_vector(keep_strb_length(protocol_checker)-1 downto 0) := (others => '1');
+    tstrb    : in std_logic_vector(keep_strb_length(protocol_checker)-1 downto 0) := (others => 'U');
     tid      : in std_logic_vector(id_length(protocol_checker)-1 downto 0)     := (others => '0');
     tdest    : in std_logic_vector(dest_length(protocol_checker)-1 downto 0)   := (others => '0');
     tuser    : in std_logic_vector(user_length(protocol_checker)-1 downto 0)   := (others => '0')
@@ -85,7 +85,7 @@ architecture a of axi_stream_protocol_checker is
     ret := data;
     for i in keep'range loop
       if keep(i) = '0' or strb(i) = '0' then
-        ret(i*8+7 downto i*8) := (others => '0');
+        ret(minimum(i*8+7, ret'left) downto i*8) := (others => '0');
       end if;
     end loop;
     return ret;

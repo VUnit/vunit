@@ -207,6 +207,10 @@ package axi_stream_pkg is
   impure function data_length(slave : axi_stream_slave_t) return natural;
   impure function data_length(monitor : axi_stream_monitor_t) return natural;
   impure function data_length(protocol_checker : axi_stream_protocol_checker_t) return natural;
+  impure function keep_strb_length(master : axi_stream_master_t) return natural;
+  impure function keep_strb_length(slave : axi_stream_slave_t) return natural;
+  impure function keep_strb_length(monitor : axi_stream_monitor_t) return natural;
+  impure function keep_strb_length(protocol_checker : axi_stream_protocol_checker_t) return natural;
   impure function id_length(master : axi_stream_master_t) return natural;
   impure function id_length(slave : axi_stream_slave_t) return natural;
   impure function id_length(monitor : axi_stream_monitor_t) return natural;
@@ -516,6 +520,26 @@ package body axi_stream_pkg is
     return protocol_checker.p_data_length;
   end;
 
+  impure function keep_strb_length(master : axi_stream_master_t) return natural is
+  begin
+    return (master.p_data_length + 7) / 8 ;
+  end;
+
+  impure function keep_strb_length(slave : axi_stream_slave_t) return natural is
+  begin
+    return (slave.p_data_length + 7) / 8;
+  end;
+
+  impure function keep_strb_length(monitor : axi_stream_monitor_t) return natural is
+  begin
+    return (monitor.p_data_length + 7) / 8;
+  end;
+
+  impure function keep_strb_length(protocol_checker : axi_stream_protocol_checker_t) return natural is
+  begin
+    return (protocol_checker.p_data_length + 7) / 8;
+  end;
+
   impure function id_length(master : axi_stream_master_t) return natural is
   begin
     return master.p_id_length;
@@ -609,8 +633,8 @@ package body axi_stream_pkg is
     ) is
     variable msg             : msg_t := new_msg(push_axi_stream_msg);
     variable normalized_data : std_logic_vector(data_length(axi_stream)-1 downto 0) := (others => '0');
-    variable normalized_keep : std_logic_vector(data_length(axi_stream)/8-1 downto 0) := (others => '1');
-    variable normalized_strb : std_logic_vector(data_length(axi_stream)/8-1 downto 0) := (others => '1');
+    variable normalized_keep : std_logic_vector(keep_strb_length(axi_stream)-1 downto 0) := (others => '1');
+    variable normalized_strb : std_logic_vector(keep_strb_length(axi_stream)-1 downto 0) := (others => '1');
     variable normalized_id   : std_logic_vector(id_length(axi_stream)-1 downto 0) := (others => '0');
     variable normalized_dest : std_logic_vector(dest_length(axi_stream)-1 downto 0) := (others => '0');
     variable normalized_user : std_logic_vector(user_length(axi_stream)-1 downto 0) := (others => '0');
@@ -733,8 +757,8 @@ package body axi_stream_pkg is
     constant expected_normalized : std_logic_vector(expected'length - 1 downto 0) := expected;
     variable got_tdata : std_logic_vector(data_length(axi_stream)-1 downto 0);
     variable got_tlast : std_logic;
-    variable got_tkeep : std_logic_vector(data_length(axi_stream)/8-1 downto 0);
-    variable got_tstrb : std_logic_vector(data_length(axi_stream)/8-1 downto 0);
+    variable got_tkeep : std_logic_vector(keep_strb_length(axi_stream)-1 downto 0);
+    variable got_tstrb : std_logic_vector(keep_strb_length(axi_stream)-1 downto 0);
     variable got_tid   : std_logic_vector(id_length(axi_stream)-1 downto 0);
     variable got_tdest : std_logic_vector(dest_length(axi_stream)-1 downto 0);
     variable got_tuser : std_logic_vector(user_length(axi_stream)-1 downto 0);
@@ -746,7 +770,8 @@ package body axi_stream_pkg is
       mismatch := false;
       for idx in got_tkeep'range loop
         if got_tkeep(idx) and got_tstrb(idx) then
-          mismatch := got_tdata(8 * idx + 7 downto 8 * idx) /= expected_normalized(8 * idx + 7 downto 8 * idx);
+          mismatch := got_tdata(minimum(8 * idx + 7, got_tdata'left) downto 8 * idx) /=
+                      expected_normalized(minimum(8 * idx + 7, got_tdata'left) downto 8 * idx);
           exit when mismatch;
         end if;
       end loop;
