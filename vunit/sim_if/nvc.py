@@ -288,7 +288,17 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
             if self._supports_jit:
                 cmd += ["--jit"]
             cmd += ["-r"]
-            cmd += config.sim_options.get("nvc.sim_flags", [])
+
+            config_sim_options = config.sim_options.get("nvc.sim_flags", [])
+            if "--exit-severity" in "".join(config_sim_options):
+                LOGGER.warning(
+                    "The --exit-severity setting has been passed via %s.sim_flags. This is overruled by the VUnit"
+                    " option vhdl_assert_stop_level, which is set to '%s'. See"
+                    " https://vunit.github.io/py/opts.html#simulation-options for further details",
+                    self.name,
+                    config.vhdl_assert_stop_level
+                )
+            cmd += config_sim_options
             cmd += [f"--exit-severity={config.vhdl_assert_stop_level}"]
 
             if not self._ieee_warnings_global and config.sim_options.get("disable_ieee_warnings", False):
