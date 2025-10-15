@@ -192,8 +192,8 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
         """
         Returns True when the simulator supports VHPI
         """
-        return (cls.determine_backend(cls.find_prefix_from_path()) != "mcode") or (
-            cls.determine_version(cls.find_prefix_from_path()) > 0.36
+        return (cls.determine_backend(cls.find_prefix()) != "mcode") or (
+            cls.determine_version(cls.find_prefix()) > 0.36
         )
 
     @classmethod
@@ -201,7 +201,7 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
         """
         Returns True when the simulator supports coverage
         """
-        prefix = cls.find_prefix_from_path()
+        prefix = cls.find_prefix()
         return cls.determine_backend(prefix) == "gcc" or cls.determine_coverage(prefix)
 
     def _has_output_flag(self):
