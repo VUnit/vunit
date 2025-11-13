@@ -17,7 +17,7 @@ import shlex
 import re
 from sys import stdout  # To avoid output catched in non-verbose mode
 from ..exceptions import CompileError
-from ..ostools import Process
+from ..ostools import Process, file_exists
 from . import SimulatorInterface, ListOfStringOption, StringOption
 from . import run_command
 from ._viewermixin import ViewerMixin
@@ -86,10 +86,11 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
         self._project = None
 
         self._vhdl_standard = None
-        self._coverage_test_dirs = set()
+        self._coverage_files = set()
         (major, minor) = self.determine_version(prefix)
         self._supports_jit = major > 1 or (major == 1 and minor >= 9)
         self._ieee_warnings_global = major > 1 or (major == 1 and minor >= 16)
+        self._supports_coverage_merge = major > 1 or (major == 1 and minor >= 14)
 
         if self.use_color:
             environ["NVC_COLORS"] = "always"
@@ -135,7 +136,7 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
         """
         Returns True when the simulator supports coverage
         """
-        return False
+        return True
 
     @classmethod
     def supports_vhdl_call_paths(cls):
@@ -273,6 +274,12 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
         cmd += ["-e"]
 
         cmd += config.sim_options.get("nvc.elab_flags", [])
+
+        if config.sim_options.get("enable_coverage", False):
+            coverage_file_path = str(Path(output_path) / "coverage.ncdb")
+            self._coverage_files.add(coverage_file_path)
+            cmd += [f"--cover-file={coverage_file_path}"]
+
         if config.vhdl_configuration_name is not None:
             cmd += [config.vhdl_configuration_name]
         else:
@@ -329,3 +336,36 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
             subprocess.call(cmd)
 
         return status
+
+    def merge_coverage(self, file_name, args=None):
+        """
+        Merge coverage from all test cases.
+        """
+
+        if not self._supports_coverage_merge:
+            LOGGER.error(
+                "Current nvc version does not support coverage database merge."
+            )
+            return
+
+        coverage_files = []
+
+        for coverage_file in self._coverage_files:
+            if file_exists(coverage_file):
+                coverage_files.append(coverage_file)
+            else:
+                LOGGER.warning("Missing coverage file: %s", coverage_file)
+
+        nvc_coverage_merge_cmd = [
+            "nvc",
+            "--cover-merge",
+            "-o",
+            f"{file_name}.ncdb",
+        ]
+
+        nvc_coverage_merge_cmd.extend(coverage_files)
+
+        print(f"Merging coverage files into {file_name!s}.ncdb...")
+        nvc_coverage_merge_process = Process(nvc_coverage_merge_cmd, env=self.get_env())
+        nvc_coverage_merge_process.consume_output()
+        print("Done merging coverage files")
