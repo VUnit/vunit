@@ -11,6 +11,7 @@ Functionality to represent and operate on a HDL code library
 """
 
 import logging
+from typing import Optional
 from vunit.vhdl_standard import VHDLStandard
 
 LOGGER = logging.getLogger(__name__)
@@ -21,9 +22,18 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
     Represents a VHDL library
     """
 
-    def __init__(self, name: str, directory: str, vhdl_standard: VHDLStandard, is_external=False):
+    def __init__(
+        self,
+        name: str,
+        directory: str,
+        vhdl_standard: VHDLStandard,
+        is_external=False,
+        *,
+        file_name: Optional[str] = None,
+    ):
         self.name = name
         self.directory = directory
+        self.file_name = file_name
 
         # Default VHDL standard for files added unless explicitly set per file
         self.vhdl_standard = vhdl_standard
