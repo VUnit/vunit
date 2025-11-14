@@ -86,6 +86,8 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         directory: Union[str, Path],
         vhdl_standard: VHDLStandard = VHDL.STD_2008,
         is_external=False,
+        *,
+        file_name: Optional[str] = None,
     ):
         """
         Add library to project with logical_name located or to be located in directory
@@ -96,15 +98,14 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         dpath = Path(directory)
         dstr = str(directory)
 
+        full_path = dpath / file_name if file_name is not None else dpath
+
         if is_external:
-            if not dpath.exists():
-                raise ValueError(f"External library {dstr!r} does not exist")
+            if not full_path.exists():
+                raise ValueError(f"External library {full_path} does not exist")
 
-            if not dpath.is_dir():
-                raise ValueError(f"External library must be a directory. Got {dstr!r}")
-
-        library = Library(logical_name, dstr, vhdl_standard, is_external=is_external)
-        LOGGER.debug("Adding library %s with path %s", logical_name, dstr)
+        library = Library(logical_name, dstr, vhdl_standard, is_external=is_external, file_name=file_name)
+        LOGGER.debug("Adding library %s with path %s", logical_name, full_path)
 
         self._libraries[logical_name] = library
         self._lower_library_names_dict[logical_name.lower()] = library.name

@@ -1,0 +1,4 @@
+Added support for adding external Riviera-PRO libraries by library file rather than library directory.
+This is needed when the name of the library directory differs from that of the library file.
+
+Included all libraries in the ``vsim`` call using the ``-L`` option.
