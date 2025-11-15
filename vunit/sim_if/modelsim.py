@@ -32,6 +32,10 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
     """
 
     name = "modelsim"
+    ''' Questsim change the option for modelsim.ini
+    from -modelsimini to -ini
+    '''
+    ini_flag = "ini"                                                      # added by asicnet
     supports_gui_flag = True
     package_users_depend_on_bodies = False
 
@@ -127,18 +131,37 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         # Lock to access the two shared variables above
         self._shared_state_lock = Lock()
 
+# added by asicnet for questsim version check
+        if self.get_version()<2025:
+            self.ini_flag = 'modelsimini'
+             
+    def get_version(self):
+      proc = Process(["vsim", "-version"])
+      consumer = VersionConsumer()
+      proc.consume_output(consumer)
+      return consumer.year
+# -------------------------------------------
+
     def _create_modelsim_ini(self):
         """
         Create the modelsim.ini file
         """
-        parent = str(Path(self._sim_cfg_file_name).parent)
-        if not file_exists(parent):
-            os.makedirs(parent)
-
-        original_modelsim_ini = os.environ.get("VUNIT_MODELSIM_INI", str(Path(self._prefix).parent / "modelsim.ini"))
-        with Path(original_modelsim_ini).open("rb") as fread:
-            with Path(self._sim_cfg_file_name).open("wb") as fwrite:
-                fwrite.write(fread.read())
+        
+        ''' Many problems arise when libraries already exist or when certain files—usually protected—need to be precompiled. 
+        This can be solved with env. VUNIT_MODELSIM_INI, but not if modelsim.ini changes after vunit compile or even during it.
+        The initial modelsim.ini must first be adjusted again because vunit creates a new modelsim each time. 
+        This is a hindrance for very complex designs.
+        Therefore, the suggestion is NOT to overwrite modelsim.ini if it already exists.
+        ''' 
+        if not file_exists(self._sim_cfg_file_name) or os.environ.get("VUNIT_MODELSIM_INI",None):  # added by asicnet
+            parent = str(Path(self._sim_cfg_file_name).parent)
+            if not file_exists(parent):
+                os.makedirs(parent)
+        
+            original_modelsim_ini = os.environ.get("VUNIT_MODELSIM_INI", str(Path(self._prefix).parent / "modelsim.ini"))
+            with Path(original_modelsim_ini).open("rb") as fread:
+                with Path(self._sim_cfg_file_name).open("wb") as fwrite:
+                    fwrite.write(fread.read())
 
     def add_simulator_specific(self, project):
         """
@@ -190,7 +213,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
             [
                 str(Path(self._prefix) / "vcom"),
                 "-quiet",
-                "-modelsimini",
+                f"-{self.ini_flag}",                   # changed by asicnet
                 self._sim_cfg_file_name,
             ]
             + source_file.compile_options.get("modelsim.vcom_flags", [])
@@ -209,7 +232,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         args = [
             str(Path(self._prefix) / "vlog"),
             "-quiet",
-            "-modelsimini",
+            f"-{self.ini_flag}",                   # changed by asicnet
             self._sim_cfg_file_name,
         ]
         if source_file.is_system_verilog:
@@ -331,10 +354,10 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
             f"{{{fix_path(design_file)}}}",
         ]
 
-        # There is a known bug in modelsim that prevents the -modelsimini flag from accepting
+        # There is a known bug in modelsim that prevents the -modelsimini/-ini flag from accepting
         # a space in the path even with escaping, see issue #36
         if " " not in self._sim_cfg_file_name:
-            modelsimini_option = f"-modelsimini {fix_path(self._sim_cfg_file_name)!s}"
+            modelsimini_option = f"-{self.ini_flag} {fix_path(self._sim_cfg_file_name)!s}"  #changed by asicnet
             vopt_flags.insert(0, modelsimini_option)
 
         vopt_flags += vopt_library_flags
@@ -652,10 +675,11 @@ proc vunit_load {{vsim_extra_args ""}} {"""
             self._vsim_extra_args(config),
         ]
 
-        # There is a known bug in modelsim that prevents the -modelsimini flag from accepting
+        # There is a known bug in modelsim that prevents the -modelsimini/-ini flag from accepting
         # a space in the path even with escaping, see issue #36
         if " " not in self._sim_cfg_file_name:
-            vsim_flags.insert(1, "-modelsimini")
+            #            vsim_flags.insert(0, f"-{self.ini_flag} {fix_path(self._sim_cfg_file_name)!s}")
+            vsim_flags.insert(1, f"-{self.ini_flag} ")   #changed by asicnet
             vsim_flags.insert(2, f"{fix_path(self._sim_cfg_file_name)}")
 
         for library in self._libraries:
@@ -823,7 +847,26 @@ proc _vunit_sim_restart {} {
                 del env[key]
         return env
 
+# added by asicnet for new questasim -ini modelsim.ini from version 2025
+class VersionConsumer(object):
+    """
+    Consume version information
 
+    """
+
+    def __init__(self):
+        self.year = None
+        self.number = None
+
+    _version_re = re.compile(r'vsim\s+(?P<year>\d+)\.(?P<number>\d+)')
+
+    def __call__(self, line):
+        match = self._version_re.search(line)
+        if match is not None:
+            self.year = int(match.group("year"))
+            self.number = int(match.group("number"))
+        return True
+  
 def encode_generic_value_for_tcl(value):
     """
     Ensure values with space and commas in them are quoted properly for TCL files.
