@@ -18,6 +18,8 @@ def post_run(results):
             call(["gcovr", "coverage_data"])
         else:
             call(["gcovr", "-a", "coverage_data/gcovr.json"])
+    elif VU.get_simulator_name() == "nvc":
+        call(["nvc", "--cover-report", "coverage_data.ncdb", "-o", "output_coverage"])
 
 
 VU = VUnit.from_argv()
@@ -28,6 +30,7 @@ LIB.add_source_files(Path(__file__).parent / "*.vhd")
 
 LIB.set_sim_option("enable_coverage", True)
 
+LIB.set_sim_option("nvc.elab_flags", ["--cover=branch,statement"])
 LIB.set_compile_option("rivierapro.vcom_flags", ["-coverage", "bs"])
 LIB.set_compile_option("rivierapro.vlog_flags", ["-coverage", "bs"])
 LIB.set_compile_option("modelsim.vcom_flags", ["+cover=bs"])
