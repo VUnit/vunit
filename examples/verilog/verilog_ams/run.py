@@ -11,7 +11,7 @@ from vunit import VUnit
 
 ROOT = Path(__file__).parent
 
-VU = VUnit.from_argv()
+VU = VUnit.from_argv(compile_builtins=False)
 VU.add_verilog_builtins()
 
 LIB = VU.add_library("lib")

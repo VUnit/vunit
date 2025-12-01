@@ -21,7 +21,7 @@ from vunit.json4vhdl import read_json, encode_json, b16encode
 
 TEST_PATH = Path(__file__).parent / "src" / "test"
 
-VU = VUnit.from_argv()
+VU = VUnit.from_argv(compile_builtins=False)
 VU.add_vhdl_builtins()
 VU.add_json4vhdl()
 

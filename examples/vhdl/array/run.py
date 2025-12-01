@@ -18,7 +18,7 @@ loading it from csv and raw files.
 from pathlib import Path
 from vunit import VUnit
 
-VU = VUnit.from_argv()
+VU = VUnit.from_argv(compile_builtins=False)
 VU.add_vhdl_builtins()
 VU.add_osvvm()
 

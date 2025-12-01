@@ -16,7 +16,7 @@ Demonstrates the VUnit check library.
 from pathlib import Path
 from vunit import VUnit
 
-VU = VUnit.from_argv()
+VU = VUnit.from_argv(compile_builtins=False)
 VU.add_vhdl_builtins()
 
 # Enable location preprocessing but exclude all but check_false to make the example less bloated

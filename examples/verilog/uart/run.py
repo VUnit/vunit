@@ -19,7 +19,7 @@ from vunit import VUnit
 
 SRC_PATH = Path(__file__).parent / "src"
 
-VU = VUnit.from_argv()
+VU = VUnit.from_argv(compile_builtins=False)
 VU.add_verilog_builtins()
 
 VU.add_library("uart_lib").add_source_files(SRC_PATH / "*.sv")

@@ -27,7 +27,7 @@ args = cli.parse_args()
 if args.use_osvvm_log and args.use_vunit_log:
     raise RuntimeError("Only one of --use-osvvm-log and --use-vunit-log can be used at any time.")
 args.clean = True
-prj = VUnit.from_args(args=args)
+prj = VUnit.from_args(args=args, compile_builtins=False)
 root = Path(__file__).parent
 if args.use_osvvm_log:
     prj.add_vhdl_builtins(use_external_log=Path(root / "osvvm_integration" / "vunit_to_osvvm_common_log_pkg-body.vhd"))

@@ -62,7 +62,7 @@ def generate_tests(obj, signs, data_widths):
         )
 
 
-VU = VUnit.from_argv()
+VU = VUnit.from_argv(compile_builtins=False)
 VU.add_vhdl_builtins()
 
 LIB = VU.add_library("lib")

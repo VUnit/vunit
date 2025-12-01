@@ -19,7 +19,7 @@ from vivado_util import add_vivado_ip
 ROOT = Path(__file__).parent
 SRC_PATH = ROOT / "src"
 
-VU = VUnit.from_argv()
+VU = VUnit.from_argv(compile_builtins=False)
 VU.add_vhdl_builtins()
 
 VU.add_library("lib").add_source_files(SRC_PATH / "*.vhd")

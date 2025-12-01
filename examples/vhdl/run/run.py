@@ -18,7 +18,7 @@ from vunit import VUnit
 
 root = Path(__file__).parent
 
-vu = VUnit.from_argv()
+vu = VUnit.from_argv(compile_builtins=False)
 vu.add_vhdl_builtins()
 
 lib = vu.add_library("lib")
