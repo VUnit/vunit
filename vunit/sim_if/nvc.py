@@ -19,7 +19,7 @@ from sys import stdout  # To avoid output catched in non-verbose mode
 from ..exceptions import CompileError
 from ..ostools import Process
 from . import SimulatorInterface, ListOfStringOption, StringOption
-from . import run_command
+from . import run_command, check_executable
 from ._viewermixin import ViewerMixin
 from ..vhdl_standard import VHDL
 
@@ -56,6 +56,8 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
         Create instance from args namespace
         """
         prefix = cls.find_prefix()
+        check_executable("NVC", prefix, cls.executable)
+
         return cls(
             output_path=output_path,
             prefix=prefix,

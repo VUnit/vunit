@@ -20,6 +20,7 @@ from sys import stdout  # To avoid output catched in non-verbose mode
 from ..exceptions import CompileError
 from ..ostools import Process
 from . import SimulatorInterface, ListOfStringOption, StringOption, BooleanOption
+from . import check_executable
 from ..vhdl_standard import VHDL
 from ._viewermixin import ViewerMixin
 
@@ -72,6 +73,8 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
         Create instance from args namespace
         """
         prefix = cls.find_prefix()
+        check_executable("GHDL", prefix, cls.executable)
+
         return cls(
             output_path=output_path,
             prefix=prefix,
