@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2025, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Provides documentation and version information
@@ -69,4 +69,4 @@ def version():
     return VERSION
 
 
-VERSION = "5.0.0.dev7"
+VERSION = "5.0.0.dev8"

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2025, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Interface for GHDL simulator
@@ -20,6 +20,7 @@ from sys import stdout  # To avoid output catched in non-verbose mode
 from ..exceptions import CompileError
 from ..ostools import Process
 from . import SimulatorInterface, ListOfStringOption, StringOption, BooleanOption
+from . import check_executable
 from ..vhdl_standard import VHDL
 from ._viewermixin import ViewerMixin
 
@@ -72,6 +73,8 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
         Create instance from args namespace
         """
         prefix = cls.find_prefix()
+        check_executable("GHDL", prefix, cls.executable)
+
         return cls(
             output_path=output_path,
             prefix=prefix,
@@ -192,8 +195,8 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
         """
         Returns True when the simulator supports VHPI
         """
-        return (cls.determine_backend(cls.find_prefix_from_path()) != "mcode") or (
-            cls.determine_version(cls.find_prefix_from_path()) > 0.36
+        return (cls.determine_backend(cls.find_prefix()) != "mcode") or (
+            cls.determine_version(cls.find_prefix()) > 0.36
         )
 
     @classmethod
@@ -201,7 +204,7 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
         """
         Returns True when the simulator supports coverage
         """
-        prefix = cls.find_prefix_from_path()
+        prefix = cls.find_prefix()
         return cls.determine_backend(prefix) == "gcc" or cls.determine_coverage(prefix)
 
     def _has_output_flag(self):

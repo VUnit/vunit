@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2025, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 # pylint: disable=too-many-lines
 
@@ -232,7 +232,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         Add an externally compiled library as a black-box
 
         :param library_name: The name of the external library
-        :param path: The path to the external library directory
+        :param path: The path to the external library file or directory
         :param vhdl_standard: The VHDL standard used to compile files,
                               if None the VUNIT_VHDL_STANDARD environment variable is used
         :returns: The created :class:`.Library` object
@@ -245,11 +245,20 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         """
 
+        resolved_path = Path(path).resolve()
+        if resolved_path.is_file():
+            directory = resolved_path.parent
+            file_name = resolved_path.name
+        else:
+            directory = resolved_path
+            file_name = None
+
         self._project.add_library(
             library_name,
-            Path(path).resolve(),
+            directory,
             self._which_vhdl_standard(vhdl_standard),
             is_external=True,
+            file_name=file_name
         )
         return self.library(library_name)
 

@@ -2,10 +2,13 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2025, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 -- Optional package that includes random functions for the data_types based on
 -- OSVVM
+
+library ieee;
+use ieee.numeric_std.all;
 
 library osvvm;
 use osvvm.RandomPkg.RandomPType;
@@ -91,17 +94,45 @@ package body random_pkg is
     return integer_vector_ptr;
   end function;
 
+  function max_integer(bits_per_word : positive; is_signed : boolean) return integer is
+  begin
+    if is_signed then
+      if bits_per_word > 1 then
+        return 2**(bits_per_word - 2) - 1 + 2**(bits_per_word - 2);
+      else
+        return 0;
+      end if;
+    else
+      return 2**(bits_per_word - 1) - 1 + 2**(bits_per_word - 1);
+    end if;
+  end;
+
+  function min_integer(bits_per_word : positive; is_signed : boolean) return integer is
+  begin
+    if is_signed then
+      if bits_per_word > 1 then
+        return -2**(bits_per_word - 2) - 2**(bits_per_word - 2);
+      else
+        return -1;
+      end if;
+    else
+      return 0;
+    end if;
+  end;
+
   procedure random_integer_vector_ptr(variable rnd : inout RandomPType;
                                       variable integer_vector_ptr : inout integer_vector_ptr_t;
                                       length : natural;
                                       bits_per_word : positive;
                                       is_signed : boolean) is
   begin
-    if is_signed then
-      random_integer_vector_ptr(rnd, integer_vector_ptr, length, -(2**(bits_per_word-1)), 2**(bits_per_word-1)-1);
-    else
-      random_integer_vector_ptr(rnd, integer_vector_ptr, length, 0, 2**bits_per_word-1);
-    end if;
+    random_integer_vector_ptr(
+      rnd,
+      integer_vector_ptr,
+      length,
+      min_integer(bits_per_word, is_signed),
+      max_integer(bits_per_word, is_signed)
+    );
   end;
 
   impure function random_integer_vector_ptr(length : natural;
@@ -113,16 +144,26 @@ package body random_pkg is
     return integer_vector_ptr;
   end;
 
-  function ilog2(value : natural) return natural is
-    variable res : natural := 0;
-    variable pow : natural := 1;
+  function n_bits_needed(value : integer; signed_representation : boolean) return positive is
+    variable n_bits : positive := 1;
+    variable quotient : integer := value;
   begin
-    while pow < value loop
-      pow := pow*2;
-      res := res + 1;
+    if value < 0 then
+      quotient := -(value + 1);
+    end if;
+
+    while quotient > 0 loop
+      n_bits := n_bits + 1;
+      quotient := quotient / 2;
     end loop;
-    return res;
-  end function;
+
+    if not signed_representation then
+      -- A minimum of 1 is needed to prevent value = 0 from returning 0 bits
+      return maximum(1, n_bits - 1);
+    else
+      return n_bits;
+    end if;
+  end;
 
   procedure random_integer_array(variable rnd : inout RandomPType;
                                  variable integer_array : inout integer_array_t;
@@ -137,11 +178,7 @@ package body random_pkg is
     assert min_value <= max_value report "min_value must be lower or equal to max_value";
     is_signed := min_value < 0;
 
-    if is_signed then
-      bit_width := ilog2(abs min_value) + 1;
-    else
-      bit_width := ilog2(max_value+1);
-    end if;
+    bit_width := maximum(n_bits_needed(min_value, is_signed), n_bits_needed(max_value, is_signed));
 
     deallocate(integer_array);
     integer_array := new_3d(width => width, height => height, depth => depth,
@@ -159,17 +196,10 @@ package body random_pkg is
                                  depth : natural := 1;
                                  bits_per_word : integer := 1;
                                  is_signed : boolean := false) is
-    variable min_value, max_value : integer;
   begin
-    if is_signed then
-      min_value := -2**(bits_per_word-1);
-      max_value := 2**(bits_per_word-1)-1;
-    else
-      min_value := 0;
-      max_value := 2**bits_per_word-1;
-    end if;
     random_integer_array(rnd, integer_array, width, height, depth,
-                         min_value => min_value, max_value => max_value);
+                         min_value => min_integer(bits_per_word, is_signed),
+                         max_value => max_integer(bits_per_word, is_signed));
   end procedure;
 
   impure function random_integer_array(width : natural := 1;

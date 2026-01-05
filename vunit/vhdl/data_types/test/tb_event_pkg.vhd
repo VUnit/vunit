@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2025, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 library vunit_lib;
 use vunit_lib.run_pkg.all;
@@ -35,12 +35,7 @@ architecture test_fixture of tb_event_pkg is
   signal acted_on_event_4 : boolean := false;
   signal acted_on_event_5 : boolean := false;
 
-  signal event_1 : event_t := new_event(get_id("tb_event_pkg:my_event_1"));
-  signal event_2 : event_t := new_event(get_id("tb_event_pkg:my_event_2"));
-  signal event_3 : event_t := new_event(get_id("tb_event_pkg:event_3"));
-  signal event_4 : event_t := new_event("tb_event_pkg:my_event_4");
-  signal event_5 : event_t := new_event;
-  signal number_event : event_t := new_event;
+  signal event_1, event_2, event_3, event_4, event_5, number_event : event_t := (others => 'Z');
 begin
   test_runner : process
     procedure activate_event(event_number : natural range 1 to 2; event_time : time; queue_idx : positive range request_queue'range) is
@@ -55,6 +50,19 @@ begin
     variable event_counter : natural := 0;
   begin
     test_runner_setup(runner, runner_cfg);
+
+    -- Some simulator (versions) call the impure new_event functions multiple
+    -- times if the signal is initialized when declared. This is interpreted as
+    -- an attempt to create multiple events with the same name which is not allowed.
+    -- To avoid this problem, the event signals are initialized after elaboration by
+    -- the notifying process.
+    event_1 <= new_event(get_id("tb_event_pkg:my_event_1"));
+    event_2 <= new_event(get_id("tb_event_pkg:my_event_2"));
+    event_3 <= new_event(get_id("tb_event_pkg:event_3"));
+    event_4 <= new_event("tb_event_pkg:my_event_4");
+    event_5 <= new_event;
+    number_event <= new_event;
+    wait for 0 ns;
 
     while test_suite loop
       if run("Test getting event names") then

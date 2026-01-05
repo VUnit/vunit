@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2025, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Simulator interface(s)
@@ -33,6 +33,18 @@ class Option(object):
 
     def validate(self, value):
         pass
+
+
+def add_extension(executable_name):
+    """
+    Add .exe extension on Windows platforms if not already present
+    """
+    ext = Path(executable_name).suffix
+
+    if (sys.platform == "win32" or os.name == "os2") and (ext != ".exe"):
+        executable_name = executable_name + ".exe"
+
+    return executable_name
 
 
 class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
@@ -91,10 +103,7 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
             return []
 
         paths = path.split(pathsep)
-        ext = Path(executable).suffix
-
-        if (sys.platform == "win32" or os.name == "os2") and (ext != ".exe"):
-            executable = executable + ".exe"
+        executable = add_extension(executable)
 
         result = []
         if isfile(executable):
@@ -359,6 +368,43 @@ def check_output(command, env=None):
         err.output = err.output.decode("utf-8")
         raise err
     return output.decode("utf-8")
+
+
+def check_executable(simulator_name, prefix, executable_name):
+    """
+    Check that the executable exists.
+
+    This helps to identify the case where the environment variable named after the simulator is used for
+    other purposes than naming the executable. Issue #1149.
+    """
+    env_name = environ.get(simulator_name)
+
+    # If environment variable isn't used for executable naming and VUNIT_<SIMULATOR_NAME>_PATH isn't set, the prefix
+    # will be invalid since the toolchain search didn't find anything.
+    try:
+        prefix_path = Path(prefix)
+    except TypeError as exc:
+        error_message = f"{simulator_name} executable not found."
+        if env_name is not None:
+            error_message += (
+                f" The {simulator_name} environment variable, if set, must be the executable name."
+                f" Current value is {env_name}."
+            )
+
+        raise FileNotFoundError(error_message) from exc
+
+    executable_name = add_extension(executable_name)
+
+    executable_path = prefix_path / executable_name
+    if not executable_path.is_file():
+        error_message = f"{simulator_name} executable not found at {executable_path}."
+        if env_name is not None:
+            error_message += (
+                f" The {simulator_name} environment variable, if set, must be the executable name."
+                f" Current value is {env_name}."
+            )
+
+        raise FileNotFoundError(error_message)
 
 
 class BooleanOption(Option):

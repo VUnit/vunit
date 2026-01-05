@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2025, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Interface for NVC simulator
@@ -19,7 +19,7 @@ from sys import stdout  # To avoid output catched in non-verbose mode
 from ..exceptions import CompileError
 from ..ostools import Process, file_exists
 from . import SimulatorInterface, ListOfStringOption, StringOption
-from . import run_command
+from . import run_command, check_executable
 from ._viewermixin import ViewerMixin
 from ..vhdl_standard import VHDL
 
@@ -56,6 +56,8 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
         Create instance from args namespace
         """
         prefix = cls.find_prefix()
+        check_executable("NVC", prefix, cls.executable)
+
         return cls(
             output_path=output_path,
             prefix=prefix,
@@ -293,7 +295,17 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
             if self._supports_jit:
                 cmd += ["--jit"]
             cmd += ["-r"]
-            cmd += config.sim_options.get("nvc.sim_flags", [])
+
+            config_sim_options = config.sim_options.get("nvc.sim_flags", [])
+            if "--exit-severity" in "".join(config_sim_options):
+                LOGGER.warning(
+                    "The --exit-severity setting has been passed via %s.sim_flags. This is overruled by the VUnit"
+                    " option vhdl_assert_stop_level, which is set to '%s'. See"
+                    " https://vunit.github.io/py/opts.html#simulation-options for further details",
+                    self.name,
+                    config.vhdl_assert_stop_level
+                )
+            cmd += config_sim_options
             cmd += [f"--exit-severity={config.vhdl_assert_stop_level}"]
 
             if not self._ieee_warnings_global and config.sim_options.get("disable_ieee_warnings", False):

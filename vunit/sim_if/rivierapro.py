@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2025, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Interface towards Aldec Riviera Pro
@@ -145,7 +145,10 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         mapped_libraries = self._get_mapped_libraries(self._sim_cfg_file_name)
         for library in project.get_libraries():
             self._libraries.append(library)
-            self.create_library(library.name, library.directory, mapped_libraries)
+            path = (
+                str(Path(library.directory) / library.file_name) if library.file_name is not None else library.directory
+            )
+            self.create_library(library.name, path, mapped_libraries)
 
     def compile_source_file_command(self, source_file):
         """
@@ -309,6 +312,9 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
             vsim_flags.append("-ieee_nowarn")
 
         vsim_flags += ["-lib", config.library_name]
+
+        for library in self._libraries:
+            vsim_flags += ["-L", library.name]
 
         if config.vhdl_configuration_name is None:
             # Add the the testbench top-level unit last as coverage is
