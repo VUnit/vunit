@@ -247,7 +247,7 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
 
     def simulate(
         self, output_path, test_suite_name, config, elaborate_only
-    ):  # pylint: disable=too-many-branches, disable=too-many-statements
+    ):  # pylint: disable=too-many-branches, disable=too-many-statements, disable=too-many-locals
         """
         Simulate with entity as top level using generics
         """
