@@ -56,8 +56,9 @@ jobs:
 
     - name: '🛳️ Build container image'
       run: |
+        echo '${{ github.token }}' | docker login ghcr.io -u gha --password-stdin
         docker build -t ghcr.io/vunit/dev/nvc -<<EOF
-        FROM hdlc/nvc
+        FROM ghcr.io/nickg/nvc
 
         RUN apt-get update -qq \
          && DEBIAN_FRONTEND=noninteractive apt-get -y install --no-install-recommends \
@@ -66,7 +67,8 @@ jobs:
          && update-ca-certificates \
          && rm -rf /var/lib/apt/lists/*
 
-        RUN pip install -U tox colorama coverage --progress-bar off
+        RUN python3 -m pip install -U pip --break-system-packages --progress-bar off \
+         && python3 -m pip install -U tox colorama coverage --break-system-packages --progress-bar off
         EOF
 
     - name: '🛰️ Push container image to registry'
