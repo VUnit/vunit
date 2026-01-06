@@ -92,7 +92,7 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
         (major, minor) = self.determine_version(prefix)
         self._supports_jit = major > 1 or (major == 1 and minor >= 9)
         self._ieee_warnings_global = major > 1 or (major == 1 and minor >= 16)
-        self._supports_coverage_merge = major > 1 or (major == 1 and minor >= 14)
+        self._supports_coverage_merge = major > 1 or (major == 1 and minor >= 15)
 
         if self.use_color:
             environ["NVC_COLORS"] = "always"
