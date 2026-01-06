@@ -32,7 +32,8 @@ package log_levels_pkg is
     custom_level8);
 
   type log_level_vec_t is array (natural range <>) of log_level_t;
-  constant null_vec : log_level_vec_t(1 to 0) := (others => info);
+  constant null_string : string := "";
+  constant null_vec : log_level_vec_t(null_string'range) := (others => info);
 
   subtype alert_log_level_t is log_level_t range warning to failure;
   subtype legal_log_level_t is log_level_t range log_level_t'succ(null_log_level) to log_level_t'high;
