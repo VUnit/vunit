@@ -104,8 +104,8 @@ jobs:
       fail-fast: false
       matrix:
         task: [
-          {do: 39-acceptance},
-          {do: 39-vcomponents},
+          {do: 311-acceptance},
+          {do: 311-vcomponents},
         ]
     name: '🛳️ Container · ${{ matrix.task.do }} · NVC'
     steps:
