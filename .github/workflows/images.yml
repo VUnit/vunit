@@ -16,6 +16,7 @@ jobs:
 
 
   GHDL:
+    if: github.repository == 'VUnit/vunit' || github.event_name != 'schedule'
     strategy:
       fail-fast: false
       matrix:
@@ -48,6 +49,7 @@ jobs:
 
 
   NVC:
+    if: github.repository == 'VUnit/vunit' || github.event_name != 'schedule'
     runs-on: ubuntu-latest
     steps:
 
