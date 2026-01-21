@@ -26,10 +26,11 @@ architecture a of uart_master is
 begin
 
   main : process
-    procedure uart_send(data : std_logic_vector;
+    procedure uart_send(data      :     std_logic_vector;
                         signal tx : out std_logic;
-                        baud_rate  : integer) is
+                        baud_rate :     integer) is
       constant time_per_bit : time := (10**9 / baud_rate) * 1 ns;
+      constant parity_mode : parity_mode_t := uart.p_parity_mode;
 
       procedure send_bit(value : std_logic) is
       begin
@@ -43,12 +44,22 @@ begin
       for i in 0 to data'length-1 loop
         send_bit(data(i));
       end loop;
+
+      -- Send parity bit (if parity_mode /= none)
+      case parity_mode is
+        when even => send_bit(xor data);
+        when odd => send_bit(not (xor data));
+        when space => send_bit('0');
+        when mark => send_bit('1');
+        when others => null;
+      end case;
+
       send_bit(uart.p_idle_state);
     end procedure;
 
-    variable msg : msg_t;
+    variable msg       : msg_t;
     variable baud_rate : natural := uart.p_baud_rate;
-    variable msg_type : msg_type_t;
+    variable msg_type  : msg_type_t;
   begin
     receive(net, uart.p_actor, msg);
     msg_type := message_type(msg);
