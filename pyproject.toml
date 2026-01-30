@@ -36,6 +36,7 @@ classifiers = [
 requires-python = ">=3.10"
 dependencies = [
     "colorama",
+    "tomli; python_version < '3.11'",
 ]
 
 [tool.setuptools]

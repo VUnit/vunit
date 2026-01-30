@@ -8,6 +8,9 @@
 Provides documentation and version information
 """
 
+import re
+from functools import total_ordering
+
 
 def license_text():
     """
@@ -70,3 +73,58 @@ def version():
 
 
 VERSION = "5.0.0.dev9"
+
+
+@total_ordering
+class VUnitVersion:
+    """
+    VUnit version object which encapsulates knowledge about VUnit versions
+    """
+
+    # Regular expression for parsing VUnit version strings. Not a full
+    # implementation of PEP 440, only what is needed for VUnit versioning.
+    _VUNIT_VERSION_RE = re.compile(
+        r"""
+(v)?
+(?P<major>\d+)
+(?:\.(?P<minor>\d+))?
+(?:\.(?P<patch>\d+))?
+(?:\.dev(?P<dev>\d+))?
+""",
+        re.VERBOSE,
+    )
+
+    def __init__(self, version_string: str) -> None:
+        version_string = version_string.strip()
+        match = self._VUNIT_VERSION_RE.fullmatch(version_string)
+
+        if not match:
+            raise ValueError(f"Invalid version format: {version_string}. Use [v]MAJOR[.MINOR][.PATCH][.devN]")
+
+        major = int(match.group("major"))
+        minor = int(match.group("minor") or 0)
+        patch = int(match.group("patch") or 0)
+        # Development releases sort before the final release
+        dev = int(match.group("dev") or 1000) - 1000
+
+        self._version = (major, minor, patch, dev)
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, VUnitVersion):
+            return self._version == other._version  # pylint: disable=protected-access
+        return NotImplemented
+
+    def __lt__(self, other: object) -> bool:
+        if isinstance(other, VUnitVersion):
+            return self._version < other._version  # pylint: disable=protected-access
+        return NotImplemented
+
+    def __str__(self) -> str:
+        version_string = f"{self._version[0]}.{self._version[1]}.{self._version[2]}"
+        if self._version[3]:
+            version_string += f".dev{self._version[3] + 1000}"
+
+        return version_string
+
+    def __repr__(self) -> str:
+        return f"VUnitVersion{self._version}"

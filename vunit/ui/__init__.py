@@ -1281,6 +1281,11 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         """
         self._builtins.add_vhdl_builtins(external=external, use_external_log=use_external_log)
 
+    def add_package(self, package_name: str) -> None:
+        """Add VUnit package."""
+
+        self._builtins.add_package(package_name)
+
     def add_com(self):
         """
         Add communication package

@@ -107,6 +107,13 @@ class TestVunitArtificial(unittest.TestCase):
             ],
         )
 
+    def test_not_executing_package_init_on_package_addition(self):
+        self.check(self.artificial_run_vhdl, args=["lib.tb_vunit_pkg.all"])
+        check_report(
+            self.report_file,
+            [("passed", "lib.tb_vunit_pkg.all")],
+        )
+
     def _test_artificial(self, args=None):
         """
         Utility function to run and check the result of all test benches
@@ -311,4 +318,5 @@ EXPECTED_REPORT = (
     ("failed", "lib.tb_test_prio_2.test_2"),
     ("passed", "lib.tb_seed.test_1"),
     ("passed", "lib.tb_seed.test_2"),
+    ("passed", "lib.tb_vunit_pkg.all"),
 )
