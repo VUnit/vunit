@@ -11,15 +11,38 @@ Functions to add builtin VHDL code to a project for compilation
 from pathlib import Path
 from glob import glob
 import logging
+import importlib
+import importlib.resources
+import importlib.util
+import re
+import operator
+from dataclasses import dataclass
+from typing import TypeVar, Any, Tuple
+
+try:
+    # Python 3.11+
+    import tomllib  # type: ignore
+except ModuleNotFoundError:
+    import tomli as tomllib  # type: ignore
 
 from vunit.vhdl_standard import VHDL, VHDLStandard
 from vunit.ui.common import get_checked_file_names_from_globs
+from vunit.about import version, VUnitVersion
 
 
 LOGGER = logging.getLogger(__name__)
 
 VHDL_PATH = (Path(__file__).parent / "vhdl").resolve()
 VERILOG_PATH = (Path(__file__).parent / "verilog").resolve()
+
+
+@dataclass(frozen=True)
+class ValidationError:
+    path: str
+    message: str
+
+
+VersionT = TypeVar("VersionT", VHDLStandard, VUnitVersion)
 
 
 class Builtins(object):
@@ -46,6 +69,233 @@ class Builtins(object):
 
     def add(self, name, args=None):
         self._builtins_adder.add(name, args)
+
+    _VERSION_REQUIREMENT_RE = re.compile(r"(?P<operator>===|~=|<=|!=|==|>=|>|<)\s*(?P<version>.*)", re.VERBOSE)
+    _OPERATORS = {
+        "==": operator.eq,
+        "!=": operator.ne,
+        ">=": operator.ge,
+        "<=": operator.le,
+        ">": operator.gt,
+        "<": operator.lt,
+    }
+
+    def _meets_required_version(
+        self,
+        version_class: type[VersionT],
+        current_version_str: str,
+        required_version_specifier: str,
+    ) -> bool:
+        """Check if the current VUnit version meets the required version."""
+
+        current_version = version_class(current_version_str)
+        requirement_list = required_version_specifier.split(",")
+        for requirement in requirement_list:
+            requirement = requirement.strip()
+            # Skip empty requirements since trailing commas are allowed
+            if requirement == "":
+                continue
+
+            match = self._VERSION_REQUIREMENT_RE.fullmatch(requirement)
+            if not match:
+                raise RuntimeError(
+                    f"Invalid version requirement format: {requirement}. Use <OPERATOR><VERSION> "
+                    "where OPERATOR is one of <=, <, !=, ==, >=, and >."
+                )
+
+            version_operator = match.group("operator")
+            operator_function = self._OPERATORS.get(version_operator, None)
+            if not operator_function:
+                raise RuntimeError(f"Unsupported version specifier operator: {version_operator}.")
+
+            required_version_str = requirement[match.end("operator") :].strip()
+            required_version = version_class(required_version_str)
+
+            if not operator_function(current_version, required_version):
+                return False
+
+        return True
+
+    @staticmethod
+    def _to_toml_type(python_type: type) -> Tuple[str, str]:
+        """Translate Python type to TOML type terminology."""
+        mapping = {
+            dict: ("table", "a"),
+            list: ("array", "an"),
+            str: ("string", "a"),
+            int: ("integer", "an"),
+            float: ("float", "a"),
+        }
+        return mapping.get(python_type, (python_type.__name__, "a"))
+
+    def _check_valid_keys(
+        self, data: dict[str, Any], valid: dict[str, type], path: str = "TOML"
+    ) -> list[ValidationError]:
+        """Check that TOML keys are valid, both name and type."""
+        errors = []
+        for key, value in data.items():
+            if key not in valid:
+                toml_type, _ = self._to_toml_type(type(value))
+                errors.append(ValidationError(path=f"{path}.{key}", message=f"Unexpected {toml_type} '{key}'."))
+            elif not isinstance(value, valid[key]):
+                toml_type, article = self._to_toml_type(valid[key])
+                errors.append(ValidationError(path=f"{path}.{key}", message=f"'{key}' must be {article} {toml_type}."))
+
+        return errors
+
+    def _check_mandatory_keys(
+        self, data: dict[str, Any], mandatory: dict[str, type], path: str = "TOML"
+    ) -> list[ValidationError]:
+        """Check that mandatory TOML keys are present."""
+        missing_keys = [key for key in mandatory.keys() if key not in data]
+        errors = []
+
+        for key in missing_keys:
+            toml_type, _ = self._to_toml_type(mandatory[key])
+            errors.append(ValidationError(path=f"{path}", message=f"Missing mandatory {toml_type} '{key}'."))
+
+        return errors
+
+    @staticmethod
+    def _log_validation_errors(errors: list[ValidationError]) -> None:
+        """Log validation error path and message."""
+        if errors:
+            for error in errors:
+                LOGGER.error("%s: %s", error.path, error.message)
+
+            raise RuntimeError(f"Invalid vunit_pkg.toml: {len(errors)} error(s) found.")
+
+    def _validate_toml(self, data: dict) -> None:
+        """Validate that the TOML specification has the correct format."""
+        errors = []
+
+        errors.extend(self._check_mandatory_keys(data, mandatory={"package": dict}, path="TOML"))
+        errors.extend(self._check_valid_keys(data, valid={"package": dict}, path="TOML"))
+
+        self._log_validation_errors(errors)
+
+        package = data["package"]
+        errors.extend(
+            self._check_valid_keys(
+                package,
+                valid={"requires-vunit": str, "requires-vhdl": str, "library": str, "sources": list},
+                path="package",
+            )
+        )
+
+        if "sources" in package:
+            errors.extend(self._check_mandatory_keys(package, mandatory={"library": str}, path="package"))
+
+            for idx, source in enumerate(package["sources"]):
+                errors.extend(
+                    self._check_mandatory_keys(source, mandatory={"include": list}, path=f"package.sources[{idx}]")
+                )
+                if "include" in source:
+                    for list_idx, path in enumerate(source["include"]):
+                        if not isinstance(path, str):
+                            errors.append(
+                                ValidationError(
+                                    path=f"package.sources[{idx}].include[{list_idx}]",
+                                    message="Path must be a string.",
+                                )
+                            )
+
+        self._log_validation_errors(errors)
+
+    @staticmethod
+    def _read_toml(root: Path, package_name: str) -> dict:
+        """Read TOML file."""
+        toml = root / "vunit_pkg.toml"
+
+        if not toml.is_file():
+            raise RuntimeError(f"Could not find vunit_pkg.toml for package {package_name} in {root}.")
+
+        try:
+            with toml.open("rb") as fptr:
+                return tomllib.load(fptr)
+        except tomllib.TOMLDecodeError as exc:
+            raise RuntimeError(f"vunit_pkg.toml for package {package_name} is not a valid TOML file") from exc
+
+    @staticmethod
+    def _find_package(package_name: str) -> Path:
+        """Find package path."""
+
+        # find_spec is safe since it does not execute the package __init__.py file
+        spec = importlib.util.find_spec(package_name)
+        if spec is None:
+            raise RuntimeError(f"Could not find package {package_name}.")
+
+        if spec.submodule_search_locations is not None and spec.origin is None:
+            raise RuntimeError(f"Package {package_name} is a namespace package, which is currently not supported.")
+
+        if spec.submodule_search_locations is not None and spec.origin:
+            return Path(spec.origin).parent
+
+        raise RuntimeError(f"Failed to find location of package {package_name}.")
+
+    def add_package(self, package_name: str) -> None:
+        """Add VUnit package."""
+        # The following future improvements are planned:
+        # - Support for user specified library name
+        # - Support for shared libraries across multiple packages
+        # - Support for adding subsets of packages
+
+        # Just like PyPi, all package names are normalized such that dashes, dots and
+        # underscores are equivalent.
+        package_name = package_name.replace("-", "_").replace(".", "_")
+
+        package_root = self._find_package(package_name)
+        data = self._read_toml(package_root, package_name)
+        self._validate_toml(data)
+
+        package = data["package"]
+        vunit_version = version()
+        if not self._meets_required_version(VUnitVersion, vunit_version, package.get("requires-vunit", "")):
+            raise RuntimeError(
+                f"Package {package_name} requires VUnit version "
+                f"{package['requires-vunit']} but current version is {vunit_version}."
+            )
+
+        package_vhdl_standard = package.get("requires-vhdl", "")
+        if not self._meets_required_version(VHDLStandard, str(self._vhdl_standard), package_vhdl_standard):
+            use_vhdl_standard = None
+            for vhdl_standard in VHDL.STANDARDS:
+                if self._meets_required_version(VHDLStandard, str(vhdl_standard), package_vhdl_standard):
+                    use_vhdl_standard = str(vhdl_standard)
+                    break
+
+            if not use_vhdl_standard:
+                raise RuntimeError(
+                    f"Package {package_name} requires VHDL standard "
+                    f"{package['requires-vhdl']}. Failed to find a compatible standard."
+                )
+
+            LOGGER.warning(
+                "Package %s requires VHDL standard %s but current standard is %s. "
+                "Proceeding with mixed-language compilation using VHDL standard %s for the package.",
+                package_name,
+                package["requires-vhdl"],
+                self._vhdl_standard,
+                use_vhdl_standard,
+            )
+
+        else:
+            use_vhdl_standard = None
+
+        sources = package.get("sources", [])
+        if sources:
+            library_name = package.get("library")
+            library = self._add_library_if_not_exist(
+                library_name,
+                f"Library {library_name} previously defined. Skipping addition of {package_name}.",
+            )
+
+            if library is None:
+                return
+
+            for source in sources:
+                for include in source["include"]:
+                    library.add_source_files(package_root / include, vhdl_standard=use_vhdl_standard)
 
     def _add_files(self, pattern=None, allow_empty=True):
         """
