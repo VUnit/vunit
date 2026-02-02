@@ -5,6 +5,55 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "vunit_hdl"
+dynamic = ["version"]
+description="VUnit is an open source unit testing framework for VHDL/SystemVerilog."
+urls = {homepage = "https://github.com/VUnit/vunit"}
+readme = "README.md"
+license = "MPL-2.0"
+license-files = ["LICENSE.rst"]
+authors = [
+  {name = "Lars Asplund", email = "lars.anders.asplund@gmail.com"},
+  {name = "Olof Kraigher", email = "olof.kraigher@gmail.com"},
+]
+keywords = [
+    "vunit", "verification", "vhdl", "systemverilog-hdl", "verilog-hdl",
+    "fpga", "asic", "unit-testing", "testbench", "uvm", "eda", "hdl"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Natural Language :: English",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: POSIX :: Linux",
+    "Topic :: Software Development :: Testing",
+    "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "colorama",
+]
+
+[tool.setuptools]
+include-package-data = false
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = [
+    "vunit", "vunit.com", "vunit.parsing","vunit.parsing.verilog", "vunit.sim_if",
+    "vunit.test", "vunit.ui", "vunit.vivado"
+]
+
 [tool.black]
 line-length = 120
 
