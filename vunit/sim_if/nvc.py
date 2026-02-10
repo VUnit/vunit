@@ -85,6 +85,7 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
 
         (major, minor) = self.determine_version(prefix)
         self._supports_jit = major > 1 or (major == 1 and minor >= 9)
+        self._ieee_warnings_global = major > 1 or (major == 1 and minor >= 16)
 
         if self.use_color:
             environ["NVC_COLORS"] = "always"
@@ -231,7 +232,7 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         cmd += [source_file.name]
         return cmd
 
-    def simulate(self, output_path, test_suite_name, config, elaborate_only):
+    def simulate(self, output_path, test_suite_name, config, elaborate_only):  # pylint: disable=too-many-branches
         """
         Simulate with entity as top level using generics
         """
@@ -251,6 +252,9 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         libdir = self._project.get_library(config.library_name).directory
         cmd = self._get_command(self._vhdl_standard, config.library_name, libdir)
 
+        if self._ieee_warnings_global and config.sim_options.get("disable_ieee_warnings", False):
+            cmd += ["--ieee-warnings=off"]
+
         cmd += ["-H", config.sim_options.get("nvc.heap_size", "64m")]
 
         cmd += ["-e"]
@@ -269,7 +273,7 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
             cmd += config.sim_options.get("nvc.sim_flags", [])
             cmd += [f"--exit-severity={config.vhdl_assert_stop_level}"]
 
-            if config.sim_options.get("disable_ieee_warnings", False):
+            if not self._ieee_warnings_global and config.sim_options.get("disable_ieee_warnings", False):
                 cmd += ["--ieee-warnings=off"]
 
             if wave_file:
