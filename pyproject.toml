@@ -54,7 +54,7 @@ underlines = ["-", "~"]
 [tool.tox]
 legacy_tox_ini = """
 [tox]
-envlist = py{36,37,38,39,310,311}-{fmt,unit,lint,docs}, py{36,37,38,39,310,311}-{acceptance,vcomponents}-{activehdl,ghdl,modelsim,nvc,rivierapro}, py{36,37,38,39,310,311}-coverage
+envlist = py{36,37,38,39,310,311}-{fmt,unit,lint,docs}, py{36,37,38,39,310,311,313}-{acceptance,vcomponents}-{activehdl,ghdl,modelsim,nvc,rivierapro}, py{36,37,38,39,310,311}-coverage
 isolated_build = True
 
 [testenv]
@@ -62,10 +62,10 @@ recreate=True
 passenv=ALDEC_LICENSE_FILE
 
 deps=
-    fmt: black
+    fmt: black==23.3.0
     pytest
     lint: pycodestyle
-    lint: pylint
+    lint: pylint==2.17.2
     lint: mypy
     lint: Pygments
     coverage: coverage

@@ -49,7 +49,7 @@ jobs:
       matrix:
         include:
           - { py: '3.11' , task: 311-lint }
-          - { py: '3.7'  , task: 37-unit }
+          - { py: '3.8'  , task: 38-unit }
           - { py: '3.11' , task: 311-unit }
     name: '🐧 Ubuntu · ${{ matrix.task }}'
     steps:
@@ -80,8 +80,8 @@ jobs:
       fail-fast: false
       matrix:
         task: [
-          {do: 311-acceptance,  tag: llvm},
-          {do: 311-vcomponents, tag: mcode},
+          {do: 313-acceptance,  tag: llvm},
+          {do: 313-vcomponents, tag: mcode},
         ]
     name: '🛳️ Container · ${{ matrix.task.do }} · ${{ matrix.task.tag }}'
     steps:
@@ -104,8 +104,8 @@ jobs:
       fail-fast: false
       matrix:
         task: [
-          {do: 39-acceptance},
-          {do: 39-vcomponents},
+          {do: 311-acceptance},
+          {do: 311-vcomponents},
         ]
     name: '🛳️ Container · ${{ matrix.task.do }} · NVC'
     steps:
@@ -154,9 +154,10 @@ jobs:
         submodules: recursive
 
     - name: '⚙️ Setup GHDL'
-      uses: ghdl/setup-ghdl-ci@master
+      uses: ghdl/setup-ghdl@main
       with:
-        backend: llvm
+        backend: mcode
+        runtime: mingw64
 
     - name: '🐍 Install dependencies'
       run: pip install -U tox --progress-bar off
