@@ -28,7 +28,7 @@ jobs:
     - name: Report coverage
       run: ./.github/run.sh coverage report -m --skip-covered
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: VUnit_coverage
         path: htmlcov
