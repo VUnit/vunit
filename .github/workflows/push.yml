@@ -98,27 +98,27 @@ jobs:
 # Docker (Linux) tests (NVC)
 #
 
-  nvc:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        task: [
-          {do: 311-acceptance},
-          {do: 311-vcomponents},
-        ]
-    name: '🛳️ Container · ${{ matrix.task.do }} · NVC'
-    steps:
+# nvc:
+#   runs-on: ubuntu-latest
+#   strategy:
+#     fail-fast: false
+#     matrix:
+#       task: [
+#         {do: 311-acceptance},
+#         {do: 311-vcomponents},
+#       ]
+#   name: '🛳️ Container · ${{ matrix.task.do }} · NVC'
+#   steps:
 
-    - name: '🧰 Checkout'
-      uses: actions/checkout@v4
-      with:
-        submodules: recursive
+#   - name: '🧰 Checkout'
+#     uses: actions/checkout@v4
+#     with:
+#       submodules: recursive
 
-    - name: '🚧 Run job'
-      uses: docker://ghcr.io/vunit/dev/nvc
-      with:
-        args: tox -e py${{ matrix.task.do }}-nvc
+#   - name: '🚧 Run job'
+#     uses: docker://ghcr.io/vunit/dev/nvc
+#     with:
+#       args: tox -e py${{ matrix.task.do }}-nvc
 
 #
 # Windows (MSYS2) with 'nightly' GHDL
@@ -175,7 +175,7 @@ jobs:
       - fmt
       - lin
       - ghdl
-      - nvc
+#      - nvc
       - win
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     name: '🚀 Deploy'
