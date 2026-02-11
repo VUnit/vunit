@@ -1,0 +1,1 @@
+Added warning when attempting to set NVC `--exit-severity` via `nvc.sim_flags`

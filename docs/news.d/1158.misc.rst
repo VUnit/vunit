@@ -1,0 +1,3 @@
+Restrict setup tools to pre-82, as the deprecated pkg_resources is still used.
+
+This is a short-term workaround. A properly updated setup will be released later.
