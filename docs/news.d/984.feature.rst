@@ -1,1 +1,0 @@
-[NVC] Added code coverage support.

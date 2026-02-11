@@ -1,2 +1,0 @@
-Improved error messaging if the NVC and GHDL environment variables are used for other purposes than naming the
-executable.
