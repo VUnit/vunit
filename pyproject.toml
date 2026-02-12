@@ -40,8 +40,9 @@ dynamic = ["version"]
 path = "vunit/about.py"
 
 [tool.hatch.build]
-# Ensure HDL and TCL assets are included in both sdist and wheel
+# Ensure Python source, HDL and TCL assets are included in both sdist and wheel
 include = [
+  "vunit/**/*.py",
   "vunit/**/*.tcl",
   "vunit/vhdl/**",
   "vunit/verilog/**/*.v",
