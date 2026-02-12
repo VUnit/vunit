@@ -1,0 +1,5 @@
+
+Miscellaneous
+~~~~~~~~~~~~~
+
+- Restrict setup tools to pre-82, as the deprecated pkg_resources is still used. (:vunit_issue:`1158`)
