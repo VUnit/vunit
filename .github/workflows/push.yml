@@ -26,9 +26,9 @@ jobs:
       uses: actions/checkout@v4
 
     - name: '🐍 Setup Python'
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
-        python-version: '3.13'
+        python-version: '3.14'
 
     - name: '🐍 Install dependencies'
       run: |
@@ -36,7 +36,7 @@ jobs:
         pip install -U virtualenv tox --progress-bar off
 
     - name: '🐍 Run black'
-      run: tox -e py313-fmt -- --diff --color
+      run: tox -e py314-fmt -- --diff --color
 
 #
 # Linux linting and unit tests
@@ -48,9 +48,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { py: '3.13' , task: 313-lint }
-          - { py: '3.8'  , task: 38-unit }
-          - { py: '3.13' , task: 313-unit }
+          - { py: '3.14' , task: 314-lint }
+          - { py: '3.10'  , task: 310-unit }
+          - { py: '3.14' , task: 314-unit }
     name: '🐧 Ubuntu · ${{ matrix.task }}'
     steps:
 
@@ -58,7 +58,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: '🐍 Setup Python'
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.py }}
 
@@ -80,8 +80,8 @@ jobs:
       fail-fast: false
       matrix:
         task: [
-          {do: 313-acceptance,  tag: llvm},
-          {do: 313-vcomponents, tag: mcode},
+          {do: 314-acceptance,  tag: llvm},
+          {do: 314-vcomponents, tag: mcode},
         ]
     name: '🛳️ Container · ${{ matrix.task.do }} · ${{ matrix.task.tag }}'
     steps:
@@ -187,9 +187,9 @@ jobs:
         submodules: recursive
 
     - name: '🐍 Setup Python'
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
-        python-version: '3.13'
+        python-version: '3.14'
 
     - name: '🐍 Install dependencies'
       run: |
