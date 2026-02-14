@@ -1,8 +1,5 @@
 [build-system]
-requires = [
-    "setuptools >= 35.0.2, <82.0.0",
-    "setuptools_scm >= 2.0.0, <3"
-]
+requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -25,12 +22,9 @@ classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Natural Language :: English",
     "Intended Audience :: Developers",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
     "Operating System :: Microsoft :: Windows",
@@ -39,7 +33,7 @@ classifiers = [
     "Topic :: Software Development :: Testing",
     "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 dependencies = [
     "colorama",
 ]
@@ -103,7 +97,7 @@ underlines = ["-", "~"]
 [tool.tox]
 legacy_tox_ini = """
 [tox]
-envlist = py{38,39,310,311,312,313}-{fmt,unit,lint,docs}, py{38,39,310,311,312,313}-{acceptance,vcomponents}-{activehdl,ghdl,modelsim,nvc,rivierapro}, py{38,39,310,311,312,313}-coverage
+envlist = py{310,311,312,313}-{fmt,unit,lint,docs}, py{310,311,312,313}-{acceptance,vcomponents}-{activehdl,ghdl,modelsim,nvc,rivierapro}, py{310,311,312,313}-coverage
 isolated_build = True
 
 [testenv]

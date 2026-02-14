@@ -26,7 +26,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: '🐍 Setup Python'
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: '3.13'
 
@@ -49,7 +49,7 @@ jobs:
       matrix:
         include:
           - { py: '3.13' , task: 313-lint }
-          - { py: '3.8'  , task: 38-unit }
+          - { py: '3.10'  , task: 310-unit }
           - { py: '3.13' , task: 313-unit }
     name: '🐧 Ubuntu · ${{ matrix.task }}'
     steps:
@@ -58,7 +58,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: '🐍 Setup Python'
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.py }}
 
@@ -187,7 +187,7 @@ jobs:
         submodules: recursive
 
     - name: '🐍 Setup Python'
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: '3.13'
 
