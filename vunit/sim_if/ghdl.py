@@ -155,6 +155,7 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
         mapping = {
             r"mcode (JIT )?code generator": "mcode",
             r"llvm (\d+\.\d+\.\d+ )?code generator": "llvm",
+            r"static elaboration, LLVM JIT code generator": "llvm-jit",
             r"GCC (back-end|\d+\.\d+\.\d+) code generator": "gcc",
         }
         output = cls._get_version_output(prefix)

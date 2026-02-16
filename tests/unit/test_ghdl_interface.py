@@ -56,6 +56,16 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
         check_output.return_value = version
         self.assertEqual(GHDLInterface.determine_backend("prefix"), "llvm")
 
+        version = b"""\
+GHDL 5.0.1 (tarball) [Dunoon edition]
+ Compiled with GNAT Version: 14.2.0
+ static elaboration, LLVM JIT code generator
+Written by Tristan Gingold.
+"""
+
+        check_output.return_value = version
+        self.assertEqual(GHDLInterface.determine_backend("prefix"), "llvm-jit")
+
     @mock.patch("subprocess.check_output", autospec=True)
     def test_parses_mcode_backend(self, check_output):
         version = b"""\
