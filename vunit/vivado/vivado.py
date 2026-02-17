@@ -31,7 +31,11 @@ def add_from_compile_order_file(
     no_dependency_scan = []
     with_dependency_scan = []
     for library_name, file_name in compile_order:
-        is_verilog = file_name.endswith(".v") or file_name.endswith(".vp")
+        # Treat Verilog (.v), encrypted Verilog (.vp), and SystemVerilog (.sv) alike:
+        # all need include_dirs passed through and are handled by the Verilog compiler.
+        # .sv support is required for AMD IPs such whose compile order
+        #  includes SystemVerilog sources.
+        is_verilog = file_name.endswith(".v") or file_name.endswith(".vp") or file_name.endswith(".sv")
 
         # Optionally use VUnit dependency scanning for everything in xil_defaultlib, which
         # typically contains unencrypted top levels that instantiate encrypted implementations.
@@ -92,7 +96,11 @@ def _read_compile_order(file_name, fail_on_non_hdl_files):
         for line in ifile.readlines():
             library_name, file_type, file_name = line.strip().split(",", 2)
 
-            if file_type not in ("Verilog", "VHDL", "Verilog Header"):
+            # Accept VHDL, Verilog, Verilog Header, and SystemVerilog entries.
+            # "SystemVerilog" was added to support AMD IPs (e.g. SmartConnect PG247)
+            # whose Vivado-generated compile order lists .sv files with this file_type.
+            # Without it, those entries would trigger the RuntimeError below.
+            if file_type not in ("Verilog", "VHDL", "Verilog Header", "SystemVerilog"):
                 if fail_on_non_hdl_files:
                     raise RuntimeError(f"Unsupported compile order file: {file_name}")
                 print(f"Compile order file ignored: {file_name}")
