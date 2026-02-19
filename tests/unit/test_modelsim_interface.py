@@ -22,14 +22,27 @@ from vunit.test.bench import Configuration
 from vunit.vhdl_standard import VHDL
 
 
+def _get_test_path():
+    return Path(__file__).parent / "test_modelsim_out"
+
+
+def _get_prefix_path():
+    return _get_test_path() / "prefix" / "bin"
+
+
+def _get_installed_modelsim_ini():
+    return (_get_prefix_path() / ".." / "modelsim.ini").resolve()
+
+
 class TestModelSimInterface(unittest.TestCase):
     """
     Test the ModelSim interface
     """
 
+    @mock.patch("vunit.sim_if.modelsim.ModelSimInterface._get_modelsim_ini_from_vmap", return_value=_get_installed_modelsim_ini())
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     @mock.patch("vunit.sim_if.modelsim.Process", autospec=True)
-    def test_compile_project_vhdl_2008(self, process, check_output):
+    def test_compile_project_vhdl_2008(self, process, check_output, get_modelsim_ini):
         simif = ModelSimInterface(prefix=self.prefix_path, output_path=self.output_path, persistent=False)
         project = Project()
         project.add_library("lib", "lib_path")
@@ -50,9 +63,10 @@ class TestModelSimInterface(unittest.TestCase):
         ]
         check_output.assert_called_once_with(check_args, env=simif.get_env())
 
+    @mock.patch("vunit.sim_if.modelsim.ModelSimInterface._get_modelsim_ini_from_vmap", return_value=_get_installed_modelsim_ini())
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     @mock.patch("vunit.sim_if.modelsim.Process", autospec=True)
-    def test_compile_project_vhdl_2002(self, process, check_output):
+    def test_compile_project_vhdl_2002(self, process, check_output, get_modelsim_ini):
         simif = ModelSimInterface(prefix=self.prefix_path, output_path=self.output_path, persistent=False)
         project = Project()
         project.add_library("lib", "lib_path")
@@ -73,9 +87,10 @@ class TestModelSimInterface(unittest.TestCase):
         ]
         check_output.assert_called_once_with(check_args, env=simif.get_env())
 
+    @mock.patch("vunit.sim_if.modelsim.ModelSimInterface._get_modelsim_ini_from_vmap", return_value=_get_installed_modelsim_ini())
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     @mock.patch("vunit.sim_if.modelsim.Process", autospec=True)
-    def test_compile_project_vhdl_93(self, process, check_output):
+    def test_compile_project_vhdl_93(self, process, check_output, get_modelsim_ini):
         simif = ModelSimInterface(prefix=self.prefix_path, output_path=self.output_path, persistent=False)
         project = Project()
         project.add_library("lib", "lib_path")
@@ -96,9 +111,10 @@ class TestModelSimInterface(unittest.TestCase):
         ]
         check_output.assert_called_once_with(check_args, env=simif.get_env())
 
+    @mock.patch("vunit.sim_if.modelsim.ModelSimInterface._get_modelsim_ini_from_vmap", return_value=_get_installed_modelsim_ini())
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     @mock.patch("vunit.sim_if.modelsim.Process", autospec=True)
-    def test_compile_project_vhdl_extra_flags(self, process, check_output):
+    def test_compile_project_vhdl_extra_flags(self, process, check_output, get_modelsim_ini):
         simif = ModelSimInterface(prefix=self.prefix_path, output_path=self.output_path, persistent=False)
         project = Project()
         project.add_library("lib", "lib_path")
@@ -122,9 +138,10 @@ class TestModelSimInterface(unittest.TestCase):
         ]
         check_output.assert_called_once_with(check_args, env=simif.get_env())
 
+    @mock.patch("vunit.sim_if.modelsim.ModelSimInterface._get_modelsim_ini_from_vmap", return_value=_get_installed_modelsim_ini())
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     @mock.patch("vunit.sim_if.modelsim.Process", autospec=True)
-    def test_compile_project_verilog(self, process, check_output):
+    def test_compile_project_verilog(self, process, check_output, get_modelsim_ini):
         simif = ModelSimInterface(prefix=self.prefix_path, output_path=self.output_path, persistent=False)
         project = Project()
         project.add_library("lib", "lib_path")
@@ -146,9 +163,10 @@ class TestModelSimInterface(unittest.TestCase):
         ]
         check_output.assert_called_once_with(check_args, env=simif.get_env())
 
+    @mock.patch("vunit.sim_if.modelsim.ModelSimInterface._get_modelsim_ini_from_vmap", return_value=_get_installed_modelsim_ini())
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     @mock.patch("vunit.sim_if.modelsim.Process", autospec=True)
-    def test_compile_project_system_verilog(self, process, check_output):
+    def test_compile_project_system_verilog(self, process, check_output, get_modelsim_ini):
         simif = ModelSimInterface(prefix=self.prefix_path, output_path=self.output_path, persistent=False)
         project = Project()
         project.add_library("lib", "lib_path")
@@ -171,9 +189,10 @@ class TestModelSimInterface(unittest.TestCase):
         ]
         check_output.assert_called_once_with(check_args, env=simif.get_env())
 
+    @mock.patch("vunit.sim_if.modelsim.ModelSimInterface._get_modelsim_ini_from_vmap", return_value=_get_installed_modelsim_ini())
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     @mock.patch("vunit.sim_if.modelsim.Process", autospec=True)
-    def test_compile_project_verilog_extra_flags(self, process, check_output):
+    def test_compile_project_verilog_extra_flags(self, process, check_output, get_modelsim_ini):
         simif = ModelSimInterface(prefix=self.prefix_path, output_path=self.output_path, persistent=False)
         project = Project()
         project.add_library("lib", "lib_path")
@@ -198,9 +217,10 @@ class TestModelSimInterface(unittest.TestCase):
         ]
         check_output.assert_called_once_with(check_args, env=simif.get_env())
 
+    @mock.patch("vunit.sim_if.modelsim.ModelSimInterface._get_modelsim_ini_from_vmap", return_value=_get_installed_modelsim_ini())
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     @mock.patch("vunit.sim_if.modelsim.Process", autospec=True)
-    def test_compile_project_verilog_include(self, process, check_output):
+    def test_compile_project_verilog_include(self, process, check_output, get_modelsim_ini):
         simif = ModelSimInterface(prefix=self.prefix_path, output_path=self.output_path, persistent=False)
         project = Project()
         project.add_library("lib", "lib_path")
@@ -223,9 +243,10 @@ class TestModelSimInterface(unittest.TestCase):
         ]
         check_output.assert_called_once_with(check_args, env=simif.get_env())
 
+    @mock.patch("vunit.sim_if.modelsim.ModelSimInterface._get_modelsim_ini_from_vmap", return_value=_get_installed_modelsim_ini())
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     @mock.patch("vunit.sim_if.modelsim.Process", autospec=True)
-    def test_compile_project_verilog_define(self, process, check_output):
+    def test_compile_project_verilog_define(self, process, check_output, get_modelsim_ini):
         simif = ModelSimInterface(prefix=self.prefix_path, output_path=self.output_path, persistent=False)
         project = Project()
         project.add_library("lib", "lib_path")
@@ -251,11 +272,12 @@ class TestModelSimInterface(unittest.TestCase):
     def _get_inis(self):
         return (
             str(Path(self.output_path) / "modelsim.ini"),
-            str(Path(self.prefix_path) / ".." / "modelsim.ini"),
+            str(_get_installed_modelsim_ini()),
             str(Path(self.test_path) / "my_modelsim.ini"),
         )
 
-    def test_copies_modelsim_ini_file_from_install(self):
+    @mock.patch("vunit.sim_if.modelsim.ModelSimInterface._get_modelsim_ini_from_vmap", return_value=_get_installed_modelsim_ini())
+    def test_copies_modelsim_ini_file_from_install(self, get_modelsim_ini):
         (modelsim_ini, installed_modelsim_ini, user_modelsim_ini) = self._get_inis()
 
         with open(installed_modelsim_ini, "w") as fptr:
@@ -268,7 +290,8 @@ class TestModelSimInterface(unittest.TestCase):
         with open(modelsim_ini, "r") as fptr:
             self.assertEqual(fptr.read(), "installed")
 
-    def test_copies_modelsim_ini_file_from_user(self):
+    @mock.patch("vunit.sim_if.modelsim.ModelSimInterface._get_modelsim_ini_from_vmap", return_value=_get_installed_modelsim_ini())
+    def test_copies_modelsim_ini_file_from_user(self, get_modelsim_ini):
         (modelsim_ini, installed_modelsim_ini, user_modelsim_ini) = self._get_inis()
 
         with open(installed_modelsim_ini, "w") as fptr:
@@ -283,7 +306,8 @@ class TestModelSimInterface(unittest.TestCase):
         with open(modelsim_ini, "r") as fptr:
             self.assertEqual(fptr.read(), "user")
 
-    def test_overwrites_modelsim_ini_file_from_install(self):
+    @mock.patch("vunit.sim_if.modelsim.ModelSimInterface._get_modelsim_ini_from_vmap", return_value=_get_installed_modelsim_ini())
+    def test_overwrites_modelsim_ini_file_from_install(self, get_modelsim_ini):
         (modelsim_ini, installed_modelsim_ini, user_modelsim_ini) = self._get_inis()
 
         with open(modelsim_ini, "w") as fptr:
@@ -299,7 +323,8 @@ class TestModelSimInterface(unittest.TestCase):
         with open(modelsim_ini, "r") as fptr:
             self.assertEqual(fptr.read(), "installed")
 
-    def test_overwrites_modelsim_ini_file_from_user(self):
+    @mock.patch("vunit.sim_if.modelsim.ModelSimInterface._get_modelsim_ini_from_vmap", return_value=_get_installed_modelsim_ini())
+    def test_overwrites_modelsim_ini_file_from_user(self, get_modelsim_ini):
         (modelsim_ini, installed_modelsim_ini, user_modelsim_ini) = self._get_inis()
 
         with open(modelsim_ini, "w") as fptr:
@@ -318,10 +343,11 @@ class TestModelSimInterface(unittest.TestCase):
             self.assertEqual(fptr.read(), "user")
 
     @mock.patch("vunit.sim_if.modelsim.LOGGER", autospec=True)
+    @mock.patch("vunit.sim_if.modelsim.ModelSimInterface._get_modelsim_ini_from_vmap", return_value=_get_installed_modelsim_ini())
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     @mock.patch("vunit.sim_if.modelsim.Process", autospec=True)
     @mock.patch("vunit.sim_if.vsim_simulator_mixin.Process", autospec=True)
-    def test_optimize(self, vsim_simulator_mixin_process, modelsim_process, check_output, LOGGER):
+    def test_optimize(self, vsim_simulator_mixin_process, modelsim_process, check_output, get_modelsim_ini, LOGGER):
         simif = ModelSimInterface(prefix=self.prefix_path, output_path=self.output_path, persistent=False)
         project = Project()
         project.add_library("lib", str(Path(self.libraries_path) / "lib"))
@@ -361,10 +387,10 @@ class TestModelSimInterface(unittest.TestCase):
         LOGGER.error.assert_has_calls(expected_error_calls)
 
     def setUp(self):
-        self.test_path = str(Path(__file__).parent / "test_modelsim_out")
+        self.test_path = str(_get_test_path())
 
         self.output_path = str(Path(self.test_path) / "modelsim")
-        self.prefix_path = str(Path(self.test_path) / "prefix" / "bin")
+        self.prefix_path = str(_get_prefix_path)
         self.libraries_path = str(Path(self.output_path) / "libraries")
         self.simulation_output_path = str(Path(self.test_path) / "test_output" / "lib.tb")
         renew_path(self.test_path)
@@ -372,7 +398,7 @@ class TestModelSimInterface(unittest.TestCase):
         renew_path(self.prefix_path)
         renew_path(self.libraries_path)
         renew_path(self.simulation_output_path)
-        installed_modelsim_ini = str(Path(self.prefix_path) / ".." / "modelsim.ini")
+        installed_modelsim_ini = str(_get_installed_modelsim_ini())
         write_file(installed_modelsim_ini, "[Library]")
         self.project = Project()
         self.cwd = os.getcwd()
