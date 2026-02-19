@@ -48,17 +48,33 @@ package avalon_stream_pkg is
   constant pop_avalon_stream_msg        : msg_type_t := new_msg_type("pop avalon stream");
   constant avalon_stream_transaction_msg : msg_type_t := new_msg_type("avalon stream transaction");
 
+  alias avalon_stream_reference_t is msg_t;
+
   procedure push_avalon_stream(signal net : inout network_t;
                                avalon_source : avalon_source_t;
                                data : std_logic_vector;
                                sop : std_logic := '0';
                                eop : std_logic := '0');
 
+  -- Blocking: pop a value from the avalon stream
   procedure pop_avalon_stream(signal net : inout network_t;
                               avalon_sink : avalon_sink_t;
                               variable data : inout std_logic_vector;
                               variable sop  : inout std_logic;
                               variable eop  : inout std_logic);
+
+  -- Non-blocking: pop a value from the avalon stream to be read in the future
+  procedure pop_avalon_stream(signal net : inout network_t;
+                              avalon_sink : avalon_sink_t;
+                              variable reference : inout avalon_stream_reference_t);
+
+  -- Blocking: Wait for reply to non-blocking pop
+  procedure await_pop_avalon_stream_reply(
+    signal net : inout network_t;
+    variable reference  : inout avalon_stream_reference_t;
+    variable data       : inout std_logic_vector;
+    variable sop        : inout std_logic;
+    variable eop        : inout std_logic);
 
   type avalon_stream_transaction_t is record
     data : std_logic_vector;
@@ -158,13 +174,48 @@ end;
 
   procedure pop_avalon_stream(signal net : inout network_t;
                               avalon_sink : avalon_sink_t;
+                              variable reference : inout avalon_stream_reference_t) is
+  begin
+    reference := new_msg(pop_avalon_stream_msg);
+    send(net, avalon_sink.p_actor, reference);
+  end;
+
+  procedure await_pop_avalon_stream_reply(
+    signal net : inout network_t;
+    variable reference  : inout avalon_stream_reference_t;
+    variable data       : inout std_logic_vector;
+    variable sop        : inout std_logic;
+    variable eop        : inout std_logic
+  ) is
+    variable reply_msg : msg_t;
+    variable avalon_stream_transaction : avalon_stream_transaction_t(data(data'length - 1 downto 0));
+  begin
+    receive_reply(net, reference, reply_msg);
+    pop_avalon_stream_transaction(reply_msg, avalon_stream_transaction);
+    data := avalon_stream_transaction.data;
+    if avalon_stream_transaction.sop then
+      sop := '1';
+    else
+      sop := '0';
+    end if;
+    if avalon_stream_transaction.eop then
+      eop := '1';
+    else
+      eop := '0';
+    end if;
+    delete(reference);
+    delete(reply_msg);
+  end;
+
+  procedure pop_avalon_stream(signal net : inout network_t;
+                              avalon_sink : avalon_sink_t;
                               variable data : inout std_logic_vector;
                               variable sop  : inout std_logic;
                               variable eop  : inout std_logic) is
     variable reference : msg_t := new_msg(pop_avalon_stream_msg);
     variable reply_msg : msg_t;
     variable avalon_stream_transaction : avalon_stream_transaction_t(data(data'length - 1 downto 0));
-begin
+  begin
     send(net, avalon_sink.p_actor, reference);
     receive_reply(net, reference, reply_msg);
     pop_avalon_stream_transaction(reply_msg, avalon_stream_transaction);
