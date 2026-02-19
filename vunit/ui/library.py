@@ -486,8 +486,6 @@ class Library(object):
         :returns: A :class:`.TestBench` object
         :raises: KeyError
         """
-        name = name.lower()
-
         return TestBench(self._test_bench_list.get_test_bench(self._library_name, name), self)
 
     def get_test_benches(self, pattern="*", allow_empty=False):
