@@ -296,7 +296,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         pli_str = " ".join(f'-pli "{fix_path(name)}"' for name in config.sim_options.get("pli", []))
 
         vsim_flags = [
-            f"-dataset {{{fix_path(str(Path(output_path) / 'dataset.asdb'))!s}}}",
+            f"-dataset {{{fix_path(str(output_path))!s}}}",
             pli_str,
             set_generic_str,
         ]
