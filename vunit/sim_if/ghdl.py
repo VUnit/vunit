@@ -59,6 +59,7 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
         group = parser.add_argument_group("ghdl/nvc", description="GHDL/NVC specific flags")
         group.add_argument(
             "--viewer-fmt",
+            "--waves-fmt",
             "--gtkwave-fmt",
             choices=["vcd", "fst", "ghw"],
             default=None,
@@ -66,6 +67,7 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
         )
         group.add_argument("--viewer-args", "--gtkwave-args", default="", help="Arguments to pass to waveform viewer")
         group.add_argument("--viewer", default=None, help="Waveform viewer to use")
+        group.add_argument("--waves", action='store_true', help="Generate waveform file")
 
     @classmethod
     def from_args(cls, args, output_path, **kwargs):
@@ -82,6 +84,7 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
             viewer_fmt=args.viewer_fmt,
             viewer_args=args.viewer_args,
             viewer=args.viewer,
+            waves=args.waves,
             backend=cls.determine_backend(prefix),
         )
 
@@ -101,6 +104,7 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
         viewer_fmt=None,
         viewer_args="",
         viewer=None,
+        waves=False,
         backend="llvm",
     ):
         SimulatorInterface.__init__(self, output_path, gui)
@@ -114,6 +118,7 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
 
         self._prefix = prefix
         self._project = None
+        self._waves = waves
 
         self._backend = backend
         self._vhdl_standard = None
@@ -370,6 +375,10 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
         ghdl_e = elaborate_only and config.sim_options.get("ghdl.elab_e", False)
 
         if self._viewer_fmt is not None:
+            if not self._waves and not self._gui:
+                LOGGER.warning("Passing --viewer-fmt, or any alias of that, without either "
+                               "--gui or --waves is deprecated and will be removed in a future version.")
+
             data_file_name = str(Path(script_path) / f"wave.{self._viewer_fmt!s}")
             if Path(data_file_name).exists():
                 remove(data_file_name)
