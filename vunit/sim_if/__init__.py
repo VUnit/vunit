@@ -11,6 +11,7 @@ Simulator interface(s)
 import sys
 import os
 from os import environ, listdir, pathsep
+import locale
 import subprocess
 from pathlib import Path
 from typing import List
@@ -360,14 +361,36 @@ def check_output(command, env=None):
     """
     Wrapper arround subprocess.check_output
     """
+    def _decode(data: bytes) -> str:
+        """Decode tool output robustly across platforms.
+
+        Some simulators on Windows emit output in a legacy code page (e.g. cp1252),
+        which can raise UnicodeDecodeError if decoded as strict UTF-8.
+        """
+
+        encodings_to_try = (
+            "utf-8",
+            "utf-8-sig",
+            locale.getpreferredencoding(False) or "utf-8",
+            "cp1252",
+        )
+
+        for encoding in encodings_to_try:
+            try:
+                return data.decode(encoding)
+            except UnicodeDecodeError:
+                continue
+
+        return data.decode("utf-8", errors="replace")
+
     try:
         output = subprocess.check_output(  # pylint: disable=unexpected-keyword-arg
             command, env=env, stderr=subprocess.STDOUT
         )
     except subprocess.CalledProcessError as err:
-        err.output = err.output.decode("utf-8")
+        err.output = _decode(err.output)
         raise err
-    return output.decode("utf-8")
+    return _decode(output)
 
 
 def check_executable(simulator_name, prefix, executable_name):
