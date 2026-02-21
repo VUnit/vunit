@@ -201,13 +201,6 @@ class TestExternalRunScripts(TestCase):
             ],
         )
 
-    @mark.xfail(
-        not (simulator_is("ghdl") or simulator_is("nvc")),
-        reason="Support complex JSON strings as generic",
-    )
-    def test_vhdl_json4vhdl_example_project(self):
-        self.check(ROOT / "examples/vhdl/json4vhdl/run.py")
-
     def test_vhdl_array_example_project(self):
         self.check(ROOT / "examples/vhdl/array/run.py")
 

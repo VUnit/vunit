@@ -254,11 +254,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
             file_name = None
 
         self._project.add_library(
-            library_name,
-            directory,
-            self._which_vhdl_standard(vhdl_standard),
-            is_external=True,
-            file_name=file_name
+            library_name, directory, self._which_vhdl_standard(vhdl_standard), is_external=True, file_name=file_name
         )
         return self.library(library_name)
 
@@ -1318,9 +1314,19 @@ other preprocessors. Lowest value first. The order between preprocessors with th
 
     def add_json4vhdl(self):
         """
-        Add JSON-for-VHDL library
+        Removed json4vhdl add-on.
         """
-        self._builtins.add("json4vhdl")
+        raise RuntimeError(
+            """\
+add_json4vhdl() has been removed. JSON-for-VHDL support is now provided through a separate package.
+
+Install it with:
+
+pip install vunit-json-for-vhdl
+
+Then replace the add_json4vhdl() call with add_package("vunit-json-for-vhdl").
+"""
+        )
 
     def update_test_pattern(
         self,

@@ -60,10 +60,7 @@ Main Features
     `actor model <http://en.wikipedia.org/wiki/Actor_model>`__.
   * :doc:`Verification Components library <./verification_components/user_guide>` providing verification components (VCs)
     for interfaces such as AXI, Avalon or Wishbone, along with utilities for writing your own self-checking VCs.
-  * Third-party submodules:
-
-    * `OSVVM <https://github.com/OSVVM/OSVVM>`__
-    * `JSON-for-VHDL <https://github.com/Paebbels/JSON-for-VHDL>`__
+  * Third-party submodule `OSVVM <https://github.com/OSVVM/OSVVM>`__
 
 Overview
 --------
@@ -79,7 +76,7 @@ The core of VUnit is the Python plumbing composed by the library and testbench A
 runner for interacting with HDL testbenches.
 Sibling ``run`` HDL libraries allow specifying tests within testbenches.
 
-Moreover, VUnit includes multiple optional HDL libraries, along with third-party resources such as OSVVM and JSON-for-VHDL.
+Moreover, VUnit includes multiple optional HDL libraries, along with the third-party OSVVM library.
 Those are made available through the built-ins API, which is based on the library and testbench API.
 
 Both the core and builtins are available in the public :ref:`python_interface` of VUnit.

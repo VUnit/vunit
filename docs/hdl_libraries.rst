@@ -72,15 +72,6 @@ Moreover, multiple approaches are supported for using `OSVVMLibraries <https://g
 VUnit.
 See :ref:`OSVB: Examples » SISO AXI4 Stream <osvb:Examples:AXI4Stream>`.
 
-JSON-for-VHDL
--------------
-
-VUnit includes `JSON-for-VHDL <https://github.com/Paebbels/JSON-for-VHDL>`__ as a submodule.
-JSON-for-VHDL is an alternative to composite top-level generics, which supports any depth in the content structure.
-
-See :meth:`add_json4vhdl() <vunit.ui.VUnit.add_json4vhdl>`, :vunit_file:`json4vhdl.py <vunit/json4vhdl.py>` and example
-:ref:`JSON-for-VHDL <examples:vhdl:json4vhdl>`.
-
 System Verilog
 ==============
 

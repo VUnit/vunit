@@ -5,50 +5,43 @@
 # Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 """
-json4vhdl helper functions
+Removed functions.
 """
 
-from pathlib import Path
 from typing import Union
-import json
-from base64 import b16encode as b16enc
+
+_REMOVAL_NOTICE = """\
+{function} has been removed. JSON-for-VHDL support is now provided through a separate package.
+
+Install it with:
+
+pip install vunit-json-for-vhdl
+
+Then:
+
+from vunit_json_for_vhdl import {function}
+"""
 
 
-def encode_json(obj: object):
+def encode_json(obj: object):  # pylint: disable=unused-argument
     """
-    Convert object to stringified JSON
-
-    :param obj: Object to stringify
-
-    :example:
-
-    .. code-block:: python
-
-       stringified_generic = encode_json(generics)
+    Removed function.
     """
-    return json.dumps(obj, separators=(",", ":"))
+    function = "encode_json"
+    raise RuntimeError(_REMOVAL_NOTICE.format(function=function))
 
 
-def read_json(filename: str):
+def read_json(filename: str):  # pylint: disable=unused-argument
     """
-    Read a JSON file and return an object
-
-    :param filename: The name of the file to read
-
-    :example:
-
-    .. code-block:: python
-
-       generics = read_json(join(root, "src/test/data/data.json"))
+    Removed function.
     """
-    with Path(filename).open("r", encoding="utf-8") as fptr:
-        return json.loads(fptr.read())
+    function = "read_json"
+    raise RuntimeError(_REMOVAL_NOTICE.format(function=function))
 
 
-def b16encode(data: Union[str, bytes]):
+def b16encode(data: Union[str, bytes]):  # pylint: disable=unused-argument
     """
-    Encode a str|bytes using Base16 and return a str|bytes
+    Removed function.
     """
-    if isinstance(data, str):
-        return b16enc(bytes(data, "utf-8")).decode("utf-8")
-    return b16encode(data)
+    function = "b16encode"
+    raise RuntimeError(_REMOVAL_NOTICE.format(function=function))

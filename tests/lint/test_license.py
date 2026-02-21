@@ -144,11 +144,6 @@ def find_licensed_files():
                 continue
             if file_name == "AlertLogPkg.vhd":
                 continue
-            if is_prefix_of(
-                (VHDL_PATH / "JSON-for-VHDL").resolve(),
-                (Path(root) / file_name).resolve(),
-            ):
-                continue
             if Path(file_name).suffix in (".vhd", ".vhdl", ".py", ".v", ".sv"):
                 licensed_files.append(str(Path(root) / file_name))
     return licensed_files
