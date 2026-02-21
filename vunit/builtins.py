@@ -65,7 +65,6 @@ class Builtins(object):
         add("verification_components", ["com", "osvvm"])
         add("osvvm")
         add("random", ["osvvm"])
-        add("json4vhdl")
 
     def add(self, name, args=None):
         self._builtins_adder.add(name, args)
@@ -448,18 +447,6 @@ in your VUnit Git repository? You have to do this first if installing using setu
                 continue
 
             library.add_source_files(file_name, preprocessors=[])
-
-    def _add_json4vhdl(self):
-        """
-        Add JSON-for-VHDL library
-        """
-        library = self._add_library_if_not_exist(
-            "JSON", "Library 'JSON' previously defined. Skipping addition of builtin JSON-for-VHDL (95e848b8)."
-        )
-        if library is None:
-            return
-
-        library.add_source_files(VHDL_PATH / "JSON-for-VHDL" / "src" / "*.vhdl")
 
     def _add_vhdl_logging(self):
         """

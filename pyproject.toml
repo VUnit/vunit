@@ -133,7 +133,7 @@ setenv=
     acceptance-rivierapro: VUNIT_SIMULATOR=rivierapro
 
 commands=
-    fmt:         {envpython} -m black ./ --exclude 'vunit/vhdl/JSON-for-VHDL|.eggs|.git|.hg|.mypy_cache|.nox|.tox|.venv|_build|buck-out|build|dist' {posargs}
+    fmt:         {envpython} -m black ./ --exclude .eggs|.git|.hg|.mypy_cache|.nox|.tox|.venv|_build|buck-out|build|dist' {posargs}
     unit:        {envpython} -m pytest -v -ra tests/unit {posargs}
     lint:        {envpython} -m pytest -v -ra tests/lint {posargs}
     docs:        {envpython} tools/build_docs.py {envtmpdir}/docsbuild {posargs}
