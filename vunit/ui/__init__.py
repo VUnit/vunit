@@ -254,11 +254,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
             file_name = None
 
         self._project.add_library(
-            library_name,
-            directory,
-            self._which_vhdl_standard(vhdl_standard),
-            is_external=True,
-            file_name=file_name
+            library_name, directory, self._which_vhdl_standard(vhdl_standard), is_external=True, file_name=file_name
         )
         return self.library(library_name)
 
