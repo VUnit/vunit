@@ -5,7 +5,7 @@
 # Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 """
-Interface towards Mentor Graphics ModelSim
+Interface towards Mentor Graphics/Siemens ModelSim/Questa simulator.
 """
 
 from pathlib import Path
@@ -17,7 +17,7 @@ from configparser import RawConfigParser
 from ..exceptions import CompileError
 from ..ostools import write_file, Process, file_exists
 from ..vhdl_standard import VHDL
-from . import SimulatorInterface, ListOfStringOption, StringOption, BooleanOption
+from . import SimulatorInterface, ListOfStringOption, StringOption, BooleanOption, check_output
 from .vsim_simulator_mixin import VsimSimulatorMixin, fix_path
 
 LOGGER = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ LOGGER = logging.getLogger(__name__)
 
 class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disable=too-many-instance-attributes
     """
-    Mentor Graphics ModelSim interface
+    Mentor Graphics/Siemens ModelSim/Questa interface
 
     The interface supports both running each simulation in separate vsim processes or
     re-using the same vsim process to avoid startup-overhead (persistent=True)
@@ -82,13 +82,22 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
     @classmethod
     def find_prefix_from_path(cls):
         """
-        Find first valid modelsim toolchain prefix
+        Find first valid Modelsim/Questa toolchain prefix
         """
 
-        def has_modelsim_ini(path):
-            return os.path.isfile(str(Path(path).parent / "modelsim.ini"))
+        def has_ini(path):
+            return os.path.isfile(str(Path(path).parent / "modelsim.ini")) or os.path.isfile(
+                str(Path(path).parent / "questa.ini")
+            )
 
-        return cls.find_toolchain(["vsim"], constraints=[has_modelsim_ini])
+        return cls.find_toolchain(["vsim"], constraints=[has_ini])
+
+    @classmethod
+    def supports_vhdl_call_paths(cls):
+        """
+        Returns True when this simulator supports VHDL-2019 call paths
+        """
+        return True
 
     @classmethod
     def supports_vhdl_package_generics(cls):
@@ -104,18 +113,34 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         """
         return True
 
+    def _find_in_help(self, prefix: str, tool: str, key: str) -> bool:
+        """
+        Helper function to find a key in the help output of a command.
+        """
+        try:
+            help_output = check_output([str(Path(prefix) / tool), "-help", "all"], env=self.get_env())
+            return key in help_output
+        except Process.NonZeroExitCode:
+            return False
+
     def __init__(self, prefix, output_path, *, persistent=False, gui=False, debugger="original"):
+        self._supports_vhdl_2019 = self._find_in_help(prefix, "vcom", "-2019")
+        support_ini_flag = self._find_in_help(prefix, "vcom", "-ini")
+        self._ini_flag = "-ini" if support_ini_flag else "-modelsimini"
+        self._ini_file = "questa.ini" if support_ini_flag else "modelsim.ini"
+
         SimulatorInterface.__init__(self, output_path, gui)
         VsimSimulatorMixin.__init__(
             self,
             prefix,
             persistent,
-            sim_cfg_file_name=str(Path(output_path) / "modelsim.ini"),
+            sim_cfg_file_name=str(Path(output_path) / self._ini_file),
         )
+
         self._libraries = []
         self._coverage_files = set()
         assert not (persistent and gui)
-        self._create_modelsim_ini()
+        self._create_ini()
         self._debugger = debugger
         self._vopt_retries = 3
         # Contains design already optimized, i.e. the optimized design can be reused
@@ -127,22 +152,22 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         # Lock to access the two shared variables above
         self._shared_state_lock = Lock()
 
-    def _create_modelsim_ini(self):
+    def _create_ini(self):
         """
-        Create the modelsim.ini file
+        Create the INI file
         """
         parent = str(Path(self._sim_cfg_file_name).parent)
         if not file_exists(parent):
             os.makedirs(parent)
 
-        original_modelsim_ini = os.environ.get("VUNIT_MODELSIM_INI", str(Path(self._prefix).parent / "modelsim.ini"))
-        with Path(original_modelsim_ini).open("rb") as fread:
+        original_ini = os.environ.get("VUNIT_MODELSIM_INI", str(Path(self._prefix).parent / self._ini_file))
+        with Path(original_ini).open("rb") as fread:
             with Path(self._sim_cfg_file_name).open("wb") as fwrite:
                 fwrite.write(fread.read())
 
     def add_simulator_specific(self, project):
         """
-        Add libraries from modelsim.ini file and add coverage flags
+        Add libraries from INI file and add coverage flags
         """
         mapped_libraries = self._get_mapped_libraries()
         for library_name in mapped_libraries:
@@ -172,12 +197,12 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         LOGGER.error("Unknown file type: %s", source_file.file_type)
         raise CompileError
 
-    @staticmethod
-    def _std_str(vhdl_standard):
+    def _std_str(self, vhdl_standard):
         """
-        Convert standard to format of Modelsim command line flag
+        Convert standard to format of Modelsim/Questa command line flag
         """
-        if vhdl_standard <= VHDL.STD_2008:
+        latest_supported_standard = VHDL.STD_2019 if self._supports_vhdl_2019 else VHDL.STD_2008
+        if vhdl_standard <= latest_supported_standard:
             return f"-{vhdl_standard!s}"
 
         raise ValueError(f"Invalid VHDL standard {vhdl_standard!s}")
@@ -190,7 +215,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
             [
                 str(Path(self._prefix) / "vcom"),
                 "-quiet",
-                "-modelsimini",
+                self._ini_flag,
                 self._sim_cfg_file_name,
             ]
             + source_file.compile_options.get("modelsim.vcom_flags", [])
@@ -209,7 +234,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         args = [
             str(Path(self._prefix) / "vlog"),
             "-quiet",
-            "-modelsimini",
+            self._ini_flag,
             self._sim_cfg_file_name,
         ]
         if source_file.is_system_verilog:
@@ -243,15 +268,15 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         if library_name in mapped_libraries and mapped_libraries[library_name] == path:
             return
 
-        cfg = parse_modelsimini(self._sim_cfg_file_name)
+        cfg = parse_ini(self._sim_cfg_file_name)
         cfg.set("Library", library_name, path)
-        write_modelsimini(cfg, self._sim_cfg_file_name)
+        write_ini(cfg, self._sim_cfg_file_name)
 
     def _get_mapped_libraries(self):
         """
-        Get mapped libraries from modelsim.ini file
+        Get mapped libraries from INI file
         """
-        cfg = parse_modelsimini(self._sim_cfg_file_name)
+        cfg = parse_ini(self._sim_cfg_file_name)
         libraries = dict(cfg.items("Library"))
         if "others" in libraries:
             del libraries["others"]
@@ -331,11 +356,11 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
             f"{{{fix_path(design_file)}}}",
         ]
 
-        # There is a known bug in modelsim that prevents the -modelsimini flag from accepting
+        # There is a known bug in Modelsim/Questa that prevents the -(modelsim)ini flag from accepting
         # a space in the path even with escaping, see issue #36
         if " " not in self._sim_cfg_file_name:
-            modelsimini_option = f"-modelsimini {fix_path(self._sim_cfg_file_name)!s}"
-            vopt_flags.insert(0, modelsimini_option)
+            ini_option = f"{self._ini_flag} {fix_path(self._sim_cfg_file_name)!s}"
+            vopt_flags.insert(0, ini_option)
 
         vopt_flags += vopt_library_flags
 
@@ -652,10 +677,10 @@ proc vunit_load {{vsim_extra_args ""}} {"""
             self._vsim_extra_args(config),
         ]
 
-        # There is a known bug in modelsim that prevents the -modelsimini flag from accepting
+        # There is a known bug in Modelsim/Questa that prevents the -(modelsim)ini flag from accepting
         # a space in the path even with escaping, see issue #36
         if " " not in self._sim_cfg_file_name:
-            vsim_flags.insert(1, "-modelsimini")
+            vsim_flags.insert(1, self._ini_flag)
             vsim_flags.insert(2, f"{fix_path(self._sim_cfg_file_name)}")
 
         for library in self._libraries:
@@ -814,9 +839,9 @@ proc _vunit_sim_restart {} {
     @staticmethod
     def get_env():
         """
-        Remove MODELSIM environment variable
+        Remove MODELSIM and QSIM_INIenvironment variables
         """
-        remove = ("MODELSIM",)
+        remove = ("MODELSIM", "QSIM_INI")
         env = os.environ.copy()
         for key in remove:
             if key in env.keys():
@@ -848,9 +873,9 @@ def encode_generic_value_for_args(value):
     return s_value
 
 
-def parse_modelsimini(file_name):
+def parse_ini(file_name):
     """
-    Parse a modelsim.ini file
+    Parse an INI file
     :returns: A RawConfigParser object
     """
     cfg = RawConfigParser()
@@ -859,9 +884,9 @@ def parse_modelsimini(file_name):
     return cfg
 
 
-def write_modelsimini(cfg, file_name):
+def write_ini(cfg, file_name):
     """
-    Writes a modelsim.ini file
+    Writes an INI file
     """
     with Path(file_name).open("w", encoding="utf-8") as optr:
         cfg.write(optr)
