@@ -369,7 +369,7 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
                 LOGGER.warning("Missing coverage file: %s", coverage_file)
 
         nvc_coverage_merge_cmd = [
-            "nvc",
+            str(Path(self._prefix) / self.executable),
             "--cover-merge",
             "-o",
             f"{file_name}.ncdb",
