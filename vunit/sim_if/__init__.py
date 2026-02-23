@@ -368,12 +368,12 @@ def check_output(command, env=None):
         which can raise UnicodeDecodeError if decoded as strict UTF-8.
         """
 
-        encodings_to_try = (
+        # Deduplicate via dict.fromkeys to avoid trying utf-8 twice
+        # when locale.getpreferredencoding() returns "UTF-8".
+        encodings_to_try = dict.fromkeys([
             "utf-8",
-            "utf-8-sig",
-            locale.getpreferredencoding(False) or "utf-8",
-            "cp1252",
-        )
+            locale.getpreferredencoding(False),
+        ])
 
         for encoding in encodings_to_try:
             try:
@@ -381,7 +381,7 @@ def check_output(command, env=None):
             except UnicodeDecodeError:
                 continue
 
-        return data.decode("utf-8", errors="replace")
+        return data.decode("utf-8", errors="backslashreplace")
 
     try:
         output = subprocess.check_output(  # pylint: disable=unexpected-keyword-arg
