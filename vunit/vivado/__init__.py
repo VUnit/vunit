@@ -4,12 +4,13 @@
 #
 # Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
-"""
-Utilities for integrating with Vivado
-"""
+"""Deprecated package."""
 
-from vunit.vivado.vivado import (
-    run_vivado,
-    add_from_compile_order_file,
-    create_compile_order_file,
-)
+raise RuntimeError("""\
+vunit.vivado has been removed. Vivado support is now provided through a separate package.
+
+Install it with:
+
+pip install vunit-vivado
+
+Then import vunit_vivado.vivado instead of vunit.vivado.""")

@@ -46,7 +46,7 @@ include-package-data = false
 where = ["."]
 include = [
     "vunit", "vunit.com", "vunit.parsing","vunit.parsing.verilog", "vunit.sim_if",
-    "vunit.test", "vunit.ui", "vunit.vivado"
+    "vunit.test", "vunit.ui"
 ]
 
 [tool.black]
