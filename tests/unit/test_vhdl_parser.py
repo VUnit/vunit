@@ -662,6 +662,39 @@ record
         stimulus = 'signal a : std_logic_vector(3 downto 0) := "----";'
         self.assertEqual(remove_comments(stimulus), stimulus)
 
+    def test_external_identifier(self):
+        # This test is focused on the special cases of external identifier parsing.
+        design_file = VHDLDesignFile.parse(
+            """
+entity standard_identifier is
+  generic (
+    -- Extended identifiers with parenthesis will be accepted if they are balanced.
+    -- Otherwise they will interfere with finding the closing parenthesis to the
+    -- generic clause. Same thing with port clause. This is an acceptable limitation
+    -- for now.
+    \\foo(bar)\\ : integer
+    );
+end entity;
+
+entity non-standard-identifier is -- This entity won't be found because of illegal identifier pattern.
+end package;
+
+entity \\extended-identifier\\ is
+end entity \\extended-identifier\\;
+
+package \\a.package\\ is
+end package \\a.package\\;
+"""
+        )
+        entities = design_file.entities
+        self.assertEqual(len(entities), 2)
+        self.assertEqual(entities[0].identifier, "standard_identifier")
+        self.assertEqual(entities[1].identifier, "\\extended-identifier\\")
+
+        packages = design_file.packages
+        self.assertEqual(len(packages), 1)
+        self.assertEqual(packages[0].identifier, "\\a.package\\")
+
     def parse_single_entity(self, code):
         """
         Helper function to parse a single entity

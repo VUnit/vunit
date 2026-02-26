@@ -1,0 +1,5 @@
+Added support for extended identifiers.
+
+A known exception is that extended identifiers within a port or generic clause that uses parenthesis must 
+have the same number of opening and closing parenthesis. For example, a generic named ``\foo(bar)\`` is
+accepted but ``\foo(bar\`` is not.
