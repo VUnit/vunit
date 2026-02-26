@@ -42,6 +42,9 @@ class VHDLParser(object):
         )
 
 
+_ID_PATTERN = r"[A-Za-z]\w*|\\[^\n\r\\]+\\"
+
+
 class VHDLDesignFile(object):  # pylint: disable=too-many-instance-attributes
     """
     Contains VHDL objects found within a file
@@ -86,7 +89,7 @@ class VHDLDesignFile(object):  # pylint: disable=too-many-instance-attributes
         )
 
     _component_re = re.compile(
-        r"[a-zA-Z]\w*\s*\:\s*(?:component)?\s*(?:(?:[a-zA-Z]\w*)\.)?([a-zA-Z]\w*)\s*"
+        rf"(?:{_ID_PATTERN})\s*\:\s*(?:component)?\s*(?:(?:{_ID_PATTERN})\.)?({_ID_PATTERN})\s*"
         r"(?:generic|port) map\s*\([\s\w\=\>\,\.\)\(\+\-\*\/\'\"]*\);",
         re.IGNORECASE,
     )
@@ -101,13 +104,13 @@ class VHDLPackageBody(object):
         self.identifier = identifier
 
     _package_body_pattern = re.compile(
-        r"""
+        rf"""
         \b                             # Word boundary
         package                        # package keyword
         \s+                            # At least one whitespace
         body                           # body keyword
         \s+                            # At least one whitespace
-        (?P<package>[a-zA-Z][\w]*)     # A package
+        (?P<package>{_ID_PATTERN})     # A package
         \s+                            # At least one whitespace
         is                             # is keyword
         """,
@@ -134,15 +137,15 @@ class VHDLConfiguration(object):
         self.entity = entity
 
     _configuration_re = re.compile(
-        r"""
+        rf"""
         \b                    # Word boundary
         configuration         # configuration keyword
         \s+                   # At least one whitespace
-        (?P<id>[a-zA-Z][\w]*) # An identifier
+        (?P<id>{_ID_PATTERN}) # An identifier
         \s+                   # At least one whitespace
         of                    # of keyword
         \s+                   # At least one whitespace
-        (?P<entity_id>[a-zA-Z][\w]*) # An identifier
+        (?P<entity_id>{_ID_PATTERN}) # An identifier
         \s+                   # At least one whitespace
         is                    # is keyword
         """,
@@ -168,15 +171,15 @@ class VHDLArchitecture(object):
         self.entity = entity
 
     _architecture_re = re.compile(
-        r"""
+        rf"""
         \b                    # Word boundary
         architecture          # architecture keyword
         \s+                   # At least one whitespace
-        (?P<id>[a-zA-Z][\w]*) # An identifier
+        (?P<id>{_ID_PATTERN}) # An identifier
         \s+                   # At least one whitespace
         of                    # of keyword
         \s+                   # At least one whitespace
-        (?P<entity_id>[a-zA-Z][\w]*) # An identifier
+        (?P<entity_id>{_ID_PATTERN}) # An identifier
         \s+                   # At least one whitespace
         is                    # is keyword
         """,
@@ -194,7 +197,9 @@ class VHDLArchitecture(object):
             yield VHDLArchitecture(identifier, entity_id)
 
 
-PACKAGE_INSTANCE_PATTERN = r"\bpackage\s+(?P<new_name>[a-zA-Z]\w*)\s+is\s+new\s+(?P<lib>[a-zA-Z]\w*)\.(?P<name>[a-zA-Z]\w*)"  # pylint: disable=line-too-long
+PACKAGE_INSTANCE_PATTERN = (
+    rf"\bpackage\s+(?P<new_name>{_ID_PATTERN})\s+is\s+new\s+" rf"(?P<lib>{_ID_PATTERN})\.(?P<name>{_ID_PATTERN})"
+)
 
 
 class VHDLPackage(object):
@@ -209,11 +214,11 @@ class VHDLPackage(object):
         self.array_types = array_types
 
     _package_start_re = re.compile(
-        r"""
+        rf"""
         \b                    # Word boundary
         package               # package keyword
         \s+                   # At least one whitespace
-        (?P<id>[a-zA-Z][\w]*) # An identifier
+        (?P<id>{_ID_PATTERN}) # An identifier
         \s+                   # At least one whitespace
         is                    # is keyword
         """,
@@ -324,11 +329,11 @@ class VHDLEntity(object):
         )
 
     _entity_start_re = re.compile(
-        r"""
+        rf"""
         \b                    # Word boundary
         entity                # entity keyword
         \s+                   # At least one whitespace
-        (?P<id>[a-zA-Z][\w]*) # An identifier
+        (?P<id>{_ID_PATTERN}) # An identifier
         \s+                   # At least one whitespace
         is                    # is keyword
         """,
@@ -371,11 +376,11 @@ class VHDLEntity(object):
         # Extract identifier
         re_flags = re.MULTILINE | re.IGNORECASE | re.VERBOSE
         entity_start = re.compile(
-            r"""
+            rf"""
             \b                    # Word boundary
             entity                # entity keyword
             \s+                   # At least one whitespace
-            (?P<id>[a-zA-Z][\w]*) # An identifier
+            (?P<id>{_ID_PATTERN}) # An identifier
             \s+                   # At least one whitespace
             is                    # is keyword
             """,
@@ -560,11 +565,11 @@ class VHDLContext(object):
         self.identifier = identifier
 
     _context_start_re = re.compile(
-        r"""
+        rf"""
         \b                    # Word boundary
         context               # context keyword
         \s+                   # At least one whitespace
-        (?P<id>[a-zA-Z][\w]*) # An identifier
+        (?P<id>{_ID_PATTERN}) # An identifier
         \s+                   # At least one whitespace
         is                    # is keyword
         """,
@@ -600,10 +605,10 @@ class VHDLSubtypeIndication(object):
         # Extract type mark and find out if it's an array type and if a constraint is given.
         re_flags = re.MULTILINE | re.IGNORECASE | re.VERBOSE
         subtype_indication_start = re.compile(
-            r"""
+            rf"""
             ^                             # Beginning of line
             [\s]*                         # Potential whitespaces
-            (?P<type_mark>[a-zA-Z][\w]*)   # An type mark
+            (?P<type_mark>{_ID_PATTERN})   # An type mark
             [\s]*                         # Potential whitespaces
             (?P<constraint>\(.*\))?
             """,
@@ -705,16 +710,16 @@ class VHDLEnumerationType(object):
         self.literals = literals
 
     _enum_declaration_re = re.compile(
-        r"""
+        rf"""
         \b                    # Word boundary
         type
         \s+
-        (?P<id>[a-zA-Z][\w]*)       # An identifier
+        (?P<id>{_ID_PATTERN})       # An identifier
         \s+
         is
         \s*\(\s*
-        (?P<literals>[a-zA-Z][\w]* # First enumeration literal
-        (\s*,\s*[a-zA-Z][\w]*)*)   # More enumeration literals
+        (?P<literals>({_ID_PATTERN}) # First enumeration literal
+        (\s*,\s*(?:{_ID_PATTERN}))*)   # More enumeration literals
         \s*\)\s*;""",
         re.MULTILINE | re.IGNORECASE | re.VERBOSE,
     )
@@ -746,11 +751,11 @@ class VHDLRecordType(object):
         self.elements = elements
 
     _record_declaration_re = re.compile(
-        r"""
+        rf"""
         \b                    # Word boundary
         type
         \s+
-        (?P<id>[a-zA-Z][\w]*)       # An identifier
+        (?P<id>{_ID_PATTERN})       # An identifier
         \s+
         is
         \s+
@@ -809,17 +814,17 @@ class VHDLArrayType(object):
     )
 
     _range_attribute_ranges_re = re.compile(
-        r"""
-        \s*(?P<range_attribute>[a-zA-Z][\w]*'range)\s*""",
+        rf"""
+        \s*(?P<range_attribute>(?:{_ID_PATTERN})'range)\s*""",
         re.MULTILINE | re.IGNORECASE | re.VERBOSE | re.DOTALL,
     )
 
     _unconstrained_ranges_re = re.compile(
-        r"""
-        \s*(?P<range_type1>[a-zA-Z][\w]*)
+        rf"""
+        \s*(?P<range_type1>{_ID_PATTERN})
         \s+range\s+<>\s*
         (,
-        \s*(?P<range_type2>[a-zA-Z][\w]*)
+        \s*(?P<range_type2>{_ID_PATTERN})
         \s+range\s+<>\s*)?""",
         re.MULTILINE | re.IGNORECASE | re.VERBOSE | re.DOTALL,
     )
@@ -833,24 +838,24 @@ class VHDLArrayType(object):
     )
 
     _range_attribute_range_re = re.compile(
-        r"""
-        \s*(?P<range_attribute>[a-zA-Z][\w]*'range)\s*""",
+        rf"""
+        \s*(?P<range_attribute>(?:{_ID_PATTERN})'range)\s*""",
         re.MULTILINE | re.IGNORECASE | re.VERBOSE | re.DOTALL,
     )
 
     _unconstrained_range_re = re.compile(
-        r"""
-        \s*(?P<range_type>[a-zA-Z][\w]*)
+        rf"""
+        \s*(?P<range_type>{_ID_PATTERN})
         \s+range\s+<>\s*""",
         re.MULTILINE | re.IGNORECASE | re.VERBOSE | re.DOTALL,
     )
 
     _array_declaration_re = re.compile(
-        r"""
+        rf"""
         \b                    # Word boundary
         type
         \s+
-        (?P<id>[a-zA-Z][\w]*)
+        (?P<id>{_ID_PATTERN})
         \s+
         is
         \s+
@@ -950,12 +955,12 @@ class VHDLReference(object):
     _reference_types = ("package", "context", "entity", "configuration")
 
     _uses_re = re.compile(
-        r"""
+        rf"""
             \b                             # Word boundary
             (?P<use_type>use|context)      # use or context keyword
             \s+                            # At least one whitespace
-            (?P<id>[a-zA-Z][\w]*(\.[a-zA-Z][\w]*){1,2})
-            (?P<extra>(\s*,\s*[a-zA-Z][\w]*(\.[a-zA-Z][\w]*){1,2})*)
+            (?P<id>(?:{_ID_PATTERN})(\.(?:{_ID_PATTERN})){{1,2}})
+            (?P<extra>(\s*,\s*(?:{_ID_PATTERN})(\.(?:{_ID_PATTERN})){{1,2}})*)
             \s*                            # Potential whitespaces
             ;                              # Semi-colon
     """,
@@ -1002,7 +1007,7 @@ class VHDLReference(object):
         return references
 
     _entity_reference_re = re.compile(
-        r"\bentity\s+(?P<lib>[a-zA-Z]\w*)\.(?P<ent>[a-zA-Z]\w*)\s*(\((?P<arch>[a-zA-Z]\w*)\))?",
+        rf"\bentity\s+(?P<lib>{_ID_PATTERN})\.(?P<ent>{_ID_PATTERN})\s*(\(" rf"(?P<arch>{_ID_PATTERN})\))?",
         re.MULTILINE | re.IGNORECASE,
     )
 
@@ -1027,7 +1032,7 @@ class VHDLReference(object):
         return references
 
     _configuration_reference_re = re.compile(
-        r"\bconfiguration\s+(?P<lib>[a-zA-Z]\w*)\.(?P<cfg>[a-zA-Z]\w*)",
+        rf"\bconfiguration\s+(?P<lib>{_ID_PATTERN})\.(?P<cfg>{_ID_PATTERN})",
         re.MULTILINE | re.IGNORECASE,
     )
 
