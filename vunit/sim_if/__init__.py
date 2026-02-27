@@ -359,9 +359,7 @@ def check_output(command, env=None):
 
         encodings_to_try = (
             "utf-8",
-            "utf-8-sig",
-            locale.getpreferredencoding(False) or "utf-8",
-            "cp1252",
+            locale.getpreferredencoding(False),
         )
 
         for encoding in encodings_to_try:
@@ -370,7 +368,7 @@ def check_output(command, env=None):
             except UnicodeDecodeError:
                 continue
 
-        return data.decode("utf-8", errors="replace")
+        return data.decode("utf-8", errors="backslashreplace")
 
     try:
         output = subprocess.check_output(  # pylint: disable=unexpected-keyword-arg
