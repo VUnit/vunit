@@ -1,0 +1,5 @@
+[GHDL/NVC] It is now possible to pass ``--waves`` to generate waveform files without
+opening the GUI. The earlier GHDL-only approach of passing ``--viewer-fmt``
+(or ``--gtkwave-fmt``) is deprecated and will be removed in a later version.
+There is also a new alias for providing the waveform format, ``--waves-fmt``,
+to make it consistent with the new flag.
