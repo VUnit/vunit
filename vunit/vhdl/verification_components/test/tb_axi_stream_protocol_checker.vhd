@@ -35,8 +35,8 @@ architecture a of tb_axi_stream_protocol_checker is
   signal tlast    : std_logic := '1';
   signal tdest    : std_logic_vector(dest_length - 1 downto 0) := (others => '0');
   signal tid      : std_logic_vector(id_length - 1 downto 0) := (others => '0');
-  signal tstrb    : std_logic_vector(data_length/8 - 1 downto 0) := (others => '0');
-  signal tkeep    : std_logic_vector(data_length/8 - 1 downto 0) := (others => '0');
+  signal tstrb    : std_logic_vector((data_length + 7) / 8 - 1 downto 0) := (others => '0');
+  signal tkeep    : std_logic_vector((data_length + 7) / 8 - 1 downto 0) := (others => '0');
   signal tuser    : std_logic_vector(user_length - 1 downto 0) := (others => '0');
 
   constant logger           : logger_t                      := get_logger("protocol_checker");
