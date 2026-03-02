@@ -119,7 +119,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         """
         try:
             help_output = check_output([str(Path(prefix) / tool), "-help", "all"], env=self.get_env())
-            return key in help_output
+            return key in help_output.split()
         except Process.NonZeroExitCode:
             return False
 

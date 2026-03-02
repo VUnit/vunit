@@ -257,11 +257,11 @@ class TestModelSimInterface(unittest.TestCase):
         ]
         check_output.assert_called_once_with(process_args, env=simif.get_env())
 
-    def _get_inis(self):
+    def _get_inis(self, name="modelsim"):
         return (
-            str(Path(self.output_path) / "modelsim.ini"),
-            str(Path(self.prefix_path) / ".." / "modelsim.ini"),
-            str(Path(self.test_path) / "my_modelsim.ini"),
+            str(Path(self.output_path) / f"{name}.ini"),
+            str(Path(self.prefix_path) / f".." / "{name}.ini"),
+            str(Path(self.test_path) / f"my_{name}.ini"),
         )
 
     @mock.patch("vunit.sim_if.modelsim.check_output", autospec=True, return_value="")
@@ -329,6 +329,52 @@ class TestModelSimInterface(unittest.TestCase):
 
         with open(modelsim_ini, "r") as fptr:
             self.assertEqual(fptr.read(), "user")
+
+    @mock.patch("vunit.sim_if.vsim_simulator_mixin.Process", autospec=True)
+    def test_modelsim_ini_file_detection(self, vsim_simulator_mixin_process):
+        (_, _, user_modelsim_ini) = self._get_inis("questa")
+
+        with open(user_modelsim_ini, "w") as fptr:
+            fptr.write("user")
+
+        def check_output(*args, **kwargs):
+            return """\
+  -initoutcompositeparam
+                     Initialize array and record mode OUT parameters of subprogram
+  -modelsimini <modelsim.ini>
+                     Specify path to the modelsim.ini file.
+"""
+
+        with (
+            set_env(VUNIT_MODELSIM_INI=user_modelsim_ini),
+            mock.patch("vunit.sim_if.vsim_simulator_mixin.Process", return_value=None),
+            mock.patch("vunit.sim_if.modelsim.check_output", side_effect=check_output),
+        ):
+            simif = ModelSimInterface(prefix=self.prefix_path, output_path=self.output_path, persistent=False)
+            self.assertEqual(simif._ini_flag, "-modelsimini")
+            self.assertEqual(simif._ini_file, "modelsim.ini")
+
+    @mock.patch("vunit.sim_if.vsim_simulator_mixin.Process", autospec=True)
+    def test_questa_ini_file_detection(self, vsim_simulator_mixin_process):
+        (_, _, user_questa_ini) = self._get_inis("questa")
+
+        with open(user_questa_ini, "w") as fptr:
+            fptr.write("user")
+
+        def check_output(*args, **kwargs):
+            return """\
+-modelsimini <modelsim.ini>     Specify path to the modelsim.ini file
+-ini <questa.ini>               Specify path to the questa.ini file
+"""
+
+        with (
+            set_env(VUNIT_MODELSIM_INI=user_questa_ini),
+            mock.patch("vunit.sim_if.vsim_simulator_mixin.Process", return_value=None),
+            mock.patch("vunit.sim_if.modelsim.check_output", side_effect=check_output),
+        ):
+            simif = ModelSimInterface(prefix=self.prefix_path, output_path=self.output_path, persistent=False)
+            self.assertEqual(simif._ini_flag, "-ini")
+            self.assertEqual(simif._ini_file, "questa.ini")
 
     @mock.patch("vunit.sim_if.modelsim.check_output", autospec=True, return_value="")
     @mock.patch("vunit.sim_if.modelsim.LOGGER", autospec=True)
