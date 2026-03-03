@@ -66,6 +66,7 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
             viewer_fmt=args.viewer_fmt,
             viewer_args=args.viewer_args,
             viewer=args.viewer,
+            waves=args.waves,
         )
 
     @classmethod
@@ -76,7 +77,7 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
         return cls.find_toolchain([cls.executable])
 
     def __init__(  # pylint: disable=too-many-arguments
-        self, output_path, prefix, *, num_threads, gui=False, viewer_fmt=None, viewer_args="", viewer=None
+        self, output_path, prefix, *, num_threads, gui=False, viewer_fmt=None, viewer_args="", viewer=None, waves=False
     ):
         SimulatorInterface.__init__(self, output_path, gui)
         if viewer_fmt == "ghw":
@@ -86,6 +87,7 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
 
         self._prefix = prefix
         self._project = None
+        self._waves = waves
 
         self._vhdl_standard = None
         self._coverage_files = set()
@@ -260,7 +262,7 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
         libdir = self._project.get_library(config.library_name).directory
         cmd = self._get_command(self._vhdl_standard, config.library_name, libdir)
 
-        if self._gui:
+        if self._gui or self._waves:
             wave_file = script_path / (f"{config.entity_name}.{self._viewer_fmt or 'fst'}")
             if wave_file.exists():
                 remove(wave_file)
