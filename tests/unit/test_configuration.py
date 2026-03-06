@@ -172,14 +172,14 @@ class TestConfiguration(unittest.TestCase):
         )
 
     def test_call_pre_config_none(self):
-        self.assertEqual(self._call_pre_config(None, "output_path", "simulator_output_path"), True)
+        self.assertEqual(self._call_pre_config(None, "output_path", "simulator_output_path", "seed"), True)
 
     def test_call_pre_config_false(self):
         def pre_config():
             return False
 
         self.assertEqual(
-            self._call_pre_config(pre_config, "output_path", "simulator_output_path"),
+            self._call_pre_config(pre_config, "output_path", "simulator_output_path", "seed"),
             False,
         )
 
@@ -188,7 +188,7 @@ class TestConfiguration(unittest.TestCase):
             return True
 
         self.assertEqual(
-            self._call_pre_config(pre_config, "output_path", "simulator_output_path"),
+            self._call_pre_config(pre_config, "output_path", "simulator_output_path", "seed"),
             True,
         )
 
@@ -197,7 +197,7 @@ class TestConfiguration(unittest.TestCase):
             pass
 
         self.assertEqual(
-            self._call_pre_config(pre_config, "output_path", "simulator_output_path"),
+            self._call_pre_config(pre_config, "output_path", "simulator_output_path", "seed"),
             False,
         )
 
@@ -209,13 +209,7 @@ class TestConfiguration(unittest.TestCase):
             self.assertEqual(output_path, "output_path")
             raise WasHere
 
-        self.assertRaises(
-            WasHere,
-            self._call_pre_config,
-            pre_config,
-            "output_path",
-            "simulator_output_path",
-        )
+        self.assertRaises(WasHere, self._call_pre_config, pre_config, "output_path", "simulator_output_path", "seed")
 
     def test_call_pre_config_with_simulator_output_path(self):
         def pre_config(output_path, simulator_output_path):
@@ -226,13 +220,19 @@ class TestConfiguration(unittest.TestCase):
             self.assertEqual(simulator_output_path, "simulator_output_path")
             raise WasHere
 
-        self.assertRaises(
-            WasHere,
-            self._call_pre_config,
-            pre_config,
-            "output_path",
-            "simulator_output_path",
-        )
+        self.assertRaises(WasHere, self._call_pre_config, pre_config, "output_path", "simulator_output_path", "seed")
+
+    def test_call_pre_config_with_seed(self):
+        def pre_config(output_path, simulator_output_path, seed):
+            """
+            Pre config with output path
+            """
+            self.assertEqual(output_path, "output_path")
+            self.assertEqual(simulator_output_path, "simulator_output_path")
+            self.assertEqual(seed, "seed")
+            raise WasHere
+
+        self.assertRaises(WasHere, self._call_pre_config, pre_config, "output_path", "simulator_output_path", "seed")
 
     def test_call_pre_config_class_method(self):
         class MyClass(object):
@@ -243,30 +243,27 @@ class TestConfiguration(unittest.TestCase):
             def __init__(self, value):
                 self.value = value
 
-            def pre_config(self, output_path, simulator_output_path):
+            def pre_config(self, output_path, simulator_output_path, seed):
                 """
                 Pre config with output path
                 """
                 assert self.value == 2
                 assert output_path == "output_path"
                 assert simulator_output_path == "simulator_output_path"
+                assert seed == "seed"
                 raise WasHere
 
         self.assertRaises(
-            WasHere,
-            self._call_pre_config,
-            MyClass(value=2).pre_config,
-            "output_path",
-            "simulator_output_path",
+            WasHere, self._call_pre_config, MyClass(value=2).pre_config, "output_path", "simulator_output_path", "seed"
         )
 
     @staticmethod
-    def _call_pre_config(pre_config, output_path, simulator_output_path):
+    def _call_pre_config(pre_config, output_path, simulator_output_path, seed):
         """
         Helper method to test call_pre_config method
         """
         with _create_config(pre_config=pre_config) as config:
-            return config.call_pre_config(output_path, simulator_output_path)
+            return config.call_pre_config(output_path, simulator_output_path, seed)
 
     @staticmethod
     def _call_post_check(post_check, **kwargs):

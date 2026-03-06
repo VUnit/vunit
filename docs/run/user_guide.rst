@@ -259,7 +259,7 @@ level of test coverage.
 The base seed is provided via the ``runner_cfg`` generic and new derived seeds can be obtained by calling the
 ``get_seed`` function with ``runner_cfg`` and a salt string. The salt string is hashed together with the base seed to
 ensure the uniqueness of each derived seed (with very high probability). The ``salt`` parameter can be omitted if only a
-single seed is needed:
+single seed is needed. In that case, the base seed is hashed with the empty string.
 
 .. raw:: html
     :file: img/get_seed_and_runner_cfg.html

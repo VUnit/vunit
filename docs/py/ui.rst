@@ -102,9 +102,10 @@ There are two hooks to run user defined Python code.
 :pre_config: A ``pre_config`` is called before simulation of the test
              case. The function accepts an optional string argument
              ``output_path``, which is the filesystem path to the
-             directory where test outputs are stored, and an optional
+             directory where test outputs are stored, an optional
              string argument ``simulator_output_path`` which is the path
-             to the simulator working directory.
+             to the simulator working directory, and ``seed`` which is the
+             seed assigned to the test case.
 
              .. note::
                ``simulator_output_path`` is shared by all test runs. The
@@ -125,6 +126,11 @@ There are two hooks to run user defined Python code.
              The use case for ``simulator_output_path`` is to support
              code expecting input files to be located in the
              simulator working directory.
+
+             The use case for ``seed`` is to have access to a reproducible
+             seed for data randomization. The seed is identical to the
+             base seed provided to the simulation, see the
+             :doc:`run library user guide <../run/user_guide>`.
 
 :post_check: A ``post_check`` is called after a passing simulation of
              the test case. The function accepts an optional string argument

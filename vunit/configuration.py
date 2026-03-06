@@ -148,7 +148,7 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
 
         return level
 
-    def call_pre_config(self, output_path, simulator_output_path):
+    def call_pre_config(self, output_path, simulator_output_path, seed):
         """
         Call pre_config if available. Setting optional output_path
         """
@@ -157,10 +157,7 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
 
         args = inspect.getfullargspec(self.pre_config).args
 
-        kwargs = {
-            "output_path": output_path,
-            "simulator_output_path": simulator_output_path,
-        }
+        kwargs = {"output_path": output_path, "simulator_output_path": simulator_output_path, "seed": seed}
 
         for argname in list(kwargs.keys()):
             if argname not in args:

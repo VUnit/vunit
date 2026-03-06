@@ -1,0 +1,1 @@
+Added seed as an optional input to ``pre_config`` hooks. The seed is identical to the base seed provided to the simulation.
