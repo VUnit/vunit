@@ -169,12 +169,27 @@ def configure_tb_test_prio(ui):
 def configure_tb_seed(ui):
     tb = ui.library("lib").test_bench("tb_seed")
 
+    def make_pre_config(expected_seed=""):
+        def pre_config(seed):
+            print(f"pre_config seed: {seed}")
+            if not expected_seed:
+                assert seed != "0123456789abcdef"
+            else:
+                assert seed == expected_seed
+
+            return True
+
+        return pre_config
+
     if args.seed == "0123456789abcdef":
         tb.test("test_1").set_generic("expected_seed", "2e373913e5ad677d")
         tb.test("test_2").set_generic("expected_seed", "2e373913e5ad677d")
+        tb.set_pre_config(make_pre_config("0123456789abcdef"))
     elif args.seed == "repeat":
         tb.test("test_1").set_generic("expected_seed", "ffa08cd9489aad14")
         tb.test("test_2").set_generic("expected_seed", "9a292b3679afd081")
+        tb.test("test_1").set_pre_config(make_pre_config("7ac31eb89c4059f9"))
+        tb.test("test_2").set_pre_config(make_pre_config("8b1cd665d806e572"))
 
 
 def configure_tb_vunit_pkg(vu):
