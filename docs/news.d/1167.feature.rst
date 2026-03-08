@@ -1,0 +1,1 @@
+Improved support for non UTF-8 encoded outputs from simulators.

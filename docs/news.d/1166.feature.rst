@@ -1,0 +1,5 @@
+Added initial support for external package addition. This is in preparation for supporting third-party additions to
+VUnit in a controlled way. Some packages currently shipped alongside VUnit will also be moved to this new system, for
+example the JSON-for-VHDL package. By separating the packages from the core of VUnit, we make it easier for users to
+create, maintain, and share their own packages independent of the VUnit core. Package management is based on the Python
+ecosystem, i.e they can be hosted on PyPi and installed by using pip.

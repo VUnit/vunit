@@ -1,0 +1,1 @@
+Dropped support for Python 3.8 and 3.9 which have reached their end of life, see https://devguide.python.org/versions.

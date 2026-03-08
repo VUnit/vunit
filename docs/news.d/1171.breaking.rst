@@ -1,0 +1,5 @@
+JSON-for-VHDL is no longer shipped with VUnit. Support is now provided through a separate VUnit package. Install it with:
+
+``pip install vunit-json-for-vhdl``
+
+Calls to the ``add_json4vhdl()`` method must be replaced with ``add_package("vunit-json-for-vhdl")``.
