@@ -448,11 +448,10 @@ in your VUnit Git repository? You have to do this first if installing using setu
 
             library.add_source_files(file_name, preprocessors=[])
 
-    def _add_vhdl_logging(self):
+    def _add_vhdl_logging(self, use_external_log):
         """
         Add logging functionality
         """
-
         use_call_paths = self._simulator_class.supports_vhdl_call_paths() and (
             self._vhdl_standard in VHDL.STD_2019.and_later
         )
@@ -465,6 +464,10 @@ in your VUnit Git repository? You have to do this first if installing using setu
             base_file_name = Path(file_name).name
 
             if base_file_name.startswith("location_pkg-body"):
+                continue
+
+            if (base_file_name == "common_log_pkg-body.vhd") and use_external_log:
+                self._add_files(Path(use_external_log))
                 continue
 
             standards = set()
@@ -504,7 +507,7 @@ in your VUnit Git repository? You have to do this first if installing using setu
             })
         """
         self._add_data_types(external=external)
-        self._add_vhdl_logging()
+        self._add_vhdl_logging(use_external_log)
         self._add_files(VHDL_PATH / "*.vhd")
         for path in (
             "core",
@@ -515,14 +518,6 @@ in your VUnit Git repository? You have to do this first if installing using setu
             "path",
         ):
             self._add_files(VHDL_PATH / path / "src" / "*.vhd")
-
-        logging_files = glob(str(VHDL_PATH / "logging" / "src" / "*.vhd"))
-        for logging_file in logging_files:
-            if logging_file.endswith("common_log_pkg-body.vhd") and use_external_log:
-                self._add_files(Path(use_external_log))
-                continue
-
-            self._add_files(Path(logging_file))
 
 
 def osvvm_is_installed():
