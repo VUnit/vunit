@@ -119,6 +119,7 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
         self._vhdl_standard = None
         self._coverage_test_dirs = set()  # For gcov
         self._coverage_files = set()  # For --coverage
+        self._version = self.determine_version(self.find_prefix())
 
     def has_valid_exit_code(self):  # pylint: disable=arguments-differ
         """
@@ -185,6 +186,13 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
         )
 
     @classmethod
+    def supports_vhdl_call_paths(cls):
+        """
+        Returns True when this simulator supports VHDL-2019 call paths
+        """
+        return False
+
+    @classmethod
     def supports_vhdl_package_generics(cls):
         """
         Returns True when this simulator supports VHDL package generics
@@ -246,16 +254,20 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
         LOGGER.error("Unknown file type: %s", source_file.file_type)
         raise CompileError
 
-    @staticmethod
-    def _std_str(vhdl_standard):
+    def _std_str(self, vhdl_standard):
         """
         Convert standard to format of GHDL command line flag
         """
-        if vhdl_standard == VHDL.STD_2002:
-            return "02"
+        if vhdl_standard == VHDL.STD_2019:
+            if self._version >= 6.0:
+                return "19"
+            raise ValueError("VHDL-2019 requires GHDL >=6.0.0.")
 
         if vhdl_standard == VHDL.STD_2008:
             return "08"
+
+        if vhdl_standard == VHDL.STD_2002:
+            return "02"
 
         if vhdl_standard == VHDL.STD_1993:
             return "93"

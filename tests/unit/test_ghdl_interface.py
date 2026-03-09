@@ -138,7 +138,31 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         self.assertRaises(AssertionError, GHDLInterface.determine_backend, "prefix")
 
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")  # pylint: disable=no-self-use
-    def test_compile_project_2008(self, check_output):
+    @mock.patch.object(GHDLInterface, "determine_version", return_value=6.0)
+    def test_compile_project_2019(self, determine_version, check_output):
+        simif = GHDLInterface(prefix="prefix", output_path="")
+        write_file("file.vhd", "")
+
+        project = Project()
+        project.add_library("lib", "lib_path")
+        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("2019"))
+        simif.compile_project(project)
+        check_output.assert_called_once_with(
+            [
+                str(Path("prefix") / "ghdl"),
+                "-a",
+                "--workdir=lib_path",
+                "--work=lib",
+                "--std=19",
+                "-Plib_path",
+                "file.vhd",
+            ],
+            env=simif.get_env(),
+        )
+
+    @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")  # pylint: disable=no-self-use
+    @mock.patch.object(GHDLInterface, "determine_version", return_value=5.0)
+    def test_compile_project_2008(self, determine_version, check_output):
         simif = GHDLInterface(prefix="prefix", output_path="")
         write_file("file.vhd", "")
 
@@ -160,7 +184,8 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         )
 
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")  # pylint: disable=no-self-use
-    def test_compile_project_2002(self, check_output):
+    @mock.patch.object(GHDLInterface, "determine_version", return_value=5.0)
+    def test_compile_project_2002(self, determine_version, check_output):
         simif = GHDLInterface(prefix="prefix", output_path="")
         write_file("file.vhd", "")
 
@@ -182,7 +207,8 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         )
 
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")  # pylint: disable=no-self-use
-    def test_compile_project_93(self, check_output):
+    @mock.patch.object(GHDLInterface, "determine_version", return_value=5.0)
+    def test_compile_project_93(self, determine_version, check_output):
         simif = GHDLInterface(prefix="prefix", output_path="")
         write_file("file.vhd", "")
 
@@ -204,7 +230,8 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         )
 
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")  # pylint: disable=no-self-use
-    def test_compile_project_extra_flags(self, check_output):
+    @mock.patch.object(GHDLInterface, "determine_version", return_value=5.0)
+    def test_compile_project_extra_flags(self, determine_version, check_output):
         simif = GHDLInterface(prefix="prefix", output_path="")
         write_file("file.vhd", "")
 
@@ -228,7 +255,8 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
             env=simif.get_env(),
         )
 
-    def test_elaborate_e_project(self):
+    @mock.patch.object(GHDLInterface, "determine_version", return_value=5.0)
+    def test_elaborate_e_project(self, determine_version):
         design_unit = Entity("tb_entity", file_name=str(Path("tempdir") / "file.vhd"))
         design_unit.original_file_name = str(Path("tempdir") / "other_path" / "original_file.vhd")
         design_unit.generic_names = ["runner_cfg", "tb_path"]
@@ -258,7 +286,8 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
             ],
         )
 
-    def test_compile_project_verilog_error(self):
+    @mock.patch.object(GHDLInterface, "determine_version", return_value=5.0)
+    def test_compile_project_verilog_error(self, determine_version):
         simif = GHDLInterface(prefix="prefix", output_path="")
         write_file("file.v", "")
 
