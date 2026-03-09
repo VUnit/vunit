@@ -1,3 +1,0 @@
-Enabled VHDL-2019 for GHDL >= 6.0.0.
-
-Note that VUnit log location support based on call_path is deactivated as this is yet to be supported by GHDL.

@@ -1,1 +1,0 @@
-Added support for VHDL-2019 in Questa. Related issues #1135 and #1169.
