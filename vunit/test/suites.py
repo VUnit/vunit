@@ -211,7 +211,8 @@ class TestRun(object):
         for name in self._test_cases:
             results[name] = FAILED
 
-        if not self._config.call_pre_config(output_path, self._simulator_if.output_path, self._seed):
+        seed = self.get_seed()
+        if not self._config.call_pre_config(output_path, self._simulator_if.output_path, seed):
             return results
 
         # Ensure result file exists

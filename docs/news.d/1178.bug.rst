@@ -1,0 +1,1 @@
+Fixed missing generated seed input to pre_config hook.
