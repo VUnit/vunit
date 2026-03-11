@@ -174,6 +174,7 @@ def configure_tb_seed(ui):
             print(f"pre_config seed: {seed}")
             if not expected_seed:
                 assert seed != "0123456789abcdef"
+                assert seed is not None
             else:
                 assert seed == expected_seed
 
@@ -190,6 +191,8 @@ def configure_tb_seed(ui):
         tb.test("test_2").set_generic("expected_seed", "9a292b3679afd081")
         tb.test("test_1").set_pre_config(make_pre_config("7ac31eb89c4059f9"))
         tb.test("test_2").set_pre_config(make_pre_config("8b1cd665d806e572"))
+    elif args.seed is None:
+        tb.set_pre_config(make_pre_config())
 
 
 def configure_tb_vunit_pkg(vu):

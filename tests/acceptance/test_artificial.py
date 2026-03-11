@@ -107,6 +107,16 @@ class TestVunitArtificial(unittest.TestCase):
             ],
         )
 
+    def test_generated_seed(self):
+        self.check(self.artificial_run_vhdl, args=["lib.tb_seed*"])
+        check_report(
+            self.report_file,
+            [
+                ("passed", "lib.tb_seed.test_1"),
+                ("passed", "lib.tb_seed.test_2"),
+            ],
+        )
+
     def test_not_executing_package_init_on_package_addition(self):
         self.check(self.artificial_run_vhdl, args=["lib.tb_vunit_pkg.all"])
         check_report(
