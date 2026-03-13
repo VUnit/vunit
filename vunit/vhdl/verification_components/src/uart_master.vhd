@@ -52,7 +52,7 @@ begin
         send_bit(odd_parity(data));
       elsif parity = 2 then
         send_bit(even_parity(data));
-	  end if;
+      end if;
 
       send_bit(uart.p_idle_state);
     end procedure;
