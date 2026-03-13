@@ -24,6 +24,7 @@ end entity;
 
 architecture a of uart_slave is
   signal baud_rate : natural := uart.p_baud_rate;
+  signal parity    : natural := uart.p_parity;
   signal local_event : std_logic := '0';
   constant data_queue : queue_t := new_queue;
 begin
@@ -37,7 +38,8 @@ begin
 
     if msg_type = uart_set_baud_rate_msg then
       baud_rate <= pop(msg);
-
+    elsif msg_type = uart_set_parity_msg then
+      parity <= pop(msg);
     elsif msg_type = stream_pop_msg then
       reply_msg := new_msg;
       if not (length(data_queue) > 0) then
@@ -56,9 +58,12 @@ begin
   recv : process
     procedure uart_recv(variable data : out std_logic_vector;
                         signal rx : in std_logic;
-                        baud_rate : integer) is
+                        baud_rate : integer;
+                        parity    : natural) is
       constant time_per_bit : time := (10**9 / baud_rate) * 1 ns;
       constant time_per_half_bit : time := (10**9 / (2*baud_rate)) * 1 ns;
+      variable parity_bit  : std_logic;
+      variable parity_calc : std_logic;
     begin
       wait for time_per_half_bit; -- middle of start bit
       assert rx = not uart.p_idle_state;
@@ -69,13 +74,37 @@ begin
         wait for time_per_bit;
       end loop;
 
+      if parity = 1 then
+        parity_bit := rx;
+        parity_calc := odd_parity(data);
+        wait for 0 ns;
+
+        if parity_bit /= parity_calc then
+          report "odd parity mismatch"
+          severity WARNING;
+        end if;
+
+        wait for time_per_bit;
+      elsif parity = 2 then
+        parity_bit := rx;
+        parity_calc := even_parity(data);
+        wait for 0 ns;
+
+        if parity_bit /= parity_calc then
+          report "even parity mismatch"
+          severity WARNING;
+        end if;
+
+        wait for time_per_bit;
+      end if;
+
       assert rx = uart.p_idle_state;
     end procedure;
 
     variable data : std_logic_vector(uart.p_data_length-1 downto 0);
   begin
     wait on rx until rx = not uart.p_idle_state;
-    uart_recv(data, rx, baud_rate);
+    uart_recv(data, rx, baud_rate, parity);
     push_std_ulogic_vector(data_queue, data);
     local_event <= '1';
     wait for 0 ns;
