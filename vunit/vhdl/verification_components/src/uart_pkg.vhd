@@ -150,6 +150,11 @@ package body uart_pkg is
                        parity     : natural) is
     variable msg : msg_t := new_msg(uart_set_parity_msg);
   begin
+    if parity > 2 then
+      report "Invalid parity value: " & to_string(parity)
+      severity error;
+    end if;
+
     push(msg, parity);
     send(net, actor, msg);
   end;
