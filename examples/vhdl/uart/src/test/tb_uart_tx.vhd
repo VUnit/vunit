@@ -19,7 +19,8 @@ library uart_lib;
 
 entity tb_uart_tx is
   generic (
-    runner_cfg : string);
+    runner_cfg : string;
+    parity : natural);
 end entity;
 
 architecture tb of tb_uart_tx is
@@ -35,6 +36,7 @@ architecture tb of tb_uart_tx is
 
   shared variable rnd_stimuli, rnd_expected : RandomPType;
   constant uart_bfm : uart_slave_t := new_uart_slave(initial_baud_rate => baud_rate,
+                                                     initial_parity => parity,
                                                      data_length => tdata'length);
   constant uart_stream : stream_slave_t := as_stream(uart_bfm);
 
@@ -79,7 +81,8 @@ begin
 
   dut : entity uart_lib.uart_tx
     generic map (
-      cycles_per_bit => cycles_per_bit)
+      cycles_per_bit => cycles_per_bit,
+      parity => parity)
     port map (
       clk => clk,
       tx => tx,

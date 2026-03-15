@@ -15,7 +15,8 @@ use vunit_lib.logger_pkg.all;
 
 entity uart_rx is
   generic (
-    cycles_per_bit : natural := 434);
+    cycles_per_bit : natural := 434;
+    parity : natural := 0);
   port (
    clk : in std_logic;
 
@@ -29,6 +30,7 @@ entity uart_rx is
    tvalid : out std_Logic := '0';
    tdata : out std_logic_vector(7 downto 0));
 begin
+
   -- pragma translate_off
   check_stable(clk, check_enabled, tvalid, tready, tdata, "tdata must be stable until tready is active");
   check_stable(clk, check_enabled, tvalid, tready, tvalid, "tvalid must be active until tready is active");
@@ -46,12 +48,30 @@ end entity;
 
 architecture a of uart_rx is
   signal tvalid_int : std_logic := '0';
+
+  function data_size(
+    constant parity: natural
+  ) return natural is
+  begin
+    if parity = 0 then
+      -- uart data (8 bits)
+      return 8;
+    elsif parity = 1 or parity = 2 then
+      -- uart data (8 bits)+ parity
+      return 9;
+    else
+      -- invalid mode
+      return 0;
+    end if;
+  end function data_size;
+
 begin
   main : process (clk)
     type state_t is (idle, receiving, done);
     variable state : state_t := idle;
+    variable datawidth : natural := data_size(parity);
     variable cycles : natural range 0 to cycles_per_bit-1 := 0;
-    variable data : std_logic_vector(7 downto 0);
+    variable data : std_logic_vector(datawidth-1 downto 0);
     variable index : natural range 0 to data'length-1 := 0;
   begin
     if rising_edge(clk) then
@@ -89,7 +109,7 @@ begin
           -- New output overwrites old output
           overflow <= tvalid_int and not tready;
           tvalid_int <= '1';
-          tdata <= data;
+          tdata <= data(7 downto 0);
           state := idle;
       end case;
 

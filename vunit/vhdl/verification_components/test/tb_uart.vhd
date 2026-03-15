@@ -27,6 +27,12 @@ architecture a of tb_uart is
   constant slave_uart : uart_slave_t := new_uart_slave(data_length => 8);
   constant slave_stream : stream_slave_t := as_stream(slave_uart);
 
+  -- parity related VCs
+  constant master_uart_p : uart_master_t := new_uart_master;
+  constant master_stream_p : stream_master_t := as_stream(master_uart);
+
+  constant slave_uart_p : uart_slave_t := new_uart_slave(data_length => 8);
+  constant slave_stream_p : stream_slave_t := as_stream(slave_uart);
   signal chan : std_logic;
 begin
 
@@ -83,6 +89,28 @@ begin
       test_baud_rate(2000);
       test_baud_rate(7000);
       test_baud_rate(200000);
+    elsif run("test_parity_odd") then
+      set_parity(net, master_uart_p, 1);
+      set_parity(net, slave_uart_p, 1);
+
+      for i in 0 to 7 loop
+        push_stream(net, master_stream_p,
+                    std_logic_vector(to_unsigned(i+1, data'length)));
+        pop_stream(net, slave_stream_p, data);
+        check_equal(data, std_logic_vector(to_unsigned(i+1, data'length)), "pop stream data");
+      end loop;
+
+    elsif run("test_parity_even") then
+      set_parity(net, master_uart_p, 2);
+      set_parity(net, slave_uart_p, 2);
+
+      for i in 0 to 7 loop
+        push_stream(net, master_stream_p,
+                    std_logic_vector(to_unsigned(i+1, data'length)));
+        pop_stream(net, slave_stream_p, data);
+        check_equal(data, std_logic_vector(to_unsigned(i+1, data'length)), "pop stream data");
+      end loop;
+
     end if;
 
     test_runner_cleanup(runner);

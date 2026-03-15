@@ -15,7 +15,8 @@ use vunit_lib.logger_pkg.all;
 
 entity uart_tx is
   generic (
-    cycles_per_bit : natural := 434);
+    cycles_per_bit : natural := 434;
+    parity : natural := 0);
   port (
    clk : in std_logic;
 
@@ -44,12 +45,42 @@ end entity;
 
 architecture a of uart_tx is
   signal tready_int : std_logic := '0';
+
+  function data_size(
+    constant parity: natural
+  ) return natural is
+  begin
+    if parity = 0 then
+      -- uart data (8 bits)
+      return 8;
+    elsif parity = 1 or parity = 2 then
+      -- uart data (8 bits)+ parity
+      return 9;
+    else
+      -- invalid mode
+      return 0;
+    end if;
+  end function data_size;
+
+  function even_parity (data : std_logic_vector) return std_logic is
+  begin
+    return xor data;
+
+  end function even_parity;
+
+  function odd_parity (data : std_logic_vector) return std_logic is
+  begin
+
+    return xnor data;
+  end function odd_parity;
+
 begin
   main : process (clk)
     type state_t is (idle, sending);
     variable state : state_t := idle;
+    variable datawidth : natural := data_size(parity) + 2;
     variable cycles : natural range 0 to cycles_per_bit-1 := 0;
-    variable data : std_logic_vector(9 downto 0);
+    variable data : std_logic_vector(datawidth-1 downto 0);
     variable index : natural range 0 to data'length-1 := 0;
   begin
     if rising_edge(clk) then
@@ -60,7 +91,14 @@ begin
             state := sending;
             cycles := 0;
             index := 0;
-            data := '1' & tdata & '0';
+
+            if parity = 0 then
+              data := '1' & tdata & '0';
+            elsif parity = 1 then
+              data := '1' & odd_parity(tdata) & tdata & '0';
+            elsif parity = 2 then
+              data := '1' & even_parity(tdata) & tdata & '0';
+            end if;
           end if;
         when sending =>
           tx <= data(0);
