@@ -410,7 +410,8 @@ package logger_pkg is
                       log_level : log_level_t;
                       log_time : time := no_time_check;
                       line_num : natural := 0;
-                      file_name : string := "");
+                      file_name : string := "";
+                      msg_is_substr : boolean := false);
 
   -- Check that there is only one recorded log call remaining
   procedure check_only_log(logger : logger_t;
@@ -418,7 +419,8 @@ package logger_pkg is
                            log_level : log_level_t;
                            log_time : time := no_time_check;
                            line_num : natural := 0;
-                           file_name : string := "");
+                           file_name : string := "";
+                           msg_is_substr : boolean := false);
 
   -- Check that there are no remaining recorded log calls, automatically called
   -- during unmock
