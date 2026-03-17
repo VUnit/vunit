@@ -34,8 +34,8 @@ entity axi_stream_slave is
     tready   : out std_logic := '0';
     tdata    : in std_logic_vector(data_length(slave)-1 downto 0);
     tlast    : in std_logic                                         := '1';
-    tkeep    : in std_logic_vector(data_length(slave)/8-1 downto 0) := (others => '1');
-    tstrb    : in std_logic_vector(data_length(slave)/8-1 downto 0) := (others => 'U');
+    tkeep    : in std_logic_vector(keep_strb_length(slave)-1 downto 0) := (others => '1');
+    tstrb    : in std_logic_vector(keep_strb_length(slave)-1 downto 0) := (others => 'U');
     tid      : in std_logic_vector(id_length(slave)-1 downto 0)     := (others => '0');
     tdest    : in std_logic_vector(dest_length(slave)-1 downto 0)   := (others => '0');
     tuser    : in std_logic_vector(user_length(slave)-1 downto 0)   := (others => '0')
@@ -146,7 +146,8 @@ begin
             mismatch := false;
             for idx in tkeep'range loop
               if tkeep(idx) and tstrb_resolved(idx) then
-                mismatch := tdata(8 * idx + 7 downto 8 * idx) /= expected_tdata(8 * idx + 7 downto 8 * idx);
+                mismatch := tdata(minimum(8 * idx + 7, tdata'left) downto 8 * idx) /=
+                            expected_tdata(minimum(8 * idx + 7, tdata'left) downto 8 * idx);
                 exit when mismatch;
               end if;
             end loop;
