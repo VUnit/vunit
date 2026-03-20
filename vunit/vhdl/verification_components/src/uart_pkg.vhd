@@ -54,12 +54,12 @@ package uart_pkg is
   constant default_parity      : parity_t := PARITY_NONE;
 
   impure function new_uart_master(initial_baud_rate : natural := default_baud_rate;
-                                  initial_parity : parity_t := default_parity;
-                                  idle_state : std_logic := default_idle_state) return uart_master_t;
+                                  idle_state : std_logic := default_idle_state;
+                                  initial_parity : parity_t := default_parity) return uart_master_t;
   impure function new_uart_slave(initial_baud_rate : natural := default_baud_rate;
-                                 initial_parity : parity_t := default_parity;
                                  idle_state : std_logic := default_idle_state;
-                                 data_length : positive := default_data_length) return uart_slave_t;
+                                 data_length : positive := default_data_length;
+                                 initial_parity : parity_t := default_parity) return uart_slave_t;
 
   impure function as_stream(uart_master : uart_master_t) return stream_master_t;
   impure function as_stream(uart_slave : uart_slave_t) return stream_slave_t;
@@ -78,8 +78,9 @@ end package;
 package body uart_pkg is
 
   impure function new_uart_master(initial_baud_rate : natural := default_baud_rate;
-                                  initial_parity : parity_t := default_parity;
-                                  idle_state : std_logic := default_idle_state) return uart_master_t is
+                                  idle_state : std_logic := default_idle_state;
+                                  initial_parity : parity_t := default_parity
+  ) return uart_master_t is
   begin
     return (p_actor => new_actor,
             p_baud_rate => initial_baud_rate,
@@ -89,9 +90,9 @@ package body uart_pkg is
 
   impure function new_uart_slave(
                                  initial_baud_rate : natural := default_baud_rate;
-                                 initial_parity : parity_t := default_parity;
                                  idle_state : std_logic := default_idle_state;
-                                 data_length : positive := default_data_length
+                                 data_length : positive := default_data_length;
+                                 initial_parity : parity_t := default_parity
   ) return uart_slave_t is
 
   begin
