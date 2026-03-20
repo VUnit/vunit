@@ -18,14 +18,14 @@ package uart_pkg is
   type uart_master_t is record
     p_actor : actor_t;
     p_baud_rate : natural;
-    p_parity     : natural;
+    p_parity     : parity_t;
     p_idle_state : std_logic;
   end record uart_master_t;
 
   type uart_slave_t is record
     p_actor : actor_t;
     p_baud_rate : natural;
-    p_parity     : natural;
+    p_parity     : parity_t;
     p_idle_state : std_logic;
     p_data_length : positive;
   end record;
@@ -42,22 +42,22 @@ package uart_pkg is
   -- 0 = no parity, 1 = odd parity, 2 = even parity
   procedure set_parity(signal net  : inout network_t;
                        uart_master : uart_master_t;
-                       parity      : natural);
+                       parity      : parity_t);
 
   procedure set_parity(signal net : inout network_t;
                        uart_slave : uart_slave_t;
-                       parity     : natural);
+                       parity     : parity_t);
 
   constant default_baud_rate : natural := 115200;
   constant default_idle_state : std_logic := '1';
   constant default_data_length : positive := 8;
-  constant default_parity      : natural  := 0;
+  constant default_parity      : parity_t := PARITY_NONE;
 
   impure function new_uart_master(initial_baud_rate : natural := default_baud_rate;
-                                  initial_parity : natural := default_parity;
+                                  initial_parity : parity_t := default_parity;
                                   idle_state : std_logic := default_idle_state) return uart_master_t;
   impure function new_uart_slave(initial_baud_rate : natural := default_baud_rate;
-                                 initial_parity : natural := default_parity;
+                                 initial_parity : parity_t := default_parity;
                                  idle_state : std_logic := default_idle_state;
                                  data_length : positive := default_data_length) return uart_slave_t;
 
@@ -68,7 +68,7 @@ package uart_pkg is
 
   constant uart_set_baud_rate_msg : msg_type_t := new_msg_type("uart set baud rate");
 
-  constant uart_set_parity_msg : msg_type_t := new_msg_type("uart set parity rate");
+  constant uart_set_parity_msg : msg_type_t := new_msg_type("uart set parity");
 
   function even_parity(data : std_logic_vector) return std_logic;
   function odd_parity (data : std_logic_vector) return std_logic;
@@ -78,7 +78,7 @@ end package;
 package body uart_pkg is
 
   impure function new_uart_master(initial_baud_rate : natural := default_baud_rate;
-                                  initial_parity : natural := default_parity;
+                                  initial_parity : parity_t := default_parity;
                                   idle_state : std_logic := default_idle_state) return uart_master_t is
   begin
     return (p_actor => new_actor,
@@ -89,7 +89,7 @@ package body uart_pkg is
 
   impure function new_uart_slave(
                                  initial_baud_rate : natural := default_baud_rate;
-                                 initial_parity : natural := default_parity;
+                                 initial_parity : parity_t := default_parity;
                                  idle_state : std_logic := default_idle_state;
                                  data_length : positive := default_data_length
   ) return uart_slave_t is
@@ -147,28 +147,24 @@ package body uart_pkg is
 
   procedure set_parity(signal net : inout network_t;
                        actor      : actor_t;
-                       parity     : natural) is
+                       parity     : parity_t) is
     variable msg : msg_t := new_msg(uart_set_parity_msg);
   begin
-    if parity > 2 then
-      report "Invalid parity value: " & to_string(parity)
-      severity error;
-    end if;
 
-    push(msg, parity);
+    push(msg, parity_t'pos(parity));
     send(net, actor, msg);
   end;
 
   procedure set_parity(signal net  : inout network_t;
                        uart_master : uart_master_t;
-                       parity      : natural) is
+                       parity      : parity_t) is
   begin
     set_parity(net, uart_master.p_actor, parity);
   end;
 
   procedure set_parity(signal net : inout network_t;
                        uart_slave : uart_slave_t;
-                       parity     : natural) is
+                       parity     : parity_t) is
   begin
     set_parity(net, uart_slave.p_actor, parity);
   end;

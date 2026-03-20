@@ -24,7 +24,7 @@ end entity;
 
 architecture a of uart_slave is
   signal baud_rate : natural := uart.p_baud_rate;
-  signal parity    : natural := uart.p_parity;
+  signal parity    : parity_t := uart.p_parity;
   signal local_event : std_logic := '0';
   constant data_queue : queue_t := new_queue;
 begin
@@ -39,7 +39,7 @@ begin
     if msg_type = uart_set_baud_rate_msg then
       baud_rate <= pop(msg);
     elsif msg_type = uart_set_parity_msg then
-      parity <= pop(msg);
+      parity <= int_to_parity(pop(msg));
     elsif msg_type = stream_pop_msg then
       reply_msg := new_msg;
       if not (length(data_queue) > 0) then
@@ -59,7 +59,7 @@ begin
     procedure uart_recv(variable data : out std_logic_vector;
                         signal rx : in std_logic;
                         baud_rate : integer;
-                        parity    : natural) is
+                        parity    : parity_t) is
       constant time_per_bit : time := (10**9 / baud_rate) * 1 ns;
       constant time_per_half_bit : time := (10**9 / (2*baud_rate)) * 1 ns;
       variable parity_bit  : std_logic;
@@ -74,7 +74,7 @@ begin
         wait for time_per_bit;
       end loop;
 
-      if parity = 1 then
+      if parity = PARITY_ODD then
         parity_bit := rx;
         parity_calc := odd_parity(data);
         wait for 0 ns;
@@ -85,7 +85,7 @@ begin
         end if;
 
         wait for time_per_bit;
-      elsif parity = 2 then
+      elsif parity = PARITY_EVEN then
         parity_bit := rx;
         parity_calc := even_parity(data);
         wait for 0 ns;

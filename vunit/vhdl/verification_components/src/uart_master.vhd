@@ -31,7 +31,7 @@ begin
     procedure uart_send(data : std_logic_vector;
                         signal tx : out std_logic;
                         baud_rate  : integer;
-                        parity     : natural
+                        parity     : parity_t
   ) is
       constant time_per_bit : time := (10**9 / baud_rate) * 1 ns;
 
@@ -48,9 +48,9 @@ begin
         send_bit(data(i));
       end loop;
 
-      if parity = 1 then
+      if parity = PARITY_ODD then
         send_bit(odd_parity(data));
-      elsif parity = 2 then
+      elsif parity = PARITY_EVEN then
         send_bit(even_parity(data));
       end if;
 
@@ -59,7 +59,7 @@ begin
 
     variable msg : msg_t;
     variable baud_rate : natural := uart.p_baud_rate;
-    variable parity    : natural := uart.p_parity;
+    variable parity    : parity_t := uart.p_parity;
     variable msg_type : msg_type_t;
   begin
     receive(net, uart.p_actor, msg);
@@ -72,7 +72,7 @@ begin
     elsif msg_type = uart_set_baud_rate_msg then
       baud_rate := pop(msg);
     elsif msg_type = uart_set_parity_msg then
-      parity := pop(msg);
+      parity := int_to_parity(pop(msg));
     else
       unexpected_msg_type(msg_type);
     end if;

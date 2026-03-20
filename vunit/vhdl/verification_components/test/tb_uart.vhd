@@ -90,8 +90,8 @@ begin
       test_baud_rate(7000);
       test_baud_rate(200000);
     elsif run("test_parity_odd") then
-      set_parity(net, master_uart_p, 1);
-      set_parity(net, slave_uart_p, 1);
+      set_parity(net, master_uart_p, PARITY_ODD);
+      set_parity(net, slave_uart_p, PARITY_ODD);
 
       for i in 0 to 7 loop
         push_stream(net, master_stream_p,
@@ -101,8 +101,8 @@ begin
       end loop;
 
     elsif run("test_parity_even") then
-      set_parity(net, master_uart_p, 2);
-      set_parity(net, slave_uart_p, 2);
+      set_parity(net, master_uart_p, PARITY_EVEN);
+      set_parity(net, slave_uart_p, PARITY_EVEN);
 
       for i in 0 to 7 loop
         push_stream(net, master_stream_p,
