@@ -22,4 +22,6 @@ package axi_pkg is
   subtype axi4_len_t is std_logic_vector(7 downto 0);
   constant max_axi4_burst_length : natural := 2**axi4_len_t'length;
   subtype axi4_size_t is std_logic_vector(2 downto 0);
+
+  type inactive_bus_policy_t is ('0', '1', 'X', hold);
 end package;

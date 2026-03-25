@@ -12,9 +12,11 @@ use work.checker_pkg.all;
 use work.check_pkg.all;
 use work.stream_master_pkg.stream_master_t;
 use work.stream_slave_pkg.stream_slave_t;
+use work.integer_vector_ptr_pkg.all;
 use work.sync_pkg.all;
 use work.com_pkg.all;
 use work.com_types_pkg.all;
+use work.axi_pkg.all;
 
 package axi_stream_pkg is
 
@@ -30,7 +32,17 @@ package axi_stream_pkg is
     max_stall_cycles  => 0
     );
 
+  -- Only signals relevant to inactivity policy are present.
+  type axi_stream_signal_t is (tdata, tlast, tkeep, tstrb, tid, tdest, tuser, all_signals);
+  type inactive_axi_stream_policy_t is array (tdata to tuser) of inactive_bus_policy_t;
+
+  constant default_axi_stream_policy : inactive_axi_stream_policy_t := (tuser => '0', others => 'X');
+  constant all_0_policy : inactive_axi_stream_policy_t := (others => '0');
+  constant all_1_policy : inactive_axi_stream_policy_t := (others => '1');
+  constant all_hold_policy : inactive_axi_stream_policy_t := (others => hold);
+  
   type axi_stream_component_type_t is (null_component, default_component, custom_component);
+  
 
   type axi_stream_protocol_checker_t is record
     p_type                      : axi_stream_component_type_t;
@@ -113,10 +125,10 @@ package axi_stream_pkg is
     p_id_length        : natural;
     p_dest_length      : natural;
     p_user_length      : natural;
-    p_stall_config     : stall_config_t;
     p_logger           : logger_t;
     p_monitor          : axi_stream_monitor_t;
     p_protocol_checker : axi_stream_protocol_checker_t;
+    p_config : integer_vector_ptr_t;
   end record;
 
   constant null_axi_stream_master : axi_stream_master_t := (
@@ -125,10 +137,10 @@ package axi_stream_pkg is
     p_id_length        => 0,
     p_dest_length      => 0,
     p_user_length      => 0,
-    p_stall_config     => null_stall_config,
     p_logger           => null_logger,
     p_monitor          => null_axi_stream_monitor,
-    p_protocol_checker => null_axi_stream_protocol_checker
+    p_protocol_checker => null_axi_stream_protocol_checker,
+    p_config           => null_integer_vector_ptr
     );
 
   type axi_stream_slave_t is record
@@ -137,10 +149,10 @@ package axi_stream_pkg is
     p_id_length        : natural;
     p_dest_length      : natural;
     p_user_length      : natural;
-    p_stall_config     : stall_config_t;
     p_logger           : logger_t;
     p_monitor          : axi_stream_monitor_t;
     p_protocol_checker : axi_stream_protocol_checker_t;
+    p_config : integer_vector_ptr_t;
   end record;
 
   constant null_axi_stream_slave : axi_stream_slave_t := (
@@ -149,10 +161,10 @@ package axi_stream_pkg is
     p_id_length        => 0,
     p_dest_length      => 0,
     p_user_length      => 0,
-    p_stall_config     => null_stall_config,
     p_logger           => null_logger,
     p_monitor          => null_axi_stream_monitor,
-    p_protocol_checker => null_axi_stream_protocol_checker
+    p_protocol_checker => null_axi_stream_protocol_checker,
+    p_config           => null_integer_vector_ptr
     );
 
   constant axi_stream_logger  : logger_t  := get_logger("vunit_lib:axi_stream_pkg");
@@ -167,7 +179,8 @@ package axi_stream_pkg is
     logger           : logger_t                      := axi_stream_logger;
     actor            : actor_t                       := null_actor;
     monitor          : axi_stream_monitor_t          := null_axi_stream_monitor;
-    protocol_checker : axi_stream_protocol_checker_t := null_axi_stream_protocol_checker
+    protocol_checker : axi_stream_protocol_checker_t := null_axi_stream_protocol_checker;
+    inactive_policy : inactive_axi_stream_policy_t  := default_axi_stream_policy
   ) return axi_stream_master_t;
 
   impure function new_axi_stream_slave(
@@ -224,10 +237,30 @@ package axi_stream_pkg is
   impure function as_sync(master : axi_stream_master_t) return sync_handle_t;
   impure function as_sync(slave : axi_stream_slave_t) return sync_handle_t;
 
+  procedure set_stall_config(
+    signal net : inout network_t;
+    master : axi_stream_master_t;
+    stall_config : stall_config_t
+  );
+  procedure set_stall_config(
+    signal net : inout network_t;
+    slave : axi_stream_slave_t;
+    stall_config : stall_config_t
+  );
+
+  procedure set_inactive_axi_stream_policy(
+    signal net : inout network_t;
+    master : axi_stream_master_t;
+    inactive_policy : inactive_bus_policy_t;
+    axi_stream_signal : axi_stream_signal_t := all_signals
+  );
+  
   constant push_axi_stream_msg : msg_type_t := new_msg_type("push axi stream");
   constant pop_axi_stream_msg : msg_type_t := new_msg_type("pop axi stream");
   constant check_axi_stream_msg : msg_type_t := new_msg_type("check axi stream");
   constant axi_stream_transaction_msg : msg_type_t := new_msg_type("axi stream transaction");
+  constant set_inactive_axi_stream_policy_msg : msg_type_t := new_msg_type("set inactive axi stream policy");
+  constant set_stall_config_msg : msg_type_t := new_msg_type("set stall config");
 
   alias axi_stream_reference_t is msg_t;
 
@@ -336,10 +369,13 @@ package axi_stream_pkg is
 
   function is_u(value : std_ulogic_vector) return boolean;
 
+  -- Private
+  constant p_stall_config_idx : natural := 0;
+  constant p_interactive_policy_idx : natural := 1;
+
 end package;
 
 package body axi_stream_pkg is
-
   impure function get_valid_monitor(
       data_length      : natural;
       id_length        : natural  := 0;
@@ -389,6 +425,36 @@ package body axi_stream_pkg is
     end if;
   end;
 
+  impure function to_integer_vector_ptr(stall_config : stall_config_t) return integer_vector_ptr_t is
+    variable result : integer_vector_ptr_t := new_integer_vector_ptr(3);
+  begin
+    set(result, 0, integer(stall_config.stall_probability * (2.0 ** 23)));
+    set(result, 1, stall_config.min_stall_cycles);
+    set(result, 2, stall_config.max_stall_cycles);
+
+    return result;
+  end;
+
+  procedure set_stall_config(master : axi_stream_master_t; stall_config : stall_config_t) is
+  begin
+    set(master.p_config, p_stall_config_idx, to_integer(to_integer_vector_ptr(stall_config)));
+  end;
+
+  impure function to_integer_vector_ptr(inactive_policy : inactive_axi_stream_policy_t) return integer_vector_ptr_t is
+    variable result : integer_vector_ptr_t := new_integer_vector_ptr(inactive_policy'length);
+  begin
+    for sig in inactive_policy'range loop
+      set(result, axi_stream_signal_t'pos(sig), inactive_bus_policy_t'pos(inactive_policy(sig)));
+    end loop;
+
+    return result;
+  end;
+
+  procedure set_inactive_axi_stream_policy(master : axi_stream_master_t; inactive_policy : inactive_axi_stream_policy_t) is
+  begin
+    set(master.p_config, p_interactive_policy_idx, to_integer(to_integer_vector_ptr(inactive_policy)));
+  end;
+
   impure function new_axi_stream_master(
     data_length      : natural;
     id_length        : natural                       := 0;
@@ -398,25 +464,38 @@ package body axi_stream_pkg is
     logger           : logger_t                      := axi_stream_logger;
     actor            : actor_t                       := null_actor;
     monitor          : axi_stream_monitor_t          := null_axi_stream_monitor;
-    protocol_checker : axi_stream_protocol_checker_t := null_axi_stream_protocol_checker
+    protocol_checker : axi_stream_protocol_checker_t := null_axi_stream_protocol_checker;
+    inactive_policy : inactive_axi_stream_policy_t  := default_axi_stream_policy
   ) return axi_stream_master_t is
     variable p_actor            : actor_t;
     variable p_monitor          : axi_stream_monitor_t;
     variable p_protocol_checker : axi_stream_protocol_checker_t;
+    variable handle : axi_stream_master_t;
   begin
     p_monitor          := get_valid_monitor(data_length, id_length, dest_length, user_length, logger, actor, monitor, "master");
     p_actor            := actor when actor /= null_actor else new_actor;
     p_protocol_checker := get_valid_protocol_checker(data_length, id_length, dest_length, user_length, logger, actor, protocol_checker, "master");
 
-    return (p_actor      => p_actor,
+    handle := (p_actor      => p_actor,
       p_data_length      => data_length,
       p_id_length        => id_length,
       p_dest_length      => dest_length,
       p_user_length      => user_length,
-      p_stall_config     => stall_config,
       p_logger           => logger,
       p_monitor          => p_monitor,
-      p_protocol_checker => p_protocol_checker);
+      p_protocol_checker => p_protocol_checker,
+      p_config           => new_integer_vector_ptr(p_interactive_policy_idx + 1)
+    );
+
+    set_stall_config(handle, stall_config);
+    set_inactive_axi_stream_policy(handle, inactive_policy);
+
+    return handle;
+  end;
+
+  procedure set_stall_config(slave : axi_stream_slave_t; stall_config : stall_config_t) is
+  begin
+    set(slave.p_config, p_stall_config_idx, to_integer(to_integer_vector_ptr(stall_config)));
   end;
 
   impure function new_axi_stream_slave(
@@ -433,20 +512,25 @@ package body axi_stream_pkg is
     variable p_actor            : actor_t;
     variable p_monitor          : axi_stream_monitor_t;
     variable p_protocol_checker : axi_stream_protocol_checker_t;
+    variable handle : axi_stream_slave_t;
   begin
     p_monitor          := get_valid_monitor(data_length, id_length, dest_length, user_length, logger, actor, monitor, "slave");
     p_actor            := actor when actor /= null_actor else new_actor;
     p_protocol_checker := get_valid_protocol_checker(data_length, id_length, dest_length, user_length, logger, actor, protocol_checker, "slave");
 
-    return (p_actor      => p_actor,
+    handle := (p_actor      => p_actor,
       p_data_length      => data_length,
       p_id_length        => id_length,
       p_dest_length      => dest_length,
       p_user_length      => user_length,
-      p_stall_config     => stall_config,
       p_logger           => logger,
       p_monitor          => p_monitor,
-      p_protocol_checker => p_protocol_checker);
+      p_protocol_checker => p_protocol_checker,
+      p_config => new_integer_vector_ptr(p_stall_config_idx + 1));
+
+    set_stall_config(handle, stall_config);
+
+    return handle;
   end;
 
   impure function new_axi_stream_monitor(
@@ -782,6 +866,52 @@ package body axi_stream_pkg is
       send(net, axi_stream.p_actor, check_msg);
     end if;
   end procedure;
+
+  procedure set_inactive_axi_stream_policy(
+      signal net : inout network_t;
+      master : axi_stream_master_t;
+      inactive_policy : inactive_bus_policy_t;
+      axi_stream_signal : axi_stream_signal_t := all_signals
+    ) is
+    variable msg : msg_t;
+    variable start, stop : axi_stream_signal_t := axi_stream_signal;
+  begin
+    if axi_stream_signal = all_signals then
+      start := tdata;
+      stop := tuser;
+    end if;
+
+    for sig in start to stop loop
+      msg := new_msg(set_inactive_axi_stream_policy_msg);
+      push(msg, inactive_bus_policy_t'pos(inactive_policy));
+      push(msg, axi_stream_signal_t'pos(sig));
+      send(net, master.p_actor, msg);
+    end loop;
+  end;
+
+  procedure set_stall_config(
+    signal net : inout network_t;
+    master : axi_stream_master_t;
+    stall_config : stall_config_t
+  ) is
+    variable msg : msg_t := new_msg(set_stall_config_msg);
+    variable stall_config_vec : integer_vector_ptr_t := to_integer_vector_ptr(stall_config);
+  begin
+      push(msg, stall_config_vec);
+      send(net, master.p_actor, msg);
+  end;
+
+  procedure set_stall_config(
+    signal net : inout network_t;
+    slave : axi_stream_slave_t;
+    stall_config : stall_config_t
+  ) is
+    variable msg : msg_t := new_msg(set_stall_config_msg);
+    variable stall_config_vec : integer_vector_ptr_t := to_integer_vector_ptr(stall_config);
+  begin
+      push(msg, stall_config_vec);
+      send(net, slave.p_actor, msg);
+  end;
 
   procedure push_axi_stream_transaction(msg : msg_t; axi_stream_transaction : axi_stream_transaction_t) is
   begin

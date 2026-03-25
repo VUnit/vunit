@@ -14,10 +14,11 @@ use work.check_pkg.all;
 use work.com_pkg.all;
 use work.com_types_pkg.all;
 use work.id_pkg.all;
+use work.integer_vector_ptr_pkg.all;
 use work.queue_pkg.all;
 use work.stream_slave_pkg.stream_pop_msg;
 use work.axi_stream_pkg.all;
-use work.axi_stream_private_pkg.probability_stall_axi_stream;
+use work.axi_stream_private_pkg.all;
 use work.sync_pkg.all;
 use work.string_ptr_pkg.all;
 use work.event_common_pkg.is_active;
@@ -59,12 +60,14 @@ begin
     receive(net, slave.p_actor, request_msg);
     msg_type := message_type(request_msg);
 
-    if msg_type = stream_pop_msg or msg_type = pop_axi_stream_msg then
+    if msg_type = stream_pop_msg or
+      msg_type = pop_axi_stream_msg or
+      msg_type = check_axi_stream_msg or
+      msg_type = wait_for_time_msg or
+      msg_type = set_stall_config_msg then
+
       push(message_queue, request_msg);
-    elsif msg_type = check_axi_stream_msg then
-      push(message_queue, request_msg);
-    elsif msg_type = wait_for_time_msg then
-      push(message_queue, request_msg);
+
     elsif msg_type = wait_until_idle_msg then
       notify_msg := new_msg(notify_request_msg);
       push(message_queue, notify_msg);
@@ -76,6 +79,13 @@ begin
   end process;
 
   bus_process : process
+    procedure probability_stall_axi_stream(
+      signal aclk : in std_logic;
+      axi_stream  : in axi_stream_slave_t;
+      rnd         : inout RandomPType) is
+    begin
+      probability_stall_axi_stream(aclk, get_stall_config(axi_stream), rnd);
+    end procedure;
 
     procedure check_field(got, exp : std_logic_vector; msg : string) is
     begin
@@ -114,8 +124,10 @@ begin
         if msg_type = wait_for_time_msg then
           handle_sync_message(net, msg_type, msg);
           wait until rising_edge(aclk);
+        
         elsif msg_type = notify_request_msg then
           -- Ignore this message, but expect it
+        
         elsif msg_type = stream_pop_msg or msg_type = pop_axi_stream_msg or msg_type = check_axi_stream_msg then
 
           -- stall according to probability configuration
@@ -162,6 +174,11 @@ begin
             check_field(tuser, pop_std_ulogic_vector(msg), "TUSER mismatch, " & to_string(report_msg));
           end if;
 
+        
+        elsif msg_type = set_stall_config_msg then
+          deallocate(to_integer_vector_ptr(get(slave.p_config, p_stall_config_idx)));
+          set(slave.p_config, p_stall_config_idx, to_integer(pop_integer_vector_ptr_ref(msg)));
+          
         else
           unexpected_msg_type(msg_type);
         end if;
