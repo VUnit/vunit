@@ -11,17 +11,20 @@ library osvvm;
 use osvvm.RandomPkg.RandomPType;
 
 use work.axi_stream_pkg.all;
-use work.axi_stream_private_pkg.probability_stall_axi_stream;
+use work.axi_stream_private_pkg.all;
 use work.com_pkg.net;
 use work.com_pkg.receive;
 use work.com_types_pkg.all;
 use work.id_pkg.all;
+use work.integer_vector_ptr_pkg.all;
 use work.queue_pkg.all;
 use work.stream_master_pkg.stream_push_msg;
 use work.sync_pkg.all;
 use work.event_common_pkg.is_active;
 use work.event_common_pkg.notify;
 use work.event_pkg.all;
+use work.logger_pkg.all;
+use work.axi_pkg.all;
 
 entity axi_stream_master is
   generic (
@@ -52,24 +55,6 @@ architecture a of axi_stream_master is
   constant bus_process_done_base_id : id_t       := get_id("vunit_lib:axi_stream_master:bus_process_done");
   constant bus_process_done_id      : id_t       := get_id(to_string(num_children(bus_process_done_base_id)), parent => bus_process_done_base_id);
   signal bus_process_done           : event_t    := new_event(bus_process_done_id);
-
-
-  procedure drive_invalid_output(signal l_tdata : out std_logic_vector(data_length(master)-1 downto 0);
-                                 signal l_tkeep : out std_logic_vector(data_length(master)/8-1 downto 0);
-                                 signal l_tstrb : out std_logic_vector(data_length(master)/8-1 downto 0);
-                                 signal l_tid   : out std_logic_vector(id_length(master)-1 downto 0);
-                                 signal l_tdest : out std_logic_vector(dest_length(master)-1 downto 0);
-                                 signal l_tuser : out std_logic_vector(user_length(master)-1 downto 0))
-  is
-  begin
-    l_tdata <= (others => drive_invalid_val);
-    l_tkeep <= (others => drive_invalid_val);
-    l_tstrb <= (others => drive_invalid_val);
-    l_tid   <= (others => drive_invalid_val);
-    l_tdest <= (others => drive_invalid_val);
-    l_tuser <= (others => drive_invalid_val_user);
-  end procedure;
-
 begin
 
   main : process
@@ -80,10 +65,14 @@ begin
     receive(net, master.p_actor, request_msg);
     msg_type := message_type(request_msg);
 
-    if msg_type = stream_push_msg or msg_type = push_axi_stream_msg then
+    if msg_type = stream_push_msg or
+      msg_type = push_axi_stream_msg or
+      msg_type = wait_for_time_msg or
+      msg_type = set_inactive_axi_stream_policy_msg or
+      msg_type = set_stall_config_msg then
+
       push(message_queue, request_msg);
-    elsif msg_type = wait_for_time_msg then
-      push(message_queue, request_msg);
+
     elsif msg_type = wait_until_idle_msg then
       notify_msg := new_msg(notify_request_msg);
       push(message_queue, notify_msg);
@@ -98,13 +87,64 @@ begin
     variable msg : msg_t;
     variable msg_type : msg_type_t;
     variable rnd : RandomPType;
+    variable inactive_axi_stream_policy : inactive_axi_stream_policy_t := get_inactive_axi_stream_policy(master);
+    variable inactive_bus_policy : inactive_bus_policy_t;
+    variable axi_stream_signal : axi_stream_signal_t;
+
+    procedure probability_stall_axi_stream(
+      signal aclk : in std_logic;
+      axi_stream  : in axi_stream_master_t;
+      rnd         : inout RandomPType) is
+    begin
+      probability_stall_axi_stream(aclk, get_stall_config(axi_stream), rnd);
+    end procedure;
+
+    procedure drive_inactive(
+      signal l_tdata : out std_logic_vector(data_length(master)-1 downto 0);
+      signal l_tlast : out std_logic;
+      signal l_tkeep : out std_logic_vector(data_length(master)/8-1 downto 0);
+      signal l_tstrb : out std_logic_vector(data_length(master)/8-1 downto 0);
+      signal l_tid   : out std_logic_vector(id_length(master)-1 downto 0);
+      signal l_tdest : out std_logic_vector(dest_length(master)-1 downto 0);
+      signal l_tuser : out std_logic_vector(user_length(master)-1 downto 0)
+    ) is
+
+      procedure drive_policy(signal s : out std_logic_vector; policy : inactive_bus_policy_t) is
+      begin
+        if policy = 'X' then
+          s <= (s'range => 'X');
+        elsif policy = '0' then
+          s <= (s'range => '0');
+        elsif policy = '1' then
+          s <= (s'range => '1');
+        end if;
+      end;
+
+      procedure drive_policy(signal s : out std_logic; policy : inactive_bus_policy_t) is
+      begin
+        if policy = 'X' then
+          s <= 'X';
+        elsif policy = '0' then
+          s <= '0';
+        elsif policy = '1' then
+          s <= '1';
+        end if;
+      end;
+
+    begin
+      drive_policy(l_tdata, inactive_axi_stream_policy(work.axi_stream_pkg.tdata));
+      drive_policy(l_tlast, inactive_axi_stream_policy(work.axi_stream_pkg.tlast));
+      drive_policy(l_tkeep, inactive_axi_stream_policy(work.axi_stream_pkg.tkeep));
+      drive_policy(l_tstrb, inactive_axi_stream_policy(work.axi_stream_pkg.tstrb));
+      drive_policy(l_tid, inactive_axi_stream_policy(work.axi_stream_pkg.tid));
+      drive_policy(l_tdest, inactive_axi_stream_policy(work.axi_stream_pkg.tdest));
+      drive_policy(l_tuser, inactive_axi_stream_policy(work.axi_stream_pkg.tuser));
+    end procedure;
+
   begin
     rnd.InitSeed(rnd'instance_name);
     loop
-      if drive_invalid then
-        drive_invalid_output(tdata, tkeep, tstrb, tid, tdest, tuser);
-      end if;
-
+      drive_inactive(tdata, tlast, tkeep, tstrb, tid, tdest, tuser);
       if (areset_n = '0') then
         tvalid <= '0';
         wait until areset_n = '1' and rising_edge(aclk);
@@ -122,10 +162,11 @@ begin
             handle_sync_message(net, msg_type, msg);
             -- Re-align with the clock when a wait for time message was handled, because this breaks edge alignment.
             wait until rising_edge(aclk);
+          
           elsif msg_type = notify_request_msg then
             -- Ignore this message, but expect it
+          
           elsif msg_type = stream_push_msg or msg_type = push_axi_stream_msg then
-            drive_invalid_output(tdata, tkeep, tstrb, tid, tdest, tuser);
             -- stall according to probability configuration
             probability_stall_axi_stream(aclk, master, rnd);
 
@@ -152,7 +193,18 @@ begin
             end if;
             wait until ((tvalid and tready) = '1' or areset_n = '0') and rising_edge(aclk);
             tvalid <= '0';
-            tlast <= '0';
+            drive_inactive(tdata, tlast, tkeep, tstrb, tid, tdest, tuser);
+          
+          elsif msg_type = set_inactive_axi_stream_policy_msg then
+            inactive_bus_policy := inactive_bus_policy_t'val(pop_integer(msg));
+            axi_stream_signal := axi_stream_signal_t'val(pop_integer(msg));
+            set_inactive_axi_stream_policy(master, inactive_bus_policy, axi_stream_signal);
+            inactive_axi_stream_policy := get_inactive_axi_stream_policy(master);
+          
+          elsif msg_type = set_stall_config_msg then
+            deallocate(to_integer_vector_ptr(get(master.p_config, p_stall_config_idx)));
+            set(master.p_config, p_stall_config_idx, to_integer(pop_integer_vector_ptr_ref(msg)));
+          
           else
             unexpected_msg_type(msg_type);
           end if;
@@ -202,5 +254,17 @@ begin
         tuser    => tuser
       );
   end generate axi_stream_protocol_checker_generate;
+
+  deprecation_message : process is
+  begin
+    warning_if(
+      master.p_logger, 
+      drive_invalid, 
+      "The drive_invalid generics have been deprecated. Bus inactivity is now controlled " &
+      "by the inactive_bus_policy parameter to the new_axi_stream_master function."
+    );
+
+    wait;
+  end process;
 
 end architecture;

@@ -13,6 +13,7 @@ context work.vunit_context;
 context work.com_context;
 context work.data_types_context;
 use work.axi_stream_pkg.all;
+use work.axi_pkg.all;
 use work.stream_master_pkg.all;
 use work.stream_slave_pkg.all;
 use work.sync_pkg.all;
@@ -26,9 +27,7 @@ entity tb_axi_stream is
     g_data_length : positive := 8;
     g_id_length   : natural := 8;
     g_dest_length : natural := 8;
-    g_user_length : natural := 8;
-    g_stall_percentage_master : natural range 0 to 100 := 0;
-    g_stall_percentage_slave  : natural range 0 to 100 := 0
+    g_user_length : natural := 8
   );
 end entity;
 
@@ -36,12 +35,10 @@ architecture a of tb_axi_stream is
 
   constant min_stall_cycles : natural := 5;
   constant max_stall_cycles : natural := 15;
-  constant master_stall_config : stall_config_t := new_stall_config(stall_probability => real(g_stall_percentage_master)/100.0, min_stall_cycles => min_stall_cycles, max_stall_cycles => max_stall_cycles);
-  constant slave_stall_config  : stall_config_t := new_stall_config(stall_probability => real(g_stall_percentage_slave)/100.0 , min_stall_cycles => min_stall_cycles, max_stall_cycles => max_stall_cycles);
 
   constant master_axi_stream : axi_stream_master_t := new_axi_stream_master(
     data_length => g_data_length, id_length => g_id_length, dest_length => g_dest_length, user_length => g_user_length,
-    stall_config => master_stall_config, logger => get_logger("master"), actor => new_actor("master"),
+    logger => get_logger("master"), actor => new_actor("master"),
     monitor => default_axi_stream_monitor, protocol_checker => default_axi_stream_protocol_checker
   );
   constant master_stream : stream_master_t := as_stream(master_axi_stream);
@@ -49,7 +46,7 @@ architecture a of tb_axi_stream is
 
   constant slave_axi_stream : axi_stream_slave_t := new_axi_stream_slave(
     data_length => g_data_length, id_length => g_id_length, dest_length => g_dest_length, user_length => g_user_length,
-    stall_config => slave_stall_config, logger => get_logger("slave"), actor => new_actor("slave"),
+    logger => get_logger("slave"), actor => new_actor("slave"),
     monitor => default_axi_stream_monitor, protocol_checker => default_axi_stream_protocol_checker
   );
   constant slave_stream : stream_slave_t := as_stream(slave_axi_stream);
@@ -80,14 +77,6 @@ architecture a of tb_axi_stream is
   signal tid : std_logic_vector(id_length(slave_axi_stream)-1 downto 0);
   signal tdest : std_logic_vector(dest_length(slave_axi_stream)-1 downto 0);
   signal tuser : std_logic_vector(user_length(slave_axi_stream)-1 downto 0);
-
-  signal not_valid      : std_logic;
-  signal not_valid_data : std_logic;
-  signal not_valid_keep : std_logic;
-  signal not_valid_strb : std_logic;
-  signal not_valid_id   : std_logic;
-  signal not_valid_dest : std_logic;
-  signal not_valid_user : std_logic;
 
   signal connected_tkeep : boolean := true;
   signal connected_tstrb : boolean := true;
@@ -136,8 +125,24 @@ begin
     variable msg_type               : msg_type_t;
     variable timestamp              : time := 0 ns;
 
-    variable mocklogger : logger_t;
+    variable mock_logger : logger_t;
     variable rnd : RandomPtype;
+    variable stall_config : stall_config_t;
+    variable stall_probability_percent : natural;
+    variable previous_inactive_policy : inactive_bus_policy_t := 'X';
+    variable loop_count : natural := 0;
+
+    impure function select_policy(
+      modified_signal, signal_to_check : axi_stream_signal_t;
+      current_inactive_policy, previous_inactive_policy : inactive_bus_policy_t
+    ) return inactive_bus_policy_t is
+    begin
+      if signal_to_check >= modified_signal then
+        return current_inactive_policy;
+      end if;
+
+      return previous_inactive_policy;
+    end;
 
     procedure get_axi_stream_transaction(variable axi_stream_transaction : out axi_stream_transaction_t) is
     begin
@@ -146,6 +151,37 @@ begin
       handle_axi_stream_transaction(msg_type, msg, axi_stream_transaction);
       check(is_already_handled(msg_type));
     end;
+
+    procedure check(inactive_data, packet_data : std_logic_vector; inactive_policy : inactive_bus_policy_t) is
+    begin
+      if inactive_policy = '0' then
+        check_equal(inactive_data, std_logic_vector'((inactive_data'range => '0')));
+      elsif inactive_policy = '1' then
+        check_equal(inactive_data, std_logic_vector'((inactive_data'range => '1')));
+      elsif inactive_policy = 'X' then
+        check_equal(inactive_data, std_logic_vector'((inactive_data'range => 'X')));
+      elsif inactive_policy = hold then
+        check_equal(inactive_data, packet_data);
+      else
+
+        check_failed;
+      end if;
+   end;
+
+    procedure check(inactive_data, packet_data : std_logic; inactive_policy : inactive_bus_policy_t) is
+    begin
+      if inactive_policy = '0' then
+        check_equal(inactive_data, '0');
+      elsif inactive_policy = '1' then
+        check_equal(inactive_data, '1');
+      elsif inactive_policy = 'X' then
+        check_equal(inactive_data, 'X');
+      elsif inactive_policy = hold then
+        check_equal(inactive_data, packet_data);
+      else
+        check_failed;
+      end if;
+   end;
 
   begin
     test_runner_setup(runner, runner_cfg);
@@ -432,8 +468,8 @@ begin
       -- Delay mocking the logger to prevent 'invalid checks' from failing the checks below
       wait until rising_edge (aclk) and tvalid = '1';
 
-      mocklogger := get_logger("check");
-      mock(mocklogger);
+      mock_logger := get_logger("check");
+      mock(mock_logger);
 
       if id'length > 0 then
         id := x"23";
@@ -447,27 +483,27 @@ begin
       check_axi_stream(net, slave_axi_stream, not data, tlast => '0', tkeep => not keep, tstrb => not strb, tid => id, tdest => dest,
                        tuser => user, msg => "checking axi stream");
 
-      check_log(mocklogger, "TDATA mismatch, checking axi stream - Got " &
+      check_log(mock_logger, "TDATA mismatch, checking axi stream - Got " &
                 to_nibble_string(data) & " (" & to_string(to_integer(data)) & "). Expected " &
                 to_nibble_string(not data) & " (" & to_string(to_integer(not data)) & ").", error);
-      check_log(mocklogger, "TKEEP mismatch, checking axi stream - Got " &
+      check_log(mock_logger, "TKEEP mismatch, checking axi stream - Got " &
                 to_nibble_string(keep) & " (" & to_string(to_integer(keep)) & "). Expected " &
                 to_nibble_string(not keep) & " (" & to_string(to_integer(not keep)) & ").", error);
-      check_log(mocklogger, "TSTRB mismatch, checking axi stream - Got " &
+      check_log(mock_logger, "TSTRB mismatch, checking axi stream - Got " &
                 to_nibble_string(strb) & " (" & to_string(to_integer(strb)) & "). Expected " &
                 to_nibble_string(not strb) & " (" & to_string(to_integer(not strb)) & ").", error);
-      check_log(mocklogger, "TLAST mismatch, checking axi stream - Got 1. Expected 0.", error);
+      check_log(mock_logger, "TLAST mismatch, checking axi stream - Got 1. Expected 0.", error);
       if id'length > 0 then
-        check_log(mocklogger, "TID mismatch, checking axi stream - Got 0010_0010 (34). Expected 0010_0011 (35).", error);
+        check_log(mock_logger, "TID mismatch, checking axi stream - Got 0010_0010 (34). Expected 0010_0011 (35).", error);
       end if;
       if dest'length > 0 then
-        check_log(mocklogger, "TDEST mismatch, checking axi stream - Got 0011_0011 (51). Expected 0011_0100 (52).", error);
+        check_log(mock_logger, "TDEST mismatch, checking axi stream - Got 0011_0011 (51). Expected 0011_0100 (52).", error);
       end if;
       if user'length > 0 then
-        check_log(mocklogger, "TUSER mismatch, checking axi stream - Got 0100_0100 (68). Expected 0100_0101 (69).", error);
+        check_log(mock_logger, "TUSER mismatch, checking axi stream - Got 0100_0100 (68). Expected 0100_0101 (69).", error);
       end if;
 
-      unmock(mocklogger);
+      unmock(mock_logger);
 
     elsif run("test back-to-back passing check") then
       keep := (others => '1');
@@ -581,38 +617,45 @@ begin
 
       wait until rising_edge(aclk);
       wait for 1 ps;
-      mocklogger := get_logger("check");
-      mock(mocklogger);
+      mock_logger := get_logger("check");
+      mock(mock_logger);
 
       wait until rising_edge(aclk) and tvalid = '1';
       wait for 1 ps;
 
-      check_log(mocklogger, "TDATA mismatch, check non-blocking - Got " &
+      check_log(mock_logger, "TDATA mismatch, check non-blocking - Got " &
                 to_nibble_string(data) & " (" & to_string(to_integer(data)) & "). Expected " &
                 to_nibble_string(not data) & " (" & to_string(to_integer(not data)) & ").", error);
-      check_log(mocklogger, "TKEEP mismatch, check non-blocking - Got " &
+      check_log(mock_logger, "TKEEP mismatch, check non-blocking - Got " &
                 to_nibble_string(keep) & " (" & to_string(to_integer(keep)) & "). Expected " &
                 to_nibble_string(not keep) & " (" & to_string(to_integer(not keep)) & ").", error);
-      check_log(mocklogger, "TSTRB mismatch, check non-blocking - Got " &
+      check_log(mock_logger, "TSTRB mismatch, check non-blocking - Got " &
                 to_nibble_string(keep) & " (" & to_string(to_integer(keep)) & "). Expected " &
                 to_nibble_string(not keep) & " (" & to_string(to_integer(not keep)) & ").", error);
-      check_log(mocklogger, "TLAST mismatch, check non-blocking - Got 1. Expected 0.", error);
+      check_log(mock_logger, "TLAST mismatch, check non-blocking - Got 1. Expected 0.", error);
       if id'length > 0 then
-        check_log(mocklogger, "TID mismatch, check non-blocking - Got 0010_1010 (42). Expected 0010_1100 (44).", error);
+        check_log(mock_logger, "TID mismatch, check non-blocking - Got 0010_1010 (42). Expected 0010_1100 (44).", error);
       end if;
       if dest'length > 0 then
-        check_log(mocklogger, "TDEST mismatch, check non-blocking - Got 0000_0100 (4). Expected 0000_0101 (5).", error);
+        check_log(mock_logger, "TDEST mismatch, check non-blocking - Got 0000_0100 (4). Expected 0000_0101 (5).", error);
       end if;
       if user'length > 0 then
-        check_log(mocklogger, "TUSER mismatch, check non-blocking - Got 0000_0111 (7). Expected 0000_1000 (8).", error);
+        check_log(mock_logger, "TUSER mismatch, check non-blocking - Got 0000_0111 (7). Expected 0000_1000 (8).", error);
       end if;
 
-      unmock(mocklogger);
+      unmock(mock_logger);
 
       check_equal(now, timestamp + 20 ns + 1 ps, " transaction time incorrect");
 
     elsif run("test random stall on master") or run("test random pop stall on slave") then
       wait until rising_edge(aclk);
+      stall_probability_percent := 30;
+      stall_config := new_stall_config(real(stall_probability_percent) / 100.0, min_stall_cycles, max_stall_cycles);
+      if running_test_case = "test random stall on master" then
+        set_stall_config(net, master_axi_stream, stall_config);
+      else
+        set_stall_config(net, slave_axi_stream, stall_config);
+      end if;
       for i in 0 to 100 loop
         pop_stream(net, slave_stream, reference);
         push(reference_queue, reference);
@@ -633,17 +676,20 @@ begin
       info("Min stall length was " & to_string(axis_stall_stats.valid.min));
       info("Max stall length was " & to_string(axis_stall_stats.valid.max));
       if running_test_case = "test random stall on master" then
-        check((axis_stall_stats.valid.events < (g_stall_percentage_master+10)) and (axis_stall_stats.valid.events > (g_stall_percentage_master-10)), "Checking that the tvalid stall probability lies within reasonable boundaries");
-        check((axis_stall_stats.valid.min >= min_stall_cycles) and (axis_stall_stats.valid.max <= max_stall_cycles), "Checking that the minimal and maximal stall lenghts are in expected boundaries");
+        check((axis_stall_stats.valid.events < (stall_probability_percent+10)) and (axis_stall_stats.valid.events > (stall_probability_percent-10)), "Checking that the tvalid stall probability lies within reasonable boundaries");
+        check((axis_stall_stats.valid.min >= min_stall_cycles) and (axis_stall_stats.valid.max <= max_stall_cycles), "Checking that the minimal and maximal stall lengths are in expected boundaries");
         check_equal(axis_stall_stats.ready.events, 0, "Checking that there are zero tready stall events");
       else
-        check((axis_stall_stats.ready.events < (g_stall_percentage_slave+10)) and (axis_stall_stats.ready.events > (g_stall_percentage_slave-10)), "Checking that the tready stall probability lies within reasonable boundaries");
-        check((axis_stall_stats.ready.min >= min_stall_cycles) and (axis_stall_stats.ready.max <= max_stall_cycles), "Checking that the minimal and maximal stall lenghts are in expected boundaries");
+        check((axis_stall_stats.ready.events < (stall_probability_percent+10)) and (axis_stall_stats.ready.events > (stall_probability_percent-10)), "Checking that the tready stall probability lies within reasonable boundaries");
+        check((axis_stall_stats.ready.min >= min_stall_cycles) and (axis_stall_stats.ready.max <= max_stall_cycles), "Checking that the minimal and maximal stall lengths are in expected boundaries");
         check_equal(axis_stall_stats.valid.events, 0, "Checking that there are zero tvalid stall events");
       end if;
 
     elsif run("test random check stall on slave") then
       wait until rising_edge(aclk);
+      stall_probability_percent := 40;
+      stall_config := new_stall_config(real(stall_probability_percent) / 100.0, min_stall_cycles, max_stall_cycles);
+      set_stall_config(net, slave_axi_stream, stall_config);
       for i in 0 to 100 loop
         check_axi_stream(net, slave_axi_stream, std_logic_vector(to_unsigned(i + 1, data'length)), blocking => false);
       end loop;
@@ -657,12 +703,125 @@ begin
       info("There have been " & to_string(axis_stall_stats.valid.events) & " tvalid stall events");
       info("Min stall length was " & to_string(axis_stall_stats.valid.min));
       info("Max stall length was " & to_string(axis_stall_stats.valid.max));
-      check((axis_stall_stats.ready.events < (g_stall_percentage_slave+10)) and (axis_stall_stats.ready.events > (g_stall_percentage_slave-10)), "Checking that the tready stall probability lies within reasonable boundaries");
-      check((axis_stall_stats.ready.min >= min_stall_cycles) and (axis_stall_stats.ready.max <= max_stall_cycles), "Checking that the minimal and maximal stall lenghts are in expected boundaries");
+      check((axis_stall_stats.ready.events < (stall_probability_percent+10)) and (axis_stall_stats.ready.events > (stall_probability_percent-10)), "Checking that the tready stall probability lies within reasonable boundaries");
+      check((axis_stall_stats.ready.min >= min_stall_cycles) and (axis_stall_stats.ready.max <= max_stall_cycles), "Checking that the minimal and maximal stall lengths are in expected boundaries");
       check_equal(axis_stall_stats.valid.events, 0, "Checking that there are zero tvalid stall events");
 
+    elsif run("test signal inactive bus policy") then
+      -- tuser is not allowed to be X when not in reset but the capability is tested for completeness.
+      disable(get_logger("protocol_checker:rule 10"), error);
+      disable(get_logger("monitor:rule 10"), error);
+      disable(get_logger("master:rule 10"), error);
+      disable(get_logger("slave:rule 10"), error);
+      for inactive_policy in inactive_bus_policy_t'left to inactive_bus_policy_t'right loop
+        for axi_stream_signal in work.axi_stream_pkg.tuser downto work.axi_stream_pkg.tdata loop
+          set_inactive_axi_stream_policy(net, master_axi_stream, inactive_policy, axi_stream_signal);
+
+          axi_stream_transaction := (tdata => x"99", tlast => true, tkeep => "1", tstrb => "1", tid => x"11", tdest => x"22", tuser => x"33");
+          last := '1' when axi_stream_transaction.tlast else '0';
+          push_axi_stream(
+            net,
+            master_axi_stream,
+            tdata => axi_stream_transaction.tdata,
+            tlast => last,
+            tkeep => axi_stream_transaction.tkeep,
+            tstrb => axi_stream_transaction.tstrb,
+            tid => axi_stream_transaction.tid,
+            tdest => axi_stream_transaction.tdest,
+            tuser => axi_stream_transaction.tuser
+          );
+
+          pop_axi_stream(net, slave_axi_stream, data, last, keep, strb, id, dest, user);
+          wait until rising_edge(aclk);
+          for sig in work.axi_stream_pkg.tdata to  work.axi_stream_pkg.tuser loop
+            case sig is
+              when work.axi_stream_pkg.tdata =>
+                check(
+                  tdata,
+                  axi_stream_transaction.tdata, select_policy(axi_stream_signal, work.axi_stream_pkg.tdata, inactive_policy, previous_inactive_policy)
+                );
+              when work.axi_stream_pkg.tlast =>
+                check(
+                  tlast,
+                  last, select_policy(axi_stream_signal, work.axi_stream_pkg.tlast, inactive_policy, previous_inactive_policy)
+                );
+              when work.axi_stream_pkg.tkeep =>
+                check(
+                  tkeep,
+                  axi_stream_transaction.tkeep, select_policy(axi_stream_signal, work.axi_stream_pkg.tkeep, inactive_policy, previous_inactive_policy)
+                );
+              when work.axi_stream_pkg.tstrb =>
+                check(
+                  tstrb,
+                  axi_stream_transaction.tstrb, select_policy(axi_stream_signal, work.axi_stream_pkg.tstrb, inactive_policy, previous_inactive_policy)
+                );
+              when work.axi_stream_pkg.tid =>
+                check(
+                  tid,
+                  axi_stream_transaction.tid, select_policy(axi_stream_signal, work.axi_stream_pkg.tid, inactive_policy, previous_inactive_policy)
+                );
+              when work.axi_stream_pkg.tdest =>
+                check(
+                  tdest,
+                  axi_stream_transaction.tdest, select_policy(axi_stream_signal, work.axi_stream_pkg.tdest, inactive_policy, previous_inactive_policy)
+                );
+              when work.axi_stream_pkg.tuser =>
+                check(
+                  tuser,
+                  axi_stream_transaction.tuser, select_policy(axi_stream_signal, work.axi_stream_pkg.tuser, inactive_policy, previous_inactive_policy)
+                );
+            end case;
+            loop_count := loop_count + 1;
+          end loop;
+        end loop;
+        previous_inactive_policy := inactive_policy;
+      end loop;
+      check_equal(loop_count, 4 * 7 * 7);
+
+    elsif run("test global inactive bus policy") then
+      for inactive_policy in inactive_bus_policy_t'('0') to inactive_bus_policy_t'('1') loop
+
+        set_inactive_axi_stream_policy(net, master_axi_stream, inactive_policy);
+
+        axi_stream_transaction := (tdata => x"99", tlast => true, tkeep => "1", tstrb => "1", tid => x"11", tdest => x"22", tuser => x"33");
+        last := '1' when axi_stream_transaction.tlast else '0';
+        push_axi_stream(
+          net,
+          master_axi_stream,
+          tdata => axi_stream_transaction.tdata,
+          tlast => last,
+          tkeep => axi_stream_transaction.tkeep,
+          tstrb => axi_stream_transaction.tstrb,
+          tid => axi_stream_transaction.tid,
+          tdest => axi_stream_transaction.tdest,
+          tuser => axi_stream_transaction.tuser
+        );
+
+        pop_axi_stream(net, slave_axi_stream, data, last, keep, strb, id, dest, user);
+        wait until rising_edge(aclk);
+        for sig in work.axi_stream_pkg.tdata to  work.axi_stream_pkg.tuser loop
+          case sig is
+            when work.axi_stream_pkg.tdata =>
+              check(tdata, "", inactive_policy);
+            when work.axi_stream_pkg.tlast =>
+              check(tlast, '-', inactive_policy);
+            when work.axi_stream_pkg.tkeep =>
+              check(tkeep, "", inactive_policy);
+            when work.axi_stream_pkg.tstrb =>
+              check(tstrb, "", inactive_policy);
+            when work.axi_stream_pkg.tid =>
+              check(tid, "", inactive_policy);
+            when work.axi_stream_pkg.tdest =>
+              check(tdest, "", inactive_policy);
+            when work.axi_stream_pkg.tuser =>
+              check(tuser, "", inactive_policy);
+          end case;
+          loop_count := loop_count + 1;
+        end loop;
+      end loop;
+      check_equal(loop_count, 2 * 7);
     end if;
-    test_runner_cleanup(runner);
+    test_runner_cleanup(runner, allow_disabled_errors => running_test_case = "test signal inactive bus policy");
   end process;
   test_runner_watchdog(runner, 10 ms);
 
@@ -684,27 +843,6 @@ begin
 
   tkeep <= tkeep_from_master when connected_tkeep else (others => '1');
   tstrb <= tstrb_from_master when connected_tstrb else (others => 'U');
-
- not_valid <= not tvalid;
-
- not_valid_data <= '1' when is_x(tdata) else '0';
- check_true(aclk, not_valid, not_valid_data, "Invalid data not X");
- not_valid_keep <= '1' when is_x(tkeep_from_master) else '0';
- check_true(aclk, not_valid, not_valid_keep, "Invalid keep not X");
- not_valid_strb <= '1' when is_x(tstrb_from_master) else '0';
- check_true(aclk, not_valid, not_valid_strb, "Invalid strb not X");
- GEN_CHECK_INVALID_ID: if g_id_length > 0 generate
-   not_valid_id   <= '1' when is_x(tid) else '0';
-   check_true(aclk, not_valid, not_valid_id,   "Invalid id not X");
- end generate;
- GEN_CHECK_INVALID_DEST: if g_dest_length > 0 generate
-   not_valid_dest <= '1' when is_x(tdest) else '0';
-   check_true(aclk, not_valid, not_valid_dest, "Invalid dest not X");
- end generate;
- GEN_CHECK_INVALID_USER: if g_user_length > 0 generate
-   not_valid_user <= '1' when tuser = std_logic_vector'("00000000") else '0';
-   check_true(aclk, not_valid, not_valid_user, "Invalid user not 0");
- end generate;
 
   axi_stream_slave_inst : entity work.axi_stream_slave
     generic map(
@@ -771,7 +909,7 @@ begin
       end if;
 
       -------------------------------------------------------------------------
-      -- TVALID Minmal and Maximal Stall lengths
+      -- TVALID Minimal and Maximal Stall lengths
       if tvalid then
         axis_stall_stats.valid.start <= '1';
       end if;
@@ -785,7 +923,7 @@ begin
         axis_stall_stats.valid.max <= maximum(axis_stall_stats.valid.length, axis_stall_stats.valid.max);
       end if;
       -------------------------------------------------------------------------
-      -- TREADY Minmal and Maximal Stall lengths
+      -- TREADY Minimal and Maximal Stall lengths
       if tready then
         axis_stall_stats.ready.start <= '1';
       end if;
