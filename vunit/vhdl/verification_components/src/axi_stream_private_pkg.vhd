@@ -16,10 +16,10 @@ use work.integer_vector_ptr_pkg.all;
 
 package axi_stream_private_pkg is
   procedure probability_stall_axi_stream(
-      signal aclk  : in std_logic;
-      stall_config : in stall_config_t;
-      rnd          : inout RandomPType
-    );
+    signal aclk  : in std_logic;
+    stall_config : in stall_config_t;
+    rnd          : inout RandomPType
+  );
 
   procedure set_inactive_axi_stream_policy(
     master : axi_stream_master_t;
@@ -44,7 +44,7 @@ package body axi_stream_private_pkg is
       num_stall_cycles := rnd.FavorSmall(stall_config.min_stall_cycles, stall_config.max_stall_cycles);
     end if;
     for stall in 0 to num_stall_cycles-1 loop
-       wait until rising_edge(aclk);
+      wait until rising_edge(aclk);
     end loop;
   end procedure;
 
@@ -61,7 +61,11 @@ package body axi_stream_private_pkg is
     end if;
 
     for sig in start to stop loop
-      set(to_integer_vector_ptr(get(master.p_config, p_interactive_policy_idx)), axi_stream_signal_t'pos(sig), inactive_bus_policy_t'pos(inactive_policy));
+      set(
+        to_integer_vector_ptr(get(master.p_config, p_interactive_policy_idx)),
+        axi_stream_signal_t'pos(sig),
+        inactive_bus_policy_t'pos(inactive_policy)
+      );
     end loop;
   end;
 

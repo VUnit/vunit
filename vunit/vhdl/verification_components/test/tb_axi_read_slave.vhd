@@ -52,21 +52,23 @@ begin
   main : process
     variable rnd : RandomPType;
 
-    procedure write_addr(id : std_logic_vector;
-                         addr : natural;
-                         len : natural;
-                         log_size : natural;
-                         burst : axi_burst_type_t) is
+    procedure write_addr(
+      id : std_logic_vector;
+      addr : natural;
+      len : natural;
+      log_size : natural;
+      burst : axi_burst_type_t
+    ) is
     begin
-        arvalid <= '1';
-        arid <= id;
-        araddr <= std_logic_vector(to_unsigned(addr, araddr'length));
-        arlen <= std_logic_vector(to_unsigned(len-1, arlen'length));
-        arsize <= std_logic_vector(to_unsigned(log_size, arsize'length));
-        arburst <= burst;
+      arvalid <= '1';
+      arid <= id;
+      araddr <= std_logic_vector(to_unsigned(addr, araddr'length));
+      arlen <= std_logic_vector(to_unsigned(len-1, arlen'length));
+      arsize <= std_logic_vector(to_unsigned(log_size, arsize'length));
+      arburst <= burst;
 
-        wait until (arvalid and arready) = '1' and rising_edge(clk);
-        arvalid <= '0';
+      wait until (arvalid and arready) = '1' and rising_edge(clk);
+      arvalid <= '0';
     end procedure;
 
     procedure read_data(id : std_logic_vector; address : natural; size : natural; resp : axi_resp_t; last : boolean) is
@@ -84,9 +86,11 @@ begin
       check_equal(rlast, last, "rlast");
     end procedure;
 
-    procedure transfer(log_size, len : natural;
-                       id : std_logic_vector;
-                       burst : std_logic_vector) is
+    procedure transfer(
+      log_size, len : natural;
+      id : std_logic_vector;
+      burst : std_logic_vector
+    ) is
       variable buf : buffer_t;
       variable size : natural;
       variable data : integer_vector_ptr_t;
@@ -194,9 +198,11 @@ begin
       mock(axi_slave_logger, failure);
       write_addr(x"2", base_address(buf), 1, 0, axi_burst_type_fixed);
       wait until mock_queue_length > 0 and rising_edge(clk);
-      check_only_log(axi_slave_logger,
-                     "Reading from address 0 at offset 0 within anonymous buffer at range (0 to 15) without permission (no_access)",
-                     failure);
+      check_only_log(
+        axi_slave_logger,
+        "Reading from address 0 at offset 0 within anonymous buffer at range (0 to 15) without permission (no_access)",
+        failure
+      );
       unmock(axi_slave_logger);
 
     elsif run("Test error on unsupported wrap burst") then
@@ -213,7 +219,11 @@ begin
       mock(axi_slave_logger, failure);
       write_addr(x"2", base_address(buf)+4000, 256, 0, axi_burst_type_incr);
       wait until mock_queue_length > 0 and rising_edge(clk);
-      check_only_log(axi_slave_logger, "Crossing 4KByte boundary. First page = 0 (4000/4096), last page = 1 (4255/4096)", failure);
+      check_only_log(
+        axi_slave_logger,
+        "Crossing 4KByte boundary. First page = 0 (4000/4096), last page = 1 (4255/4096)",
+        failure
+      );
       unmock(axi_slave_logger);
 
     elsif run("Test no error on 4KByte boundary crossing with disabled check") then
@@ -350,7 +360,11 @@ begin
       rready <= '1';
       wait until rising_edge(clk);
       write_addr(x"0", base_address(buf), len => 2, log_size => 0, burst => axi_burst_type_incr);
-      check_only_log(axi_slave_logger, "Burst not well behaved, axi size = 1 but bus data width allows " & to_string(data_size), failure);
+      check_only_log(
+        axi_slave_logger,
+        "Burst not well behaved, axi size = 1 but bus data width allows " & to_string(data_size),
+        failure
+      );
       unmock(axi_slave_logger);
 
     elsif run("Test well behaved check fails when rready not high during active burst") then

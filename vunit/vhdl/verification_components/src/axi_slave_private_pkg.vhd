@@ -44,14 +44,15 @@ package axi_slave_private_pkg is
 
   impure function describe_burst(burst : axi_burst_t) return string;
 
-  type axi_slave_type_t is (write_slave,
-                            read_slave);
+  type axi_slave_type_t is (write_slave, read_slave);
 
   type axi_slave_private_t is protected
-    procedure init(axi_slave : axi_slave_t;
-                   axi_slave_type : axi_slave_type_t;
-                   max_id : natural;
-                   data : std_logic_vector);
+    procedure init(
+      axi_slave : axi_slave_t;
+      axi_slave_type : axi_slave_type_t;
+      max_id : natural;
+      data : std_logic_vector
+    );
     impure function get_actor return actor_t;
 
     procedure set_address_fifo_depth(depth : positive);
@@ -68,11 +69,13 @@ package axi_slave_private_pkg is
     impure function should_stall_data return boolean;
     impure function should_stall_write_response return boolean;
 
-    impure function create_burst(axid : std_logic_vector;
-                                 axaddr : std_logic_vector;
-                                 axlen : std_logic_vector;
-                                 axsize : std_logic_vector;
-                                 axburst : axi_burst_type_t) return axi_burst_t;
+    impure function create_burst(
+      axid : std_logic_vector;
+      axaddr : std_logic_vector;
+      axlen : std_logic_vector;
+      axsize : std_logic_vector;
+      axburst : axi_burst_type_t
+    ) return axi_burst_t;
 
     procedure push_burst(burst : axi_burst_t);
     impure function pop_burst return axi_burst_t;
@@ -99,8 +102,7 @@ package axi_slave_private_pkg is
     procedure clear_statistics;
   end protected;
 
-  procedure main_loop(variable self : inout axi_slave_private_t;
-                      signal net : inout network_t);
+  procedure main_loop(variable self : inout axi_slave_private_t; signal net : inout network_t);
 
   procedure check_axi_resp(bus_handle : bus_master_t; got, expected : axi_resp_t; msg : string);
 end package;
@@ -139,10 +141,12 @@ package body axi_slave_private_pkg is
     variable p_check_well_behaved : boolean;
     variable p_statistics : axi_statistics_t;
 
-    procedure init(axi_slave : axi_slave_t;
-                   axi_slave_type : axi_slave_type_t;
-                   max_id : natural;
-                   data : std_logic_vector) is
+    procedure init(
+      axi_slave : axi_slave_t;
+      axi_slave_type : axi_slave_type_t;
+      max_id : natural;
+      data : std_logic_vector
+    ) is
     begin
       p_axi_slave := axi_slave;
       p_axi_slave_type := axi_slave_type;
@@ -252,11 +256,13 @@ package body axi_slave_private_pkg is
       return should_stall(p_wresp_stall_prob);
     end;
 
-    impure function create_burst(axid : std_logic_vector;
-                                 axaddr : std_logic_vector;
-                                 axlen : std_logic_vector;
-                                 axsize : std_logic_vector;
-                                 axburst : axi_burst_type_t) return axi_burst_t is
+    impure function create_burst(
+      axid : std_logic_vector;
+      axaddr : std_logic_vector;
+      axlen : std_logic_vector;
+      axsize : std_logic_vector;
+      axburst : axi_burst_type_t
+    ) return axi_burst_t is
 
       -- Return the correct prefix ar/aw depending on slave type
       impure function ax return string is
@@ -497,8 +503,10 @@ package body axi_slave_private_pkg is
     return burst;
   end;
 
-  procedure main_loop(variable self : inout axi_slave_private_t;
-                      signal net : inout network_t) is
+  procedure main_loop(
+    variable self : inout axi_slave_private_t;
+    signal net : inout network_t
+  ) is
     variable reply_msg, request_msg : msg_t;
     variable msg_type : msg_type_t;
 

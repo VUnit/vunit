@@ -53,7 +53,10 @@ architecture a of axi_stream_master is
   constant notify_request_msg      : msg_type_t := new_msg_type("notify request");
   constant message_queue           : queue_t    := new_queue;
   constant bus_process_done_base_id : id_t       := get_id("vunit_lib:axi_stream_master:bus_process_done");
-  constant bus_process_done_id      : id_t       := get_id(to_string(num_children(bus_process_done_base_id)), parent => bus_process_done_base_id);
+  constant bus_process_done_id      : id_t       := get_id(
+      to_string(num_children(bus_process_done_base_id)),
+      parent => bus_process_done_base_id
+    );
   signal bus_process_done           : event_t    := new_event(bus_process_done_id);
 begin
 
@@ -111,24 +114,30 @@ begin
 
       procedure drive_policy(signal s : out std_logic_vector; policy : inactive_bus_policy_t) is
       begin
-        if policy = 'X' then
-          s <= (s'range => 'X');
-        elsif policy = '0' then
-          s <= (s'range => '0');
-        elsif policy = '1' then
-          s <= (s'range => '1');
-        end if;
+        case policy is
+          when 'X' =>
+            s <= (s'range => 'X');
+          when '0' =>
+            s <= (s'range => '0');
+          when '1' =>
+            s <= (s'range => '1');
+          when hold =>
+            null;
+        end case;
       end;
 
       procedure drive_policy(signal s : out std_logic; policy : inactive_bus_policy_t) is
       begin
-        if policy = 'X' then
-          s <= 'X';
-        elsif policy = '0' then
-          s <= '0';
-        elsif policy = '1' then
-          s <= '1';
-        end if;
+        case policy is
+          when 'X' =>
+            s <= 'X';
+          when '0' =>
+            s <= '0';
+          when '1' =>
+            s <= '1';
+          when hold =>
+            null;
+        end case;
       end;
 
     begin
@@ -162,10 +171,10 @@ begin
             handle_sync_message(net, msg_type, msg);
             -- Re-align with the clock when a wait for time message was handled, because this breaks edge alignment.
             wait until rising_edge(aclk);
-          
+
           elsif msg_type = notify_request_msg then
             -- Ignore this message, but expect it
-          
+
           elsif msg_type = stream_push_msg or msg_type = push_axi_stream_msg then
             -- stall according to probability configuration
             probability_stall_axi_stream(aclk, master, rnd);
@@ -194,17 +203,17 @@ begin
             wait until ((tvalid and tready) = '1' or areset_n = '0') and rising_edge(aclk);
             tvalid <= '0';
             drive_inactive(tdata, tlast, tkeep, tstrb, tid, tdest, tuser);
-          
+
           elsif msg_type = set_inactive_axi_stream_policy_msg then
             inactive_bus_policy := inactive_bus_policy_t'val(pop_integer(msg));
             axi_stream_signal := axi_stream_signal_t'val(pop_integer(msg));
             set_inactive_axi_stream_policy(master, inactive_bus_policy, axi_stream_signal);
             inactive_axi_stream_policy := get_inactive_axi_stream_policy(master);
-          
+
           elsif msg_type = set_stall_config_msg then
             deallocate(to_integer_vector_ptr(get(master.p_config, p_stall_config_idx)));
             set(master.p_config, p_stall_config_idx, to_integer(pop_integer_vector_ptr_ref(msg)));
-          
+
           else
             unexpected_msg_type(msg_type);
           end if;
@@ -258,8 +267,8 @@ begin
   deprecation_message : process is
   begin
     warning_if(
-      master.p_logger, 
-      drive_invalid, 
+      master.p_logger,
+      drive_invalid,
       "The drive_invalid generics have been deprecated. Bus inactivity is now controlled " &
       "by the inactive_bus_policy parameter to the new_axi_stream_master function."
     );

@@ -81,15 +81,15 @@ begin
 
     procedure fail_stable_test (
       signal d : out std_logic_vector;
-      constant rname : string; constant sname : string;
-      constant szero : string; constant sone : string;
-      constant vzero : std_logic := '0'; constant vone : std_logic := '1'
+      constant rule_name : string; constant signal_name : string;
+      constant zero_string : string; constant one_string : string;
+      constant zero_value : std_logic := '0'; constant one_value : std_logic := '1'
     ) is
-      constant zeros : std_logic_vector(d'range) := (others => vzero);
-      constant ones : std_logic_vector(d'range) := (others => vone);
+      constant zeros : std_logic_vector(d'range) := (others => zero_value);
+      constant ones : std_logic_vector(d'range) := (others => one_value);
       variable rule_logger : logger_t;
     begin
-      rule_logger := get_logger(get_name(logger) & rname);
+      rule_logger := get_logger(get_name(logger) & rule_name);
       mock(rule_logger);
 
       wait until rising_edge(aclk);
@@ -106,8 +106,10 @@ begin
 
       check_only_log(
         rule_logger,
-        "Stability check failed for " & sname & " while waiting for tready - Got " & sone & " at 2nd active and enabled clock edge. Expected " & szero & ".",
-        error);
+        "Stability check failed for " & signal_name & " while waiting for tready - Got " & one_string &
+        " at 2nd active and enabled clock edge. Expected " & zero_string & ".",
+        error
+      );
 
       wait until rising_edge(aclk);
       tvalid <= '1';
@@ -121,8 +123,10 @@ begin
 
       check_only_log(
         rule_logger,
-        "Stability check failed for " & sname & " while waiting for tready - Got " & sone & " at 2nd active and enabled clock edge. Expected " & szero & ".",
-        error);
+        "Stability check failed for " & signal_name & " while waiting for tready - Got " & one_string &
+        " at 2nd active and enabled clock edge. Expected " & zero_string & ".",
+        error
+      );
 
       tvalid <= '1';
       wait until rising_edge(aclk);
@@ -139,12 +143,16 @@ begin
 
       check_log(
         rule_logger,
-        "Stability check passed for " & sname & " while waiting for tready - Got " & sone & " for 2 active and enabled clock edges.",
-        pass);
+        "Stability check passed for " & signal_name & " while waiting for tready - Got " & one_string &
+        " for 2 active and enabled clock edges.",
+        pass
+      );
       check_only_log(
         rule_logger,
-        "Stability check failed for " & sname & " while waiting for tready - Got " & szero & " at 2nd active and enabled clock edge. Expected " & sone & ".",
-        error);
+        "Stability check failed for " & signal_name & " while waiting for tready - Got " & zero_string &
+        " at 2nd active and enabled clock edge. Expected " & one_string & ".",
+        error
+      );
 
       unmock(rule_logger);
     end;
@@ -200,17 +208,18 @@ begin
     procedure fail_unknown_test(
       signal d: out std_logic_vector;
       signal e1, e2: out std_logic;
-      constant rname : string;
-      constant sname : string;
-      constant e1name : string;
+      constant rule_name : string;
+      constant signal_name : string;
+      constant e1_name : string;
       constant skip_meta_values : boolean_vector(meta_values'range) := (others => false)
     ) is
       variable rule_logger : logger_t;
     begin
-      rule_logger := get_logger(get_name(logger) & rname);
+      rule_logger := get_logger(get_name(logger) & rule_name);
       mock(rule_logger);
 
-      -- need to disable these signals first, because there would be a log message for the first clock edge if enabled (happens with areset_n)
+      -- Need to disable these signals first, because there would be a log message for the first clock edge
+      -- if enabled (happens with areset_n)
       e1 <= '0';
       e2 <= '0';
       wait until rising_edge(aclk);
@@ -223,8 +232,10 @@ begin
         wait for 1 ns;
         check_only_log(
           rule_logger,
-          "Not unknown check failed for " & sname & " when " & e1name & " is high - Got " & to_nibble_string(std_logic_vector'(d'range => meta_values(i))) & ".",
-          error);
+          "Not unknown check failed for " & signal_name & " when " & e1_name & " is high - Got " &
+          to_nibble_string(std_logic_vector'(d'range => meta_values(i))) & ".",
+          error
+        );
       end loop;
 
       unmock(rule_logger);
@@ -243,7 +254,9 @@ begin
       pass_stable_test(d(0) => tlast);
 
     elsif run("Test failing check of that tlast remains stable when tvalid is asserted and tready is low") then
-      fail_stable_test(d(0) => tlast, rname => ":rule 2", sname => "tlast", szero => "1", sone => "0", vzero => '1', vone => '0');
+      fail_stable_test(
+        d(0) => tlast, rule_name => ":rule 2", signal_name => "tlast", zero_string => "1", one_string => "0", zero_value => '1', one_value => '0'
+      );
 
     elsif run("Test passing check of that tvalid remains asserted until tready is high") then
       wait until rising_edge(aclk);
@@ -280,12 +293,16 @@ begin
 
       check_log(
         rule_logger,
-        "Stability check failed for tvalid while waiting for tready - Got 0 " & "at 2nd active and enabled clock edge. Expected 1.",
-        error);
+        "Stability check failed for tvalid while waiting for tready - Got 0 " &
+        "at 2nd active and enabled clock edge. Expected 1.",
+        error
+      );
       check_only_log(
         rule_logger,
-        "Stability check failed for tvalid while waiting for tready - Got 0 " & "at 3rd active and enabled clock edge. Expected 1.",
-        error);
+        "Stability check failed for tvalid while waiting for tready - Got 0 " &
+        "at 3rd active and enabled clock edge. Expected 1.",
+        error
+      );
 
       wait until rising_edge(aclk);
       tvalid <= '1';
@@ -299,8 +316,10 @@ begin
 
       check_only_log(
         rule_logger,
-        "Stability check failed for tvalid while waiting for tready - Got L " & "at 2nd active and enabled clock edge. Expected 1.",
-        error);
+        "Stability check failed for tvalid while waiting for tready - Got L " &
+        "at 2nd active and enabled clock edge. Expected 1.",
+        error
+      );
 
       unmock(rule_logger);
 
@@ -340,8 +359,10 @@ begin
 
       check_only_log(
         rule_logger,
-        "Check failed for performance - tready active " & to_string(max_waits + 1) & " clock cycles after tvalid. Expected <= " & to_string(max_waits) & " clock cycles.",
-        warning);
+        "Check failed for performance - tready active " & to_string(max_waits + 1) &
+        " clock cycles after tvalid. Expected <= " & to_string(max_waits) & " clock cycles.",
+        warning
+      );
 
       unmock(rule_logger);
 
@@ -489,7 +510,9 @@ begin
       set_phase(runner_state, test_runner_cleanup);
       entry_gate(runner);
 
-      check_only_log(rule_logger, "Unconditional check failed for packet completion for the following streams: 0.", error);
+      check_only_log(
+        rule_logger, "Unconditional check failed for packet completion for the following streams: 0.", error
+      );
 
       unmock(rule_logger);
 
@@ -547,7 +570,7 @@ begin
       tkeep <= (others => '1');
       pass_unknown_test(tstrb, tvalid, tready);
 
-      -- U is reolved to the value of tkeep and should not fail
+      -- U is resolved to the value of tkeep and should not fail
       tvalid <= '0';
       tready <= '0';
       wait until rising_edge(aclk);
@@ -560,8 +583,10 @@ begin
 
     elsif run("Test failing check of that tstrb must not be unknown when tvalid is high") then
       tkeep <= (others => '1');
-      -- U is reolved to the value of tkeep and should not fail
-      fail_unknown_test(tstrb, tvalid, tready, ":rule 18", "tstrb", "tvalid", skip_meta_values => (5 => true, others => false));
+      -- U is resolved to the value of tkeep and should not fail
+      fail_unknown_test(
+        tstrb, tvalid, tready, ":rule 18", "tstrb", "tvalid", skip_meta_values => (5 => true, others => false)
+      );
 
     elsif run("Test passing check of that tkeep must not be unknown when tvalid is high") then
       pass_unknown_test(tkeep, tvalid, tready);
@@ -671,7 +696,7 @@ begin
       tid      => tid,
       tdest    => tdest,
       tuser    => tuser
-      );
+    );
 
   aclk <= not aclk after 5 ns;
 end architecture;

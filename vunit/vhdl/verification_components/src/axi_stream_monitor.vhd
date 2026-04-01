@@ -49,7 +49,10 @@ begin
     wait until (tvalid and tready) = '1' and rising_edge(aclk);
 
     if is_visible(monitor.p_logger, debug) then
-      debug(monitor.p_logger, "tdata: " & to_nibble_string(tdata) & " (" & to_integer_string(tdata) & ")" & ", tlast: " & to_string(tlast));
+      debug(
+        monitor.p_logger,
+        "tdata: " & to_nibble_string(tdata) & " (" & to_integer_string(tdata) & ")" & ", tlast: " & to_string(tlast)
+      );
     end if;
 
     tstrb_resolved := tkeep when is_u(tstrb) else tstrb;

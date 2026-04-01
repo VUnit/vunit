@@ -35,7 +35,7 @@ entity axi_stream_protocol_checker is
     tid      : in std_logic_vector(id_length(protocol_checker)-1 downto 0)     := (others => '0');
     tdest    : in std_logic_vector(dest_length(protocol_checker)-1 downto 0)   := (others => '0');
     tuser    : in std_logic_vector(user_length(protocol_checker)-1 downto 0)   := (others => '0')
-    );
+  );
 end entity;
 
 architecture a of axi_stream_protocol_checker is
@@ -134,7 +134,8 @@ begin
 
   -- AXI4STREAM_ERRM_TDATA_X A value of X on TDATA is not permitted when TVALID
   -- is HIGH
-  tdata_normalized <= normalize_tdata(tdata, tstrb_resolved, tkeep) when protocol_checker.p_allow_x_in_non_data_bytes else tdata;
+  tdata_normalized <= normalize_tdata(tdata, tstrb_resolved, tkeep) when protocol_checker.p_allow_x_in_non_data_bytes
+    else tdata;
   check_not_unknown(rule5_checker, aclk, tvalid, tdata_normalized, result("for tdata when tvalid is high"));
 
   -- AXI4STREAM_ERRM_TLAST_X A value of X on TLAST is not permitted when TVALID
@@ -255,16 +256,19 @@ begin
   check_not_unknown(rule19_checker, aclk, tvalid, tkeep, result("for tkeep when tvalid is high"));
 
   -- AXI4STREAM_ERRM_TKEEP_TSTRB If TKEEP is de-asserted, then TSTRB must also be de-asserted
-  -- eschmidscs: Binding this to tvalid. ARM does not include that, but makes more sense this way?
+  -- Binding this to tvalid. ARM does not include that, but makes more sense this way?
   rule20_check_value <= not(or(((not tkeep) and tstrb_resolved)));
   check_true(rule20_checker, aclk, tvalid, rule20_check_value, result("for tstrb de-asserted when tkeep de-asserted"));
 
   -- AXI4STREAM_AUXM_TID_TDTEST_WIDTH  The value of ID_WIDTH + DEST_WIDTH must not exceed 24
-  -- eschmidscs: Must wait a short while to allow testing of the rule.
+  -- Must wait a short while to allow testing of the rule.
   process
   begin
     wait for 1 ps;
-    check_true(rule21_checker, tid'length + tdest'length <= 24, result("for tid width and tdest width together must be less than 25"));
+    check_true(
+      rule21_checker, tid'length + tdest'length <= 24,
+      result("for tid width and tdest width together must be less than 25")
+    );
     wait;
   end process;
 
@@ -277,7 +281,9 @@ begin
   end process;
   areset_rose <= areset_n and not areset_n_d;
   not_tvalid   <= not tvalid;
-  check_implication(rule22_checker, aclk, areset_n, areset_rose, not_tvalid, result("for tvalid de-asserted after reset release"));
+  check_implication(
+    rule22_checker, aclk, areset_n, areset_rose, not_tvalid, result("for tvalid de-asserted after reset release")
+  );
 
   -- for * being DATA, KEEP, STRB, ID, DEST or USER
   -- AXI4STREAM_ERRM_T*_TIEOFF T* must be stable while *_WIDTH has been set to zero

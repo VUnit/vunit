@@ -62,9 +62,9 @@ architecture a of axi_write_slave is
 
   procedure push_burst_data(queue : queue_t; variable burst_data : inout burst_data_t) is
   begin
-     push_integer(queue, burst_data.length);
-     push_integer_vector_ptr_ref(queue, burst_data.address);
-     push_integer_vector_ptr_ref(queue, burst_data.data);
+    push_integer(queue, burst_data.length);
+    push_integer_vector_ptr_ref(queue, burst_data.address);
+    push_integer_vector_ptr_ref(queue, burst_data.data);
   end;
 
   impure function pop_burst_data(queue : queue_t) return burst_data_t is
@@ -109,8 +109,7 @@ begin
       end if;
     end procedure;
 
-    procedure record_input_data(variable input_data : inout burst_data_t;
-                                address : natural; byte : natural) is
+    procedure record_input_data(variable input_data : inout burst_data_t; address : natural; byte : natural) is
       variable ignored : boolean;
     begin
       if not check_address(axi_slave.p_memory, address, reading => false, check_permissions => true) then
@@ -251,7 +250,8 @@ begin
         num_beats := num_beats_now;
 
         if self.should_check_well_behaved and size /= self.data_size and len /= 0 then
-          self.fail("Burst not well behaved, axi size = " & to_string(size) & " but bus data width allows " & to_string(self.data_size));
+          self.fail("Burst not well behaved, axi size = " & to_string(size) & " but bus data width allows " &
+          to_string(self.data_size));
         end if;
       end if;
 

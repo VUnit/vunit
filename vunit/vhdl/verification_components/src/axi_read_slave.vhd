@@ -163,7 +163,10 @@ begin
         num_beats := num_beats_now;
 
         if self.should_check_well_behaved and size /= self.data_size and len /= 0 then
-          self.fail("Burst not well behaved, axi size = " & to_string(size) & " but bus data width allows " & to_string(self.data_size));
+          self.fail(
+            "Burst not well behaved, axi size = " & to_string(size) & " but bus data width allows " &
+            to_string(self.data_size)
+          );
         end if;
       end if;
 

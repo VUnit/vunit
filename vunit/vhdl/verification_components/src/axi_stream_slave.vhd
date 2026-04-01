@@ -40,7 +40,7 @@ entity axi_stream_slave is
     tid      : in std_logic_vector(id_length(slave)-1 downto 0)     := (others => '0');
     tdest    : in std_logic_vector(dest_length(slave)-1 downto 0)   := (others => '0');
     tuser    : in std_logic_vector(user_length(slave)-1 downto 0)   := (others => '0')
- );
+  );
 end entity;
 
 architecture a of axi_stream_slave is
@@ -48,7 +48,9 @@ architecture a of axi_stream_slave is
   constant notify_request_msg       : msg_type_t := new_msg_type("notify request");
   constant message_queue            : queue_t    := new_queue;
   constant bus_process_done_base_id : id_t       := get_id("vunit_lib:axi_stream_slave:bus_process_done");
-  constant bus_process_done_id      : id_t       := get_id(to_string(num_children(bus_process_done_base_id)), parent => bus_process_done_base_id);
+  constant bus_process_done_id      : id_t       := get_id(
+      to_string(num_children(bus_process_done_base_id)), parent => bus_process_done_base_id
+    );
   signal bus_process_done           : event_t    := new_event(bus_process_done_id);
 
 begin
@@ -124,10 +126,10 @@ begin
         if msg_type = wait_for_time_msg then
           handle_sync_message(net, msg_type, msg);
           wait until rising_edge(aclk);
-        
+
         elsif msg_type = notify_request_msg then
           -- Ignore this message, but expect it
-        
+
         elsif msg_type = stream_pop_msg or msg_type = pop_axi_stream_msg or msg_type = check_axi_stream_msg then
 
           -- stall according to probability configuration
@@ -163,7 +165,7 @@ begin
               end if;
             end loop;
             if mismatch then
-                check_field(tdata, expected_tdata, "TDATA mismatch, " & to_string(report_msg));
+              check_field(tdata, expected_tdata, "TDATA mismatch, " & to_string(report_msg));
             end if;
 
             check_field(tkeep, pop_std_ulogic_vector(msg), "TKEEP mismatch, " & to_string(report_msg));
@@ -174,11 +176,11 @@ begin
             check_field(tuser, pop_std_ulogic_vector(msg), "TUSER mismatch, " & to_string(report_msg));
           end if;
 
-        
+
         elsif msg_type = set_stall_config_msg then
           deallocate(to_integer_vector_ptr(get(slave.p_config, p_stall_config_idx)));
           set(slave.p_config, p_stall_config_idx, to_integer(pop_integer_vector_ptr_ref(msg)));
-          
+
         else
           unexpected_msg_type(msg_type);
         end if;
@@ -225,7 +227,7 @@ begin
         tid      => tid,
         tdest    => tdest,
         tuser    => tuser
-        );
+      );
   end generate axi_stream_protocol_checker_generate;
 
 end architecture;

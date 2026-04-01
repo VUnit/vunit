@@ -21,35 +21,43 @@ package axi_lite_master_pkg is
   constant axi_lite_write_msg : msg_type_t := new_msg_type("write axi lite");
 
   -- Blocking: Write the bus
-  procedure write_axi_lite(signal net : inout network_t;
-                           constant bus_handle : bus_master_t;
-                           constant address : std_logic_vector;
-                           constant data : std_logic_vector;
-                           constant expected_bresp : axi_resp_t := axi_resp_okay;
-                           -- default byte enable is all bytes
-                           constant byte_enable : std_logic_vector := "");
+  procedure write_axi_lite(
+    signal net : inout network_t;
+    constant bus_handle : bus_master_t;
+    constant address : std_logic_vector;
+    constant data : std_logic_vector;
+    constant expected_bresp : axi_resp_t := axi_resp_okay;
+    -- default byte enable is all bytes
+    constant byte_enable : std_logic_vector := ""
+  );
 
   -- Non blocking: Read the bus returning a reference to the future reply
-  procedure read_axi_lite(signal net : inout network_t;
-                          constant bus_handle : bus_master_t;
-                          constant address : std_logic_vector;
-                          constant expected_rresp : axi_resp_t := axi_resp_okay;
-                          variable reference : inout bus_reference_t);
+  procedure read_axi_lite(
+    signal net : inout network_t;
+    constant bus_handle : bus_master_t;
+    constant address : std_logic_vector;
+    constant expected_rresp : axi_resp_t := axi_resp_okay;
+    variable reference : inout bus_reference_t
+  );
 
   -- Blocking: read bus with immediate reply
-  procedure read_axi_lite(signal net : inout network_t;
-                          constant bus_handle : bus_master_t;
-                          constant address : std_logic_vector;
-                          constant expected_rresp : axi_resp_t := axi_resp_okay;
-                          variable data : inout std_logic_vector);
+  procedure read_axi_lite(
+    signal net : inout network_t;
+    constant bus_handle : bus_master_t;
+    constant address : std_logic_vector;
+    constant expected_rresp : axi_resp_t := axi_resp_okay;
+    variable data : inout std_logic_vector
+  );
 
   -- Blocking: Read bus and check result against expected data
-  procedure check_axi_lite(signal net : inout network_t;
-                           constant bus_handle : bus_master_t;
-                           constant address : std_logic_vector;
-                           constant expected_rresp : axi_resp_t := axi_resp_okay;
-                           constant expected : std_logic_vector;
-                           constant msg : string := "");
+  procedure check_axi_lite(
+    signal net : inout network_t;
+    constant bus_handle : bus_master_t;
+    constant address : std_logic_vector;
+    constant expected_rresp : axi_resp_t := axi_resp_okay;
+    constant expected : std_logic_vector;
+    constant msg : string := ""
+  );
 
   function is_read(msg_type : msg_type_t) return boolean;
   function is_write(msg_type : msg_type_t) return boolean;
@@ -59,13 +67,15 @@ end package;
 
 package body axi_lite_master_pkg is
 
-  procedure write_axi_lite(signal net : inout network_t;
-                           constant bus_handle : bus_master_t;
-                           constant address : std_logic_vector;
-                           constant data : std_logic_vector;
-                           constant expected_bresp : axi_resp_t := axi_resp_okay;
-                           -- default byte enable is all bytes
-                           constant byte_enable : std_logic_vector := "") is
+  procedure write_axi_lite(
+    signal net : inout network_t;
+    constant bus_handle : bus_master_t;
+    constant address : std_logic_vector;
+    constant data : std_logic_vector;
+    constant expected_bresp : axi_resp_t := axi_resp_okay;
+    -- default byte enable is all bytes
+    constant byte_enable : std_logic_vector := ""
+  ) is
     variable request_msg : msg_t := new_msg(axi_lite_write_msg);
     variable full_data : std_logic_vector(bus_handle.p_data_length - 1 downto 0) := (others => '0');
     variable full_address : std_logic_vector(bus_handle.p_address_length - 1 downto 0) := (others => '0');
@@ -89,11 +99,13 @@ package body axi_lite_master_pkg is
     send(net, bus_handle.p_actor, request_msg);
   end procedure;
 
-  procedure read_axi_lite(signal net : inout network_t;
-                          constant bus_handle : bus_master_t;
-                          constant address : std_logic_vector;
-                          constant expected_rresp : axi_resp_t := axi_resp_okay;
-                          variable reference : inout bus_reference_t) is
+  procedure read_axi_lite(
+    signal net : inout network_t;
+    constant bus_handle : bus_master_t;
+    constant address : std_logic_vector;
+    constant expected_rresp : axi_resp_t := axi_resp_okay;
+    variable reference : inout bus_reference_t
+  ) is
     variable full_address : std_logic_vector(bus_handle.p_address_length - 1 downto 0) := (others => '0');
     alias request_msg : msg_t is reference;
   begin
@@ -104,25 +116,29 @@ package body axi_lite_master_pkg is
     send(net, bus_handle.p_actor, request_msg);
   end procedure;
 
-  procedure read_axi_lite(signal net : inout network_t;
-                          constant bus_handle : bus_master_t;
-                          constant address : std_logic_vector;
-                          constant expected_rresp : axi_resp_t := axi_resp_okay;
-                          variable data : inout std_logic_vector) is
+  procedure read_axi_lite(
+    signal net : inout network_t;
+    constant bus_handle : bus_master_t;
+    constant address : std_logic_vector;
+    constant expected_rresp : axi_resp_t := axi_resp_okay;
+    variable data : inout std_logic_vector
+  ) is
     variable reference : bus_reference_t;
   begin
     read_axi_lite(net, bus_handle, address, expected_rresp, reference);
     await_read_bus_reply(net, reference, data);
   end procedure;
 
-  procedure check_axi_lite(signal net : inout network_t;
-                           constant bus_handle : bus_master_t;
-                           constant address : std_logic_vector;
-                           constant expected_rresp : axi_resp_t := axi_resp_okay;
-                           constant expected : std_logic_vector;
-                           constant msg : string := "") is
+  procedure check_axi_lite(
+    signal net : inout network_t;
+    constant bus_handle : bus_master_t;
+    constant address : std_logic_vector;
+    constant expected_rresp : axi_resp_t := axi_resp_okay;
+    constant expected : std_logic_vector;
+    constant msg : string := ""
+  ) is
     variable data : std_logic_vector(bus_handle.p_data_length - 1 downto 0);
-    variable edata : std_logic_vector(data'range) := (others => '0');
+    variable expected_data : std_logic_vector(data'range) := (others => '0');
 
     impure function error_prefix return string is
     begin
@@ -135,14 +151,14 @@ package body axi_lite_master_pkg is
 
     impure function base_error return string is
     begin
-      return error_prefix & " - Got x""" & to_hstring(data) & """ expected x""" & to_hstring(edata) & """";
+      return error_prefix & " - Got x""" & to_hstring(data) & """ expected x""" & to_hstring(expected_data) & """";
     end;
   begin
 
-    edata(expected'length - 1 downto 0) := expected;
+    expected_data(expected'length - 1 downto 0) := expected;
 
     read_axi_lite(net, bus_handle, address, expected_rresp, data);
-    if not std_match(data, edata) then
+    if not std_match(data, expected_data) then
       failure(bus_handle.p_logger, base_error);
     end if;
   end procedure;
