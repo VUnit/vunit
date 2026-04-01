@@ -23,5 +23,12 @@ package axi_pkg is
   constant max_axi4_burst_length : natural := 2**axi4_len_t'length;
   subtype axi4_size_t is std_logic_vector(2 downto 0);
 
+  -- This policy controls what value the bus signals are assigned when not driving valid
+  -- data. All zeros, all ones, all unknown values, or holding last valid value.
+
+  -- 'X' violates the all lower case naming rule but is kept to match the corresponding
+  -- std_logic value it represents.
+  -- vsg_off type_500
   type inactive_bus_policy_t is ('0', '1', 'X', hold);
+  -- vsg_on
 end package;
