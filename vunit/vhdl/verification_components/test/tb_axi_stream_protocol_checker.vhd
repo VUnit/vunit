@@ -255,7 +255,8 @@ begin
 
     elsif run("Test failing check of that tlast remains stable when tvalid is asserted and tready is low") then
       fail_stable_test(
-        d(0) => tlast, rule_name => ":rule 2", signal_name => "tlast", zero_string => "1", one_string => "0", zero_value => '1', one_value => '0'
+        d(0) => tlast, rule_name => ":rule 2", signal_name => "tlast", zero_string => "1",
+        one_string => "0", zero_value => '1', one_value => '0'
       );
 
     elsif run("Test passing check of that tvalid remains asserted until tready is high") then

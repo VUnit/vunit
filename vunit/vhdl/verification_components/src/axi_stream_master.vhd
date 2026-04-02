@@ -14,6 +14,7 @@ use work.axi_stream_pkg.all;
 use work.axi_stream_private_pkg.all;
 use work.com_pkg.net;
 use work.com_pkg.receive;
+use work.com_pkg.reply;
 use work.com_types_pkg.all;
 use work.id_pkg.all;
 use work.integer_vector_ptr_pkg.all;
@@ -72,7 +73,9 @@ begin
       msg_type = push_axi_stream_msg or
       msg_type = wait_for_time_msg or
       msg_type = set_inactive_axi_stream_policy_msg or
-      msg_type = set_stall_config_msg then
+      msg_type = get_inactive_axi_stream_policy_msg or
+      msg_type = set_stall_config_msg or
+      msg_type = get_stall_config_msg then
 
       push(message_queue, request_msg);
 
@@ -88,11 +91,13 @@ begin
 
   bus_process : process
     variable msg : msg_t;
+    variable reply_msg : msg_t;
     variable msg_type : msg_type_t;
     variable rnd : RandomPType;
     variable inactive_axi_stream_policy : inactive_axi_stream_policy_t := get_inactive_axi_stream_policy(master);
     variable inactive_bus_policy : inactive_bus_policy_t;
     variable axi_stream_signal : axi_stream_signal_t;
+    variable stall_config : integer_vector_ptr_t;
 
     procedure probability_stall_axi_stream(
       signal aclk : in std_logic;
@@ -210,9 +215,22 @@ begin
             set_inactive_axi_stream_policy(master, inactive_bus_policy, axi_stream_signal);
             inactive_axi_stream_policy := get_inactive_axi_stream_policy(master);
 
+          elsif msg_type = get_inactive_axi_stream_policy_msg then
+            reply_msg := new_msg(get_inactive_axi_stream_policy_reply_msg);
+            axi_stream_signal := axi_stream_signal_t'val(pop_integer(msg));
+            inactive_bus_policy := inactive_axi_stream_policy(axi_stream_signal);
+            push(reply_msg, inactive_bus_policy_t'pos(inactive_bus_policy));
+            reply(net, msg, reply_msg);
+
           elsif msg_type = set_stall_config_msg then
             deallocate(to_integer_vector_ptr(get(master.p_config, p_stall_config_idx)));
             set(master.p_config, p_stall_config_idx, to_integer(pop_integer_vector_ptr_ref(msg)));
+
+          elsif msg_type = get_stall_config_msg then
+            reply_msg := new_msg(get_stall_config_reply_msg);
+            stall_config := to_integer_vector_ptr(get(master.p_config, p_stall_config_idx));
+            push(reply_msg, stall_config);
+            reply(net, msg, reply_msg);
 
           else
             unexpected_msg_type(msg_type);

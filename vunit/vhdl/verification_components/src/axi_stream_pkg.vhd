@@ -246,10 +246,20 @@ package axi_stream_pkg is
     master : axi_stream_master_t;
     stall_config : stall_config_t
   );
+  procedure get_stall_config(
+    signal net : inout network_t;
+    master : axi_stream_master_t;
+    stall_config : out stall_config_t
+  );
   procedure set_stall_config(
     signal net : inout network_t;
     slave : axi_stream_slave_t;
     stall_config : stall_config_t
+  );
+  procedure get_stall_config(
+    signal net : inout network_t;
+    slave : axi_stream_slave_t;
+    stall_config : out stall_config_t
   );
 
   procedure set_inactive_axi_stream_policy(
@@ -259,12 +269,26 @@ package axi_stream_pkg is
     axi_stream_signal : axi_stream_signal_t := all_signals
   );
 
+  procedure get_inactive_axi_stream_policy(
+    signal net : inout network_t;
+    master : axi_stream_master_t;
+    inactive_policy : out inactive_bus_policy_t;
+    axi_stream_signal : axi_stream_signal_t range tdata to tuser
+  );
+
+
   constant push_axi_stream_msg : msg_type_t := new_msg_type("push axi stream");
   constant pop_axi_stream_msg : msg_type_t := new_msg_type("pop axi stream");
   constant check_axi_stream_msg : msg_type_t := new_msg_type("check axi stream");
   constant axi_stream_transaction_msg : msg_type_t := new_msg_type("axi stream transaction");
   constant set_inactive_axi_stream_policy_msg : msg_type_t := new_msg_type("set inactive axi stream policy");
+  constant get_inactive_axi_stream_policy_msg : msg_type_t := new_msg_type("get inactive axi stream policy");
+  constant get_inactive_axi_stream_policy_reply_msg : msg_type_t := new_msg_type(
+    "get inactive axi stream policy reply"
+  );
   constant set_stall_config_msg : msg_type_t := new_msg_type("set stall config");
+  constant get_stall_config_msg : msg_type_t := new_msg_type("get stall config");
+  constant get_stall_config_reply_msg : msg_type_t := new_msg_type("get stall config reply");
 
   alias axi_stream_reference_t is msg_t;
 
@@ -378,6 +402,7 @@ package axi_stream_pkg is
   -- Private
   constant p_stall_config_idx : natural := 0;
   constant p_interactive_policy_idx : natural := 1;
+  impure function p_to_stall_config(vec : integer_vector_ptr_t) return stall_config_t;
 
 end package;
 
@@ -944,6 +969,20 @@ package body axi_stream_pkg is
     end loop;
   end;
 
+  procedure get_inactive_axi_stream_policy(
+    signal net : inout network_t;
+    master : axi_stream_master_t;
+    inactive_policy : out inactive_bus_policy_t;
+    axi_stream_signal : axi_stream_signal_t range tdata to tuser
+  ) is
+    variable request_msg : msg_t := new_msg(get_inactive_axi_stream_policy_msg);
+    variable reply_msg : msg_t;
+  begin
+    push(request_msg, axi_stream_signal_t'pos(axi_stream_signal));
+    request(net, master.p_actor, request_msg, reply_msg);
+    inactive_policy := inactive_bus_policy_t'val(pop_integer(reply_msg));
+  end;
+
   procedure set_stall_config(
     signal net : inout network_t;
     master : axi_stream_master_t;
@@ -956,6 +995,28 @@ package body axi_stream_pkg is
     send(net, master.p_actor, msg);
   end;
 
+  impure function p_to_stall_config(vec : integer_vector_ptr_t) return stall_config_t is
+    variable stall_config : stall_config_t;
+  begin
+    stall_config.stall_probability := real(get(vec, 0)) * (2.0 ** (-23));
+    stall_config.min_stall_cycles := get(vec, 1);
+    stall_config.max_stall_cycles := get(vec, 2);
+
+    return stall_config;
+  end;
+
+  procedure get_stall_config(
+    signal net : inout network_t;
+    master : axi_stream_master_t;
+    stall_config : out stall_config_t
+  ) is
+    variable request_msg : msg_t := new_msg(get_stall_config_msg);
+    variable reply_msg : msg_t;
+  begin
+    request(net, master.p_actor, request_msg, reply_msg);
+    stall_config := p_to_stall_config(pop_integer_vector_ptr_ref(reply_msg));
+  end;
+
   procedure set_stall_config(
     signal net : inout network_t;
     slave : axi_stream_slave_t;
@@ -966,6 +1027,18 @@ package body axi_stream_pkg is
   begin
     push(msg, stall_config_vec);
     send(net, slave.p_actor, msg);
+  end;
+
+ procedure get_stall_config(
+    signal net : inout network_t;
+    slave : axi_stream_slave_t;
+    stall_config : out stall_config_t
+  ) is
+    variable request_msg : msg_t := new_msg(get_stall_config_msg);
+    variable reply_msg : msg_t;
+  begin
+    request(net, slave.p_actor, request_msg, reply_msg);
+    stall_config := p_to_stall_config(pop_integer_vector_ptr_ref(reply_msg));
   end;
 
   procedure push_axi_stream_transaction(msg : msg_t; axi_stream_transaction : axi_stream_transaction_t) is

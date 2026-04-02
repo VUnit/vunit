@@ -66,7 +66,8 @@ begin
       msg_type = pop_axi_stream_msg or
       msg_type = check_axi_stream_msg or
       msg_type = wait_for_time_msg or
-      msg_type = set_stall_config_msg then
+      msg_type = set_stall_config_msg or
+      msg_type = get_stall_config_msg  then
 
       push(message_queue, request_msg);
 
@@ -111,6 +112,7 @@ begin
     variable expected_tdata : std_logic_vector(tdata'range);
     variable mismatch : boolean;
     variable tstrb_resolved : std_logic_vector(tstrb'range);
+    variable stall_config : integer_vector_ptr_t;
   begin
     rnd.InitSeed(rnd'instance_name);
     loop
@@ -180,6 +182,12 @@ begin
         elsif msg_type = set_stall_config_msg then
           deallocate(to_integer_vector_ptr(get(slave.p_config, p_stall_config_idx)));
           set(slave.p_config, p_stall_config_idx, to_integer(pop_integer_vector_ptr_ref(msg)));
+
+        elsif msg_type = get_stall_config_msg then
+          reply_msg := new_msg(get_stall_config_reply_msg);
+          stall_config := to_integer_vector_ptr(get(slave.p_config, p_stall_config_idx));
+          push(reply_msg, stall_config);
+          reply(net, msg, reply_msg);
 
         else
           unexpected_msg_type(msg_type);
