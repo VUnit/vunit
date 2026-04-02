@@ -128,8 +128,10 @@ begin
     variable mock_logger : logger_t;
     variable rnd : RandomPtype;
     variable stall_config : stall_config_t;
+    variable stall_config_read_back : stall_config_t;
     variable stall_probability_percent : natural;
     variable previous_inactive_policy : inactive_bus_policy_t := 'X';
+    variable inactive_policy_read_back : inactive_bus_policy_t;
     variable loop_count : natural := 0;
 
     impure function select_policy(
@@ -686,11 +688,17 @@ begin
       wait until rising_edge(aclk);
       stall_probability_percent := 30;
       stall_config := new_stall_config(real(stall_probability_percent) / 100.0, min_stall_cycles, max_stall_cycles);
+
       if running_test_case = "test random stall on master" then
         set_stall_config(net, master_axi_stream, stall_config);
+        get_stall_config(net, master_axi_stream, stall_config_read_back);
       else
         set_stall_config(net, slave_axi_stream, stall_config);
+        get_stall_config(net, slave_axi_stream, stall_config_read_back);
       end if;
+      check_equal(stall_config_read_back.stall_probability, stall_config.stall_probability, max_diff => 0.0001);
+      check_equal(stall_config_read_back.min_stall_cycles, stall_config.min_stall_cycles);
+      check_equal(stall_config_read_back.max_stall_cycles, stall_config.max_stall_cycles);
       for i in 0 to 100 loop
         pop_stream(net, slave_stream, reference);
         push(reference_queue, reference);
@@ -772,6 +780,8 @@ begin
       for inactive_policy in inactive_bus_policy_t'left to inactive_bus_policy_t'right loop
         for axi_stream_signal in work.axi_stream_pkg.tuser downto work.axi_stream_pkg.tdata loop
           set_inactive_axi_stream_policy(net, master_axi_stream, inactive_policy, axi_stream_signal);
+          get_inactive_axi_stream_policy(net, master_axi_stream, inactive_policy_read_back, axi_stream_signal);
+          check(inactive_policy_read_back = inactive_policy);
 
           axi_stream_transaction := (
             tdata => x"99", tlast => true, tkeep => "1", tstrb => "1",
@@ -896,7 +906,9 @@ begin
 
   axi_stream_master_inst : entity work.axi_stream_master
     generic map(
-      master => master_axi_stream)
+      master => master_axi_stream,
+      drive_invalid => false
+    )
     port map(
       aclk     => aclk,
       areset_n => areset_n,

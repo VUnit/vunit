@@ -84,23 +84,13 @@ package body axi_stream_private_pkg is
     return to_inactive_axi_stream_policy(to_integer_vector_ptr(get(master.p_config, p_interactive_policy_idx)));
   end;
 
-  impure function to_stall_config(vec : integer_vector_ptr_t) return stall_config_t is
-    variable stall_config : stall_config_t;
-  begin
-    stall_config.stall_probability := real(get(vec, 0)) * (2.0 ** (-23));
-    stall_config.min_stall_cycles := get(vec, 1);
-    stall_config.max_stall_cycles := get(vec, 2);
-
-    return stall_config;
-  end;
-
   impure function get_stall_config(master : axi_stream_master_t) return stall_config_t is
   begin
-    return to_stall_config(to_integer_vector_ptr(get(master.p_config, p_stall_config_idx)));
+    return p_to_stall_config(to_integer_vector_ptr(get(master.p_config, p_stall_config_idx)));
   end;
 
   impure function get_stall_config(slave : axi_stream_slave_t) return stall_config_t is
   begin
-    return to_stall_config(to_integer_vector_ptr(get(slave.p_config, p_stall_config_idx)));
+    return p_to_stall_config(to_integer_vector_ptr(get(slave.p_config, p_stall_config_idx)));
   end;
 end package body;
