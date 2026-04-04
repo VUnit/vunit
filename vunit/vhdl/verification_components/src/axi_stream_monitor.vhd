@@ -8,6 +8,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 use work.axi_stream_pkg.all;
+use work.axi_stream_private_pkg.all;
 use work.com_pkg.net;
 use work.com_pkg.publish;
 use work.com_types_pkg.msg_t;
@@ -55,7 +56,7 @@ begin
       );
     end if;
 
-    tstrb_resolved := tkeep when is_u(tstrb) else tstrb;
+    tstrb_resolved := resolve_tstrb(tkeep, tstrb);
     axi_stream_transaction := (
       tdata => tdata,
       tlast => tlast = '1',

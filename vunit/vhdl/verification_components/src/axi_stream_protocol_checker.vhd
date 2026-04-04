@@ -11,6 +11,7 @@ use ieee.numeric_std_unsigned.all;
 use std.textio.all;
 
 use work.axi_stream_pkg.all;
+use work.axi_stream_private_pkg.all;
 use work.check_pkg.all;
 use work.checker_pkg.all;
 use work.event_common_pkg.is_active;
@@ -91,7 +92,7 @@ architecture a of axi_stream_protocol_checker is
     return ret;
   end function;
 begin
-  tstrb_resolved <= tkeep when is_u(tstrb) else tstrb;
+  tstrb_resolved <= resolve_tstrb(tkeep, tstrb);
   handshake_is_not_x <= '1' when not is_x(tvalid) and not is_x(tready) else '0';
 
   -- AXI4STREAM_ERRM_TDATA_STABLE TDATA remains stable when TVALID is asserted,
