@@ -397,16 +397,19 @@ package axi_stream_pkg is
     max_stall_cycles  : natural
   ) return stall_config_t;
 
-  function is_u(value : std_ulogic_vector) return boolean;
-
   -- Private
   constant p_stall_config_idx : natural := 0;
-  constant p_interactive_policy_idx : natural := 1;
+  constant p_inactive_policy_idx : natural := 1;
   impure function p_to_stall_config(vec : integer_vector_ptr_t) return stall_config_t;
 
 end package;
 
 package body axi_stream_pkg is
+  constant single_precision_mantissa_length : natural := 23;
+  constant stall_probability_idx : natural := 0;
+  constant min_stall_idx : natural := 1;
+  constant max_stall_idx : natural := 2;
+
   impure function get_valid_monitor(
     data_length      : natural;
     id_length        : natural  := 0;
@@ -472,19 +475,19 @@ package body axi_stream_pkg is
         axi_stream_checker,
         protocol_checker.p_id_length,
         id_length,
-        "ID length of monitor doesn't match that of the " & parent_component
+        "ID length of protocol checker doesn't match that of the " & parent_component
       );
       check_equal(
         axi_stream_checker,
         protocol_checker.p_dest_length,
         dest_length,
-        "Dest length of monitor doesn't match that of the " & parent_component
+        "Dest length of protocol checker doesn't match that of the " & parent_component
       );
       check_equal(
         axi_stream_checker,
         protocol_checker.p_user_length,
         user_length,
-        "User length of monitor doesn't match that of the " & parent_component
+        "User length of protocol checker doesn't match that of the " & parent_component
       );
       return protocol_checker;
     end if;
@@ -495,16 +498,15 @@ package body axi_stream_pkg is
   begin
     -- Since values are in the 0 - 1 range, we can have the full resolution of the mantissa fit within
     -- an integer if reals are implemented as single-precision floats.
-    set(result, 0, integer(stall_config.stall_probability * (2.0 ** 23)));
-    set(result, 1, stall_config.min_stall_cycles);
-    set(result, 2, stall_config.max_stall_cycles);
+    set(
+      result,
+      stall_probability_idx,
+      integer(stall_config.stall_probability * (2.0 ** single_precision_mantissa_length))
+    );
+    set(result, min_stall_idx, stall_config.min_stall_cycles);
+    set(result, max_stall_idx, stall_config.max_stall_cycles);
 
     return result;
-  end;
-
-  procedure set_stall_config(master : axi_stream_master_t; stall_config : stall_config_t) is
-  begin
-    set(master.p_config, p_stall_config_idx, to_integer(to_integer_vector_ptr(stall_config)));
   end;
 
   impure function to_integer_vector_ptr(inactive_policy : inactive_axi_stream_policy_t) return integer_vector_ptr_t is
@@ -515,14 +517,6 @@ package body axi_stream_pkg is
     end loop;
 
     return result;
-  end;
-
-  procedure set_inactive_axi_stream_policy(
-    master : axi_stream_master_t;
-    inactive_policy : inactive_axi_stream_policy_t
-  ) is
-  begin
-    set(master.p_config, p_interactive_policy_idx, to_integer(to_integer_vector_ptr(inactive_policy)));
   end;
 
   impure function new_axi_stream_master(
@@ -558,18 +552,13 @@ package body axi_stream_pkg is
       p_logger           => logger,
       p_monitor          => p_monitor,
       p_protocol_checker => p_protocol_checker,
-      p_config           => new_integer_vector_ptr(p_interactive_policy_idx + 1)
+      p_config           => new_integer_vector_ptr(p_inactive_policy_idx + 1)
     );
 
-    set_stall_config(handle, stall_config);
-    set_inactive_axi_stream_policy(handle, inactive_policy);
+    set(handle.p_config, p_stall_config_idx, to_integer(to_integer_vector_ptr(stall_config)));
+    set(handle.p_config, p_inactive_policy_idx, to_integer(to_integer_vector_ptr(inactive_policy)));
 
     return handle;
-  end;
-
-  procedure set_stall_config(slave : axi_stream_slave_t; stall_config : stall_config_t) is
-  begin
-    set(slave.p_config, p_stall_config_idx, to_integer(to_integer_vector_ptr(stall_config)));
   end;
 
   impure function new_axi_stream_slave(
@@ -606,7 +595,7 @@ package body axi_stream_pkg is
       p_protocol_checker => p_protocol_checker,
       p_config => new_integer_vector_ptr(p_stall_config_idx + 1));
 
-    set_stall_config(handle, stall_config);
+    set(handle.p_config, p_stall_config_idx, to_integer(to_integer_vector_ptr(stall_config)));
 
     return handle;
   end;
@@ -998,9 +987,9 @@ package body axi_stream_pkg is
   impure function p_to_stall_config(vec : integer_vector_ptr_t) return stall_config_t is
     variable stall_config : stall_config_t;
   begin
-    stall_config.stall_probability := real(get(vec, 0)) * (2.0 ** (-23));
-    stall_config.min_stall_cycles := get(vec, 1);
-    stall_config.max_stall_cycles := get(vec, 2);
+    stall_config.stall_probability := real(get(vec, stall_probability_idx)) * (2.0 ** (-single_precision_mantissa_length));
+    stall_config.min_stall_cycles := get(vec, min_stall_idx);
+    stall_config.max_stall_cycles := get(vec, max_stall_idx);
 
     return stall_config;
   end;
@@ -1100,17 +1089,6 @@ package body axi_stream_pkg is
       min_stall_cycles  => min_stall_cycles,
       max_stall_cycles  => max_stall_cycles);
     return stall_config;
-  end;
-
-  function is_u(value : std_ulogic_vector) return boolean is
-  begin
-    for idx in value'range loop
-      if value(idx) /= 'U' then
-        return false;
-      end if;
-    end loop;
-
-    return true;
   end;
 
 end package body;

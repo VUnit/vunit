@@ -906,8 +906,7 @@ begin
 
   axi_stream_master_inst : entity work.axi_stream_master
     generic map(
-      master => master_axi_stream,
-      drive_invalid => false
+      master => master_axi_stream
     )
     port map(
       aclk     => aclk,

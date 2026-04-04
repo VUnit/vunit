@@ -94,18 +94,51 @@ begin
     variable reply_msg : msg_t;
     variable msg_type : msg_type_t;
     variable rnd : RandomPType;
-    variable inactive_axi_stream_policy : inactive_axi_stream_policy_t := get_inactive_axi_stream_policy(master);
     variable inactive_bus_policy : inactive_bus_policy_t;
     variable axi_stream_signal : axi_stream_signal_t;
     variable stall_config : integer_vector_ptr_t;
 
-    procedure probability_stall_axi_stream(
-      signal aclk : in std_logic;
-      axi_stream  : in axi_stream_master_t;
-      rnd         : inout RandomPType) is
+    impure function get_inactive_axi_stream_policy(master : axi_stream_master_t) return inactive_axi_stream_policy_t is
+      impure function to_inactive_axi_stream_policy(vec : integer_vector_ptr_t) return inactive_axi_stream_policy_t is
+        variable inactive_policy : inactive_axi_stream_policy_t;
+      begin
+        for sig in inactive_policy'range loop
+          inactive_policy(sig) := inactive_bus_policy_t'val(get(vec, axi_stream_signal_t'pos(sig)));
+        end loop;
+
+        return inactive_policy;
+      end;
     begin
-      probability_stall_axi_stream(aclk, get_stall_config(axi_stream), rnd);
-    end procedure;
+      return to_inactive_axi_stream_policy(to_integer_vector_ptr(get(master.p_config, p_inactive_policy_idx)));
+    end;
+
+    variable inactive_axi_stream_policy : inactive_axi_stream_policy_t := get_inactive_axi_stream_policy(master);
+
+    procedure set_inactive_axi_stream_policy(
+      master : axi_stream_master_t;
+      inactive_policy : inactive_bus_policy_t;
+      axi_stream_signal : axi_stream_signal_t
+    ) is
+      variable start, stop : axi_stream_signal_t := axi_stream_signal;
+    begin
+      if axi_stream_signal = all_signals then
+        start := work.axi_stream_pkg.tdata;
+        stop := work.axi_stream_pkg.tuser;
+      end if;
+
+      for sig in start to stop loop
+        set(
+          to_integer_vector_ptr(get(master.p_config, p_inactive_policy_idx)),
+          axi_stream_signal_t'pos(sig),
+          inactive_bus_policy_t'pos(inactive_policy)
+        );
+      end loop;
+    end;
+
+    impure function get_stall_config(master : axi_stream_master_t) return stall_config_t is
+    begin
+      return p_to_stall_config(to_integer_vector_ptr(get(master.p_config, p_stall_config_idx)));
+    end;
 
     procedure drive_inactive(
       signal l_tdata : out std_logic_vector(data_length(master)-1 downto 0);
@@ -159,7 +192,7 @@ begin
     rnd.InitSeed(rnd'instance_name);
     loop
       drive_inactive(tdata, tlast, tkeep, tstrb, tid, tdest, tuser);
-      if (areset_n = '0') then
+      if areset_n = '0' then
         tvalid <= '0';
         wait until areset_n = '1' and rising_edge(aclk);
       else
@@ -182,7 +215,7 @@ begin
 
           elsif msg_type = stream_push_msg or msg_type = push_axi_stream_msg then
             -- stall according to probability configuration
-            probability_stall_axi_stream(aclk, master, rnd);
+            probability_stall_axi_stream(aclk, get_stall_config(master), rnd);
 
             tvalid <= '1';
             tdata <= pop_std_ulogic_vector(msg);
@@ -194,11 +227,7 @@ begin
               tdest <= pop_std_ulogic_vector(msg);
               tuser <= pop_std_ulogic_vector(msg);
             else
-              if pop_boolean(msg) then
-                tlast <= '1';
-              else
-                tlast <= '0';
-              end if;
+              tlast <= '1' when pop_boolean(msg) else '0';
               tkeep <= (others => '1');
               tstrb <= (others => '1');
               tid   <= (others => '0');
@@ -207,7 +236,6 @@ begin
             end if;
             wait until ((tvalid and tready) = '1' or areset_n = '0') and rising_edge(aclk);
             tvalid <= '0';
-            drive_inactive(tdata, tlast, tkeep, tstrb, tid, tdest, tuser);
 
           elsif msg_type = set_inactive_axi_stream_policy_msg then
             inactive_bus_policy := inactive_bus_policy_t'val(pop_integer(msg));
@@ -283,12 +311,17 @@ begin
   end generate axi_stream_protocol_checker_generate;
 
   deprecation_message : process is
+    impure function default_generics return boolean is
+    begin
+      return drive_invalid and (drive_invalid_val = 'X') and (drive_invalid_val_user = '0');
+    end;
   begin
-    warning_if(
+    error_if(
       master.p_logger,
-      drive_invalid,
-      "The drive_invalid generics have been deprecated. Bus inactivity is now controlled " &
-      "by the inactive_bus_policy parameter to the new_axi_stream_master function."
+      not default_generics,
+      "The drive_invalid generics have been deprecated. Bus inactivity is now controlled " & LF &
+      "by the inactive_bus_policy parameter to the new_axi_stream_master function. Remove generics " & LF &
+      "assignments and use the inactive_bus_policy parameter to avoid this error."
     );
 
     wait;

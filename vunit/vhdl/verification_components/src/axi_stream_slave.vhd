@@ -82,14 +82,6 @@ begin
   end process;
 
   bus_process : process
-    procedure probability_stall_axi_stream(
-      signal aclk : in std_logic;
-      axi_stream  : in axi_stream_slave_t;
-      rnd         : inout RandomPType) is
-    begin
-      probability_stall_axi_stream(aclk, get_stall_config(axi_stream), rnd);
-    end procedure;
-
     procedure check_field(got, exp : std_logic_vector; msg : string) is
     begin
       if got'length /= 0 and exp'length /= 0 then
@@ -135,13 +127,16 @@ begin
         elsif msg_type = stream_pop_msg or msg_type = pop_axi_stream_msg or msg_type = check_axi_stream_msg then
 
           -- stall according to probability configuration
-          probability_stall_axi_stream(aclk, slave, rnd);
+          probability_stall_axi_stream(
+            aclk,
+            p_to_stall_config(to_integer_vector_ptr(get(slave.p_config, p_stall_config_idx))),
+            rnd);
 
           tready <= '1';
           wait until (tvalid and tready) = '1' and rising_edge(aclk);
           tready <= '0';
 
-          tstrb_resolved := tkeep when is_u(tstrb) else tstrb;
+          tstrb_resolved := resolve_tstrb(tkeep, tstrb);
           if msg_type = stream_pop_msg or msg_type = pop_axi_stream_msg then
             axi_stream_transaction := (
               tdata => tdata,
