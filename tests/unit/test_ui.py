@@ -656,7 +656,7 @@ Listed 2 files""".splitlines()
         Test that compilation is skipped when attribute filtering results in
         no matching tests, e.g. --with-attributes=.nonexistent
         """
-        ui = self._create_ui("--with-attributes", ".nonexistent")
+        ui = self._create_ui("--with-attributes", ".nonexistent", "--no-color")
         lib = ui.add_library("lib")
         file_name = str(Path(tempdir) / "tb_skip.vhd")
         create_vhdl_test_bench_file(
