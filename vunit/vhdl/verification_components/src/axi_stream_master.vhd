@@ -161,6 +161,8 @@ begin
             s <= (s'range => '1');
           when hold =>
             null;
+          when rand01 =>
+            s <= rnd.RandSlv(s'length);
         end case;
       end;
 
@@ -175,6 +177,8 @@ begin
             s <= '1';
           when hold =>
             null;
+          when rand01 =>
+            s <= to_stdulogic(rnd.RandBit);
         end case;
       end;
 

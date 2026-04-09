@@ -987,7 +987,8 @@ package body axi_stream_pkg is
   impure function p_to_stall_config(vec : integer_vector_ptr_t) return stall_config_t is
     variable stall_config : stall_config_t;
   begin
-    stall_config.stall_probability := real(get(vec, stall_probability_idx)) * (2.0 ** (-single_precision_mantissa_length));
+    stall_config.stall_probability := real(get(vec, stall_probability_idx)) *
+      (2.0 ** (-single_precision_mantissa_length));
     stall_config.min_stall_cycles := get(vec, min_stall_idx);
     stall_config.max_stall_cycles := get(vec, max_stall_idx);
 
@@ -1018,7 +1019,7 @@ package body axi_stream_pkg is
     send(net, slave.p_actor, msg);
   end;
 
- procedure get_stall_config(
+  procedure get_stall_config(
     signal net : inout network_t;
     slave : axi_stream_slave_t;
     stall_config : out stall_config_t

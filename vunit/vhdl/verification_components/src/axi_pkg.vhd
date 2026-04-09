@@ -24,11 +24,12 @@ package axi_pkg is
   subtype axi4_size_t is std_logic_vector(2 downto 0);
 
   -- This policy controls what value the bus signals are assigned when not driving valid
-  -- data. All zeros, all ones, all unknown values, or holding last valid value.
+  -- data. All zeros, all ones, all unknown values, holding last valid value, or
+  -- random zeros and ones.
 
   -- 'X' violates the all lower case naming rule but is kept to match the corresponding
   -- std_logic value it represents.
   -- vsg_off type_500
-  type inactive_bus_policy_t is ('0', '1', 'X', hold);
+  type inactive_bus_policy_t is ('0', '1', 'X', hold, rand01);
   -- vsg_on
 end package;
