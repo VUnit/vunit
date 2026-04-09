@@ -20,6 +20,7 @@ use work.sync_pkg.all;
 
 library osvvm;
 use osvvm.RandomPkg.all;
+use osvvm.CoveragePkg.all;
 
 entity tb_axi_stream is
   generic(
@@ -133,6 +134,7 @@ begin
     variable previous_inactive_policy : inactive_bus_policy_t := 'X';
     variable inactive_policy_read_back : inactive_bus_policy_t;
     variable loop_count : natural := 0;
+    variable cov : CoverageIDType;
 
     impure function select_policy(
       modified_signal, signal_to_check : axi_stream_signal_t;
@@ -154,33 +156,86 @@ begin
       check(is_already_handled(msg_type));
     end;
 
-    procedure check(inactive_data, packet_data : std_logic_vector; inactive_policy : inactive_bus_policy_t) is
+    function to_sl(policy : inactive_bus_policy_t) return std_logic is
     begin
-      if inactive_policy = '0' then
-        check_equal(inactive_data, std_logic_vector'((inactive_data'range => '0')));
-      elsif inactive_policy = '1' then
-        check_equal(inactive_data, std_logic_vector'((inactive_data'range => '1')));
-      elsif inactive_policy = 'X' then
-        check_equal(inactive_data, std_logic_vector'((inactive_data'range => 'X')));
-      elsif inactive_policy = hold then
+      if policy = '0' then
+        return '0';
+      elsif policy = '1' then
+        return '1';
+      elsif policy = 'X' then
+        return 'X';
+      end if;
+
+      check_failed("Cannot convert inactive_bus_policy " & inactive_bus_policy_t'image(policy) & " to std_logic.");
+      return 'U';
+    end;
+
+    procedure check(
+      add_to_coverage : boolean;
+      inactive_data, packet_data : std_logic;
+      inactive_policy : inactive_bus_policy_t
+    ) is
+    begin
+      if inactive_policy = hold then
         check_equal(inactive_data, packet_data);
+      elsif inactive_policy = rand01 then
+        check_not_unknown(inactive_data);
       else
-        check_failed;
+        check_equal(inactive_data, to_sl(inactive_policy));
+      end if;
+
+      if add_to_coverage then
+        if inactive_policy = rand01 then
+          -- Randomized bits should cover '0' (bin 0) and '1' (bin 1).
+          ICover(cov, to_integer(inactive_data));
+        else
+          -- Non-randomized bits are immediately covered.
+          ICover(cov, 0);
+          ICover(cov, 1);
+        end if;
       end if;
     end;
 
-    procedure check(inactive_data, packet_data : std_logic; inactive_policy : inactive_bus_policy_t) is
+    procedure check(
+      add_to_coverage : boolean;
+      inactive_data, packet_data : std_logic_vector;
+      inactive_policy : inactive_bus_policy_t
+    ) is
     begin
-      if inactive_policy = '0' then
-        check_equal(inactive_data, '0');
-      elsif inactive_policy = '1' then
-        check_equal(inactive_data, '1');
-      elsif inactive_policy = 'X' then
-        check_equal(inactive_data, 'X');
-      elsif inactive_policy = hold then
+      if inactive_data'length = 1 then
+        check(
+          add_to_coverage,
+          inactive_data(inactive_data'left),
+          packet_data(packet_data'left),
+          inactive_policy
+        );
+        return;
+      end if;
+
+      if inactive_policy = hold then
         check_equal(inactive_data, packet_data);
+      elsif inactive_policy = rand01 then
+        check_not_unknown(inactive_data);
       else
-        check_failed;
+        check_equal(inactive_data, std_logic_vector'((inactive_data'range => to_sl(inactive_policy))));
+      end if;
+
+      if add_to_coverage then
+        if inactive_policy = rand01 then
+          -- Randomized vectors should cover values whose bits are not all the same (bin 0), and
+          -- not the packet data (bin 1).
+          if inactive_data /= (inactive_data'range => '0') and inactive_data /= (inactive_data'range => '1') then
+            ICover(cov, 0);
+          end if;
+
+          if inactive_data /= packet_data then
+            ICover(cov, 1);
+          end if;
+        else
+          -- Non-randomized vectors are immediately covered.
+          ICover(cov, 0);
+          ICover(cov, 1);
+        end if;
       end if;
     end;
 
@@ -777,6 +832,7 @@ begin
       disable(get_logger("monitor:rule 10"), error);
       disable(get_logger("master:rule 10"), error);
       disable(get_logger("slave:rule 10"), error);
+
       for inactive_policy in inactive_bus_policy_t'left to inactive_bus_policy_t'right loop
         for axi_stream_signal in work.axi_stream_pkg.tuser downto work.axi_stream_pkg.tdata loop
           set_inactive_axi_stream_policy(net, master_axi_stream, inactive_policy, axi_stream_signal);
@@ -788,71 +844,76 @@ begin
             tid => x"11", tdest => x"22", tuser => x"33"
           );
           last := '1' when axi_stream_transaction.tlast else '0';
-          push_axi_stream(
-            net,
-            master_axi_stream,
-            tdata => axi_stream_transaction.tdata,
-            tlast => last,
-            tkeep => axi_stream_transaction.tkeep,
-            tstrb => axi_stream_transaction.tstrb,
-            tid => axi_stream_transaction.tid,
-            tdest => axi_stream_transaction.tdest,
-            tuser => axi_stream_transaction.tuser
-          );
 
-          pop_axi_stream(net, slave_axi_stream, data, last, keep, strb, id, dest, user);
-          wait until rising_edge(aclk);
-          for sig in work.axi_stream_pkg.tdata to  work.axi_stream_pkg.tuser loop
-            case sig is
-              when work.axi_stream_pkg.tdata =>
-                check(
-                  tdata,
-                  axi_stream_transaction.tdata,
-                  select_policy(axi_stream_signal, work.axi_stream_pkg.tdata, inactive_policy, previous_inactive_policy)
-                );
-              when work.axi_stream_pkg.tlast =>
-                check(
-                  tlast,
-                  last,
-                  select_policy(axi_stream_signal, work.axi_stream_pkg.tlast, inactive_policy, previous_inactive_policy)
-                );
-              when work.axi_stream_pkg.tkeep =>
-                check(
-                  tkeep,
-                  axi_stream_transaction.tkeep,
-                  select_policy(axi_stream_signal, work.axi_stream_pkg.tkeep, inactive_policy, previous_inactive_policy)
-                );
-              when work.axi_stream_pkg.tstrb =>
-                check(
-                  tstrb,
-                  axi_stream_transaction.tstrb,
-                  select_policy(axi_stream_signal, work.axi_stream_pkg.tstrb, inactive_policy, previous_inactive_policy)
-                );
-              when work.axi_stream_pkg.tid =>
-                check(
-                  tid,
-                  axi_stream_transaction.tid,
-                  select_policy(axi_stream_signal, work.axi_stream_pkg.tid, inactive_policy, previous_inactive_policy)
-                );
-              when work.axi_stream_pkg.tdest =>
-                check(
-                  tdest,
-                  axi_stream_transaction.tdest,
-                  select_policy(axi_stream_signal, work.axi_stream_pkg.tdest, inactive_policy, previous_inactive_policy)
-                );
-              when work.axi_stream_pkg.tuser =>
-                check(
-                  tuser,
-                  axi_stream_transaction.tuser,
-                  select_policy(axi_stream_signal, work.axi_stream_pkg.tuser, inactive_policy, previous_inactive_policy)
-                );
-            end case;
-            loop_count := loop_count + 1;
+          cov := NewID(
+            axi_stream_signal_t'image(axi_stream_signal) & "_" &
+            inactive_bus_policy_t'image(inactive_policy)
+          );
+          AddBins(cov,  GenBin(0,1));
+
+          while not IsCovered(cov) loop
+            push_axi_stream(
+              net,
+              master_axi_stream,
+              tdata => axi_stream_transaction.tdata,
+              tlast => last,
+              tkeep => axi_stream_transaction.tkeep,
+              tstrb => axi_stream_transaction.tstrb,
+              tid => axi_stream_transaction.tid,
+              tdest => axi_stream_transaction.tdest,
+              tuser => axi_stream_transaction.tuser
+            );
+            pop_axi_stream(net, slave_axi_stream, data, last, keep, strb, id, dest, user);
+            wait until rising_edge(aclk);
+
+            check(
+              axi_stream_signal = work.axi_stream_pkg.tdata,
+              tdata,
+              axi_stream_transaction.tdata,
+              select_policy(axi_stream_signal, work.axi_stream_pkg.tdata, inactive_policy, previous_inactive_policy)
+            );
+            check(
+              axi_stream_signal = work.axi_stream_pkg.tlast,
+              tlast,
+              last,
+              select_policy(axi_stream_signal, work.axi_stream_pkg.tlast, inactive_policy, previous_inactive_policy)
+            );
+            check(
+              axi_stream_signal = work.axi_stream_pkg.tkeep,
+              tkeep,
+              axi_stream_transaction.tkeep,
+              select_policy(axi_stream_signal, work.axi_stream_pkg.tkeep, inactive_policy, previous_inactive_policy)
+            );
+            check(
+              axi_stream_signal = work.axi_stream_pkg.tstrb,
+              tstrb,
+              axi_stream_transaction.tstrb,
+              select_policy(axi_stream_signal, work.axi_stream_pkg.tstrb, inactive_policy, previous_inactive_policy)
+            );
+            check(
+              axi_stream_signal = work.axi_stream_pkg.tid,
+              tid,
+              axi_stream_transaction.tid,
+              select_policy(axi_stream_signal, work.axi_stream_pkg.tid, inactive_policy, previous_inactive_policy)
+            );
+            check(
+              axi_stream_signal = work.axi_stream_pkg.tdest,
+              tdest,
+              axi_stream_transaction.tdest,
+              select_policy(axi_stream_signal, work.axi_stream_pkg.tdest, inactive_policy, previous_inactive_policy)
+            );
+            check(
+              axi_stream_signal = work.axi_stream_pkg.tuser,
+              tuser,
+              axi_stream_transaction.tuser,
+              select_policy(axi_stream_signal, work.axi_stream_pkg.tuser, inactive_policy, previous_inactive_policy)
+            );
           end loop;
+          loop_count := loop_count + 1;
         end loop;
         previous_inactive_policy := inactive_policy;
       end loop;
-      check_equal(loop_count, 4 * 7 * 7);
+      check_equal(loop_count, 5 * 7);
 
     elsif run("test global inactive bus policy") then
       for inactive_policy in inactive_bus_policy_t'('0') to inactive_bus_policy_t'('1') loop
@@ -878,27 +939,16 @@ begin
 
         pop_axi_stream(net, slave_axi_stream, data, last, keep, strb, id, dest, user);
         wait until rising_edge(aclk);
-        for sig in work.axi_stream_pkg.tdata to  work.axi_stream_pkg.tuser loop
-          case sig is
-            when work.axi_stream_pkg.tdata =>
-              check(tdata, "", inactive_policy);
-            when work.axi_stream_pkg.tlast =>
-              check(tlast, '-', inactive_policy);
-            when work.axi_stream_pkg.tkeep =>
-              check(tkeep, "", inactive_policy);
-            when work.axi_stream_pkg.tstrb =>
-              check(tstrb, "", inactive_policy);
-            when work.axi_stream_pkg.tid =>
-              check(tid, "", inactive_policy);
-            when work.axi_stream_pkg.tdest =>
-              check(tdest, "", inactive_policy);
-            when work.axi_stream_pkg.tuser =>
-              check(tuser, "", inactive_policy);
-          end case;
-          loop_count := loop_count + 1;
-        end loop;
+        check(false, tdata, "-", inactive_policy);
+        check(false, tlast, '-', inactive_policy);
+        check(false, tkeep, "-", inactive_policy);
+        check(false, tstrb, "-", inactive_policy);
+        check(false, tid, "-", inactive_policy);
+        check(false, tdest, "-", inactive_policy);
+        check(false, tuser, "-", inactive_policy);
+        loop_count := loop_count + 1;
       end loop;
-      check_equal(loop_count, 2 * 7);
+      check_equal(loop_count, 2);
     end if;
     test_runner_cleanup(runner, allow_disabled_errors => running_test_case = "test signal inactive bus policy");
   end process;
