@@ -1,0 +1,8 @@
+Improved user control over what values are driven on the AXI stream bus when ``tvalid`` is low and the bus is inactive.
+The inactive value configuration is controlled by a new parameter ``inactive_policy`` to the ``new_axi_stream_master``
+function and it can also be updated dynamically with the ``set_inactive_axi_stream_policy`` command.
+This is a breaking change from the generic-based configuration used before. However, if will only affect the behavior
+of the AXI stream master VC if the generics are set to non-default values.
+
+``set_stall_config`` has also been added for dynamic control of the stall configuration. This is not a breaking
+change.

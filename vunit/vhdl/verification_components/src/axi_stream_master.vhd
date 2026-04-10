@@ -324,8 +324,8 @@ begin
       master.p_logger,
       not default_generics,
       "The drive_invalid generics have been deprecated. Bus inactivity is now controlled " & LF &
-      "by the inactive_bus_policy parameter to the new_axi_stream_master function. Remove generics " & LF &
-      "assignments and use the inactive_bus_policy parameter to avoid this error."
+      "by the inactive_policy parameter to the new_axi_stream_master function. Remove generics " & LF &
+      "assignments and use the inactive_policy parameter to avoid this error."
     );
 
     wait;
