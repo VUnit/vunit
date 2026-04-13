@@ -1,0 +1,2 @@
+Bumped required setuptools version to >=77. The higher version is required to support the license and license files
+formats in pyproject.toml.
