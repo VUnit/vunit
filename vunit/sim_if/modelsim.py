@@ -13,7 +13,7 @@ import os
 import logging
 from threading import Lock, Event
 from time import sleep
-from configparser import RawConfigParser
+from configparser import RawConfigParser, ParsingError
 from ..exceptions import CompileError
 from ..ostools import write_file, Process, file_exists
 from ..vhdl_standard import VHDL
@@ -71,12 +71,74 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         """
         persistent = not (args.unique_sim or args.gui)
 
+        prefix = cls.find_prefix()
+        try:
+            Path(prefix)
+        except TypeError as exc:
+            raise FileNotFoundError(
+                "Modelsim/Questa executable not found. Please set the VUNIT_MODELSIM_PATH environment variable."
+            ) from exc
+
         return cls(
-            prefix=cls.find_prefix(),
+            prefix=prefix,
             output_path=output_path,
             persistent=persistent,
             gui=args.gui,
             debugger=args.debugger,
+        )
+
+    @staticmethod
+    def _find_any_ini_file(root: Path) -> Path | None:
+        """
+        Find any INI file in the given directory that resembles a ModelSim/Questa INI file.
+        """
+        possible_ini_files = list(root.glob("*.ini"))
+        for ini_file in possible_ini_files:
+            try:
+                cfg = RawConfigParser()
+                with Path(ini_file).open("r", encoding="utf-8") as fptr:
+                    cfg.read_file(fptr)
+
+                    for name in ["Library", "library"]:
+                        if cfg.has_section(name):
+                            return ini_file
+
+            except ParsingError:
+                continue
+
+        return None
+
+    def _find_ini_file(self, prefix: str, support_ini_flag: bool) -> tuple[Path, str] | None:
+        """
+        Find the INI file to use for the simulation and the name of the copy to be used for simulation.
+        """
+
+        # The standard simulation INI file name is based on the name of the INI flag option. If such a file
+        # doesn't exist in the installation but there is another similar INI file, the simulation name
+        # is based on that file instead. We only revert to finding any INI file if the standard names
+        # can't be found. The reason is that the non-standard approaches are a somewhat unknown territory
+        # and this way we avoid discarding a standard name if there are several INI files in the installation
+        # directory.
+        parent_dir = Path(prefix).parent
+        installation_ini_name = "questa.ini" if support_ini_flag else "modelsim.ini"
+        standard_installation_ini_file = parent_dir / installation_ini_name
+        has_standard_ini_file = standard_installation_ini_file.is_file()
+
+        first_installation_ini_file = self._find_any_ini_file(parent_dir)
+        if not has_standard_ini_file and first_installation_ini_file:
+            installation_ini_name = first_installation_ini_file.name
+
+        if "VUNIT_MODELSIM_INI" in os.environ:
+            return Path(os.environ["VUNIT_MODELSIM_INI"]), installation_ini_name
+
+        if has_standard_ini_file:
+            return standard_installation_ini_file, installation_ini_name
+
+        if first_installation_ini_file:
+            return first_installation_ini_file, first_installation_ini_file.name
+
+        raise RuntimeError(
+            "Failed to find an INI file for ModelSim/Questa. Please set the VUNIT_MODELSIM_INI environment variable."
         )
 
     @classmethod
@@ -86,9 +148,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         """
 
         def has_ini(path):
-            return os.path.isfile(str(Path(path).parent / "modelsim.ini")) or os.path.isfile(
-                str(Path(path).parent / "questa.ini")
-            )
+            return cls._find_any_ini_file(Path(path).parent) is not None
 
         return cls.find_toolchain(["vsim"], constraints=[has_ini])
 
@@ -127,14 +187,14 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         self._supports_vhdl_2019 = self._find_in_help(prefix, "vcom", "-2019")
         support_ini_flag = self._find_in_help(prefix, "vcom", "-ini")
         self._ini_flag = "-ini" if support_ini_flag else "-modelsimini"
-        self._ini_file = "questa.ini" if support_ini_flag else "modelsim.ini"
+        self._ini_file_path, simulation_ini_file_name = self._find_ini_file(prefix, support_ini_flag)
 
         SimulatorInterface.__init__(self, output_path, gui)
         VsimSimulatorMixin.__init__(
             self,
             prefix,
             persistent,
-            sim_cfg_file_name=str(Path(output_path) / self._ini_file),
+            sim_cfg_file_name=str(Path(output_path) / simulation_ini_file_name),
         )
 
         self._libraries = []
@@ -160,8 +220,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         if not file_exists(parent):
             os.makedirs(parent)
 
-        original_ini = os.environ.get("VUNIT_MODELSIM_INI", str(Path(self._prefix).parent / self._ini_file))
-        with Path(original_ini).open("rb") as fread:
+        with self._ini_file_path.open("rb") as fread:
             with Path(self._sim_cfg_file_name).open("wb") as fwrite:
                 fwrite.write(fread.read())
 

@@ -1,0 +1,3 @@
+Improved the strategy for locating the INI file in Questa / ModelSim installations that do not use the standard file
+names ``questa.ini`` or ``modelsim.ini``. The update handles known naming deviations and also supports other INI file
+names, provided their contents appear to be valid simulator configuration files.

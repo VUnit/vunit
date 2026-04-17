@@ -269,73 +269,73 @@ class TestModelSimInterface(unittest.TestCase):
         (modelsim_ini, installed_modelsim_ini, user_modelsim_ini) = self._get_inis()
 
         with open(installed_modelsim_ini, "w") as fptr:
-            fptr.write("installed")
+            fptr.write("[Library]\ninstalled=installed")
 
         with open(user_modelsim_ini, "w") as fptr:
-            fptr.write("user")
+            fptr.write("[Library]\nuser=user")
 
         ModelSimInterface(prefix=self.prefix_path, output_path=self.output_path, persistent=False)
         with open(modelsim_ini, "r") as fptr:
-            self.assertEqual(fptr.read(), "installed")
+            self.assertEqual(fptr.read(), "[Library]\ninstalled=installed")
 
     @mock.patch("vunit.sim_if.modelsim.check_output", autospec=True, return_value="")
     def test_copies_modelsim_ini_file_from_user(self, _check_output):
         (modelsim_ini, installed_modelsim_ini, user_modelsim_ini) = self._get_inis()
 
         with open(installed_modelsim_ini, "w") as fptr:
-            fptr.write("installed")
+            fptr.write("[Library]\ninstalled=installed")
 
         with open(user_modelsim_ini, "w") as fptr:
-            fptr.write("user")
+            fptr.write("[Library]\nuser=user")
 
         with set_env(VUNIT_MODELSIM_INI=user_modelsim_ini):
             ModelSimInterface(prefix=self.prefix_path, output_path=self.output_path, persistent=False)
 
         with open(modelsim_ini, "r") as fptr:
-            self.assertEqual(fptr.read(), "user")
+            self.assertEqual(fptr.read(), "[Library]\nuser=user")
 
     @mock.patch("vunit.sim_if.modelsim.check_output", autospec=True, return_value="")
     def test_overwrites_modelsim_ini_file_from_install(self, _check_output):
         (modelsim_ini, installed_modelsim_ini, user_modelsim_ini) = self._get_inis()
 
         with open(modelsim_ini, "w") as fptr:
-            fptr.write("existing")
+            fptr.write("[Library]\nexisting=existing")
 
         with open(installed_modelsim_ini, "w") as fptr:
-            fptr.write("installed")
+            fptr.write("[Library]\ninstalled=installed")
 
         with open(user_modelsim_ini, "w") as fptr:
-            fptr.write("user")
+            fptr.write("[Library]\nuser=user")
 
         ModelSimInterface(prefix=self.prefix_path, output_path=self.output_path, persistent=False)
         with open(modelsim_ini, "r") as fptr:
-            self.assertEqual(fptr.read(), "installed")
+            self.assertEqual(fptr.read(), "[Library]\ninstalled=installed")
 
     @mock.patch("vunit.sim_if.modelsim.check_output", autospec=True, return_value="")
     def test_overwrites_modelsim_ini_file_from_user(self, _check_output):
         (modelsim_ini, installed_modelsim_ini, user_modelsim_ini) = self._get_inis()
 
         with open(modelsim_ini, "w") as fptr:
-            fptr.write("existing")
+            fptr.write("[Library]\nexisting=existing")
 
         with open(installed_modelsim_ini, "w") as fptr:
-            fptr.write("installed")
+            fptr.write("[Library]\ninstalled=installed")
 
         with open(user_modelsim_ini, "w") as fptr:
-            fptr.write("user")
+            fptr.write("[Library]\nuser=user")
 
         with set_env(VUNIT_MODELSIM_INI=user_modelsim_ini):
             ModelSimInterface(prefix=self.prefix_path, output_path=self.output_path, persistent=False)
 
         with open(modelsim_ini, "r") as fptr:
-            self.assertEqual(fptr.read(), "user")
+            self.assertEqual(fptr.read(), "[Library]\nuser=user")
 
     @mock.patch("vunit.sim_if.vsim_simulator_mixin.Process", autospec=True)
     def test_modelsim_ini_file_detection(self, vsim_simulator_mixin_process):
-        (_, _, user_modelsim_ini) = self._get_inis("questa")
+        (modelsim_ini, _, user_modelsim_ini) = self._get_inis()
 
         with open(user_modelsim_ini, "w") as fptr:
-            fptr.write("user")
+            fptr.write("[Library]\nuser=user")
 
         def check_output(*args, **kwargs):
             return """\
@@ -352,14 +352,18 @@ class TestModelSimInterface(unittest.TestCase):
         ):
             simif = ModelSimInterface(prefix=self.prefix_path, output_path=self.output_path, persistent=False)
             self.assertEqual(simif._ini_flag, "-modelsimini")
-            self.assertEqual(simif._ini_file, "modelsim.ini")
+            self.assertEqual(str(simif._ini_file_path), user_modelsim_ini)
+            self.assertEqual(simif._sim_cfg_file_name, modelsim_ini)
 
     @mock.patch("vunit.sim_if.vsim_simulator_mixin.Process", autospec=True)
     def test_questa_ini_file_detection(self, vsim_simulator_mixin_process):
-        (_, _, user_questa_ini) = self._get_inis("questa")
+        (questa_ini, installed_questa_ini, user_questa_ini) = self._get_inis("questa")
 
         with open(user_questa_ini, "w") as fptr:
-            fptr.write("user")
+            fptr.write("[Library]\nuser=user")
+
+        with open(installed_questa_ini, "w") as fptr:
+            fptr.write("[Library]\ninstalled=installed")
 
         def check_output(*args, **kwargs):
             return """\
@@ -374,7 +378,37 @@ class TestModelSimInterface(unittest.TestCase):
         ):
             simif = ModelSimInterface(prefix=self.prefix_path, output_path=self.output_path, persistent=False)
             self.assertEqual(simif._ini_flag, "-ini")
-            self.assertEqual(simif._ini_file, "questa.ini")
+            self.assertEqual(str(simif._ini_file_path), user_questa_ini)
+            self.assertEqual(simif._sim_cfg_file_name, questa_ini)
+
+    @mock.patch("vunit.sim_if.vsim_simulator_mixin.Process", autospec=True)
+    def test_non_standard_ini_name(self, vsim_simulator_mixin_process):
+        # We need to remove the INI file created in setUp since we testing a non-standard INI file name.
+        (Path(self.prefix_path) / ".." / "modelsim.ini").unlink()
+
+        (questasim_ini, installed_questasim_ini, user_questasim_ini) = self._get_inis("questasim")
+
+        with open(user_questasim_ini, "w") as fptr:
+            fptr.write("[Library]\nuser=user")
+
+        with open(installed_questasim_ini, "w") as fptr:
+            fptr.write("[Library]\ninstalled=installed")
+
+        def check_output(*args, **kwargs):
+            return """\
+-modelsimini <modelsim.ini>     Specify path to the modelsim.ini file
+-ini <questa.ini>               Specify path to the questa.ini file
+"""
+
+        with (
+            set_env(VUNIT_MODELSIM_INI=user_questasim_ini),
+            mock.patch("vunit.sim_if.vsim_simulator_mixin.Process", return_value=None),
+            mock.patch("vunit.sim_if.modelsim.check_output", side_effect=check_output),
+        ):
+            simif = ModelSimInterface(prefix=self.prefix_path, output_path=self.output_path, persistent=False)
+            self.assertEqual(simif._ini_flag, "-ini")
+            self.assertEqual(str(simif._ini_file_path), user_questasim_ini)
+            self.assertEqual(simif._sim_cfg_file_name, questasim_ini)
 
     @mock.patch("vunit.sim_if.modelsim.check_output", autospec=True, return_value="")
     @mock.patch("vunit.sim_if.modelsim.LOGGER", autospec=True)
@@ -435,7 +469,7 @@ class TestModelSimInterface(unittest.TestCase):
         renew_path(self.libraries_path)
         renew_path(self.simulation_output_path)
         installed_modelsim_ini = str(Path(self.prefix_path) / ".." / "modelsim.ini")
-        write_file(installed_modelsim_ini, "[Library]")
+        write_file(installed_modelsim_ini, "[Library]\ninstalled=installed")
         self.project = Project()
         self.cwd = os.getcwd()
         os.chdir(self.test_path)
