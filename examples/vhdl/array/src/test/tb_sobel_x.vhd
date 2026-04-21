@@ -40,15 +40,18 @@ begin
     impure function sobel_x (
       constant image : integer_array_t
     ) return integer_array_t is
+      constant image_width : natural := width(image);
+      constant image_height : natural := height(image);
+      constant image_bit_width : natural := bit_width(image);
       variable result: integer_array_t := new_2d(
-        width     => width(image),
-        height    => height(image),
-        bit_width => bit_width(image)+1,
+        width     => image_width,
+        height    => image_height,
+        bit_width => image_bit_width+1,
         is_signed => true
       );
     begin
-      for y in 0 to height(image)-1 loop
-        for x in 0 to width(image)-1 loop
+      for y in 0 to image_height-1 loop
+        for x in 0 to image_width-1 loop
           set(
             result,
             x => x,
