@@ -105,6 +105,7 @@ package axi_slave_private_pkg is
   procedure main_loop(variable self : inout axi_slave_private_t; signal net : inout network_t);
 
   procedure check_axi_resp(bus_handle : bus_master_t; got, expected : axi_resp_t; msg : string);
+  procedure check_axi_id(bus_handle : bus_master_t; got, expected : std_logic_vector; msg : string);
 end package;
 
 
@@ -589,6 +590,17 @@ package body axi_slave_private_pkg is
   begin
     if got /= expected then
       failure(bus_handle.p_logger, msg & " - Got AXI response "  & describe(got) & " expected " & describe(expected));
+    end if;
+  end;
+
+  procedure check_axi_id(bus_handle : bus_master_t; got, expected : std_logic_vector; msg : string) is
+    function describe(id : std_logic_vector) return string is
+    begin
+      return to_string(id);
+    end;
+  begin
+    if got /= expected then
+      failure(bus_handle.p_logger, msg & " - Got AXI id "  & describe(got) & " expected " & describe(expected));
     end if;
   end;
 end package body;
