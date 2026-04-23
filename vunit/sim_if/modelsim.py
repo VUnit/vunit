@@ -846,6 +846,22 @@ proc _vunit_sim_restart {} {
 }
 """
 
+    @staticmethod
+    def _create_vunit_menu():
+        """
+        Create a menu in the GUI to call the VUnit commands.
+        """
+        tcl = 'add_menu "" VUnit\n'
+        tcl += 'add_menuitem "" VUnit "Run" vunit_run\n'
+        tcl += 'add_menuitem "" VUnit "Restart" vunit_restart\n'
+        tcl += 'add_menuitem "" VUnit "Compile" vunit_compile\n'
+        tcl += 'add_menuitem "" VUnit "Load Design" vunit_load\n'
+        tcl += 'add_menuitem "" VUnit "Run User Init File" vunit_user_init\n'
+        tcl += 'add_separator "" VUnit\n'
+        tcl += 'add_menuitem "" VUnit "Help" vunit_help\n'
+
+        return tcl
+
     def _vopt_extra_args(self, config):
         """
         Determine vopt_extra_args
