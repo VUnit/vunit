@@ -26,14 +26,12 @@ def main():
     Build documentation/website
     """
     create_release_notes()
-    copyfile(str(ROOT / 'LICENSE.rst'), str(ROOT / 'docs/license.rst'))
+    copyfile(str(ROOT / "LICENSE.rst"), str(ROOT / "docs/license.rst"))
     check_call(
-        [
-            sys.executable,
-            "-m",
-            "sphinx"
-        ] + ([] if len(argv) < 2 else argv[2:]) + [
-            "-TEWanb",
+        [sys.executable, "-m", "sphinx"]
+        + ([] if len(argv) < 2 else argv[2:])
+        + [
+            "-TEanb",
             "html",
             Path(__file__).parent.parent / "docs",
             argv[1],
