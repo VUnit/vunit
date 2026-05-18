@@ -9,6 +9,7 @@ on:
 jobs:
 
   coverage:
+    if: github.repository == 'VUnit/vunit'
     runs-on: ubuntu-latest
     steps:
 
