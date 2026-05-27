@@ -191,6 +191,8 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
         """
         if source_file.is_vhdl:
             return self.compile_vhdl_file_command(source_file)
+        if source_file.is_any_verilog:
+            return self.compile_verilog_file_command(source_file)
 
         LOGGER.error("Unknown file type: %s", source_file.file_type)
         raise CompileError
@@ -214,7 +216,7 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
 
         raise ValueError(f"Invalid VHDL standard {vhdl_standard}")
 
-    def _get_command(self, std, worklib, workpath):
+    def _get_vhdl_command(self, std, worklib, workpath):
         """
         Get basic NVC command with global options
         """
@@ -233,9 +235,35 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
         """
         Returns the command to compile a VHDL file
         """
-        cmd = self._get_command(
+        cmd = self._get_vhdl_command(
             source_file.get_vhdl_standard(), source_file.library.name, source_file.library.directory
         )
+
+        cmd += source_file.compile_options.get("nvc.global_flags", [])
+
+        cmd += ["-a"]
+        cmd += source_file.compile_options.get("nvc.a_flags", [])
+
+        cmd += [source_file.name]
+        return cmd
+
+    def _get_verilog_command(self, worklib: str, workpath: str) -> list[str]:
+        cmd = [
+            str(Path(self._prefix) / self.executable),
+            f"--work={worklib}:{workpath!s}",
+        ]
+
+        for library in self._project.get_libraries():
+            cmd += [f"--map={library.name}:{library.directory}"]
+
+        return cmd
+
+    def compile_verilog_file_command(self, source_file):
+        """
+        Returns the command to compile a VHDL file
+        """
+
+        cmd = self._get_verilog_command(source_file.library.name, source_file.library.directory)
 
         cmd += source_file.compile_options.get("nvc.global_flags", [])
 
@@ -258,7 +286,7 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
             makedirs(script_path)
 
         libdir = self._project.get_library(config.library_name).directory
-        cmd = self._get_command(self._vhdl_standard, config.library_name, libdir)
+        cmd = self._get_vhdl_command(self._vhdl_standard, config.library_name, libdir)
 
         if self._gui:
             wave_file = script_path / (f"{config.entity_name}.{self._viewer_fmt or 'fst'}")
