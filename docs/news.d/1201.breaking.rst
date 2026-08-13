@@ -1,9 +1,0 @@
-``vunit.vivado`` has been removed. Vivado support is now provided through a separate package.
-
-Install it with:
-
-.. code-block:: shell
-
-   pip install vunit-vivado
-
-Then import ``vunit_vivado.vivado`` instead of ``vunit.vivado``.
