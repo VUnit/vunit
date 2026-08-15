@@ -18,6 +18,7 @@ jobs:
 #
 
   fmt:
+    if: github.repository == 'VUnit/vunit' || github.event_name != 'schedule'
     runs-on: ubuntu-latest
     name: '🐍 black'
     steps:
@@ -43,6 +44,7 @@ jobs:
 #
 
   lin:
+    if: github.repository == 'VUnit/vunit' || github.event_name != 'schedule'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -75,6 +77,7 @@ jobs:
 #
 
   ghdl:
+    if: github.repository == 'VUnit/vunit' || github.event_name != 'schedule'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -99,6 +102,7 @@ jobs:
 #
 
   nvc:
+    if: github.repository == 'VUnit/vunit' || github.event_name != 'schedule'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -125,6 +129,7 @@ jobs:
 #
 
   win:
+    if: github.repository == 'VUnit/vunit' || github.event_name != 'schedule'
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -177,7 +182,7 @@ jobs:
       - ghdl
       - nvc
       - win
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    if: github.repository == 'VUnit/vunit' && github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     name: '🚀 Deploy'
     steps:
 
