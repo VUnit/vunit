@@ -651,6 +651,31 @@ Listed 2 files""".splitlines()
         check_stdout(ui, "lib.tb_filter.Test 1\n" "Listed 1 tests")
 
     @with_tempdir
+    def test_skips_compilation_when_no_matching_tests(self, tempdir):
+        """
+        Test that compilation is skipped when attribute filtering results in
+        no matching tests, e.g. --with-attributes=.nonexistent
+        """
+        ui = self._create_ui("--with-attributes", ".nonexistent", "--no-color")
+        lib = ui.add_library("lib")
+        file_name = str(Path(tempdir) / "tb_skip.vhd")
+        create_vhdl_test_bench_file(
+                "tb_skip",
+                file_name,
+                tests=["Test 1"],
+            )
+        lib.add_source_file(file_name)
+
+        post_run = mock.Mock()
+        with mock.patch("sys.stdout", autospec=True) as stdout:
+            with mock.patch.object(ui, "_compile") as compile_mock:
+                self._run_main(ui, post_run=post_run)
+                compile_mock.assert_not_called()
+        text = "".join([call[1][0] for call in stdout.write.mock_calls])
+        self.assertEqual(set(text.splitlines()), {"No tests were run!"})
+        self.assertTrue(post_run.called)
+
+    @with_tempdir
     def test_export_json(self, tempdir):
         tdir = Path(tempdir)
         json_file = str(tdir / "export.json")

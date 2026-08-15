@@ -1,0 +1,1 @@
+Compilation is now skipped when no tests match the active filters (e.g. ``--with-attributes``), avoiding unnecessary work when no tests would run.

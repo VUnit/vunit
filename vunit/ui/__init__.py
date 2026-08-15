@@ -1041,6 +1041,10 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         if self._args.changed:
             test_list = self._get_test_list_depending_on_change(test_list)
 
+        if test_list.num_tests == 0:
+            LOGGER.info("Skipping compilation: no matching tests after filtering.")
+            return self._main_run_report(post_run, simulator_if)
+
         self._compile(simulator_if)
         print()
 
@@ -1057,6 +1061,15 @@ other preprocessors. Lowest value first. The order between preprocessors with th
 
         report.set_real_total_time(ostools.get_time() - start_time)
         self._update_test_history(report, simulator_if)
+        return self._main_run_report(post_run, simulator_if, report)
+
+    def _main_run_report(self, post_run, simulator_if, report=None):
+        """
+        Print report and handle post_run callback and xunit XML output.
+        """
+        if report is None:
+            report = TestReport(printer=self._printer)
+
         report.print_str()
 
         if post_run is not None:
