@@ -329,6 +329,11 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         Allows inheriting classes to overload this to modify environment variables. Return None for default environment
         """
 
+    def clean_up(self):
+        """
+        Can overload to add simulator specific clean up options
+        """
+
 
 def isfile(file_name):
     """

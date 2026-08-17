@@ -34,7 +34,7 @@ class VsimSimulatorMixin(object):
         def create_process(ident):
             return Process(
                 [
-                    str(Path(prefix) / "vsim"),
+                    str(Path(prefix) / self._vsim_command()),
                     "-c",
                     "-l",
                     str(Path(sim_cfg_file_name).parent / f"transcript{ident}"),
@@ -314,6 +314,12 @@ proc vunit_run {} {
 
         return tcl
 
+    def _vsim_command(self):
+        """
+        Returns 'qsim' if using questa one gui else returns 'vsim'
+        """
+        return "vsim"
+
     def _run_batch_file(self, batch_file_name, gui=False, gui_option="-gui", extra_args=None):
         """
         Run a test bench in batch by invoking a new vsim process from the command line
@@ -321,7 +327,7 @@ proc vunit_run {} {
 
         try:
             args = [
-                str(Path(self._prefix) / "vsim"),
+                str(Path(self._prefix) / self._vsim_command()),
                 gui_option if gui else "-c",
                 "-l",
                 str(Path(batch_file_name).parent / "transcript"),

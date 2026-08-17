@@ -59,7 +59,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         group = parser.add_argument_group("modelsim/questa", description="ModelSim/Questa specific flags")
         group.add_argument(
             "--debugger",
-            choices=["original", "visualizer"],
+            choices=["original", "visualizer", "qone"],
             default="original",
             help="Debugger to use.",
         )
@@ -111,14 +111,14 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
     def _find_ini_file(self, prefix: str, support_ini_flag: bool) -> tuple[Path, str] | None:
         """
         Find the INI file to use for the simulation and the name of the copy to be used for simulation.
-        """
 
-        # The standard simulation INI file name is based on the name of the INI flag option. If such a file
-        # doesn't exist in the installation but there is another similar INI file, the simulation name
-        # is based on that file instead. We only revert to finding any INI file if the standard names
-        # can't be found. The reason is that the non-standard approaches are a somewhat unknown territory
-        # and this way we avoid discarding a standard name if there are several INI files in the installation
-        # directory.
+        The standard simulation INI file name is based on the name of the INI flag option. If such a file
+        doesn't exist in the installation but there is another similar INI file, the simulation name
+        is based on that file instead. We only revert to finding any INI file if the standard names
+        can't be found. The reason is that the non-standard approaches are a somewhat unknown territory
+        and this way we avoid discarding a standard name if there are several INI files in the installation
+        directory.
+        """
         parent_dir = Path(prefix).parent
         installation_ini_name = "questa.ini" if support_ini_flag else "modelsim.ini"
         standard_installation_ini_file = parent_dir / installation_ini_name
@@ -146,7 +146,6 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         """
         Find first valid Modelsim/Questa toolchain prefix
         """
-
         def has_ini(path):
             return cls._find_any_ini_file(Path(path).parent) is not None
 
@@ -188,6 +187,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         support_ini_flag = self._find_in_help(prefix, "vcom", "-ini")
         self._ini_flag = "-ini" if support_ini_flag else "-modelsimini"
         self._ini_file_path, simulation_ini_file_name = self._find_ini_file(prefix, support_ini_flag)
+        self._debugger = debugger
 
         SimulatorInterface.__init__(self, output_path, gui)
         VsimSimulatorMixin.__init__(
@@ -201,7 +201,6 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         self._coverage_files = set()
         assert not (persistent and gui)
         self._create_ini()
-        self._debugger = debugger
         self._vopt_retries = 3
         # Contains design already optimized, i.e. the optimized design can be reused
         self._optimized_designs = {}
@@ -345,17 +344,31 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         """
         Return True if design shall be optimized.
         """
-
+        if config.sim_options.get("modelsim.three_step_flow", False) and self._debugger == "qone":
+            print ("VUNIT: three step flow is broken for questa one - two step flow will be attempted instead")
+            return False
         return config.sim_options.get("modelsim.three_step_flow", False)
 
-    def _early_load_in_gui_mode(self):  # pylint: disable=unused-argument
+    def _early_load_in_gui_mode(self):
         """
         Return True if design is to be loaded on the first vsim call rather than
         in the second vsim call embedded in the script file.
 
         This is required for Questa Visualizer.
         """
-        return self._debugger == "visualizer"
+        return self._debugger in ["visualizer", "qone"]
+
+    def _vsim_command(self):
+        """
+        Returns 'qsim' if using questa one gui else returns 'vsim'
+        """
+        return "qsim" if self._debugger == "qone" else "vsim"
+
+    def _vopt_command(self):
+        """
+        Returns 'qopt' if using questa one gui else returns 'vopt'
+        """
+        return "qopt" if self._debugger == "qone" else "vopt"
 
     @staticmethod
     def _design_to_optimize(config):
@@ -407,12 +420,12 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
             self._vopt_extra_args(config),
             f"{design_to_optimize}",
             "-work",
-            f"{{{config.library_name}}}",
+            f"{design_file_directory}",
             "-quiet",
             f"-floatgenerics+{config.entity_name}.",
-            f"-o {{{optimized_design}}}",
+            f"-o {optimized_design}",
             "-designfile",
-            f"{{{fix_path(design_file)}}}",
+            f"{fix_path(design_file)}",
         ]
 
         # There is a known bug in Modelsim/Questa that prevents the -(modelsim)ini flag from accepting
@@ -423,16 +436,19 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
 
         vopt_flags += vopt_library_flags
 
+        if self._debugger == "qone":
+            vopt_flags.append("-debug,livesim")
+
         tcl = """
 proc vunit_optimize {{vopt_extra_args ""}} {"""
         tcl += """
-    echo Optimizing using command 'vopt ${{vopt_extra_args}} {vopt_flags}'
+    echo Optimizing using command '{vopt} ${{vopt_extra_args}} {vopt_flags}'
     set vopt_failed [catch {{
-        eval vopt ${{vopt_extra_args}} {{{vopt_flags}}}
+        eval {vopt} ${{vopt_extra_args}} {{{vopt_flags}}}
     }}]
 
     if {{${{vopt_failed}}}} {{
-        echo Command 'vopt ${{vopt_extra_args}} {vopt_flags}' failed
+        echo Command '{vopt} ${{vopt_extra_args}} {vopt_flags}' failed
         echo Bad flag from vopt_extra_args?
         return true
     }}
@@ -440,7 +456,8 @@ proc vunit_optimize {{vopt_extra_args ""}} {"""
     return false
 }}
 """.format(
-            vopt_flags=" ".join(vopt_flags)
+            vopt_flags=" ".join(vopt_flags),
+            vopt=self._vopt_command()
         )
 
         return tcl
@@ -466,16 +483,15 @@ proc vunit_optimize {{vopt_extra_args ""}} {"""
         """
         Run a test bench in batch by invoking a new vsim process from the command line
         """
-        try:
-            args = [
-                str(Path(self._prefix) / "vsim"),
-                "-c",
-                "-l",
-                str(script_path / "transcript"),
-                "-do",
-                f'source "{fix_path(str(batch_file_name))!s}"',
-            ]
+        args = [str(Path(self._prefix) / self._vsim_command()),
+            "-c",
+            "-l",
+            str(script_path / "transcript"),
+            "-do",
+            f'source "{fix_path(str(batch_file_name))!s}"',
+        ]
 
+        try:
             proc = Process(args, cwd=str(Path(self._sim_cfg_file_name).parent))
             proc.consume_output()
             status = True
@@ -637,14 +653,15 @@ quit -code 0
         """
 
         vsim_flags = " ".join(self._get_vsim_flags(config, output_path, optimize_design))
+        vsim_command = self._vsim_command()
 
         tcl = f"""
     set vsim_failed [catch {{
-        eval vsim ${{vsim_extra_args}} {{{vsim_flags}}}
+        eval {vsim_command} ${{vsim_extra_args}} {{{vsim_flags}}}
     }}]
 
     if {{${{vsim_failed}}}} {{
-       echo Command 'vsim ${{vsim_extra_args}} {vsim_flags}' failed
+       echo Command '{vsim_command} ${{vsim_extra_args}} {vsim_flags}' failed
        echo Bad flag from vsim_extra_args?
        return true
     }}
@@ -760,9 +777,17 @@ proc vunit_load {{vsim_extra_args ""}} {"""
             )
         )
 
+        if self._debugger == "original":
+            vsim_flags += [
+                "-wlf",
+                f"{{{fix_path(str(Path(output_path) / 'vsim.wlf'))}}}",
+            ]
+        else:
+            vsim_flags += [
+                str("-" + self._vopt_command() + "args=-debug,livesim"),
+            ]
+
         vsim_flags += [
-            "-wlf",
-            f"{{{fix_path(str(Path(output_path) / 'vsim.wlf'))}}}",
             pli_str,
             set_generic_str,
         ]
@@ -775,7 +800,12 @@ proc vunit_load {{vsim_extra_args ""}} {"""
 
         This is required to support Questa Visualizer.
         """
-        return "-visualizer" if self._debugger == "visualizer" else "-gui"
+        arg = "-gui"
+        if self._debugger == "visualizer":
+            arg = "-visualizer"
+        elif self._debugger == "qone":
+            arg = ""
+        return arg
 
     def _get_load_flags(self, config, output_path, optimize_design):
         """
@@ -800,9 +830,17 @@ proc vunit_load {{vsim_extra_args ""}} {"""
         generics_file_name = Path(output_path) / "generics.flags"
         write_file(str(generics_file_name), set_generic_str)
 
+        if self._debugger == "original":
+            vsim_flags += [
+                "-wlf",
+                f"{{{fix_path(str(Path(output_path) / 'vsim.wlf'))}}}",
+            ]
+        else:
+            vsim_flags += [
+                str("-" + self._vopt_command() + "args=-debug,livesim"),
+            ]
+
         vsim_flags += [
-            "-wlf",
-            f"{fix_path(str(Path(output_path) / 'vsim.wlf'))}",
             pli_str,
             "-f",
             f"{fix_path(str(generics_file_name))}",
@@ -906,6 +944,14 @@ proc _vunit_sim_restart {} {
             if key in env.keys():
                 del env[key]
         return env
+
+    def clean_up(self):
+        """
+        Explicitly clean up the persistent tcl shell instance
+        """
+        SimulatorInterface.clean_up(self)
+        if self._persistent_shell is not None:
+            self._persistent_shell.teardown()
 
 
 def encode_generic_value_for_tcl(value):

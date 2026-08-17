@@ -1062,6 +1062,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         if post_run is not None:
             post_run(results=Results(self._output_path, simulator_if, report))
 
+        simulator_if.clean_up()
         del simulator_if
 
         if self._args.xunit_xml is not None:
