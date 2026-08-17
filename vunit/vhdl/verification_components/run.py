@@ -8,15 +8,15 @@ from pathlib import Path
 from itertools import product
 from vunit import VUnit
 
-ROOT = Path(__file__).parent
+root = Path(__file__).parent
 
-UI = VUnit.from_argv()
-UI.add_vhdl_builtins()
-UI.add_random()
-UI.add_verification_components()
+ui = VUnit.from_argv()
+ui.add_vhdl_builtins()
+ui.add_random()
+ui.add_verification_components()
 
-LIB = UI.library("vunit_lib")
-LIB.add_source_files(ROOT / "test" / "*.vhd")
+lib = ui.library("vunit_lib")
+lib.add_source_files(root / "test" / "*.vhd")
 
 
 def encode(tb_cfg):
@@ -70,12 +70,12 @@ def gen_avalon_master_tests(obj, *args):
         obj.add_config(name=config_name, generics=dict(encoded_tb_cfg=encode(tb_cfg)))
 
 
-tb_avalon_slave = LIB.test_bench("tb_avalon_slave")
+tb_avalon_slave = lib.test_bench("tb_avalon_slave")
 
 for test in tb_avalon_slave.get_tests():
     gen_avalon_tests(test, [32], [1, 2, 64], [1.0, 0.3], [0.0, 0.4])
 
-tb_avalon_master = LIB.test_bench("tb_avalon_master")
+tb_avalon_master = lib.test_bench("tb_avalon_master")
 
 for test in tb_avalon_master.get_tests():
     if test.name == "wr single rd single":
@@ -83,9 +83,9 @@ for test in tb_avalon_master.get_tests():
     else:
         gen_avalon_master_tests(test, [64], [1.0, 0.3], [0.0, 0.7], [1.0, 0.3], [1.0, 0.3])
 
-TB_WISHBONE_SLAVE = LIB.test_bench("tb_wishbone_slave")
+tb_wishbone_slave = lib.test_bench("tb_wishbone_slave")
 
-for test in TB_WISHBONE_SLAVE.get_tests():
+for test in tb_wishbone_slave.get_tests():
     #  TODO strobe_prob not implemented in slave tb
     gen_wb_tests(
         test,
@@ -100,9 +100,9 @@ for test in TB_WISHBONE_SLAVE.get_tests():
     )
 
 
-TB_WISHBONE_MASTER = LIB.test_bench("tb_wishbone_master")
+tb_wishbone_master = lib.test_bench("tb_wishbone_master")
 
-for test in TB_WISHBONE_MASTER.get_tests():
+for test in tb_wishbone_master.get_tests():
     if test.name == "slave comb ack":
         gen_wb_tests(
             test,
@@ -129,13 +129,13 @@ for test in TB_WISHBONE_MASTER.get_tests():
         )
 
 
-TB_AXI_STREAM = LIB.test_bench("tb_axi_stream")
+tb_axi_stream = lib.test_bench("tb_axi_stream")
 
 for id_length in [0, 8]:
     for dest_length in [0, 8]:
         for user_length in [0, 8]:
             for data_length in [8, 16]:
-                for test in TB_AXI_STREAM.get_tests("*check"):
+                for test in tb_axi_stream.get_tests("*check"):
                     test.add_config(
                         name=f"id_l={id_length} dest_l={dest_length} user_l={user_length} data_l={data_length}",
                         generics=dict(
@@ -146,22 +146,29 @@ for id_length in [0, 8]:
                         ),
                     )
 
-TB_AXI_STREAM.test("test passing with no tkeep").set_generic("g_data_length", 16)
+tb_axi_stream.test("test passing with no tkeep").set_generic("g_data_length", 16)
 
-TB_AXI_STREAM_PROTOCOL_CHECKER = LIB.test_bench("tb_axi_stream_protocol_checker")
+for reset_policy_value in [0, 1]:
+    tb_axi_stream.test("test reset of transactions").add_config(
+        name="abort_all_transactions" if reset_policy_value == 0 else "abort_active_transaction",
+        generics=dict(reset_policy_value=reset_policy_value),
+    )
+
+
+tb_axi_stream_protocol_checker = lib.test_bench("tb_axi_stream_protocol_checker")
 
 for data_length in [0, 8, 32]:
-    for test in TB_AXI_STREAM_PROTOCOL_CHECKER.get_tests("*passing*tdata*"):
+    for test in tb_axi_stream_protocol_checker.get_tests("*passing*tdata*"):
         test.add_config(name="data_length=%d" % data_length, generics=dict(data_length=data_length))
 
-for test in TB_AXI_STREAM_PROTOCOL_CHECKER.get_tests("*failing*tid width*"):
+for test in tb_axi_stream_protocol_checker.get_tests("*failing*tid width*"):
     test.add_config(name="dest_length=25", generics=dict(dest_length=25))
     test.add_config(name="id_length=8 dest_length=17", generics=dict(id_length=8, dest_length=17))
 
-TEST_FAILING_MAX_WAITS = TB_AXI_STREAM_PROTOCOL_CHECKER.test(
+test_failing_max_waits = tb_axi_stream_protocol_checker.test(
     "Test failing check of that tready comes within max_waits after valid"
 )
 for max_waits in [0, 8]:
-    TEST_FAILING_MAX_WAITS.add_config(name="max_waits=%d" % max_waits, generics=dict(max_waits=max_waits))
+    test_failing_max_waits.add_config(name="max_waits=%d" % max_waits, generics=dict(max_waits=max_waits))
 
-UI.main()
+ui.main()
