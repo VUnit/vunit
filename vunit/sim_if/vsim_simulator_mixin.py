@@ -301,11 +301,19 @@ proc vunit_run {} {
         )
         return tcl
 
+    @staticmethod
+    def _create_vunit_menu():
+        """
+        Create a menu in the GUI to call the VUnit commands.
+        """
+        return ""
+
     def _create_gui_script(self, common_file_name, config):
         """
         Create the user facing script which loads common functions and prints a help message
         """
         tcl = f'source "{fix_path(common_file_name)!s}"\n'
+        tcl += self._create_vunit_menu()
         tcl += self._create_user_init_function(config)
         tcl += "if {![vunit_load]} {\n"
         tcl += "  vunit_user_init\n"
