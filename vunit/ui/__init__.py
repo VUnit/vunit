@@ -423,7 +423,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
     def set_sim_option(
         self,
         name: str,
-        value: str,
+        value: str | list[str],
         allow_empty: Optional[bool] = False,
         overwrite: Optional[bool] = True,
     ):
@@ -448,7 +448,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         for test_bench in check_not_empty(test_benches, allow_empty, "No test benches found"):
             test_bench.set_sim_option(name, value, overwrite)
 
-    def set_compile_option(self, name: str, value: str, allow_empty: Optional[bool] = False):
+    def set_compile_option(self, name: str, value: str | list[str], allow_empty: Optional[bool] = False):
         """
         Set compile option of all files
 
@@ -470,7 +470,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         for source_file in check_not_empty(source_files, allow_empty, "No source files found"):
             source_file.set_compile_option(name, value)
 
-    def add_compile_option(self, name: str, value: str, allow_empty: Optional[bool] = False):
+    def add_compile_option(self, name: str, value: str | list[str], allow_empty: Optional[bool] = False):
         """
         Add compile option to all files
 
