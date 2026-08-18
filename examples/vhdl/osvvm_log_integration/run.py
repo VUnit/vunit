@@ -47,16 +47,22 @@ osvvm_files_to_compile = [
     "TextUtilPkg.vhd",
     "OsvvmScriptSettingsPkg.vhd",
     "OsvvmScriptSettingsPkg_default.vhd",
+    "IfElsePkg.vhd",
+    "OsvvmSettingsPkg.vhd",
+    "OsvvmSettingsPkg_default.vhd",
+    "FileUtilPkg.vhd",
+    "LanguageSupport2019Pkg.vhd",
+    "AssertApiPkg.vhd",
 ]
 for osvvm_file in osvvm_files_to_compile:
-    osvvm.add_source_files(root / ".." / ".." / ".." / "vunit" / "vhdl" / "osvvm" / osvvm_file)
+    prj.add_osvvm_file_to_lib(osvvm_file, osvvm)
 
 if args.use_vunit_log:
     osvvm.add_source_files(root / "osvvm_integration" / "osvvm_to_vunit_common_log_pkg.vhd")
     osvvm.add_source_files(root / "osvvm_integration" / "osvvm_to_vunit_common_log_pkg-body.vhd")
     osvvm.add_source_files(root / "osvvm_integration" / "AlertLogPkg.vhd")
 else:
-    osvvm.add_source_files(root / ".." / ".." / ".." / "vunit" / "vhdl" / "osvvm" / "AlertLogPkg.vhd")
+    prj.add_osvvm_file_to_lib("AlertLogPkg.vhd", osvvm)
 
 
 prj.set_compile_option("rivierapro.vcom_flags", ["-dbg"])

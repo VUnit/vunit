@@ -1312,6 +1312,13 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         """
         self._builtins.add("osvvm")
 
+    def add_osvvm_file_to_lib(self, file_name, lib_name):
+        """
+        Adds a method to pass osvvm files through the file selection process
+        Useful if trying to build osvvm with customised packages
+        """
+        self._builtins._add_osvvm_file_to_lib(file_name, lib_name)  # pylint: disable=protected-access
+
     def add_json4vhdl(self):
         """
         Removed json4vhdl add-on.

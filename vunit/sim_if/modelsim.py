@@ -156,6 +156,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
     def supports_vhdl_call_paths(cls):
         """
         Returns True when this simulator supports VHDL-2019 call paths
+        OSVVM variable Supports2019FilePath
         """
         return True
 
@@ -165,6 +166,37 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         Returns True when this simulator supports VHDL package generics
         """
         return True
+
+    @classmethod
+    def supports_2019_generics(cls):
+        """
+        Returns True when this simulator supports VHDL 2019 generics
+        """
+        return False
+
+    @classmethod
+    def supports_2019_impure_functions(cls):
+        """
+        Returns True when this simulator supports VHDL 2019 impure functions
+        OSVVM variable Supports2019ImpureFunctions
+        """
+        return False
+
+    @classmethod
+    def supports_2019_assert_api(cls):
+        """
+        Returns True when this simulator supports VHDL 2019 assertion api
+        OSVVM variable Supports2019AssertApi
+        """
+        return False
+
+    @classmethod
+    def osvvm_tool_name(cls):
+        """
+        Returns True when this simulator supports VHDL package generics
+        OSVVM variable ToolName
+        """
+        return "modelsim"
 
     @staticmethod
     def supports_coverage():

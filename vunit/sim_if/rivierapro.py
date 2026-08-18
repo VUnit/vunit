@@ -97,15 +97,63 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
     def supports_vhdl_call_paths(cls):
         """
         Returns True when this simulator supports VHDL-2019 call paths
+        OSVVM variable Supports2019FilePath
         """
-        return True
+        version = cls._get_version()
+        if version.year is not None:
+            if (version.year == 2021 and version.month >= 4) or (version.year > 2021):
+                return True
+
+        return False
 
     @classmethod
     def supports_vhdl_package_generics(cls):
         """
         Returns True when this simulator supports VHDL package generics
+        OSVVM variable
         """
-        return True
+        return False
+
+    @classmethod
+    def supports_2019_generics(cls):
+        """
+        Returns True when this simulator supports VHDL 2019 generics
+        OSVVM variable
+        """
+        return False
+
+    @classmethod
+    def supports_2019_impure_functions(cls):
+        """
+        Returns True when this simulator supports VHDL 2019 impure functions
+        OSVVM variable Supports2019ImpureFunctions
+        """
+        version = cls._get_version()
+        if version.year is not None:
+            if (version.year == 2021 and version.month >= 4) or (version.year > 2021):
+                return True
+
+        return False
+
+    @classmethod
+    def supports_2019_assert_api(cls):
+        """
+        Returns True when this simulator supports VHDL 2019 assertion api
+        OSVVM variable Supports2019AssertApi
+        """
+        version = cls._get_version()
+        if version.year is not None:
+            if (version.year == 2021 and version.month >= 4) or (version.year > 2021):
+                return True
+
+        return False
+
+    @classmethod
+    def osvvm_tool_name(cls):
+        """
+        Returns an equivalent string to the OSVVM variable ToolName
+        """
+        return "RivieraPRO"
 
     @staticmethod
     def supports_coverage():

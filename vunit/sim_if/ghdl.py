@@ -189,6 +189,7 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
     def supports_vhdl_call_paths(cls):
         """
         Returns True when this simulator supports VHDL-2019 call paths
+        OSVVM variable Supports2019FilePath
         """
         return False
 
@@ -197,7 +198,37 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
         """
         Returns True when this simulator supports VHDL package generics
         """
-        return True
+        return False
+
+    @classmethod
+    def supports_2019_generics(cls):
+        """
+        Returns True when this simulator supports VHDL 2019 generics
+        """
+        return False
+
+    @classmethod
+    def supports_2019_impure_functions(cls):
+        """
+        Returns True when this simulator supports VHDL 2019 impure functions
+        OSVVM variable Supports2019ImpureFunctions
+        """
+        return False
+
+    @classmethod
+    def supports_2019_assert_api(cls):
+        """
+        Returns True when this simulator supports VHDL 2019 assertion api
+        OSVVM variable Supports2019AssertApi
+        """
+        return False
+
+    @classmethod
+    def osvvm_tool_name(cls):
+        """
+        Returns True when this simulator supports VHDL package generics
+        """
+        return "GHDL"
 
     @classmethod
     def supports_vhpi(cls):

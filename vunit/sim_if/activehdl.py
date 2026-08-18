@@ -54,24 +54,59 @@ class ActiveHDLInterface(SimulatorInterface):
         return cls.find_toolchain(["vsim", "avhdl"])
 
     @classmethod
+    def test_version(cls, major, minor):
+        proc = Process([str(Path(cls.find_prefix()) / "vcom"), "-version"], env=cls.get_env())
+        consumer = VersionConsumer()
+        proc.consume_output(consumer)
+        if consumer.version is not None:
+            return consumer.version >= Version(major, minor)
+
+        return False
+
+    @classmethod
     def supports_vhdl_call_paths(cls):
         """
         Returns True when this simulator supports VHDL-2019 call paths
         """
-        return True
+        return cls.test_version(12, 0)
 
     @classmethod
     def supports_vhdl_package_generics(cls):
         """
         Returns True when this simulator supports VHDL package generics
         """
-        proc = Process([str(Path(cls.find_prefix()) / "vcom"), "-version"], env=cls.get_env())
-        consumer = VersionConsumer()
-        proc.consume_output(consumer)
-        if consumer.version is not None:
-            return consumer.version >= Version(10, 1)
+        return cls.test_version(10, 1)
 
+    @classmethod
+    def supports_2019_generics(cls):
+        """
+        Returns True when this simulator supports VHDL 2019 generics
+        OSVVM variable
+        """
         return False
+
+    @classmethod
+    def supports_2019_impure_functions(cls):
+        """
+        Returns True when this simulator supports VHDL 2019 impure functions
+        OSVVM variable Supports2019ImpureFunctions
+        """
+        return cls.test_version(12, 0)
+
+    @classmethod
+    def supports_2019_assert_api(cls):
+        """
+        Returns True when this simulator supports VHDL 2019 assertion api
+        OSVVM variable Supports2019AssertApi
+        """
+        return cls.test_version(12, 0)
+
+    @classmethod
+    def osvvm_tool_name(cls):
+        """
+        Returns True when this simulator supports VHDL package generics
+        """
+        return "ActiveHDL"
 
     @staticmethod
     def supports_coverage():

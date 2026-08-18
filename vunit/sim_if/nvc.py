@@ -30,7 +30,8 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
     """
     Interface for NVC simulator
     """
-
+    _minor = 0
+    _major = 0
     name = "nvc"
     executable = environ.get("NVC", "nvc")
     supports_gui_flag = True
@@ -93,6 +94,8 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
         self._supports_jit = major > 1 or (major == 1 and minor >= 9)
         self._ieee_warnings_global = major > 1 or (major == 1 and minor >= 16)
         self._supports_coverage_merge = major > 1 or (major == 1 and minor >= 15)
+        self._major = major
+        self._minor = minor
 
         if self.use_color:
             environ["NVC_COLORS"] = "always"
@@ -144,15 +147,60 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
     def supports_vhdl_call_paths(cls):
         """
         Returns True when this simulator supports VHDL-2019 call paths
+        OSVVM variable Supports2019FilePath
         """
-        return True
+        if cls._major is not None:
+            if (cls._major == 1 and cls._minor >= 15) or (cls._major > 1):
+                return True
+
+        return False
 
     @classmethod
     def supports_vhdl_package_generics(cls):
         """
         Returns True when this simulator supports VHDL package generics
+        OSVVM variable
         """
         return True
+
+    @classmethod
+    def supports_2019_generics(cls):
+        """
+        Returns True when this simulator supports VHDL package generics
+        OSVVM variable
+        """
+        return False
+
+    @classmethod
+    def supports_2019_impure_functions(cls):
+        """
+        Returns True when this simulator supports VHDL package generics
+        OSVVM variable Supports2019ImpureFunctions
+        """
+        if cls._major is not None:
+            if (cls._major == 1 and cls._minor >= 13) or (cls._major > 1):
+                return True
+
+        return False
+
+    @classmethod
+    def supports_2019_assert_api(cls):
+        """
+        Returns True when this simulator supports VHDL package generics
+        OSVVM variable Supports2019AssertApi
+        """
+        if cls._major is not None:
+            if (cls._major == 1 and cls._minor >= 15) or (cls._major > 1):
+                return True
+
+        return False
+
+    @classmethod
+    def osvvm_tool_name(cls):
+        """
+        Returns True when this simulator supports VHDL package generics
+        """
+        return "NVC"
 
     def setup_library_mapping(self, project):
         """

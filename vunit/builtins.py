@@ -29,7 +29,6 @@ from vunit.vhdl_standard import VHDL, VHDLStandard
 from vunit.ui.common import get_checked_file_names_from_globs
 from vunit.about import version, VUnitVersion
 
-
 LOGGER = logging.getLogger(__name__)
 
 VHDL_PATH = (Path(__file__).parent / "vhdl").resolve()
@@ -389,64 +388,141 @@ class Builtins(object):
             return None
         return self._vunit_obj.add_library(library_name)
 
+    def _osvvm_file_map(self, file_name):
+        """
+        Mapping for a given osvvm file to the actual file that should be used. Returns empty string for no file
+        """
+        simulator_coverage_api = self._simulator_class.get_osvvm_coverage_api()
+        osvvm_file_dict = {
+            "LanguageSupport2019Pkg.vhd": ("deprecated/LanguageSupport2019Pkg_c.vhd"),
+            "FileLinePathPkg.vhd": (
+                "FileLinePathPkg.vhd"
+                if self._simulator_class.supports_2019_impure_functions()
+                else "deprecated/FileLinePathPkg_c.vhd"
+            ),
+            "AssertApiPkg.vhd": (
+                "AssertApiPkg.vhd"
+                if self._simulator_class.supports_2019_assert_api()
+                else "deprecated/AssertApiPkg_c.vhd"
+            ),
+            "DynamicVectorGenericPkg.vhd": (
+                "DynamicVectorGenericPkg.vhd"
+                if self._simulator_class.supports_2019_generics()
+                else "deprecated/DynamicVectorPkg_IntV_c.vhd"
+            ),
+            "DynamicVectorPkg_instances.vhd": (
+                "DynamicVectorPkg_instances.vhd"
+                if self._simulator_class.supports_2019_generics()
+                else "deprecated/DynamicVectorPkg_slv_c.vhd"
+            ),
+            "RandomPkg2019.vhd": (
+                "RandomPkg2019.vhd"
+                if self._simulator_class.supports_2019_impure_functions()
+                else "deprecated/RandomPkg2019_c.vhd"
+            ),
+            "ScoreboardPkg_IntV.vhd": "deprecated/ScoreboardPkg_IntV_c.vhd",
+            "ScoreboardPkg_slv.vhd": "deprecated/ScoreboardPkg_slv_c.vhd",
+            "ScoreboardPkg_int.vhd": "deprecated/ScoreboardPkg_int_c.vhd",
+            "ScoreboardPkg_signed.vhd": "deprecated/ScoreboardPkg_signed_c.vhd",
+            "ScoreboardPkg_unsigned.vhd": "deprecated/ScoreboardPkg_unsigned_c.vhd",
+            "MemoryGenericPkg.vhd": "deprecated/MemoryPkg_orig_c.vhd",
+            "MemoryPkg.vhd": (
+                "MemoryPkg.vhd"
+                if self._simulator_class.supports_vhdl_package_generics()
+                else "deprecated/MemoryPkg_c.vhd"
+            ),
+            "ScoreboardGenericPkg.vhd": "",
+            "CoverageVendorApiPkg_Aldec.vhd": (
+                "CoverageVendorApiPkg_Aldec.vhd" if simulator_coverage_api == "rivierapro" else ""
+            ),
+            "CoverageVendorApiPkg_default.vhd": (
+                "CoverageVendorApiPkg_default.vhd" if simulator_coverage_api not in ["nvc", "rivierapro"] else ""
+            ),
+            "CoverageVendorApiPkg_NVC.vhd": ("CoverageVendorApiPkg_NVC.vhd" if simulator_coverage_api == "nvc" else ""),
+        }
+        return osvvm_file_dict.get(file_name)
+
+    def _osvvm_file_select(self, file_name):
+        """
+        pass osvvm file_name and it returns either file_name or empty string (for no file)
+        should be used with an interator over all files in the main osvvm directory.
+        will select correct file from depreciated folder if require.
+        """
+        ret = file_name
+
+        if int(str(self._vhdl_standard)) < int(str(VHDL.STD_2019)) and (
+            file_name
+            in {
+                "LanguageSupport2019Pkg.vhd",
+                "FileLinePathPkg.vhd",
+                "AssertApiPkg.vhd",
+                "DynamicVectorGenericPkg.vhd",
+                "DynamicVectorPkg_instances.vhd",
+                "RandomPkg2019.vhd",
+            }
+        ):
+            ret = self._osvvm_file_map(file_name)
+
+        if not self._simulator_class.supports_vhdl_package_generics() and (
+            file_name
+            in [
+                "ScoreboardPkg_IntV.vhd",
+                "ScoreboardPkg_slv.vhd",
+                "ScoreboardPkg_int.vhd",
+                "ScoreboardPkg_signed.vhd",
+                "ScoreboardPkg_unsigned.vhd",
+                "MemoryGenericPkg.vhd",
+                "MemoryPkg.vhd",
+                "ScoreboardGenericPkg.vhd",
+            ]
+        ):
+            ret = self._osvvm_file_map(file_name)
+
+        if file_name in [
+            "CoverageVendorApiPkg_Aldec.vhd",
+            "CoverageVendorApiPkg_default.vhd",
+            "CoverageVendorApiPkg_NVC.vhd",
+        ]:
+            ret = self._osvvm_file_map(file_name)
+
+        return ret
+
+    def _add_osvvm_file_to_lib(self, file_name, lib_name):
+        """
+        Use this when building a custom osvvm library based on included osvvm
+        """
+        bname = self._osvvm_file_select(file_name)
+        if bname != "":
+            lib_name.add_source_files(VHDL_PATH / "osvvm" / bname, preprocessors=[])
+
     def _add_osvvm(self):
         """
         Add osvvm library
         """
         library = self._add_library_if_not_exist(
-            "osvvm", "Library 'OSVVM' previously defined. Skipping addition of builtin OSVVM (2023.04)."
+            "osvvm", "Library 'OSVVM' previously defined. Skipping addition of builtin OSVVM (2026.05)."
         )
         if library is None:
             return
 
-        simulator_coverage_api = self._simulator_class.get_osvvm_coverage_api()
-        supports_vhdl_package_generics = self._simulator_class.supports_vhdl_package_generics()
-
         if not osvvm_is_installed():
-            raise RuntimeError(
-                """
+            raise RuntimeError("""
 Found no OSVVM VHDL files. Did you forget to run
 
 git submodule update --init --recursive
 
-in your VUnit Git repository? You have to do this first if installing using setup.py."""
-            )
+in your VUnit Git repository? You have to do this first if installing using setup.py.""")
 
         for file_name in glob(str(VHDL_PATH / "osvvm" / "*.vhd")):
             bname = Path(file_name).name
+            # print ("adding file before checks", file_name, simulator_coverage_api, self._simulator_class)
 
-            if (bname == "AlertLogPkg_body_BVUL.vhd") or ("2019" in bname):
+            bname = self._osvvm_file_select(bname)
+            if bname == "":
                 continue
 
-            if ((simulator_coverage_api != "rivierapro") and (bname == "VendorCovApiPkg_Aldec.vhd")) or (
-                (simulator_coverage_api == "rivierapro") and (bname == "VendorCovApiPkg.vhd")
-            ):
-                continue
-
-            if not supports_vhdl_package_generics and (
-                bname
-                in [
-                    "ScoreboardGenericPkg.vhd",
-                    "ScoreboardPkg_int.vhd",
-                    "ScoreboardPkg_slv.vhd",
-                    "MemoryPkg.vhd",
-                    "MemoryGenericPkg.vhd",
-                ]
-            ):
-                continue
-
-            if supports_vhdl_package_generics and (
-                bname
-                in [
-                    "ScoreboardPkg_int_c.vhd",
-                    "ScoreboardPkg_slv_c.vhd",
-                    "MemoryPkg_c.vhd",
-                    "MemoryPkg_orig_c.vhd",
-                ]
-            ):
-                continue
-
-            library.add_source_files(file_name, preprocessors=[])
+            # print ("file passed checks", new_file_name)
+            library.add_source_files(VHDL_PATH / "osvvm" / bname, preprocessors=[])
 
     def _add_vhdl_logging(self, use_external_log):
         """
