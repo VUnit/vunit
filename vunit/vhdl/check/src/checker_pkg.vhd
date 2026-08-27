@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 use work.log_levels_pkg.all;
 use work.logger_pkg.all;
@@ -105,6 +105,9 @@ package checker_pkg is
   procedure reset_checker_stat(checker     : checker_t);
   procedure get_checker_stat(checker       :     checker_t;
                              variable stat : out checker_stat_t);
+
+  impure function to_integer(checker : checker_t) return integer;
+  impure function to_checker(value : integer) return checker_t;
 
   -- Private
   impure function p_has_unhandled_checks return boolean;

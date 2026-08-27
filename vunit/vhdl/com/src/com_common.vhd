@@ -5,14 +5,15 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 library ieee;
 use ieee.std_logic_1164.all;
 
-use work.com_messenger_pkg.all;
-use work.com_types_pkg.all;
-use work.event_common_pkg.all;
-use work.event_private_pkg.all;
+use work.com_messenger_pkg.messenger_t;
+use work.com_types_pkg.com_status_t;
+use work.event_common_pkg.notify;
+use work.event_common_pkg.is_active;
+use work.event_private_pkg.basic_event_t;
 
 package com_common_pkg is
   shared variable messenger :       messenger_t;

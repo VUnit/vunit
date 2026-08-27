@@ -2,14 +2,19 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
 
-context work.vunit_context;
-context work.com_context;
 use work.axi_stream_pkg.all;
+use work.axi_stream_private_pkg.all;
+use work.com_pkg.net;
+use work.com_pkg.publish;
+use work.com_types_pkg.msg_t;
+use work.log_levels_pkg.all;
+use work.logger_pkg.all;
+use work.string_ops.all;
 
 entity axi_stream_monitor is
   generic (
@@ -20,8 +25,8 @@ entity axi_stream_monitor is
     tready : in std_logic := '1';
     tdata  : in std_logic_vector(data_length(monitor) - 1 downto 0);
     tlast  : in std_logic := '1';
-    tkeep  : in std_logic_vector(data_length(monitor)/8-1 downto 0) := (others => '0');
-    tstrb  : in std_logic_vector(data_length(monitor)/8-1 downto 0) := (others => '0');
+    tkeep  : in std_logic_vector(data_length(monitor)/8-1 downto 0) := (others => '1');
+    tstrb  : in std_logic_vector(data_length(monitor)/8-1 downto 0) := (others => 'U');
     tid    : in std_logic_vector(id_length(monitor)-1 downto 0) := (others => '0');
     tdest  : in std_logic_vector(dest_length(monitor)-1 downto 0) := (others => '0');
     tuser  : in std_logic_vector(user_length(monitor)-1 downto 0) := (others => '0')
@@ -40,18 +45,23 @@ begin
       tdest(tdest'range),
       tuser(tuser'range)
     );
+    variable tstrb_resolved : std_logic_vector(tstrb'range);
   begin
     wait until (tvalid and tready) = '1' and rising_edge(aclk);
 
     if is_visible(monitor.p_logger, debug) then
-      debug(monitor.p_logger, "tdata: " & to_nibble_string(tdata) & " (" & to_integer_string(tdata) & ")" & ", tlast: " & to_string(tlast));
+      debug(
+        monitor.p_logger,
+        "tdata: " & to_nibble_string(tdata) & " (" & to_integer_string(tdata) & ")" & ", tlast: " & to_string(tlast)
+      );
     end if;
 
+    tstrb_resolved := resolve_tstrb(tkeep, tstrb);
     axi_stream_transaction := (
       tdata => tdata,
       tlast => tlast = '1',
       tkeep => tkeep,
-      tstrb => tstrb,
+      tstrb => tstrb_resolved,
       tid   => tid,
       tdest => tdest,
       tuser => tuser
@@ -73,7 +83,7 @@ begin
         tdata    => tdata,
         tlast    => tlast,
         tkeep    => tkeep,
-        tstrb    => tstrb,
+        tstrb    => tstrb, -- Resolves unconnected signal internally
         tid      => tid,
         tdest    => tdest,
         tuser    => tuser

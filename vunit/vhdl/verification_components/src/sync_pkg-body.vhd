@@ -2,19 +2,16 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
-
-context work.vunit_context;
-use work.queue_pkg.all;
-context work.com_context;
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 package body sync_pkg is
   procedure wait_until_idle(signal net : inout network_t;
-                            handle     :       sync_handle_t) is
+                            handle     :       sync_handle_t;
+                            timeout    :       delay_length := max_timeout) is
     variable msg, reply_msg : msg_t;
   begin
     msg := new_msg(wait_until_idle_msg);
-    request(net, handle, msg, reply_msg);
+    request(net, handle, msg, reply_msg, timeout);
     delete(reply_msg);
   end;
 

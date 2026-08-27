@@ -2,12 +2,20 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
-use work.log_levels_pkg.all;
-use work.log_handler_pkg.all;
-use work.integer_vector_ptr_pkg.all;
+use std.textio.all;
+
+use work.ansi_pkg.all;
+use work.core_pkg.core_failure;
 use work.id_pkg.all;
+use work.integer_vector_ptr_pkg.all;
+use work.location_pkg.all;
+use work.log_handler_pkg.all;
+use work.log_levels_pkg.all;
+use work.print_pkg.print;
+use work.queue_pkg.all;
+use work.string_ops.all;
 
 package logger_pkg is
 
@@ -418,5 +426,12 @@ package logger_pkg is
 
   -- Return the number of unchecked messages in the mock queue
   impure function mock_queue_length return natural;
+
+  -----------------------------------------------------------------------------
+  -- Misc
+  -----------------------------------------------------------------------------
+  impure function to_integer(logger : logger_t) return integer;
+  impure function to_logger(value : integer) return logger_t;
+
 
 end package;

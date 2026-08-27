@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 # pylint: disable=too-many-public-methods, too-many-lines
 
@@ -27,6 +27,7 @@ from vunit.test.bench import (
     FileLocation,
     Attribute,
     LegacyAttribute,
+    _get_historic_seed,
 )
 from vunit.configuration import AttributeException
 from vunit.ostools import write_file
@@ -274,6 +275,24 @@ if run("Test_2")
         self.assert_has_tests(tests, [("lib.tb_entity", ("lib.tb_entity.Test_1", "lib.tb_entity.Test_2"))])
 
     @with_tempdir
+    def test_that_run_in_same_simulation_attribute_from_python_works(self, tempdir):
+        for value in [None, True]:
+            design_unit = Entity(
+                "tb_entity",
+                file_name=str(Path(tempdir) / "file.vhd"),
+                contents="""\
+if run("Test_1")
+if run("Test_2")
+--if run("Test_3")
+""",
+            )
+            design_unit.generic_names = ["runner_cfg"]
+            test_bench = TestBench(design_unit)
+            test_bench.set_attribute("run_all_in_same_sim", value)
+            tests = self.create_tests(test_bench)
+            self.assert_has_tests(tests, [("lib.tb_entity", ("lib.tb_entity.Test_1", "lib.tb_entity.Test_2"))])
+
+    @with_tempdir
     def test_add_config(self, tempdir):
         design_unit = Entity("tb_entity", file_name=str(Path(tempdir) / "file.vhd"))
         design_unit.generic_names = ["runner_cfg", "value", "global_value"]
@@ -450,6 +469,22 @@ if run("Test 2")
             )
         else:
             assert False, "RuntimeError not raised"
+
+    @with_tempdir
+    def test_error_on_global_attributes_from_python_on_tests(self, tempdir):
+        design_unit = Entity(
+            "tb_entity",
+            file_name=str(Path(tempdir) / "file.vhd"),
+            contents="""\
+if run("Test 1")
+if run("Test 2")
+""",
+        )
+        design_unit.generic_names = ["runner_cfg"]
+
+        test_bench = TestBench(design_unit)
+        test = test_bench.get_test_case("Test 1")
+        self.assertRaises(AttributeException, test.set_attribute, "run_all_in_same_sim", True)
 
     @with_tempdir
     def test_test_information(self, tempdir):
@@ -870,12 +905,25 @@ if run("Test_2")
                 self.assertEqual(test1.name, test2)
                 self.assertEqual(test1.test_names, [test2])
 
+    def test_seed_from_test_history(self):
+        test_history = dict(test_suite1=dict(test1=dict(seed="11"), test2=dict(seed="12")), test_suite2=dict())
+
+        self.assertEqual(_get_historic_seed(test_history, test_suite_name="test_suite1"), "11")
+        self.assertEqual(_get_historic_seed(test_history, test_suite_name="test_suite1", test_name="test2"), "12")
+
+    def test_no_seed_from_test_history(self):
+        test_history = dict(test_suite1=dict(test1=dict(seed="11"), test2=dict(seed="12")), test_suite2=dict())
+
+        self.assertIsNone(_get_historic_seed(test_history, test_suite_name="foo"))
+        self.assertIsNone(_get_historic_seed(test_history, test_suite_name="test_suite1", test_name="test3"))
+        self.assertIsNone(_get_historic_seed(test_history, test_suite_name="test_suite2"))
+
     @staticmethod
     def create_tests(test_bench):
         """
         Helper method to reduce boiler plate
         """
-        return test_bench.create_tests("simulator_if", elaborate_only=False)
+        return test_bench.create_tests("simulator_if", seed="seed", elaborate_only=False)
 
 
 def get_config_of(tests, test_name):

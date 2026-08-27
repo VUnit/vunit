@@ -1,1 +1,0 @@
-Rename 'VHDL Libraries' to :ref:`hdl_libraries`. Add section :ref:`Guides <user_guide>`.

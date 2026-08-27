@@ -2,16 +2,16 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
 
+use work.com_pkg.all;
+use work.com_types_pkg.all;
 use work.logger_pkg.all;
-use work.stream_master_pkg.all;
-use work.stream_slave_pkg.all;
-context work.com_context;
-context work.data_types_context;
+use work.stream_master_pkg.stream_master_t;
+use work.stream_slave_pkg.stream_slave_t;
 
 package avalon_stream_pkg is
 

@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 library vunit_lib;
 context vunit_lib.vunit_context;
@@ -26,6 +26,8 @@ begin
         report to_string(my_vector(runner_cfg'length));
       elsif run("Test that fails on VUnit check procedure") then
         check_equal(17, 18);
+      elsif run("Test that a warning passes") then
+        assert false severity warning;
       end if;
     end loop;
 

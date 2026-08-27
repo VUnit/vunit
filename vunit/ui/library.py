@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 UI classes Library and LibraryList
@@ -329,7 +329,7 @@ class Library(object):
         """
         return self._parent.get_source_files(pattern, self._library_name, allow_empty)
 
-    def add_source_files(  # pylint: disable=too-many-arguments
+    def add_source_files(  # pylint: disable=too-many-arguments, too-many-positional-arguments
         self,
         pattern,
         preprocessors=None,
@@ -375,7 +375,7 @@ class Library(object):
             ]
         )
 
-    def add_source_file(  # pylint: disable=too-many-arguments
+    def add_source_file(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         file_name,
         preprocessors=None,

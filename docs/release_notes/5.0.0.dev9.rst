@@ -1,0 +1,33 @@
+
+Breaking Changes
+~~~~~~~~~~~~~~~~
+
+- JSON-for-VHDL is no longer shipped with VUnit. Support is now provided through a separate VUnit package. Install it with:
+
+  ``pip install vunit-json-for-vhdl``
+
+  Calls to the ``add_json4vhdl()`` method must be replaced with ``add_package("vunit-json-for-vhdl")``. (:vunit_issue:`1171`)
+
+
+Deprecations
+~~~~~~~~~~~~
+
+- Dropped support for Python 3.8 and 3.9 which have reached their end of life, see https://devguide.python.org/versions. (:vunit_issue:`1163`)
+
+
+Features
+~~~~~~~~
+
+- Added support for GHDL with LLVM-JIT backend. (:vunit_issue:`1105`)
+- Added support for VHDL-2019 in Questa. Related issues #1135 and #1169. (:vunit_issue:`1135`)
+- Added support for new Questa ``-ini`` option. (:vunit_issue:`1156`)
+- Added initial support for external package addition. This is in preparation for supporting third-party additions to
+  VUnit in a controlled way. Some packages currently shipped alongside VUnit will also be moved to this new system, for
+  example the JSON-for-VHDL package. By separating the packages from the core of VUnit, we make it easier for users to
+  create, maintain, and share their own packages independent of the VUnit core. Package management is based on the Python
+  ecosystem, i.e they can be hosted on PyPi and installed by using pip. (:vunit_issue:`1166`)
+- Improved support for non UTF-8 encoded outputs from simulators. (:vunit_issue:`1167`)
+- Added seed as an optional input to ``pre_config`` hooks. The seed is identical to the base seed provided to the simulation. (:vunit_issue:`1176`)
+- Enabled VHDL-2019 for GHDL >= 6.0.0.
+
+  Note that VUnit log location support based on call_path is deactivated as this is yet to be supported by GHDL. (:vunit_issue:`1177`)

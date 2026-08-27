@@ -1,0 +1,12 @@
+<div class="highlight"><pre><span></span><span class="c1">-- Disable all logging to the display.</span>
+<span class="n">hide_all</span><span class="p">(</span><span class="n">display_handler</span><span class="p">);</span>
+
+<span class="c1">-- Show debug log level of system0 logger to the display</span>
+<span class="n">show</span><span class="p">(</span><span class="n">get_logger</span><span class="p">(</span><span class="s">&quot;system0&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">display_handler</span><span class="p">,</span><span class="w"> </span><span class="n">debug</span><span class="p">);</span>
+
+<span class="c1">-- Show all logging from the uart module in system0 to the display</span>
+<span class="n">show_all</span><span class="p">(</span><span class="n">get_logger</span><span class="p">(</span><span class="s">&quot;system0:uart&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">display_handler</span><span class="p">);</span>
+
+<span class="c1">-- Hide all debug output to display handler</span>
+<span class="n">hide</span><span class="p">(</span><span class="n">display_handler</span><span class="p">,</span><span class="w"> </span><span class="n">debug</span><span class="p">);</span>
+</pre></div>

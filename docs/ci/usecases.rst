@@ -33,7 +33,7 @@ This is equivalent to *lin-vunit*, but it is slightly more verbose.
 lin-setup
 *********
 
-Uses *JavaScript Action* `ghdl/setup-ghdl-ci <https://github.com/ghdl/setup-ghdl-ci>`_ to install GHDL on the Ubuntu host/VM.
+Uses *JavaScript Action* `ghdl/setup-ghdl <https://github.com/ghdl/setup-ghdl>`_ to install GHDL on the Ubuntu host/VM.
 Then, additional system packages and Python packages are installed explicitly.
 
 Compared to previous approaches, in this case runtime dependencies are not pre-installed. As a result, startup is slightly
@@ -42,7 +42,7 @@ slower.
 win-setup
 *********
 
-Uses Actions `ghdl/setup-ghdl-ci <https://github.com/ghdl/setup-ghdl-ci>`_ and `msys2/setup-msys2 <https://github.com/msys2/setup-msys2>`_
+Uses Actions `ghdl/setup-ghdl <https://github.com/ghdl/setup-ghdl>`_ and `msys2/setup-msys2 <https://github.com/msys2/setup-msys2>`_
 to install latest *nightly* GHDL, other MSYS2 packages and Python packages in a *clean* MINGW64 environment.
 
 This is the recommended approach to run tests on Windows. Action setup-msys2 caches installed packages/dependencies

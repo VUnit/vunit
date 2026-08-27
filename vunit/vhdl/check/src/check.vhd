@@ -4,16 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
-
-library ieee;
-use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
-use std.textio.all;
-use work.checker_pkg.all;
-use work.string_ops.all;
-use work.location_pkg.all;
-use work.integer_vector_ptr_pkg.all;
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 package body check_pkg is
   type boolean_vector is array (natural range <>) of boolean;

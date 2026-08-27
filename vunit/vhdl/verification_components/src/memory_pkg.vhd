@@ -2,17 +2,18 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 -- Model of a memory address space
 
 library ieee;
+use ieee.numeric_std.all;
 use ieee.std_logic_1164.all;
 
-use work.types_pkg.all;
-use work.string_ptr_pkg.all;
 use work.integer_vector_ptr_pkg.all;
 use work.logger_pkg.all;
+use work.string_ptr_pkg.all;
+use work.types_pkg.byte_t;
 
 package memory_pkg is
 

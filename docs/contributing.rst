@@ -24,7 +24,7 @@ Copyright is given by adding the copyright notice to the beginning of each file.
    # License, v. 2.0. If a copy of the MPL was not distributed with this file,
    # You can obtain one at http://mozilla.org/MPL/2.0/.
    #
-   # Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+   # Copyright (c) 2014-2024, Lars Asplund lars.anders.asplund@gmail.com
 
 
 Python related
@@ -169,13 +169,13 @@ PyPI with pip:
 For most developers, running the full testsuite will likely lead to failed test
 cases because not all Python interpreters or HDL simulators are installed in
 their environment. More focused testing is possible by specifying which tox
-"environments" should be tested. For example, assume a developer uses Python 3.8
+"environments" should be tested. For example, assume a developer uses Python 3.13
 and Modelsim and would like to test changes using tools available in his
 environment:
 
 .. code-block:: console
 
-    vunit/ > tox -e py38-unit,py38-acceptance-modelsim
+    vunit/ > tox -e py313-unit,py313-acceptance-modelsim
 
 A full list of test environments can be seen by issuing the following command:
 

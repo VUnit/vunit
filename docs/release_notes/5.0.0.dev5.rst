@@ -1,0 +1,28 @@
+
+Bug Fixes
+~~~~~~~~~
+
+- Added workarounds for Visualizer restart and stability issues. (:vunit_issue:`899`)
+- Fixed array_axis_vcs example. (:vunit_issue:`1082`)
+
+
+Deprecations
+~~~~~~~~~~~~
+
+- Dropped support for Python 3.7 which reached end-of-life mid 2023. (:vunit_issue:`1091`)
+
+
+Features
+~~~~~~~~
+
+- Provided a unique base seed to every simulation. From that base seed any number of unique seed can derived
+  to initialize the random number generators in the testbench. Unique seeds increase the test coverage for
+  randomized tests over time as they are executed repeatedly by the user and the CI. The seed can be overrideen
+  from the command line with the --seed option in order to reproduce failing tests. (:vunit_issue:`1089`)
+
+
+Miscellaneous
+~~~~~~~~~~~~~
+
+- Added shebang to setup.py. (:vunit_issue:`1078`)
+- Updated the setup GHDL action used in the GitHub CI. (:vunit_issue:`1092`)

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2024, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Create monolithic release notes file from several input files
@@ -36,7 +36,10 @@ def create_release_notes():
     )
 
     for idx, release in enumerate(releases):
-        title = f":vunit_commit:`{release.name!s} <v{release.name!s}>` - {release.date.strftime('%Y-%m-%d')}"
+        title = f":vunit_commit:`{release.name!s} <v{release.name!s}>` - "
+        if release.is_pre_release:
+            title += "PRE-RELEASE - "
+        title += f"{release.date.strftime('%Y-%m-%d')}"
 
         if idx == 0:
             title += " (latest)"
@@ -68,7 +71,8 @@ class Release(object):
     def __init__(self, file_name, is_latest):
         self.suffix = file_name.suffix
         self.name = file_name.stem
-        tag = "v" + self.name
+        self.is_pre_release = "dev" in self.name
+        tag = "v" + self.name.replace(".dev", "-dev.")
 
         git = which("git")
         if git is None:

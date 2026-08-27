@@ -5,17 +5,21 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+
 use std.textio.all;
+
 use work.checker_pkg.all;
-use work.logger_pkg.all;
+use work.event_common_pkg.any_event_t;
+use work.event_common_pkg.notify;
+use work.integer_vector_ptr_pkg.all;
 use work.log_levels_pkg.all;
+use work.logger_pkg.logger_t;
 use work.string_ops.all;
-use work.event_common_pkg.all;
 use work.string_ptr_pkg.all;
 
 package check_pkg is

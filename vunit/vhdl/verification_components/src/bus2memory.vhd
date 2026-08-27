@@ -2,15 +2,17 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-context work.com_context;
-use work.queue_pkg.all;
 use work.bus_master_pkg.all;
+use work.com_pkg.net;
+use work.com_pkg.receive;
+use work.com_pkg.reply;
+use work.com_types_pkg.all;
 use work.memory_pkg.all;
 
 entity bus2memory is

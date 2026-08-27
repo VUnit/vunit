@@ -1,1 +1,0 @@
-Continue after compilation failure if ``--keep-compiling`` is ``True``.

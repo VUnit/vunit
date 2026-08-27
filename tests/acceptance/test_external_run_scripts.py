@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Verify that all external run scripts work correctly
@@ -204,13 +204,6 @@ class TestExternalRunScripts(TestCase):
                 ("passed", "lib.tb_selecting_test_runner_with_vhdl_configuration.test_reset_behavioral_8"),
             ],
         )
-
-    @mark.xfail(
-        not (simulator_is("ghdl") or simulator_is("nvc")),
-        reason="Support complex JSON strings as generic",
-    )
-    def test_vhdl_json4vhdl_example_project(self):
-        self.check(ROOT / "examples/vhdl/json4vhdl/run.py")
 
     def test_vhdl_array_example_project(self):
         self.check(ROOT / "examples/vhdl/array/run.py")

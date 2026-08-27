@@ -2,11 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
-
-use std.textio.all;
-use work.codec_pkg.all;
-use work.codec_builder_pkg.all;
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 package body integer_array_pkg is
   type binary_file_t is file of character;

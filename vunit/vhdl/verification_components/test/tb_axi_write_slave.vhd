@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -57,8 +57,10 @@ begin
     variable buf : buffer_t;
     variable rnd : RandomPType;
 
-    procedure read_response(id : std_logic_vector;
-                            resp : axi_resp_t := axi_resp_okay) is
+    procedure read_response(
+      id : std_logic_vector;
+      resp : axi_resp_t := axi_resp_okay
+    ) is
     begin
       bready <= '1';
       wait until (bvalid and bready) = '1' and rising_edge(clk);
@@ -68,11 +70,13 @@ begin
     end procedure;
 
 
-    procedure write_addr(id : std_logic_vector;
-                         addr : natural;
-                         len : natural;
-                         log_size : natural;
-                         burst : axi_burst_type_t) is
+    procedure write_addr(
+      id : std_logic_vector;
+      addr : natural;
+      len : natural;
+      log_size : natural;
+      burst : axi_burst_type_t
+    ) is
     begin
       awvalid <= '1';
       awid <= id;
@@ -85,10 +89,12 @@ begin
       awvalid <= '0';
     end procedure;
 
-    procedure transfer_data(id : std_logic_vector;
-                            buf : buffer_t;
-                            log_size : natural;
-                            data : integer_vector_ptr_t) is
+    procedure transfer_data(
+      id : std_logic_vector;
+      buf : buffer_t;
+      log_size : natural;
+      data : integer_vector_ptr_t
+    ) is
       variable size, len, address, idx : natural;
     begin
       size := 2**log_size;
@@ -121,10 +127,12 @@ begin
       end loop;
     end procedure;
 
-    procedure transfer(id : std_logic_vector;
-                       buf : buffer_t;
-                       log_size : natural;
-                       data : integer_vector_ptr_t) is
+    procedure transfer(
+      id : std_logic_vector;
+      buf : buffer_t;
+      log_size : natural;
+      data : integer_vector_ptr_t
+    ) is
     begin
       transfer_data(id, buf, log_size, data);
       read_response(id, axi_resp_okay);
@@ -219,9 +227,11 @@ begin
       mock(axi_slave_logger, failure);
       wait until (wvalid and wready) = '1' and rising_edge(clk);
       wait until mock_queue_length > 0 and rising_edge(clk);
-      check_only_log(axi_slave_logger,
-                     "Writing to address 0 at offset 0 within anonymous buffer at range (0 to 15) without permission (no_access)",
-                     failure);
+      check_only_log(
+        axi_slave_logger,
+        "Writing to address 0 at offset 0 within anonymous buffer at range (0 to 15) without permission (no_access)",
+        failure
+      );
       unmock(axi_slave_logger);
       wvalid <= '0';
       wlast <= '0';
@@ -353,6 +363,14 @@ begin
       buf := allocate(memory, length(data), permissions => no_access);
       transfer(x"2", buf, log_size, data);
 
+    elsif run("Test unaligned write around 4kbyte boundary") then
+      -- Do one beat write at unaligned address starting around 4kB boundary
+      log_size := log_data_size;
+      buf := allocate(memory, 4096 - 2**log_size + 1, permissions => no_access);
+      random_integer_vector_ptr(rnd, data, 2**log_size , 0, 255);
+      buf := allocate(memory, length(data), permissions => no_access); -- Unaligned address
+      transfer(x"2", buf, log_size, data);
+
     elsif run("Test error on missing tlast fixed") then
       mock(axi_slave_logger, failure);
 
@@ -404,7 +422,9 @@ begin
       mock(axi_slave_logger, failure);
       write_addr(x"2", base_address(buf)+4000, 256, 0, axi_burst_type_incr);
       wait until mock_queue_length > 0 and rising_edge(clk);
-      check_only_log(axi_slave_logger, "Crossing 4KByte boundary. First page = 0 (4000/4096), last page = 1 (4255/4096)", failure);
+      check_only_log(
+        axi_slave_logger, "Crossing 4KByte boundary. First page = 0 (4000/4096), last page = 1 (4255/4096)", failure
+      );
       unmock(axi_slave_logger);
 
     elsif run("Test no error on 4KByte boundary crossing with disabled check") then
@@ -559,7 +579,11 @@ begin
       wvalid <= '1';
       wlast  <= '0';
       write_addr(x"0", base_address(buf), len => 2, log_size => 0, burst => axi_burst_type_incr);
-      check_only_log(axi_slave_logger, "Burst not well behaved, axi size = 1 but bus data width allows " & to_string(data_size), failure);
+      check_only_log(
+        axi_slave_logger,
+        "Burst not well behaved, axi size = 1 but bus data width allows " & to_string(data_size),
+        failure
+      );
       unmock(axi_slave_logger);
 
     elsif run("Test well behaved check fails when wvalid not high during active burst") then
@@ -569,7 +593,7 @@ begin
       bready <= '1';
       wait until rising_edge(clk);
       write_addr(x"0", base_address(buf), len => 2, log_size => log_data_size, burst => axi_burst_type_incr);
-      check_only_log(axi_slave_logger, "Burst not well behaved, vwalid was not high during active burst", failure);
+      check_only_log(axi_slave_logger, "Burst not well behaved, wvalid was not high during active burst", failure);
       unmock(axi_slave_logger);
 
     elsif run("Test well behaved check fails when bready not high during active burst") then
@@ -604,7 +628,7 @@ begin
       assert awready = '0';
       wait until mock_queue_length > 0 for 0 ns;
 
-      check_only_log(axi_slave_logger, "Burst not well behaved, vwalid was not high during active burst", failure);
+      check_only_log(axi_slave_logger, "Burst not well behaved, wvalid was not high during active burst", failure);
       unmock(axi_slave_logger);
 
     end if;
@@ -612,6 +636,20 @@ begin
     test_runner_cleanup(runner);
   end process;
   test_runner_watchdog(runner, 1 ms);
+
+  check_not_valid : process
+    constant bid_invalid_value : std_logic_vector(bid'range) := (others => 'X');
+    constant bresp_invalid_value : std_logic_vector(bresp'range) := (others => 'X');
+  begin
+    wait until rising_edge(clk);
+
+    -- All signals should be driven with 'X' when the channel is not valid
+    -- (AW and W have no outputs from the VC, except for handshake, so check is only for B).
+    if not bvalid then
+      check_equal(bid, bid_invalid_value, "BID not X when BVALID low");
+      check_equal(bresp, bresp_invalid_value, "BRESP not X when BVALID low");
+    end if;
+  end process;
 
   dut : entity work.axi_write_slave
     generic map (

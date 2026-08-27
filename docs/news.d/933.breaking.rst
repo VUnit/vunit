@@ -1,1 +1,0 @@
-[VHDL] Remove deprecated ``check``, ``log`` and ``run`` packages.

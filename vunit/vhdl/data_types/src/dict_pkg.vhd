@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 --
 -- dict_pkg provides the dict_t data type which is an dynamic dictionary implementation.
 -- All dict keys are strings but the values can be of many different data types and a single
@@ -14,15 +14,14 @@ use ieee.math_complex.all;
 use ieee.numeric_bit.all;
 use ieee.numeric_std.all;
 
-use work.string_ptr_pkg.all;
-use work.string_ptr_pool_pkg.all;
-use work.integer_vector_ptr_pkg.all;
-use work.integer_vector_ptr_pool_pkg.all;
 use work.codec_pkg.all;
 use work.data_types_private_pkg.all;
-use work.queue_pkg.all;
 use work.integer_array_pkg.all;
-use work.byte_vector_ptr_pkg.all;
+use work.integer_vector_ptr_pkg.all;
+use work.integer_vector_ptr_pool_pkg.all;
+use work.queue_pkg.all;
+use work.string_ptr_pkg.all;
+use work.string_ptr_pool_pkg.all;
 
 package dict_pkg is
   type dict_t is record

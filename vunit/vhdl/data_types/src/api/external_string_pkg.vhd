@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 use work.types_pkg.all;
 
@@ -37,11 +37,13 @@ package body external_string_pkg is
     i  : integer
   ) return character is begin
     assert false report "EXTERNAL read_char" severity failure;
+    return NUL;
   end;
 
   impure function get_ptr (
     id : integer
   ) return extstring_access_t is begin
     assert false report "EXTERNAL get_string_ptr" severity failure;
+    return null;
   end;
 end package body;

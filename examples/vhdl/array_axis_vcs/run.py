@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Array and AXI4 Stream Verification Components
@@ -29,6 +29,6 @@ SRC_PATH = Path(__file__).parent / "src"
 
 VU.add_library("lib").add_source_files([SRC_PATH / "*.vhd", SRC_PATH / "**" / "*.vhd"])
 
-# vu.set_sim_option('modelsim.init_files.after_load',['runall_addwave.do'])
+VU.set_sim_option("modelsim.init_file.gui", "runall_addwave.do")
 
 VU.main()

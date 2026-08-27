@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 from pathlib import Path
 from glob import glob
@@ -63,10 +63,13 @@ def configure_tb_same_sim_all_pass(ui):
 
     module = ui.library("lib").module("tb_same_sim_all_pass")
     module.add_config("cfg", post_check=post_check)
-
-
+    module = ui.library("lib").module("tb_same_sim_from_python_all_pass")
+    module.add_config("cfg", post_check=post_check, attributes=dict(run_all_in_same_sim=True))
+   
 configure_tb_with_parameter_config()
 configure_tb_same_sim_all_pass(vu)
+lib.module("tb_same_sim_from_python_some_fail").set_attribute("run_all_in_same_sim", True)
 lib.module("tb_other_file_tests").scan_tests_from_file(str(root / "other_file_tests.sv"))
+lib.module("tb_fail_on_warning_from_python").set_attribute("fail_on_warning", True)
 
 vu.main()

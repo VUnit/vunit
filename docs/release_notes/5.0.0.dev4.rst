@@ -1,0 +1,29 @@
+
+Features
+~~~~~~~~
+
+- [Questa/Modelsim] Added support for 3-step flow and the Visualizer debugger.
+
+  The 3-step flow is enabled by setting the simulation option ``modelsim.three_step_flow`` to ``True``. Extra
+  flags to the ``vopt`` step can be provided with the simulation flags ``modelsim.vopt_flags`` and
+  ``modelsim.vopt_flags.gui`` in normal and GUI mode, respectively.
+
+  The Visualizer debugger is enabled from the command line using the ``--debugger=visualizer`` option (in
+  addition to the ``--gui`` option for GUI mode). The 3-step flow must be enabled for this feature while
+  the default ``original`` debugger works with or without the 3-step flow.
+
+  Note: There is a bug in Visualizer preventing the normal ``restart`` command from being used. Please use the
+  ``vunit_restart`` command instead. (:vunit_issue:`899`)
+- [GHDL/NVC] Arbitrary waveform viewers are now supported by passing the ``--viewer``
+  command line argument. As a consequence, ``ghdl.gtkwave_script.gui`` and
+  ``nvc.gtkwave_script.gui`` are deprecated in favour of ``ghdl.viewer_script.gui``
+  and ``nvc.viewer_script.gui``, respectively. The ``--gtkwave-args`` and
+  ``--gtkwave-fmt`` command line arguments are deprecated in favour of ``--viewer-args``
+  and ``--viewer-fmt``, respectively. ``ghdl.viewer.gui`` and ``nvc.viewer.gui`` can
+  be used to set the preferred viewer from the run-file. If no viewer is explicitly
+  requested, ``gtkwave`` or ``surfer`` is used, in that order. This also means that
+  VUnit now uses ``surfer`` if ``gtkwave`` is not installed.
+
+  [NVC] It is possible to get VCD waveform files by passing ``--viewer-fmt=vcd``. (:vunit_issue:`1002`)
+- Added timeout parameter to the `wait_until_idle` procedure in the synchronization verification component interface.
+  A timeout will result in a failure. (:vunit_issue:`1054`)

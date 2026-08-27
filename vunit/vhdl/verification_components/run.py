@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 from pathlib import Path
 from itertools import product
@@ -134,15 +134,19 @@ TB_AXI_STREAM = LIB.test_bench("tb_axi_stream")
 for id_length in [0, 8]:
     for dest_length in [0, 8]:
         for user_length in [0, 8]:
-            for test in TB_AXI_STREAM.get_tests("*check"):
-                test.add_config(
-                    name="id_l=%d dest_l=%d user_l=%d" % (id_length, dest_length, user_length),
-                    generics=dict(
-                        g_id_length=id_length,
-                        g_dest_length=dest_length,
-                        g_user_length=user_length,
-                    ),
-                )
+            for data_length in [8, 16]:
+                for test in TB_AXI_STREAM.get_tests("*check"):
+                    test.add_config(
+                        name=f"id_l={id_length} dest_l={dest_length} user_l={user_length} data_l={data_length}",
+                        generics=dict(
+                            g_data_length=data_length,
+                            g_id_length=id_length,
+                            g_dest_length=dest_length,
+                            g_user_length=user_length,
+                        ),
+                    )
+
+TB_AXI_STREAM.test("test passing with no tkeep").set_generic("g_data_length", 16)
 
 TB_AXI_STREAM_PROTOCOL_CHECKER = LIB.test_bench("tb_axi_stream_protocol_checker")
 
@@ -159,17 +163,5 @@ TEST_FAILING_MAX_WAITS = TB_AXI_STREAM_PROTOCOL_CHECKER.test(
 )
 for max_waits in [0, 8]:
     TEST_FAILING_MAX_WAITS.add_config(name="max_waits=%d" % max_waits, generics=dict(max_waits=max_waits))
-
-TB_AXI_STREAM.test("test random stall on master").add_config(
-    name="stall_master", generics=dict(g_stall_percentage_master=30)
-)
-
-TB_AXI_STREAM.test("test random pop stall on slave").add_config(
-    name="stall_slave", generics=dict(g_stall_percentage_slave=30)
-)
-
-TB_AXI_STREAM.test("test random check stall on slave").add_config(
-    name="stall_slave", generics=dict(g_stall_percentage_slave=40)
-)
 
 UI.main()

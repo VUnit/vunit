@@ -2,21 +2,30 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
 
-context work.vunit_context;
-context work.com_context;
-use work.stream_master_pkg.all;
-use work.axi_stream_pkg.all;
-use work.axi_stream_private_pkg.all;
-use work.queue_pkg.all;
-use work.sync_pkg.all;
-
 library osvvm;
 use osvvm.RandomPkg.RandomPType;
+
+use work.axi_stream_pkg.all;
+use work.axi_stream_private_pkg.all;
+use work.com_pkg.net;
+use work.com_pkg.receive;
+use work.com_pkg.reply;
+use work.com_types_pkg.all;
+use work.id_pkg.all;
+use work.integer_vector_ptr_pkg.all;
+use work.queue_pkg.all;
+use work.stream_master_pkg.stream_push_msg;
+use work.sync_pkg.all;
+use work.event_common_pkg.is_active;
+use work.event_common_pkg.notify;
+use work.event_pkg.all;
+use work.logger_pkg.all;
+use work.axi_pkg.all;
 
 entity axi_stream_master is
   generic (
@@ -32,8 +41,8 @@ entity axi_stream_master is
     tready       : in  std_logic                                          := '1';
     tdata        : out std_logic_vector(data_length(master)-1 downto 0)   := (others => '0');
     tlast        : out std_logic                                          := '0';
-    tkeep        : out std_logic_vector(data_length(master)/8-1 downto 0) := (others => '0');
-    tstrb        : out std_logic_vector(data_length(master)/8-1 downto 0) := (others => '0');
+    tkeep        : out std_logic_vector(data_length(master)/8-1 downto 0) := (others => '1');
+    tstrb        : out std_logic_vector(data_length(master)/8-1 downto 0) := (others => '1');
     tid          : out std_logic_vector(id_length(master)-1 downto 0)     := (others => '0');
     tdest        : out std_logic_vector(dest_length(master)-1 downto 0)   := (others => '0');
     tuser        : out std_logic_vector(user_length(master)-1 downto 0)   := (others => '0')
@@ -44,24 +53,12 @@ architecture a of axi_stream_master is
 
   constant notify_request_msg      : msg_type_t := new_msg_type("notify request");
   constant message_queue           : queue_t    := new_queue;
-  signal   notify_bus_process_done : std_logic  := '0';
-
-  procedure drive_invalid_output(signal l_tdata : out std_logic_vector(data_length(master)-1 downto 0);
-                                 signal l_tkeep : out std_logic_vector(data_length(master)/8-1 downto 0);
-                                 signal l_tstrb : out std_logic_vector(data_length(master)/8-1 downto 0);
-                                 signal l_tid   : out std_logic_vector(id_length(master)-1 downto 0);
-                                 signal l_tdest : out std_logic_vector(dest_length(master)-1 downto 0);
-                                 signal l_tuser : out std_logic_vector(user_length(master)-1 downto 0))
-  is
-  begin
-    l_tdata <= (others => drive_invalid_val);
-    l_tkeep <= (others => drive_invalid_val);
-    l_tstrb <= (others => drive_invalid_val);
-    l_tid   <= (others => drive_invalid_val);
-    l_tdest <= (others => drive_invalid_val);
-    l_tuser <= (others => drive_invalid_val_user);
-  end procedure;
-
+  constant bus_process_done_base_id : id_t       := get_id("vunit_lib:axi_stream_master:bus_process_done");
+  constant bus_process_done_id      : id_t       := get_id(
+      to_string(num_children(bus_process_done_base_id)),
+      parent => bus_process_done_base_id
+    );
+  signal bus_process_done           : event_t    := new_event(bus_process_done_id);
 begin
 
   main : process
@@ -72,14 +69,20 @@ begin
     receive(net, master.p_actor, request_msg);
     msg_type := message_type(request_msg);
 
-    if msg_type = stream_push_msg or msg_type = push_axi_stream_msg then
+    if msg_type = stream_push_msg or
+      msg_type = push_axi_stream_msg or
+      msg_type = wait_for_time_msg or
+      msg_type = set_inactive_axi_stream_policy_msg or
+      msg_type = get_inactive_axi_stream_policy_msg or
+      msg_type = set_stall_config_msg or
+      msg_type = get_stall_config_msg then
+
       push(message_queue, request_msg);
-    elsif msg_type = wait_for_time_msg then
-      push(message_queue, request_msg);
+
     elsif msg_type = wait_until_idle_msg then
       notify_msg := new_msg(notify_request_msg);
       push(message_queue, notify_msg);
-      wait on notify_bus_process_done until is_empty(message_queue);
+      wait until is_active(bus_process_done) and is_empty(message_queue);
       handle_wait_until_idle(net, msg_type, request_msg);
     else
       unexpected_msg_type(msg_type);
@@ -88,16 +91,112 @@ begin
 
   bus_process : process
     variable msg : msg_t;
+    variable reply_msg : msg_t;
     variable msg_type : msg_type_t;
     variable rnd : RandomPType;
+    variable inactive_bus_policy : inactive_bus_policy_t;
+    variable axi_stream_signal : axi_stream_signal_t;
+    variable stall_config : integer_vector_ptr_t;
+
+    impure function get_inactive_axi_stream_policy(master : axi_stream_master_t) return inactive_axi_stream_policy_t is
+      impure function to_inactive_axi_stream_policy(vec : integer_vector_ptr_t) return inactive_axi_stream_policy_t is
+        variable inactive_policy : inactive_axi_stream_policy_t;
+      begin
+        for sig in inactive_policy'range loop
+          inactive_policy(sig) := inactive_bus_policy_t'val(get(vec, axi_stream_signal_t'pos(sig)));
+        end loop;
+
+        return inactive_policy;
+      end;
+    begin
+      return to_inactive_axi_stream_policy(to_integer_vector_ptr(get(master.p_config, p_inactive_policy_idx)));
+    end;
+
+    variable inactive_axi_stream_policy : inactive_axi_stream_policy_t := get_inactive_axi_stream_policy(master);
+
+    procedure set_inactive_axi_stream_policy(
+      master : axi_stream_master_t;
+      inactive_policy : inactive_bus_policy_t;
+      axi_stream_signal : axi_stream_signal_t
+    ) is
+      variable start, stop : axi_stream_signal_t := axi_stream_signal;
+    begin
+      if axi_stream_signal = all_signals then
+        start := work.axi_stream_pkg.tdata;
+        stop := work.axi_stream_pkg.tuser;
+      end if;
+
+      for sig in start to stop loop
+        set(
+          to_integer_vector_ptr(get(master.p_config, p_inactive_policy_idx)),
+          axi_stream_signal_t'pos(sig),
+          inactive_bus_policy_t'pos(inactive_policy)
+        );
+      end loop;
+    end;
+
+    impure function get_stall_config(master : axi_stream_master_t) return stall_config_t is
+    begin
+      return p_to_stall_config(to_integer_vector_ptr(get(master.p_config, p_stall_config_idx)));
+    end;
+
+    procedure drive_inactive(
+      signal l_tdata : out std_logic_vector(data_length(master)-1 downto 0);
+      signal l_tlast : out std_logic;
+      signal l_tkeep : out std_logic_vector(data_length(master)/8-1 downto 0);
+      signal l_tstrb : out std_logic_vector(data_length(master)/8-1 downto 0);
+      signal l_tid   : out std_logic_vector(id_length(master)-1 downto 0);
+      signal l_tdest : out std_logic_vector(dest_length(master)-1 downto 0);
+      signal l_tuser : out std_logic_vector(user_length(master)-1 downto 0)
+    ) is
+
+      procedure drive_policy(signal s : out std_logic_vector; policy : inactive_bus_policy_t) is
+      begin
+        case policy is
+          when 'X' =>
+            s <= (s'range => 'X');
+          when '0' =>
+            s <= (s'range => '0');
+          when '1' =>
+            s <= (s'range => '1');
+          when hold =>
+            null;
+          when rand01 =>
+            s <= rnd.RandSlv(s'length);
+        end case;
+      end;
+
+      procedure drive_policy(signal s : out std_logic; policy : inactive_bus_policy_t) is
+      begin
+        case policy is
+          when 'X' =>
+            s <= 'X';
+          when '0' =>
+            s <= '0';
+          when '1' =>
+            s <= '1';
+          when hold =>
+            null;
+          when rand01 =>
+            s <= to_stdulogic(rnd.RandBit);
+        end case;
+      end;
+
+    begin
+      drive_policy(l_tdata, inactive_axi_stream_policy(work.axi_stream_pkg.tdata));
+      drive_policy(l_tlast, inactive_axi_stream_policy(work.axi_stream_pkg.tlast));
+      drive_policy(l_tkeep, inactive_axi_stream_policy(work.axi_stream_pkg.tkeep));
+      drive_policy(l_tstrb, inactive_axi_stream_policy(work.axi_stream_pkg.tstrb));
+      drive_policy(l_tid, inactive_axi_stream_policy(work.axi_stream_pkg.tid));
+      drive_policy(l_tdest, inactive_axi_stream_policy(work.axi_stream_pkg.tdest));
+      drive_policy(l_tuser, inactive_axi_stream_policy(work.axi_stream_pkg.tuser));
+    end procedure;
+
   begin
     rnd.InitSeed(rnd'instance_name);
     loop
-      if drive_invalid then
-        drive_invalid_output(tdata, tkeep, tstrb, tid, tdest, tuser);
-      end if;
-
-      if (areset_n = '0') then
+      drive_inactive(tdata, tlast, tkeep, tstrb, tid, tdest, tuser);
+      if areset_n = '0' then
         tvalid <= '0';
         wait until areset_n = '1' and rising_edge(aclk);
       else
@@ -114,12 +213,13 @@ begin
             handle_sync_message(net, msg_type, msg);
             -- Re-align with the clock when a wait for time message was handled, because this breaks edge alignment.
             wait until rising_edge(aclk);
+
           elsif msg_type = notify_request_msg then
             -- Ignore this message, but expect it
+
           elsif msg_type = stream_push_msg or msg_type = push_axi_stream_msg then
-            drive_invalid_output(tdata, tkeep, tstrb, tid, tdest, tuser);
             -- stall according to probability configuration
-            probability_stall_axi_stream(aclk, master, rnd);
+            probability_stall_axi_stream(aclk, get_stall_config(master), rnd);
 
             tvalid <= '1';
             tdata <= pop_std_ulogic_vector(msg);
@@ -131,11 +231,7 @@ begin
               tdest <= pop_std_ulogic_vector(msg);
               tuser <= pop_std_ulogic_vector(msg);
             else
-              if pop_boolean(msg) then
-                tlast <= '1';
-              else
-                tlast <= '0';
-              end if;
+              tlast <= '1' when pop_boolean(msg) else '0';
               tkeep <= (others => '1');
               tstrb <= (others => '1');
               tid   <= (others => '0');
@@ -144,7 +240,30 @@ begin
             end if;
             wait until ((tvalid and tready) = '1' or areset_n = '0') and rising_edge(aclk);
             tvalid <= '0';
-            tlast <= '0';
+
+          elsif msg_type = set_inactive_axi_stream_policy_msg then
+            inactive_bus_policy := inactive_bus_policy_t'val(pop_integer(msg));
+            axi_stream_signal := axi_stream_signal_t'val(pop_integer(msg));
+            set_inactive_axi_stream_policy(master, inactive_bus_policy, axi_stream_signal);
+            inactive_axi_stream_policy := get_inactive_axi_stream_policy(master);
+
+          elsif msg_type = get_inactive_axi_stream_policy_msg then
+            reply_msg := new_msg(get_inactive_axi_stream_policy_reply_msg);
+            axi_stream_signal := axi_stream_signal_t'val(pop_integer(msg));
+            inactive_bus_policy := inactive_axi_stream_policy(axi_stream_signal);
+            push(reply_msg, inactive_bus_policy_t'pos(inactive_bus_policy));
+            reply(net, msg, reply_msg);
+
+          elsif msg_type = set_stall_config_msg then
+            deallocate(to_integer_vector_ptr(get(master.p_config, p_stall_config_idx)));
+            set(master.p_config, p_stall_config_idx, to_integer(pop_integer_vector_ptr_ref(msg)));
+
+          elsif msg_type = get_stall_config_msg then
+            reply_msg := new_msg(get_stall_config_reply_msg);
+            stall_config := to_integer_vector_ptr(get(master.p_config, p_stall_config_idx));
+            push(reply_msg, stall_config);
+            reply(net, msg, reply_msg);
+
           else
             unexpected_msg_type(msg_type);
           end if;
@@ -152,9 +271,7 @@ begin
           delete(msg);
         end loop;
 
-        notify_bus_process_done <= '1';
-        wait until notify_bus_process_done = '1';
-        notify_bus_process_done <= '0';
+        notify(bus_process_done);
       end if;
     end loop;
   end process;
@@ -196,5 +313,22 @@ begin
         tuser    => tuser
       );
   end generate axi_stream_protocol_checker_generate;
+
+  deprecation_message : process is
+    impure function default_generics return boolean is
+    begin
+      return drive_invalid and (drive_invalid_val = 'X') and (drive_invalid_val_user = '0');
+    end;
+  begin
+    error_if(
+      master.p_logger,
+      not default_generics,
+      "The drive_invalid generics have been deprecated. Bus inactivity is now controlled " & LF &
+      "by the inactive_policy parameter to the new_axi_stream_master function. Remove generics " & LF &
+      "assignments and use the inactive_policy parameter to avoid this error."
+    );
+
+    wait;
+  end process;
 
 end architecture;

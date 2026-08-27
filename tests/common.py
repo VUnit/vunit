@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Common functions re-used between test cases
@@ -15,13 +15,25 @@ import functools
 import os
 import shutil
 import random
+import re
 
 
 def check_report(report_file, tests=None):
     """
     Check an XML report_file for the exact occurrence of specific test results
     """
-    tree = ElementTree.parse(report_file)
+
+    xml_report = Path(report_file).read_text()
+    illegal_xml_re = re.compile(r"[\x00-\x08\x0B\x0C\x0E-\x1F]")
+    xml_report = illegal_xml_re.sub("", xml_report)
+    Path(report_file).write_text(xml_report)
+
+    try:
+        tree = ElementTree.parse(report_file)
+    except ElementTree.ParseError:
+        print(f"Failed to parse XML report file {report_file}, content:\n{xml_report}")
+        raise
+
     root = tree.getroot()
     report = {}
     for test in root.iter("testcase"):

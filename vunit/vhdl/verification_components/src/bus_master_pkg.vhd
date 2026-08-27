@@ -2,17 +2,19 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 -- Defines bus master verification component interface
 
 library ieee;
+use ieee.numeric_std.all;
 use ieee.std_logic_1164.all;
 
+use work.com_pkg.all;
+use work.com_types_pkg.all;
 use work.logger_pkg.all;
-context work.com_context;
-use work.sync_pkg.all;
 use work.queue_pkg.all;
+use work.sync_pkg.all;
 
 package bus_master_pkg is
 

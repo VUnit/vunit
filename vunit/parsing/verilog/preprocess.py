@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 # pylint: disable=unused-wildcard-import
 # pylint: disable=wildcard-import
@@ -81,7 +81,7 @@ class VerilogPreprocessor(object):
 
         return result
 
-    def preprocessor(  # pylint: disable=too-many-arguments,too-many-branches
+    def preprocessor(  # pylint: disable=too-many-arguments,too-many-branches,too-many-positional-arguments
         self, token, stream, defines, include_paths, included_files
     ):
         """
@@ -162,7 +162,7 @@ class VerilogPreprocessor(object):
                     if token.value == "end_protected":
                         return
 
-    def expand_macro(  # pylint: disable=too-many-arguments
+    def expand_macro(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self, macro_token, stream, defines, include_paths, included_files
     ):
         """
@@ -254,7 +254,9 @@ class VerilogPreprocessor(object):
         stream.skip_while(NEWLINE)
         return result
 
-    def include(self, token, stream, include_paths, included_files, defines):  # pylint: disable=too-many-arguments
+    def include(
+        self, token, stream, include_paths, included_files, defines
+    ):  # pylint: disable=too-many-arguments,too-many-positional-arguments
         """
         Handle `include directive
         """

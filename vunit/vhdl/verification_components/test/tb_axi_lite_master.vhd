@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -422,6 +422,30 @@ begin
 
       done <= true;
 
+    end if;
+  end process;
+
+  check_not_valid : process
+    constant a_addr_invalid_value : std_logic_vector(araddr'range) := (others => 'X');
+    constant wdata_invalid_value : std_logic_vector(wdata'range) := (others => 'X');
+    constant wstrb_invalid_value : std_logic_vector(wstrb'range) := (others => 'X');
+  begin
+    wait until rising_edge(clk);
+
+    -- All signals should be driven with 'X' when the channel is not valid
+    -- (R and B channels have no outputs from the VC, except for handshake).
+
+    if not arvalid then
+      check_equal(araddr, a_addr_invalid_value, "ARADDR not X when ARVALID low");
+    end if;
+
+    if not awvalid then
+      check_equal(awaddr, a_addr_invalid_value, "AWADDR not X when AWVALID low");
+    end if;
+
+    if not wvalid then
+      check_equal(wdata, wdata_invalid_value, "WDATA not X when WVALID low");
+      check_equal(wstrb, wstrb_invalid_value, "WSTRB not X when WVALID low");
     end if;
   end process;
 

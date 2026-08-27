@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Support functions for creating blogs
@@ -66,6 +66,7 @@ def highlight_code(
     code_path,
     output_path,
     snippet_name=None,
+    *,
     line_no_offset=None,
     functions=None,
     types=None,

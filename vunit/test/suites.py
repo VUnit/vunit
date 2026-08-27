@@ -2,13 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Contains different kinds of test suites
 """
 
 from pathlib import Path
+from time import time
+from hashlib import blake2b
+from threading import get_ident
 from .. import ostools
 from .report import PASSED, SKIPPED, FAILED
 
@@ -18,17 +21,24 @@ class IndependentSimTestCase(object):
     A test case to be run in an independent simulation
     """
 
-    def __init__(self, test, config, simulator_if, elaborate_only=False):
-        self._name = f"{config.library_name!s}.{config.design_unit_name!s}"
+    @staticmethod
+    def get_name(test, config):
+        """Return full test case name based on library, testbench, configuration, and test names."""
+        name = f"{config.library_name!s}.{config.design_unit_name!s}"
 
         if not config.is_default:
-            self._name += "." + config.name
+            name += "." + config.name
 
         if test.is_explicit:
-            self._name += "." + test.name
+            name += "." + test.name
         elif config.is_default:
             # JUnit XML test reports wants three dotted name hierarchies
-            self._name += ".all"
+            name += ".all"
+
+        return name
+
+    def __init__(self, test, config, simulator_if, seed, *, elaborate_only=False):
+        self._name = self.get_name(test, config)
 
         self._configuration = config
 
@@ -40,6 +50,7 @@ class IndependentSimTestCase(object):
             elaborate_only=elaborate_only,
             test_suite_name=self._name,
             test_cases=[test.name],
+            seed=seed,
         )
 
     @property
@@ -70,7 +81,11 @@ class IndependentSimTestCase(object):
         Run the test case using the output_path
         """
         results = self._run.run(*args, **kwargs)
+
         return results[self._test.name] == PASSED
+
+    def get_seed(self):
+        return self._run.get_seed()
 
 
 class SameSimTestSuite(object):
@@ -78,11 +93,17 @@ class SameSimTestSuite(object):
     A test suite where multiple test cases are run within the same simulation
     """
 
-    def __init__(self, tests, config, simulator_if, elaborate_only=False):
-        self._name = f"{config.library_name!s}.{config.design_unit_name!s}"
-
+    @staticmethod
+    def get_name(config):
+        """Return full test suite name based on library, testbench, and configuration names."""
+        name = f"{config.library_name!s}.{config.design_unit_name!s}"
         if not config.is_default:
-            self._name += "." + config.name
+            name += "." + config.name
+
+        return name
+
+    def __init__(self, tests, config, simulator_if, seed, *, elaborate_only=False):
+        self._name = self.get_name(config)
 
         self._configuration = config
 
@@ -93,6 +114,7 @@ class SameSimTestSuite(object):
             elaborate_only=elaborate_only,
             test_suite_name=self._name,
             test_cases=[test.name for test in tests],
+            seed=seed,
         )
 
     @property
@@ -141,7 +163,11 @@ class SameSimTestSuite(object):
         """
         results = self._run.run(*args, **kwargs)
         results = {_full_name(self._name, test_name): result for test_name, result in results.items()}
+
         return results
+
+    def get_seed(self):
+        return self._run.get_seed()
 
 
 class TestRun(object):
@@ -149,12 +175,28 @@ class TestRun(object):
     A single simulation run yielding the results for one or several test cases
     """
 
-    def __init__(self, simulator_if, config, elaborate_only, test_suite_name, test_cases):
+    def __init__(
+        self, *, simulator_if, config, elaborate_only, test_suite_name, test_cases, seed
+    ):  # pylint: disable=too-many-arguments
         self._simulator_if = simulator_if
         self._config = config
         self._elaborate_only = elaborate_only
         self._test_suite_name = test_suite_name
         self._test_cases = test_cases
+        self._seed = seed
+
+    def get_seed(self):
+        """Return externally assigned seed or generate one from system time and thread identifier."""
+        if self._seed:
+            pass
+        elif "seed" in self._config.sim_options:
+            self._seed = self._config.sim_options["seed"]
+        else:
+            now_us = str(int(time() * 1e6)).encode()
+            thread_id = get_ident().to_bytes(8, byteorder="little")
+            self._seed = blake2b(now_us, digest_size=8, salt=thread_id).hexdigest()
+
+        return self._seed
 
     def set_test_cases(self, test_cases):
         self._test_cases = test_cases
@@ -169,7 +211,8 @@ class TestRun(object):
         for name in self._test_cases:
             results[name] = FAILED
 
-        if not self._config.call_pre_config(output_path, self._simulator_if.output_path):
+        seed = self.get_seed()
+        if not self._config.call_pre_config(output_path, self._simulator_if.output_path, seed):
             return results
 
         # Ensure result file exists
@@ -217,6 +260,9 @@ class TestRun(object):
         """
 
         config = self._config.copy()
+        seed = self.get_seed()
+
+        print(f"Seed for {self._test_suite_name}: {seed}")
 
         if "output_path" in config.generic_names and "output_path" not in config.generics:
             config.generics["output_path"] = str(output_path.replace("\\", "/")) + "/"
@@ -229,6 +275,7 @@ class TestRun(object):
             "output path": output_path.replace("\\", "/") + "/",
             "active python runner": True,
             "tb path": config.tb_path.replace("\\", "/") + "/",
+            "seed": seed,
         }
 
         # @TODO Warn if runner cfg already set?

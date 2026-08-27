@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Contains classes to manage the creation of test benches and runnable test cases thereof
@@ -60,13 +60,13 @@ class TestBenchList(object):
                 result.append(test_bench)
         return result
 
-    def create_tests(self, simulator_if, elaborate_only):
+    def create_tests(self, simulator_if, seed, elaborate_only):
         """
         Create all test cases from the test benches
         """
         test_list = TestList()
         for test_bench in self.get_test_benches():
-            test_bench.create_tests(simulator_if, elaborate_only, test_list)
+            test_bench.create_tests(simulator_if, seed, elaborate_only, test_list)
         return test_list
 
     def warn_when_empty(self):

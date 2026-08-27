@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Test the test report functionality
@@ -46,13 +46,13 @@ class TestTestReport(TestCase):
             self.report_to_str(report),
             """\
 ==== Summary ========================
-{gi}pass{x} passed_test0 (1.0 seconds)
-{gi}pass{x} passed_test1 (2.0 seconds)
+{gi}pass{x} passed_test0 (1.0 s)
+{gi}pass{x} passed_test1 (2.0 s)
 =====================================
 {gi}pass{x} 2 of 2
 =====================================
-Total time was 3.0 seconds
-Elapsed time was 1.0 seconds
+Total time was 3.0 s
+Elapsed time was 1.0 s
 =====================================
 {gi}All passed!{x}
 """,
@@ -69,13 +69,13 @@ Elapsed time was 1.0 seconds
             self.report_to_str(report),
             """\
 ==== Summary ========================
-{gi}pass{x} passed_test0 (1.0 seconds)
-{gi}pass{x} passed_test1 (2.0 seconds)
+{gi}pass{x} passed_test0 (1.0 s)
+{gi}pass{x} passed_test1 (2.0 s)
 =====================================
 {gi}pass{x} 2 of 2
 =====================================
-Total time was 3.0 seconds
-Elapsed time was 1.0 seconds
+Total time was 3.0 s
+Elapsed time was 1.0 s
 =====================================
 {gi}All passed!{x}
 {rgi}WARNING: Test execution aborted after running 2 out of 3 tests{x}
@@ -93,15 +93,15 @@ Elapsed time was 1.0 seconds
             self.report_to_str(report),
             """\
 ==== Summary ========================
-{gi}pass{x} passed_test  (2.0 seconds)
-{ri}fail{x} failed_test0 (11.1 seconds)
-{ri}fail{x} failed_test1 (3.0 seconds)
+{gi}pass{x} passed_test  ( 2.0 s)
+{ri}fail{x} failed_test0 (11.1 s)
+{ri}fail{x} failed_test1 ( 3.0 s)
 =====================================
 {gi}pass{x} 1 of 3
 {ri}fail{x} 2 of 3
 =====================================
-Total time was 16.1 seconds
-Elapsed time was 12.0 seconds
+Total time was 16.1 s
+Elapsed time was 12.0 s
 =====================================
 {ri}Some failed!{x}
 """,
@@ -118,16 +118,16 @@ Elapsed time was 12.0 seconds
             self.report_to_str(report),
             """\
 ==== Summary ========================
-{gi}pass{x} passed_test  (1.0 seconds)
-{rgi}skip{x} skipped_test (0.0 seconds)
-{ri}fail{x} failed_test  (3.0 seconds)
+{gi}pass{x} passed_test  (1.0 s)
+{rgi}skip{x} skipped_test (0.0 s)
+{ri}fail{x} failed_test  (3.0 s)
 =====================================
 {gi}pass{x} 1 of 3
 {rgi}skip{x} 1 of 3
 {ri}fail{x} 1 of 3
 =====================================
-Total time was 4.0 seconds
-Elapsed time was 3.0 seconds
+Total time was 4.0 s
+Elapsed time was 3.0 s
 =====================================
 {ri}Some failed!{x}
 """,
@@ -136,6 +136,62 @@ Elapsed time was 3.0 seconds
         self.assertTrue(report.result_of("passed_test").passed)
         self.assertTrue(report.result_of("skipped_test").skipped)
         self.assertTrue(report.result_of("failed_test").failed)
+
+    def test_report_with_mixed_length_tests(self):
+        report = self._report_with_mixed_length_tests()
+        report.set_real_total_time(45.0)
+        self.assertEqual(
+            self.report_to_str(report),
+            """\
+==== Summary ========================
+{gi}pass{x} passed_test0 (       0.2 s)
+{gi}pass{x} passed_test1 (       2.1 s)
+{gi}pass{x} passed_test2 (       5.3 s)
+{gi}pass{x} passed_test3 (1 min  0.3 s)
+=====================================
+{gi}pass{x} 4 of 4
+=====================================
+Total time was 1 min 7.9 s
+Elapsed time was 45.0 s
+=====================================
+{gi}All passed!{x}
+""",
+        )
+        self.assertTrue(report.all_ok())
+        self.assertTrue(report.result_of("passed_test0").passed)
+        self.assertTrue(report.result_of("passed_test1").passed)
+        self.assertTrue(report.result_of("passed_test2").passed)
+        self.assertTrue(report.result_of("passed_test3").passed)
+
+    def test_report_with_long_tests(self):
+        report = self._report_with_long_tests()
+        report.set_real_total_time(3700.0)
+        self.assertEqual(
+            self.report_to_str(report),
+            """\
+==== Summary ========================
+{gi}pass{x} passed_test0 (            0.2 s)
+{gi}pass{x} passed_test1 (            2.1 s)
+{gi}pass{x} passed_test2 (           10.3 s)
+{gi}pass{x} passed_test3 (     1 min  0.1 s)
+{gi}pass{x} passed_test4 (    10 min 15.1 s)
+{gi}pass{x} passed_test5 (1 h  3 min  0.1 s)
+=====================================
+{gi}pass{x} 6 of 6
+=====================================
+Total time was 1 h 14 min 27.9 s
+Elapsed time was 1 h 1 min 40.0 s
+=====================================
+{gi}All passed!{x}
+""",
+        )
+        self.assertTrue(report.all_ok())
+        self.assertTrue(report.result_of("passed_test0").passed)
+        self.assertTrue(report.result_of("passed_test1").passed)
+        self.assertTrue(report.result_of("passed_test2").passed)
+        self.assertTrue(report.result_of("passed_test3").passed)
+        self.assertTrue(report.result_of("passed_test4").passed)
+        self.assertTrue(report.result_of("passed_test5").passed)
 
     def test_report_with_no_tests(self):
         report = self._new_report()
@@ -232,14 +288,41 @@ Elapsed time was 3.0 seconds
 
     def test_junit_report_with_testcase_classname(self):
         report = self._new_report()
-        report.add_result("test", PASSED, time=1.0, output_file_name=self.output_file_name)
-        report.add_result("lib.entity", PASSED, time=1.0, output_file_name=self.output_file_name)
-        report.add_result("lib.entity.test", PASSED, time=1.0, output_file_name=self.output_file_name)
+        report.add_result(
+            "test",
+            PASSED,
+            time=1.0,
+            output_file_name=self.output_file_name,
+            test_suite_name="test",
+            start_time=0,
+            seed="0123456789abcdef",
+        )
+        report.add_result(
+            "lib.entity",
+            PASSED,
+            time=1.0,
+            output_file_name=self.output_file_name,
+            test_suite_name="lib.entity",
+            start_time=0,
+            seed="0123456789abcdef",
+        )
+        report.add_result(
+            "lib.entity.test",
+            PASSED,
+            time=1.0,
+            output_file_name=self.output_file_name,
+            test_suite_name="lib.entity.test",
+            start_time=0,
+            seed="0123456789abcdef",
+        )
         report.add_result(
             "lib.entity.config.test",
             PASSED,
             time=1.0,
             output_file_name=self.output_file_name,
+            test_suite_name="lib.entity.config.test",
+            start_time=0,
+            seed="0123456789abcdef",
         )
         root = ElementTree.fromstring(report.to_junit_xml_str())
         names = set(
@@ -291,35 +374,217 @@ Elapsed time was 3.0 seconds
         if not output_file_name:
             output_file_name = self.output_file_name
         report = self._new_report()
-        report.add_result("passed_test0", PASSED, time=1.0, output_file_name=output_file_name)
-        report.add_result("passed_test1", PASSED, time=2.0, output_file_name=output_file_name)
+        report.add_result(
+            "passed_test0",
+            PASSED,
+            time=1.0,
+            output_file_name=output_file_name,
+            test_suite_name="passed_test0",
+            start_time=0,
+            seed="0123456789abcdef",
+        )
+        report.add_result(
+            "passed_test1",
+            PASSED,
+            time=2.0,
+            output_file_name=output_file_name,
+            test_suite_name="passed_test0",
+            start_time=0,
+            seed="0123456789abcdef",
+        )
         report.set_expected_num_tests(2)
         return report
 
     def _report_with_missing_tests(self):
         "@returns A report with all passed tests"
         report = self._new_report()
-        report.add_result("passed_test0", PASSED, time=1.0, output_file_name=self.output_file_name)
-        report.add_result("passed_test1", PASSED, time=2.0, output_file_name=self.output_file_name)
+        report.add_result(
+            "passed_test0",
+            PASSED,
+            time=1.0,
+            output_file_name=self.output_file_name,
+            test_suite_name="passed_test0",
+            start_time=0,
+            seed="0123456789abcdef",
+        )
+        report.add_result(
+            "passed_test1",
+            PASSED,
+            time=2.0,
+            output_file_name=self.output_file_name,
+            test_suite_name="passed_test0",
+            start_time=0,
+            seed="0123456789abcdef",
+        )
         report.set_expected_num_tests(3)
         return report
 
     def _report_with_some_failed_tests(self):
         "@returns A report with some failed tests"
         report = self._new_report()
-        report.add_result("failed_test0", FAILED, time=11.12, output_file_name=self.output_file_name)
-        report.add_result("passed_test", PASSED, time=2.0, output_file_name=self.output_file_name)
-        report.add_result("failed_test1", FAILED, time=3.0, output_file_name=self.output_file_name)
+        report.add_result(
+            "failed_test0",
+            FAILED,
+            time=11.12,
+            output_file_name=self.output_file_name,
+            test_suite_name="failed_test0",
+            start_time=0,
+            seed="0123456789abcdef",
+        )
+        report.add_result(
+            "passed_test",
+            PASSED,
+            time=2.0,
+            output_file_name=self.output_file_name,
+            test_suite_name="passed_test",
+            start_time=0,
+            seed="0123456789abcdef",
+        )
+        report.add_result(
+            "failed_test1",
+            FAILED,
+            time=3.0,
+            output_file_name=self.output_file_name,
+            test_suite_name="failed_test1",
+            start_time=0,
+            seed="0123456789abcdef",
+        )
         report.set_expected_num_tests(3)
         return report
 
     def _report_with_some_skipped_tests(self):
         "@returns A report with some skipped tests"
         report = self._new_report()
-        report.add_result("passed_test", PASSED, time=1.0, output_file_name=self.output_file_name)
-        report.add_result("skipped_test", SKIPPED, time=0.0, output_file_name=self.output_file_name)
-        report.add_result("failed_test", FAILED, time=3.0, output_file_name=self.output_file_name)
+        report.add_result(
+            "passed_test",
+            PASSED,
+            time=1.0,
+            output_file_name=self.output_file_name,
+            test_suite_name="passed_test",
+            start_time=0,
+            seed="0123456789abcdef",
+        )
+        report.add_result(
+            "skipped_test",
+            SKIPPED,
+            time=0.0,
+            output_file_name=self.output_file_name,
+            test_suite_name="skipped_test",
+            start_time=0,
+            seed="0123456789abcdef",
+        )
+        report.add_result(
+            "failed_test",
+            FAILED,
+            time=3.0,
+            output_file_name=self.output_file_name,
+            test_suite_name="failed_test",
+            start_time=0,
+            seed="0123456789abcdef",
+        )
         report.set_expected_num_tests(3)
+        return report
+
+    def _report_with_mixed_length_tests(self):
+        "@returns A report with various long tests"
+        report = self._new_report()
+        report.add_result(
+            "passed_test0",
+            PASSED,
+            time=0.2,
+            output_file_name=self.output_file_name,
+            test_suite_name="passed_test0",
+            start_time=0,
+            seed="0123456789abcdef",
+        )
+        report.add_result(
+            "passed_test1",
+            PASSED,
+            time=2.1,
+            output_file_name=self.output_file_name,
+            test_suite_name="passed_test1",
+            start_time=0,
+            seed="0123456789abcdef",
+        )
+        report.add_result(
+            "passed_test2",
+            PASSED,
+            time=5.3,
+            output_file_name=self.output_file_name,
+            test_suite_name="passed_test2",
+            start_time=0,
+            seed="0123456789abcdef",
+        )
+        report.add_result(
+            "passed_test3",
+            PASSED,
+            time=60.3,
+            output_file_name=self.output_file_name,
+            test_suite_name="passed_test3",
+            start_time=0,
+            seed="0123456789abcdef",
+        )
+        report.set_expected_num_tests(4)
+        return report
+
+    def _report_with_long_tests(self):
+        "@returns A report with various long tests"
+        report = self._new_report()
+        report.add_result(
+            "passed_test0",
+            PASSED,
+            time=0.2,
+            output_file_name=self.output_file_name,
+            test_suite_name="passed_test0",
+            start_time=0,
+            seed="0123456789abcdef",
+        )
+        report.add_result(
+            "passed_test1",
+            PASSED,
+            time=2.1,
+            output_file_name=self.output_file_name,
+            test_suite_name="passed_test1",
+            start_time=0,
+            seed="0123456789abcdef",
+        )
+        report.add_result(
+            "passed_test2",
+            PASSED,
+            time=10.3,
+            output_file_name=self.output_file_name,
+            test_suite_name="passed_test2",
+            start_time=0,
+            seed="0123456789abcdef",
+        )
+        report.add_result(
+            "passed_test3",
+            PASSED,
+            time=60.1,
+            output_file_name=self.output_file_name,
+            test_suite_name="passed_test3",
+            start_time=0,
+            seed="0123456789abcdef",
+        )
+        report.add_result(
+            "passed_test4",
+            PASSED,
+            time=615.1,
+            output_file_name=self.output_file_name,
+            test_suite_name="passed_test4",
+            start_time=0,
+            seed="0123456789abcdef",
+        )
+        report.add_result(
+            "passed_test5",
+            PASSED,
+            time=3780.1,
+            output_file_name=self.output_file_name,
+            test_suite_name="passed_test5",
+            start_time=0,
+            seed="0123456789abcdef",
+        )
+        report.set_expected_num_tests(6)
         return report
 
     def _new_report(self):

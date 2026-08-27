@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -11,46 +11,23 @@ library osvvm;
 use osvvm.RandomPkg.RandomPType;
 
 use work.axi_stream_pkg.all;
+use work.axi_pkg.all;
+use work.integer_vector_ptr_pkg.all;
 
 package axi_stream_private_pkg is
   procedure probability_stall_axi_stream(
-      signal aclk : in std_logic;
-      axi_stream  : in axi_stream_slave_t;
-      rnd         : inout RandomPType
-    );
+    signal aclk  : in std_logic;
+    stall_config : in stall_config_t;
+    rnd          : inout RandomPType
+  );
 
-  procedure probability_stall_axi_stream(
-      signal aclk : in std_logic;
-      axi_stream  : in axi_stream_master_t;
-      rnd         : inout RandomPType
-    );
-
-  procedure probability_stall_axi_stream(
-      signal aclk  : in std_logic;
-      stall_config : in stall_config_t;
-      rnd          : inout RandomPType
-    );
-
+  function resolve_tstrb(
+    tkeep : std_logic_vector;
+    tstrb : std_logic_vector
+  ) return std_logic_vector;
 end package;
 
 package body axi_stream_private_pkg is
-
-  procedure probability_stall_axi_stream(
-    signal aclk : in std_logic;
-    axi_stream  : in axi_stream_master_t;
-    rnd         : inout RandomPType) is
-  begin
-    probability_stall_axi_stream(aclk, axi_stream.p_stall_config, rnd);
-  end procedure;
-
-  procedure probability_stall_axi_stream(
-    signal aclk : in std_logic;
-    axi_stream  : in axi_stream_slave_t;
-    rnd         : inout RandomPType) is
-  begin
-    probability_stall_axi_stream(aclk, axi_stream.p_stall_config, rnd);
-  end procedure;
-
   procedure probability_stall_axi_stream(
     signal aclk  : in std_logic;
     stall_config : in stall_config_t;
@@ -61,8 +38,19 @@ package body axi_stream_private_pkg is
       num_stall_cycles := rnd.FavorSmall(stall_config.min_stall_cycles, stall_config.max_stall_cycles);
     end if;
     for stall in 0 to num_stall_cycles-1 loop
-       wait until rising_edge(aclk);
+      wait until rising_edge(aclk);
     end loop;
   end procedure;
 
+  function resolve_tstrb(
+    tkeep : std_logic_vector;
+    tstrb : std_logic_vector
+  ) return std_logic_vector is
+  begin
+    if tstrb = (tstrb'range => 'U') then
+      return tkeep;
+    else
+      return tstrb;
+    end if;
+  end;
 end package body;

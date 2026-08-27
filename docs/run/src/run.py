@@ -4,11 +4,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 from pathlib import Path
 from vunit import VUnit, VUnitCLI
 from io import StringIO
+from multiprocessing import cpu_count
 import sys
 import re
 from tools.doc_support import highlight_code, highlight_log, LogRegistry
@@ -90,6 +91,15 @@ def extract_snippets():
         )
 
     for snippet in [
+        "tb_fail_on_warning",
+    ]:
+        highlight_code(
+            root / "tb_fail_on_warning.vhd",
+            root / ".." / "img" / f"{snippet}.html",
+            snippet,
+        )
+
+    for snippet in [
         "tb_stop_level",
     ]:
         highlight_code(
@@ -116,8 +126,23 @@ def extract_snippets():
             snippet,
         )
 
+    for snippet in [
+        "get_seed_and_runner_cfg",
+        "get_seed_wo_runner_cfg",
+        "get_uniform_seed",
+    ]:
+        highlight_code(
+            root / "tb_seed.vhd",
+            root / ".." / "img" / f"{snippet}.html",
+            snippet,
+        )
+
 
 extract_snippets()
+
+seed_option_path = root / "seed_option.txt"
+seed_option_path.write_text('> python run.py "lib.tb_seed.Test that fails" --seed fb19f3cca859d69c')
+highlight_log(seed_option_path, root / ".." / "img" / "seed_option.html")
 
 
 def post_run(log_registry):
@@ -132,6 +157,8 @@ test_name_re = re.compile(r"Starting\s+(?P<test_case_name>.*?)$", re.MULTILINE |
 cli = VUnitCLI()
 args = cli.parse_args()
 
+print(args.test_patterns)
+
 if args.compile or args.list:
     test_patterns = ["*"]
 elif args.test_patterns[0] != "*":
@@ -145,6 +172,7 @@ else:
         "lib.tb_with_watchdog*",
         "lib.tb_stopping_failure*",
         "lib.tb_stop_level*",
+        "lib.tb_seed*",
         "lib.tb_magic_paths*",
     ]
 
@@ -163,13 +191,15 @@ for test_pattern in test_patterns:
         args.verbose = True
         options += " -v"
 
-    vu = VUnit.from_args(args=args, compile_builtins=False)
+    vu = VUnit.from_args(args=args)
     vu.add_vhdl_builtins()
 
     lib = vu.add_library("lib")
     lib.add_source_files(root / "*.vhd")
     tb_with_lower_level_control = lib.test_bench("tb_with_lower_level_control")
     tb_with_lower_level_control.scan_tests_from_file(root / "test_control.vhd")
+
+    lib.test_bench("tb_seed").test("Test that fails").set_sim_option("seed", "fb19f3cca859d69c")
 
     log_registry = LogRegistry()
 
@@ -194,8 +224,8 @@ for test_pattern in test_patterns:
             test_case_names = list(test_case_names)
             test_case_names.sort()
             name = "_".join(test_case_names)
-            if args.num_threads > 1:
-                options += f" -p{args.num_threads}"
+            if args.num_threads != 1:
+                options += f" -p{args.num_threads or cpu_count()}"
             if len(test_case_names) == 1:
                 (root / f"{name}_stdout.txt").write_text(f"> python run.py{options}\n" + std_out)
             else:

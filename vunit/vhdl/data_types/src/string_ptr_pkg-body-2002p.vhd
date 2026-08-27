@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 package body string_ptr_pkg is
   type prot_storage_t is protected
@@ -285,6 +285,7 @@ package body string_ptr_pkg is
         when others =>
           -- @TODO Implement to_string for external models
           check_external(ref, "to_string");
+          return "";
       end case;
     end;
 

@@ -1,0 +1,6 @@
+
+Features
+~~~~~~~~
+
+- Added option to configure the logging simulation time format (unit and number of decimals). (:vunit_issue:`1044`)
+- Added support for setting ``run_all_in_same_sim`` and ``fail_on_warning attributes`` from Python. (:vunit_issue:`1053`)

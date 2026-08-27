@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 use std.textio.all;
 use work.dict_pkg.all;
@@ -12,13 +12,12 @@ use work.event_private_pkg.all;
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 package run_types_pkg is
-  constant max_locked_time : time := 1 ms;
   constant max_n_test_cases : natural := 1024;
 
   -- Deprecated
-  constant max_locked_time_c : time := max_locked_time;
   constant max_n_test_cases_c : natural := max_n_test_cases;
 
   subtype runner_cfg_t is string; -- Subtype deprecated, use string instead
@@ -36,6 +35,9 @@ package run_types_pkg is
   end record;
 
   type boolean_array_t is array (integer range <>) of boolean;
+  subtype string_seed_t is string(1 to 16);
+  subtype unsigned_seed_t is unsigned(63 downto 0);
+  subtype signed_seed_t is signed(63 downto 0);
 
   constant runner_exit_with_errors : std_logic := 'Z';
   constant runner_exit_without_errors : std_logic := '1';

@@ -1,0 +1,5 @@
+<div class="highlight"><pre><span></span><span class="n">randomizing_process</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">process</span><span class="w"> </span><span class="k">is</span>
+<span class="w">  </span><span class="k">variable</span><span class="w"> </span><span class="n">local_seed</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">string_seed_t</span><span class="p">;</span><span class="w"> </span><span class="c1">-- string_seed_t = string(1 to 16)</span>
+<span class="k">begin</span>
+<span class="w">  </span><span class="n">get_seed</span><span class="p">(</span><span class="n">local_seed</span><span class="p">,</span><span class="w"> </span><span class="n">salt</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">randomizing_process</span><span class="na">&#39;path_name</span><span class="p">);</span>
+</pre></div>

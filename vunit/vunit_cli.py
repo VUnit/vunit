@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 .. _custom_cli:
@@ -35,8 +35,9 @@ has a ``parser`` field which is an `ArgumentParser` object of the
 """
 
 import argparse
-from pathlib import Path
+import re
 import os
+from pathlib import Path
 from vunit.sim_if.factory import SIMULATOR_FACTORY
 from vunit.about import version
 
@@ -166,6 +167,25 @@ def _create_argument_parser(description=None, for_documentation=False):
         help="Output path for compilation and simulation artifacts",
     )
 
+    parser.add_argument(
+        "--changed",
+        action="store_true",
+        default=False,
+        help="Include only test_patterns that depend on file changes since the last recorded test run",
+    )
+
+    parser.add_argument(
+        "--test-prio",
+        choices=["opt", "ordered"],
+        default="opt",
+        help=(
+            "Controls test priority strategy. "
+            '"opt" (default) = Optimized to increase the probability of running failing tests early and '
+            "to minimize test time through thread load-balancing. "
+            '"ordered" = Tests are executed in the order they were added.'
+        ),
+    )
+
     parser.add_argument("-x", "--xunit-xml", default=None, help="Xunit test report .xml file")
 
     parser.add_argument(
@@ -225,10 +245,12 @@ def _create_argument_parser(description=None, for_documentation=False):
     parser.add_argument(
         "-p",
         "--num-threads",
-        type=positive_int,
+        type=nonnegative_int,
         default=1,
         help=(
-            "Number of tests to run in parallel. " "Test output is not continuously written in verbose mode with p > 1"
+            "Number of tests to run in parallel. "
+            "Test output is not continuously written in verbose mode with p != 1. "
+            "p = 0 uses all logical CPUs."
         ),
     )
 
@@ -244,21 +266,45 @@ def _create_argument_parser(description=None, for_documentation=False):
 
     parser.add_argument("--version", action="version", version=version())
 
+    def valid_seed(value):
+        value = value.lower()
+
+        if value == "repeat":
+            return value
+
+        if not re.fullmatch(r"[0-9a-f]+", value):
+            raise argparse.ArgumentTypeError("""Expecting a valid 16-digit hex number or "repeat".""")
+
+        if len(value) != 16:
+            raise argparse.ArgumentTypeError(f"Expecting 16 digits. {value} is {len(value)} digits.")
+
+        return value
+
+    parser.add_argument(
+        "--seed",
+        default=None,
+        type=valid_seed,
+        metavar="<seed>|repeat",
+        help="16 hex digits base seed provided to the simulation or repeat the previous base seed(s)."
+        """ If no previous base seed has been recorded, "repeat" will use the default base seed which is"""
+        " generated from system time.",
+    )
+
     SIMULATOR_FACTORY.add_arguments(parser)
 
     return parser
 
 
-def positive_int(val):
+def nonnegative_int(val):
     """
-    ArgumentParse positive int check
+    ArgumentParse non-negative int check
     """
     try:
         ival = int(val)
-        assert ival > 0
+        assert ival >= 0
         return ival
     except (ValueError, AssertionError) as exv:
-        raise argparse.ArgumentTypeError(f"'{val!s}' is not a valid positive int") from exv
+        raise argparse.ArgumentTypeError(f"'{val!s}' is not a valid non-negative int") from exv
 
 
 def _parser_for_documentation():

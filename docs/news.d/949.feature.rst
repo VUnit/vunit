@@ -1,1 +1,0 @@
-Add common log interface for third-party logging framework integration.

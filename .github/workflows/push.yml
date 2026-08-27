@@ -23,12 +23,12 @@ jobs:
     steps:
 
     - name: '🧰 Checkout'
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: '🐍 Setup Python'
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
-        python-version: '3.12'
+        python-version: '3.13'
 
     - name: '🐍 Install dependencies'
       run: |
@@ -36,7 +36,7 @@ jobs:
         pip install -U virtualenv tox --progress-bar off
 
     - name: '🐍 Run black'
-      run: tox -e py312-fmt -- --check
+      run: tox -e py313-fmt -- --diff --color
 
 #
 # Linux linting and unit tests
@@ -48,17 +48,17 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { py: '3.12' , task: 312-lint }
-          - { py: '3.7'  , task: 37-unit }
-          - { py: '3.12' , task: 312-unit }
+          - { py: '3.13' , task: 313-lint }
+          - { py: '3.10'  , task: 310-unit }
+          - { py: '3.13' , task: 313-unit }
     name: '🐧 Ubuntu · ${{ matrix.task }}'
     steps:
 
     - name: '🧰 Checkout'
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: '🐍 Setup Python'
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.py }}
 
@@ -80,14 +80,14 @@ jobs:
       fail-fast: false
       matrix:
         task: [
-          {do: 312-acceptance,  tag: llvm},
-          {do: 312-vcomponents, tag: mcode},
+          {do: 313-acceptance,  tag: llvm},
+          {do: 313-vcomponents, tag: mcode},
         ]
     name: '🛳️ Container · ${{ matrix.task.do }} · ${{ matrix.task.tag }}'
     steps:
 
     - name: '🧰 Checkout'
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: recursive
 
@@ -104,19 +104,19 @@ jobs:
       fail-fast: false
       matrix:
         task: [
-          {do: 39-acceptance},
-          {do: 39-vcomponents},
+          {do: 311-acceptance},
+          {do: 311-vcomponents},
         ]
     name: '🛳️ Container · ${{ matrix.task.do }} · NVC'
     steps:
 
     - name: '🧰 Checkout'
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: recursive
 
     - name: '🚧 Run job'
-      uses: docker://ghcr.io/vunit/dev/nvc@sha256:e6337a2b40a2eed076ffda9a5ef0af2c676718fcc7cf0c31fcfe24505de759c4
+      uses: docker://ghcr.io/vunit/dev/nvc
       with:
         args: tox -e py${{ matrix.task.do }}-nvc
 
@@ -144,19 +144,20 @@ jobs:
     - name: '🟦 Setup MSYS2'
       uses: msys2/setup-msys2@v2
       with:
-        msystem: MINGW64
+        msystem: mingw64
         update: true
         install: mingw-w64-x86_64-python-pip
 
     - name: '🧰 Checkout'
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: recursive
 
     - name: '⚙️ Setup GHDL'
-      uses: ghdl/setup-ghdl-ci@master
+      uses: ghdl/setup-ghdl@main
       with:
-        backend: llvm
+        backend: mcode
+        runtime: mingw64
 
     - name: '🐍 Install dependencies'
       run: pip install -U tox --progress-bar off
@@ -181,14 +182,14 @@ jobs:
     steps:
 
     - name: '🧰 Checkout'
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: recursive
 
     - name: '🐍 Setup Python'
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
-        python-version: '3.12'
+        python-version: '3.13'
 
     - name: '🐍 Install dependencies'
       run: |

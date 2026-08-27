@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Utility to perform costly operation on file contents which can be cached
@@ -13,7 +13,7 @@ from vunit.hashing import hash_string
 from vunit.ostools import read_file
 
 
-def cached(key, function, file_name, encoding, database=None, newline=None):
+def cached(key, function, file_name, encoding, *, database=None, newline=None):
     """
     Call function with file content if an update is needed
     """

@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 use work.types_pkg.all;
 
@@ -37,11 +37,13 @@ package body external_integer_vector_pkg is
     i  : integer
   ) return integer is begin
     assert false report "EXTERNAL read_integer" severity failure;
+    return integer'low;
   end;
 
   impure function get_ptr (
     id : integer
   ) return extintvec_access_t is begin
     assert false report "EXTERNAL get_intvec_ptr" severity failure;
+    return null;
   end;
 end package body;

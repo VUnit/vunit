@@ -1,0 +1,12 @@
+<div class="highlight"><pre><span></span><span class="c1">-- Allow 10 errors from my_logger and its children</span>
+<span class="n">set_stop_count</span><span class="p">(</span><span class="n">my_logger</span><span class="p">,</span><span class="w"> </span><span class="n">error</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">);</span>
+
+<span class="c1">-- Disable stop on errors from my_logger and its children</span>
+<span class="n">disable_stop</span><span class="p">(</span><span class="n">my_logger</span><span class="p">,</span><span class="w"> </span><span class="n">error</span><span class="p">);</span>
+
+<span class="c1">-- Short hand for stopping on error and failure but not warning globally</span>
+<span class="n">set_stop_level</span><span class="p">(</span><span class="n">error</span><span class="p">);</span>
+
+<span class="c1">-- Short hand for stopping on warning, error and failure for specific logger</span>
+<span class="n">set_stop_level</span><span class="p">(</span><span class="n">get_logger</span><span class="p">(</span><span class="s">&quot;my_library:my_component&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">warning</span><span class="p">);</span>
+</pre></div>

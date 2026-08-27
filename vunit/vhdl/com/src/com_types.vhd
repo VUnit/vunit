@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -24,7 +24,7 @@ use work.queue_pkg.all;
 use work.queue_2008p_pkg.all;
 use work.queue_pool_pkg.all;
 use work.dict_pkg.all;
-use work.event_private_pkg.all;
+use work.event_private_pkg.basic_event_t;
 
 package com_types_pkg is
 
@@ -400,6 +400,12 @@ package com_types_pkg is
   alias push_dict_t_ref is push_ref[msg_t, dict_t];
   alias pop_dict_t_ref is pop_ref[msg_t return dict_t];
 
+  -- Misc
+  impure function to_integer(actor : actor_t) return integer;
+  impure function to_actor(value : integer) return actor_t;
+
+  -- Private
+  impure function is_valid(code : integer) return boolean;
 end package;
 
 package body com_types_pkg is
@@ -870,5 +876,17 @@ package body com_types_pkg is
     return pop_ref(msg.data);
   end;
 
+  -----------------------------------------------------------------------------
+  -- Misc
+  -----------------------------------------------------------------------------
+  impure function to_integer(actor : actor_t) return integer is
+  begin
+    return actor.p_id_number;
+  end;
+
+  impure function to_actor(value : integer) return actor_t is
+  begin
+    return (p_id_number => value);
+  end;
 
 end package body com_types_pkg;

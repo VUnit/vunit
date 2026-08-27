@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 use work.axi_pkg.all;
 use work.integer_vector_ptr_pool_pkg.all;
@@ -15,15 +15,14 @@ package axi_statistics_pkg is
   end record;
   constant null_axi_statistics : axi_statistics_t := (p_count_by_burst_length => null_ptr);
 
-  -- Get the maximum burst length that occured
+  -- Get the maximum burst length that occurred
   impure function max_burst_length(stat : axi_statistics_t) return natural;
 
-  -- Get the minimum burst length that occured
+  -- Get the minimum burst length that occurred
   impure function min_burst_length(stat : axi_statistics_t) return natural;
 
-  -- Get the number of bursts that occured with specific length
-  impure function get_num_burst_with_length(stat : axi_statistics_t;
-                                            burst_length : natural) return natural;
+  -- Get the number of bursts that occurred with specific length
+  impure function get_num_burst_with_length(stat : axi_statistics_t; burst_length : natural) return natural;
 
   -- Get the number of bursts
   impure function num_bursts(stat : axi_statistics_t) return natural;
@@ -33,8 +32,7 @@ package axi_statistics_pkg is
 
   -- Private
   impure function new_axi_statistics return axi_statistics_t;
-  procedure add_burst_length(stat : axi_statistics_t;
-                             burst_length : natural);
+  procedure add_burst_length(stat : axi_statistics_t; burst_length : natural);
   impure function copy(stat : axi_statistics_t) return axi_statistics_t;
   procedure clear(stat : axi_statistics_t);
 end package;
@@ -60,8 +58,7 @@ package body axi_statistics_pkg is
     end loop;
   end;
 
-  procedure add_burst_length(stat : axi_statistics_t;
-                             burst_length : natural) is
+  procedure add_burst_length(stat : axi_statistics_t; burst_length : natural) is
 
   begin
     set(stat.p_count_by_burst_length, burst_length,
@@ -90,8 +87,7 @@ package body axi_statistics_pkg is
     return 0;
   end;
 
-  impure function get_num_burst_with_length(stat : axi_statistics_t;
-                                            burst_length : natural) return natural is
+  impure function get_num_burst_with_length(stat : axi_statistics_t; burst_length : natural) return natural is
   begin
     if burst_length >= length(stat.p_count_by_burst_length) then
       return 0;

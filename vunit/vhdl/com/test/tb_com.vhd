@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 library vunit_lib;
 context vunit_lib.vunit_context;
@@ -1383,6 +1383,11 @@ begin
         check_only_log(com_logger, "receiver outbox => [3:2 receiver -> - (-)]", trace);
 
         unmock(com_logger);
+
+      elsif run("Test actor to/from integer conversion") then
+        actor := new_actor;
+        check(to_actor(to_integer(actor)) = actor);
+        check(to_actor(to_integer(null_actor)) = null_actor);
 
       -- Deprecated APIs
       elsif run("Test that use of deprecated API leads to an error") then

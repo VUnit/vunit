@@ -8,7 +8,7 @@ Requirements
 ============
 
 .. NOTE::
-  Full VUnit functionality requires Python (3.6 or higher) and a simulator
+  Full VUnit functionality requires Python (3.10 or higher) and a simulator
   supported by the VUnit Python test runner (see list below).
   However, VUnit can run with limited functionality entirely within VHDL using
   the :doc:`VHDL test runner <./run/user_guide>`.
@@ -30,15 +30,11 @@ Simulator
 VHDL only
 ^^^^^^^^^
 
-*  `Aldec Riviera-PRO`_: Tested with Riviera-PRO 2015.06, 2015.10, 2016.02, 2016.10 (x64/x86).
+*  `Aldec Riviera-PRO`_
 
-*  `Aldec Active-HDL`_: Tested with Active-HDL 9.3, 10.1, 10.2, 10.3 (x64/x86).
+*  `Aldec Active-HDL`_
 
 *  `GHDL`_
-
-  *  Tested with LLVM and mcode backends; GCC backend might work aswell.
-
-  *  Works with versions >= 0.33.
 
      .. HINT::
 
@@ -60,7 +56,7 @@ VHDL only
 VHDL or SystemVerilog
 ^^^^^^^^^^^^^^^^^^^^^
 
-*  `Mentor Graphics ModelSim/Questa`_: Tested with 10.1 - 10.5
+*  `Mentor Graphics ModelSim/Questa`_
 
 .. CAUTION::
 
@@ -91,6 +87,10 @@ Once installed, VUnit may be updated to new versions via a similar method:
 .. code-block:: console
 
    > pip install -U vunit_hdl
+
+Occasionally, pre-releases and development versions are available via `pip <https://pip.pypa.io/en/stable/>`__.
+These give early access to updates before the next planned release has been fully completed. These are installed
+by adding the ``--pre`` option to the ``pip install`` command.
 
 .. _installing_master:
 

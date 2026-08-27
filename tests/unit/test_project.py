@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 # pylint: disable=too-many-lines
 
@@ -1599,6 +1599,7 @@ end architecture;
         self.assertEqual(file_type_of("file.vhd"), "vhdl")
         self.assertEqual(file_type_of("file.vhdl"), "vhdl")
         self.assertEqual(file_type_of("file.sv"), "systemverilog")
+        self.assertEqual(file_type_of("file.svp"), "systemverilog")
         self.assertEqual(file_type_of("file.v"), "verilog")
         self.assertEqual(file_type_of("file.vams"), "verilog")
         self.assertRaises(RuntimeError, file_type_of, "file.foo")
@@ -1915,16 +1916,7 @@ use builtin_lib.all;
         try:
             self.project.add_library("lib2", "lib_path2", is_external=True)
         except ValueError as err:
-            self.assertEqual(str(err), "External library 'lib_path2' does not exist")
-        else:
-            assert False, "ValueError not raised"
-
-    def test_add_external_library_must_be_a_directory(self):
-        write_file("lib_path3", "")
-        try:
-            self.project.add_library("lib3", "lib_path3", is_external=True)
-        except ValueError as err:
-            self.assertEqual(str(err), "External library must be a directory. Got 'lib_path3'")
+            self.assertEqual(str(err), "External library lib_path2 does not exist")
         else:
             assert False, "ValueError not raised"
 
@@ -1942,7 +1934,7 @@ use builtin_lib.all;
         """
         Get the hash file name of a source_file
         """
-        return self.project._hash_file_name_of(source_file)  # pylint: disable=protected-access
+        return self.project.hash_file_name_of(source_file)
 
     def update(self, source_file):
         """

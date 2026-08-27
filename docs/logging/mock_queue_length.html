@@ -1,0 +1,9 @@
+<div class="highlight"><pre><span></span><span class="n">logger</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">get_logger</span><span class="p">(</span><span class="s">&quot;my_library&quot;</span><span class="p">);</span>
+<span class="n">mock</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span><span class="w"> </span><span class="n">failure</span><span class="p">);</span>
+
+<span class="c1">-- Code to trigger the error</span>
+
+<span class="k">wait</span><span class="w"> </span><span class="k">until</span><span class="w"> </span><span class="n">mock_queue_length</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="n">rising_edge</span><span class="p">(</span><span class="n">clk</span><span class="p">);</span>
+<span class="n">check_only_log</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Some error message&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">failure</span><span class="p">);</span>
+<span class="n">unmock</span><span class="p">(</span><span class="n">logger</span><span class="p">);</span>
+</pre></div>

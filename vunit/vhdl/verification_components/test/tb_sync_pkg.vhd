@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 
 library vunit_lib;
@@ -32,6 +32,14 @@ begin
     wait_for_time(net, actor, 37 ms);
     wait_until_idle(net, actor);
     check_equal(now - start, 37 ms, "wait for time mismatch");
+
+    mock(com_logger, failure);
+    start := now;
+    wait_for_time(net, actor, 37 ms);
+    wait_until_idle(net, actor, 10 ms);
+    check_log(com_logger, "TIMEOUT.", failure, start + 10 ms);
+    check_only_log(get_logger("vunit_lib:com"), "NULL MESSAGE ERROR.", failure, start + 10 ms);
+    unmock(com_logger);
 
     test_runner_cleanup(runner);
   end process;

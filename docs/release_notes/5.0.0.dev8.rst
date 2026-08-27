@@ -1,0 +1,17 @@
+
+Features
+~~~~~~~~
+
+- [NVC] Added code coverage support. (:vunit_issue:`984`)
+
+
+Miscellaneous
+~~~~~~~~~~~~~
+
+- Updated contexts to include missing packages. (:vunit_issue:`1094`)
+- Added warning when attempting to set NVC `--exit-severity` via `nvc.sim_flags` (:vunit_issue:`1132`)
+- Improved error messaging if the NVC and GHDL environment variables are used for other purposes than naming the
+  executable. (:vunit_issue:`1149`)
+- Restrict setup tools to pre-82, as the deprecated pkg_resources is still used.
+
+  This is a short-term workaround. A properly updated setup will be released later. (:vunit_issue:`1158`)

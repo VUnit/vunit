@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 from pathlib import Path
 from glob import glob
@@ -11,9 +11,11 @@ from vunit.check_preprocessor import CheckPreprocessor
 
 import vunit.vhdl.check.tools.generate_check_equal as generate_check_equal
 import vunit.vhdl.check.tools.generate_check_match as generate_check_match
+import vunit.vhdl.check.tools.generate_check_equal_2008p as generate_check_equal_2008p
 
 generate_check_equal.main()
 generate_check_match.main()
+generate_check_equal_2008p.main()
 
 VU = VUnit.from_argv()
 VU.add_vhdl_builtins()

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 License header sanity check
@@ -33,7 +33,7 @@ RE_LICENSE_NOTICE = re.compile(
 RE_LOG_DATE = re.compile(r"Date:\s*(?P<year>20\d\d)-\d\d-\d\d")
 
 FIRST_YEAR = 2014
-LAST_YEAR = 2023
+LAST_YEAR = 2026
 
 
 class TestLicense(unittest.TestCase):
@@ -143,11 +143,6 @@ def find_licensed_files():
             ):
                 continue
             if file_name == "AlertLogPkg.vhd":
-                continue
-            if is_prefix_of(
-                (VHDL_PATH / "JSON-for-VHDL").resolve(),
-                (Path(root) / file_name).resolve(),
-            ):
                 continue
             if Path(file_name).suffix in (".vhd", ".vhdl", ".py", ".v", ".sv"):
                 licensed_files.append(str(Path(root) / file_name))

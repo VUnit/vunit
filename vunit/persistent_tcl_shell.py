@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 A persistent TCL shell to avoid startup overhead in TCL-based simulators
@@ -73,7 +73,7 @@ class PersistentTclShell(object):
         return consumer.var
 
     def read_bool(self, varname):
-        result = self.read_var(varname)
+        result = self.read_var(varname).lower()
         assert result in ("true", "false")
         return result == "true"
 

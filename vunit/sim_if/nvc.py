@@ -2,12 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Interface for NVC simulator
 """
 
+from multiprocessing import cpu_count
 from pathlib import Path
 from os import environ, makedirs, remove
 import logging
@@ -16,15 +17,16 @@ import shlex
 import re
 from sys import stdout  # To avoid output catched in non-verbose mode
 from ..exceptions import CompileError
-from ..ostools import Process
+from ..ostools import Process, file_exists
 from . import SimulatorInterface, ListOfStringOption, StringOption
-from . import run_command
+from . import run_command, check_executable
+from ._viewermixin import ViewerMixin
 from ..vhdl_standard import VHDL
 
 LOGGER = logging.getLogger(__name__)
 
 
-class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-attributes
+class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many-instance-attributes
     """
     Interface for NVC simulator
     """
@@ -44,7 +46,8 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         ListOfStringOption("nvc.sim_flags"),
         ListOfStringOption("nvc.elab_flags"),
         StringOption("nvc.heap_size"),
-        StringOption("nvc.gtkwave_script.gui"),
+        StringOption("nvc.viewer_script.gui"),
+        StringOption("nvc.viewer.gui"),
     ]
 
     @classmethod
@@ -53,10 +56,16 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         Create instance from args namespace
         """
         prefix = cls.find_prefix()
+        check_executable("NVC", prefix, cls.executable)
+
         return cls(
             output_path=output_path,
             prefix=prefix,
             gui=args.gui,
+            num_threads=args.num_threads,
+            viewer_fmt=args.viewer_fmt,
+            viewer_args=args.viewer_args,
+            viewer=args.viewer,
         )
 
     @classmethod
@@ -67,29 +76,30 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         return cls.find_toolchain([cls.executable])
 
     def __init__(  # pylint: disable=too-many-arguments
-        self,
-        output_path,
-        prefix,
-        gui=False,
-        gtkwave_args="",
+        self, output_path, prefix, *, num_threads, gui=False, viewer_fmt=None, viewer_args="", viewer=None
     ):
         SimulatorInterface.__init__(self, output_path, gui)
+        if viewer_fmt == "ghw":
+            LOGGER.warning("NVC does not support ghw, defaulting to fst")
+            viewer_fmt = None  # Defaults to FST later
+        ViewerMixin.__init__(self, gui=gui, viewer=viewer, viewer_fmt=viewer_fmt, viewer_args=viewer_args)
+
         self._prefix = prefix
         self._project = None
 
-        if gui and (not self.find_executable("gtkwave")):
-            raise RuntimeError("Cannot find the gtkwave executable in the PATH environment variable. GUI not possible")
-
-        self._gui = gui
-        self._gtkwave_args = gtkwave_args
         self._vhdl_standard = None
-        self._coverage_test_dirs = set()
-
+        self._coverage_files = set()
         (major, minor) = self.determine_version(prefix)
         self._supports_jit = major > 1 or (major == 1 and minor >= 9)
+        self._ieee_warnings_global = major > 1 or (major == 1 and minor >= 16)
+        self._supports_coverage_merge = major > 1 or (major == 1 and minor >= 15)
 
         if self.use_color:
             environ["NVC_COLORS"] = "always"
+
+        # Allow NVC to scale its worker thread count based on the number
+        # of VUnit threads and the number of available CPUs.
+        environ["NVC_CONCURRENT_JOBS"] = str(num_threads or cpu_count())
 
     def has_valid_exit_code(self):  # pylint: disable=arguments-differ
         """
@@ -128,7 +138,7 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         """
         Returns True when the simulator supports coverage
         """
-        return False
+        return True
 
     @classmethod
     def supports_vhdl_call_paths(cls):
@@ -235,7 +245,9 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         cmd += [source_file.name]
         return cmd
 
-    def simulate(self, output_path, test_suite_name, config, elaborate_only):  # pylint: disable=too-many-branches
+    def simulate(
+        self, output_path, test_suite_name, config, elaborate_only
+    ):  # pylint: disable=too-many-branches, disable=too-many-statements, disable=too-many-locals
         """
         Simulate with entity as top level using generics
         """
@@ -245,15 +257,18 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         if not script_path.exists():
             makedirs(script_path)
 
+        libdir = self._project.get_library(config.library_name).directory
+        cmd = self._get_command(self._vhdl_standard, config.library_name, libdir)
+
         if self._gui:
-            wave_file = script_path / (f"{config.entity_name}.fst")
+            wave_file = script_path / (f"{config.entity_name}.{self._viewer_fmt or 'fst'}")
             if wave_file.exists():
                 remove(wave_file)
         else:
             wave_file = None
 
-        libdir = self._project.get_library(config.library_name).directory
-        cmd = self._get_command(self._vhdl_standard, config.library_name, libdir)
+        if self._ieee_warnings_global and config.sim_options.get("disable_ieee_warnings", False):
+            cmd += ["--ieee-warnings=off"]
 
         cmd += ["-H", config.sim_options.get("nvc.heap_size", "64m")]
         cmd += config.sim_options.get("nvc.global_flags", [])
@@ -261,6 +276,12 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         cmd += ["-e"]
 
         cmd += config.sim_options.get("nvc.elab_flags", [])
+
+        if config.sim_options.get("enable_coverage", False):
+            coverage_file_path = str(Path(output_path) / "coverage.ncdb")
+            self._coverage_files.add(coverage_file_path)
+            cmd += [f"--cover-file={coverage_file_path}"]
+
         if config.vhdl_configuration_name is not None:
             cmd += [config.vhdl_configuration_name]
         else:
@@ -274,14 +295,27 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
             if self._supports_jit:
                 cmd += ["--jit"]
             cmd += ["-r"]
-            cmd += config.sim_options.get("nvc.sim_flags", [])
+
+            config_sim_options = config.sim_options.get("nvc.sim_flags", [])
+            if "--exit-severity" in "".join(config_sim_options):
+                LOGGER.warning(
+                    "The --exit-severity setting has been passed via %s.sim_flags. This is overruled by the VUnit"
+                    " option vhdl_assert_stop_level, which is set to '%s'. See"
+                    " https://vunit.github.io/py/opts.html#simulation-options for further details",
+                    self.name,
+                    config.vhdl_assert_stop_level
+                )
+            cmd += config_sim_options
             cmd += [f"--exit-severity={config.vhdl_assert_stop_level}"]
 
-            if config.sim_options.get("disable_ieee_warnings", False):
+            if not self._ieee_warnings_global and config.sim_options.get("disable_ieee_warnings", False):
                 cmd += ["--ieee-warnings=off"]
 
             if wave_file:
                 cmd += [f"--wave={wave_file}"]
+
+            if self._viewer_fmt:
+                cmd += [f"--format={self._viewer_fmt}"]
 
         print(" ".join([f"'{word}'" if " " in word else word for word in cmd]))
 
@@ -293,10 +327,20 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
         except Process.NonZeroExitCode:
             status = False
 
-        if self._gui and not elaborate_only:
-            cmd = ["gtkwave"] + shlex.split(self._gtkwave_args) + [str(wave_file)]
+        if config.sim_options.get(self.name + ".gtkwave_script.gui", None):
+            LOGGER.warning(
+                "%s.gtkwave_script.gui is deprecated and will be removed "
+                "in a future version, use %s.viewer_script.gui instead",
+                self.name,
+                self.name,
+            )
 
-            init_file = config.sim_options.get(self.name + ".gtkwave_script.gui", None)
+        if self._gui and not elaborate_only:
+            cmd = [self._get_viewer(config)] + shlex.split(self._viewer_args) + [str(wave_file)]
+
+            init_file = config.sim_options.get(
+                self.name + ".viewer_script.gui", config.sim_options.get(self.name + ".gtkwave_script.gui", None)
+            )
             if init_file is not None:
                 cmd += ["--script", str(Path(init_file).resolve())]
 
@@ -304,3 +348,36 @@ class NVCInterface(SimulatorInterface):  # pylint: disable=too-many-instance-att
             subprocess.call(cmd)
 
         return status
+
+    def merge_coverage(self, file_name, args=None):
+        """
+        Merge coverage from all test cases.
+        """
+
+        if not self._supports_coverage_merge:
+            LOGGER.error(
+                "Current nvc version does not support coverage database merge."
+            )
+            return
+
+        coverage_files = []
+
+        for coverage_file in self._coverage_files:
+            if file_exists(coverage_file):
+                coverage_files.append(coverage_file)
+            else:
+                LOGGER.warning("Missing coverage file: %s", coverage_file)
+
+        nvc_coverage_merge_cmd = [
+            str(Path(self._prefix) / self.executable),
+            "--cover-merge",
+            "-o",
+            f"{file_name}.ncdb",
+        ]
+
+        nvc_coverage_merge_cmd.extend(coverage_files)
+
+        print(f"Merging coverage files into {file_name!s}.ncdb...")
+        nvc_coverage_merge_process = Process(nvc_coverage_merge_cmd, env=self.get_env())
+        nvc_coverage_merge_process.consume_output()
+        print("Done merging coverage files")

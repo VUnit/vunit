@@ -4,12 +4,11 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
-
-library vunit_lib;
-context vunit_lib.vunit_context;
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 use std.textio.all;
+
+use work.string_ops.all;
 
 package com_debug_codec_builder_pkg is
   -----------------------------------------------------------------------------

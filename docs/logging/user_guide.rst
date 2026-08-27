@@ -26,22 +26,19 @@ A log entry is made to a logger. You can think of a logger as a named
 channel. There is a default logger that is used when none is specified
 but you can also create multiple custom loggers. For example
 
-.. code-block:: vhdl
-
-    info("Hello world");
+ .. raw:: html
+    :file: log_call.html
 
 will use the default logger while
 
-.. code-block:: vhdl
-
-    info(my_logger, "Hello world");
+ .. raw:: html
+    :file: log_call_with_logger.html
 
 will use the custom ``my_logger``. A custom logger is created
 by declaring a constant or a variable of type ``logger_t``.
 
-.. code-block:: vhdl
-
-    constant my_logger : logger_t := get_logger("system0:uart0");
+ .. raw:: html
+    :file: logger_declaration.html
 
 ``get_logger`` will internally create an identity for the name
 provided in the call (see :ref:`identity package <id_user_guide>`)
@@ -51,20 +48,18 @@ if it didn't already exist.
 
 A logger can also be created directly from an identity.
 
-.. code-block:: vhdl
-
-    constant my_id : id_t := get_id("system0:uart0");
-    constant my_logger : logger_t := get_logger(my_id);
+ .. raw:: html
+    :file: logger_from_id.html
 
 Log Handlers
 ------------
 
-Log messages made to a logger are handled by a log handler.
-By default there are two handlers, one for handling display (stdout)
-output and one for handling output to a file. Every log entry you do
-is passed to both these handlers. Each handler may have a different
-output format and log level setting. The format is used to control the
-layout and amount of information being displayed.
+Log messages made to a logger are handled by a one or more log handlers
+linked to that logger. By default, all loggers are linked to a handler for
+the display output (stdout) but handlers can also be added for file output.
+Every log entry to a logger is passed to the log handlers of the logger.
+Each handler may have different output format and log level settings.
+The format is used to control the layout and amount of information being displayed.
 
 Log Levels
 ----------
@@ -73,69 +68,45 @@ Every log entry you make has a log level which is defined by dedicated
 procedure calls for each log level. The standard log levels and their
 associated procedure calls are:
 
-.. code-block:: vhdl
-
-    -- Visible to display by default
-    failure("Fatal error, there is most likely no point in going further");
-    error("An error but we could still keep running for a while");
-    warning("A warning");
-    info("Informative message for very useful public information");
-
-    -- Not visible by default
-    pass("Message from a passing check");
-    debug("Debug message for seldom useful or internal information");
-    trace("Trace messages only used for tracing program flow");
+ .. raw:: html
+    :file: standard_log_levels.html
 
 There are also conditional log procedures for warning, error and failure:
 
-.. code-block:: vhdl
-
-    warning_if(True, "A warning happened");
-    warning_if(False, "A warning did not happen");
-
-    -- There are also variants for error and failure as well as with
-    -- non-default logger argument.
+ .. raw:: html
+    :file: conditional_log.html
 
 It's also possible to create custom log levels. For example
 
-.. code-block:: vhdl
-
-    license_info := new_log_level("license", fg => red, bg => yellow, style => bright);
-
+ .. raw:: html
+    :file: custom_log_level.html
 
 The last optional parameters define the foreground, background and style of the output color.
 Valid values are defined in ansi_pkg.
 
-To make a log entry with the custom level use any of the `log` procedures:
+To make a log entry with the custom level use any of the ``log`` procedures:
 
-.. code-block:: vhdl
-
-    log("Mozilla Public License, v. 2.0.", license_info);
-    log(my_logger, "Mozilla Public License, v. 2.0.", license_info);
+ .. raw:: html
+    :file: log_call_with_custom_level.html
 
 Formatting
 ----------
-The default display format is ``verbose`` and the default file format
-is ``csv`` to enable simple log file parsing. The format can be
-changed to any of ``raw``, ``level``, ``verbose`` and ``csv``.
+The default display format is ``verbose`` but he format can be
+changed to any of ``raw``, ``level``, and ``csv``.
 
-.. code-block:: vhdl
+ .. raw:: html
+    :file: set_format.html
 
-    set_format(display_handler, level);
-    info("Hello world");
+which will result in the following output:
 
-which will result in the following output.
-
-.. code-block:: console
-
-    INFO: Hello world
+ .. raw:: html
+    :file: set_format_log.html
 
 The default ``verbose`` format which adds more details to the
 output looks like this:
 
-.. code-block:: console
-
-         1000 ps - default -    INFO - Hello world
+ .. raw:: html
+    :file: verbose_format_log.html
 
 The verbose output will always contain the simulator time, the log
 level, the logger, and the message.
@@ -143,6 +114,40 @@ level, the logger, and the message.
 The ``raw`` formatter just emits the log message and nothing else. The
 ``csv`` formatter emits all information in the log entry as a comma
 separated list for convenient parsing.
+
+To enhance readability, the simulation time format can be specified by the ``log_time_unit``
+and ``n_log_time_decimals`` parameters to the ``set_format`` procedure. ``log_time_unit``
+controls the unit used for the simulation time and the default value is ``native_time_unit``
+which corresponds to the simulator's resolution. Setting it to ``auto_time_unit`` will select
+the unit based on the simulator time, following these rules:
+
+* If simulation time is greater than or equal to 1 second: unit = ``sec``
+* If simulation time is less than 1 second: unit is chosen from ``fs``, ``ps``, ``ns``, ``us``,
+  and ``ms`` so that the numerical value falls within the range [1, 1000). For example,
+  ``123456 ps`` will be displayed as (``n_log_time_decimals`` = 3):
+
+ .. raw:: html
+    :file: log_time_unit_log.html
+
+``log_time_unit`` can also be set explicitly to ``fs``, ``ps``, ``ns``, ``us``, ``ms``, or ``sec``
+as long as the value is greater than or equal to the simulator's resolution. No other time values are allowed.
+
+``n_log_time_decimals`` specifies the number of decimal places in the output. Setting it to
+``full_time_resolution`` will output the full resolution of the simulator. For instance, if the resolution is ``ps``
+and ``log_time_unit`` is set to ``us``, ``123456 ps`` will be displayed as:
+
+ .. raw:: html
+    :file: full_time_resolution_log.html
+
+If ``n_log_time_decimals`` is set to a non-negative number, the output is formatted to that number of decimals:
+
+* If the simulator resolution is higher than the specified decimals, the value is **truncated**.
+* If the number of decimals exceeds the resolution, the value is zero-padded.
+
+For example, ``123456 ps`` with ``auto_time_unit`` and 2 decimals is displayed as:
+
+ .. raw:: html
+    :file: fix_decimals_log.html
 
 Stopping simulation
 -------------------
@@ -165,36 +170,22 @@ Simulation stop is controlled via a stop count mechanism. The stop count mechani
 
 Example:
 <<<<<<<<
-.. code-block:: vhdl
 
-    -- Allow 10 errors from my_logger and its children
-    set_stop_count(my_logger, error, 10);
-
-    -- Disable stop on errors from my_logger and its children
-    disable_stop(my_logger, error);
-
-    -- Short hand for stopping on error and failure but not warning globally
-    set_stop_level(error);
-
-    -- Short hand for stopping on warning, error and failure for specific logger
-    set_stop_level(get_logger("my_library:my_component"), warning)
+ .. raw:: html
+    :file: stopping_simulation.html
 
 Print Procedure
 ---------------
 
 ``print`` is a procedure that unconditionally outputs its message to stdout or file without any formatting.
 
-.. code-block:: vhdl
-
-    print("Message to stdout");
-    print("Append this message to an existing file or create a new file if it doesn't exist", "path/to/file");
-    print("Create new file with this message", "path/to/file", write_mode);
+.. raw:: html
+    :file: print.html
 
 It's also possible to print to an open file object.
 
-.. code-block:: vhdl
-
-    print("Message to file object", my_file_object);
+.. raw:: html
+    :file: print_to_open_file.html
 
 This procedure can be used to optimize performance by printing many messages before flushing or closing the file.
 
@@ -203,19 +194,8 @@ Log visibility
 
 Log visibility to a log handler can be configured for specific log levels of a logger.
 
-.. code-block:: vhdl
-
-    -- Disable all logging to the display.
-    hide_all(display_handler);
-
-    -- Show debug log level of system0 logger to the display
-    show(get_logger("system0"), display_handler, debug);
-
-    -- Show all logging from the uart module in system0 to the display
-    show_all(get_logger("system0:uart"), display_handler);
-
-    -- Hide all debug output to display handler
-    hide(display_handler, debug);
+ .. raw:: html
+    :file: log_visibility.html
 
 Mocking
 -------
@@ -225,14 +205,8 @@ VUnit logging system it is very easy to test that the expected
 failures are produced by mocking a logger object and checking the
 expected calls to it.
 
-.. code-block:: vhdl
-
-    logger := get_logger("my_library");
-    mock(logger, failure);
-    my_library.verify_something(args);
-    check_only_log(logger, "Failed to verify something", failure);
-    unmock(logger);
-
+ .. raw:: html
+    :file: mocking.html
 
 The ``check_only_log`` procedure checks that one and only one log
 message was produced.  There is also the ``check_log`` procedure which
@@ -254,15 +228,8 @@ The number of log messages in this queue is returned by the
 The mock queue length can be used in a test bench to wait for a log to
 occur before issuing the ``check_log`` procedure.
 
-
-.. code-block:: vhdl
-
-    mock(logger, failure);
-    trigger_error(clk);
-    wait until mock_queue_length > 0 and rising_edge(clk);
-    check_only_log(logger, "Error was triggered", failure);
-    unmock(logger);
-
+ .. raw:: html
+    :file: mock_queue_length.html
 
 Disabled logs
 -------------
@@ -272,12 +239,8 @@ irrelevant or unwanted log message. Disabling prevents simulation
 stop and all visibility to log handlers. A disabled log is still
 counted to get statistics on disabled log messages.
 
-
-.. code-block:: vhdl
-
-    -- Irrelevant warning
-    disable(get_logger("memory_ip:timing_check"), warning);
-
+ .. raw:: html
+    :file: disabled_log.html
 
 .. _logging_library:LogLocation:
 
@@ -290,71 +253,45 @@ only Riviera-PRO and Active-HDL supports VHDL-2019 and they restrict the feature
 to **debug compiled files**. You can compile all files or just the ones
 using logging. For example,
 
-.. code-block:: python
-
-    testbenches = lib.get_source_files("*tb*")
-    testbenches.set_compile_option("rivierapro.vcom_flags", ["-dbg"])
-
+ .. raw:: html
+    :file: set_debug_option.html
 
 For earlier VHDL standards there is an optional location preprocessor that can
 be used to serve the same purpose. The preprocessor is enabled from
 the ``run.py`` file like this:
 
-.. code-block:: python
-
-    ui = VUnit.from_argv()
-    ui.add_vhdl_builtins()
-    ui.enable_location_preprocessing()
+ .. raw:: html
+    :file: location_preprocessing.html
 
 Regardless of method the location information is appended to the end of the log entry:
 
-.. code-block:: console
+ .. raw:: html
+    :file: log_location_log.html
 
-    1000 ps - temperature_sensor -    INFO - Over-temperature (73 degrees C)! (logging_example.vhd:79)
-
-
-If you've placed your log call(s) in a convenience procedure you most
-likely want the location of the calls to that procedure to be in the
+If you've placed your log call(s) in a convenience procedure you may
+want the location of the calls to that procedure to be in the
 output and not the location of the log call in the definition of the
 convenience procedure. For VHDL-2019 you can use the ``path_offset``
 parameter to specify a number of steps earlier in the call stack. For
-example,
+example:
 
-.. code-block:: vhdl
-
-    procedure my_convenience_procedure(
-      <my parameters>) is
-    begin
-      <some code>
-      info("Some message", path_offset => 1);
-      <some code>
-    end procedure my_convenience_procedure;
+ .. raw:: html
+    :file: convenience_procedure.html
 
 When ``path_offset`` is set to 1 the location of the caller to
 ``my_convenience_procedure`` will be used in the log output.
 
-With earlier VHDL standard you can add the ``line_num`` and
+With earlier VHDL standards you can add the ``line_num`` and
 ``file_name`` parameters to the **end** of the parameter list for the
-convenience procedure
+convenience procedure:
 
-.. code-block:: vhdl
+ .. raw:: html
+    :file: another_convenience_procedure.html
 
-    procedure my_convenience_procedure(
-      <my parameters>
-      line_num : natural := 0;
-      file_name : string := "") is
-    begin
-      <some code>
-      info("Some message", line_num => line_num, file_name => file_name);
-      <some code>
-    end procedure my_convenience_procedure;
+Then let the location preprocessor know about the added procedure:
 
-and then let the location preprocessor know about the added procedure
-
-.. code-block:: python
-
-    ui = VUnit.from_argv()
-    ui.enable_location_preprocessing(additional_subprograms=['my_convenience_procedure'])
+ .. raw:: html
+    :file: additional_subprograms.html
 
 External Logging Framework Integration
 --------------------------------------
@@ -364,16 +301,15 @@ output the string produced by a log entry. The implementation of this procedure 
 messages to a third party logging framework, thereby aligning the logging styles in a testbench with code using several
 logging frameworks. The feature is enabled by passing a reference to the file implementing the package body:
 
-.. code-block:: python
-
-    ui.add_vhdl_builtins(use_external_log="path/to/other/common_log_pkg/body")
+ .. raw:: html
+    :file: use_external_log.html
 
 The procedure interface is designed to be generic and suitable for third party logging frameworks as well. If provided,
 third party log messages can also be redirected to VUnit logging:
 
 .. literalinclude:: ../../vunit/vhdl/logging/src/common_log_pkg.vhd
    :language: vhdl
-   :lines: 7-
+   :lines: 7-69
 
 
 Deprecated Interfaces
@@ -401,7 +337,7 @@ procedures.
 
 .. literalinclude:: ../../vunit/vhdl/logging/src/log_handler_pkg.vhd
    :language: vhdl
-   :lines: 7-
+   :lines: 7-89
 
 
 Example

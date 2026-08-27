@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 A simple file based database
@@ -124,6 +124,9 @@ class DataBase(object):
     def __contains__(self, key):
         return key in self._keys_to_nodes
 
+    def __iter__(self):
+        return iter(self._keys_to_nodes.keys())
+
 
 class PickledDataBase(object):
     """
@@ -142,3 +145,6 @@ class PickledDataBase(object):
 
     def __contains__(self, key):
         return key in self._database
+
+    def __iter__(self):
+        return iter(self._database)

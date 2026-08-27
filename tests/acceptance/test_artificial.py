@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Acceptance test of VUnit end to end functionality
@@ -52,7 +52,7 @@ class TestVunitArtificial(unittest.TestCase):
 
         elab_expected_report = []
         for status, name in EXPECTED_REPORT:
-            if name in ("lib.tb_elab_fail.all",):
+            if name in ("lib.tb_elab_fail.all", "lib.tb_test_prio_1.test_2", "lib.tb_test_prio_2.test_2"):
                 status = "failed"
             else:
                 status = "passed"
@@ -75,6 +75,54 @@ class TestVunitArtificial(unittest.TestCase):
             args=["--elaborate", "lib.tb_elab_fail.all"],
         )
         check_report(self.report_file, [("failed", "lib.tb_elab_fail.all")])
+
+    def test_artificial_changed(self):
+        self.check(self.artificial_run_vhdl, exit_code=1, args=["lib.tb_test_prio*", "--changed"])
+        check_report(
+            self.report_file,
+            [
+                ("failed", "lib.tb_test_prio_2.test_2"),
+                ("passed", "lib.tb_test_prio_1.test_4"),
+                ("passed", "lib.tb_test_prio_2.test_1"),
+            ],
+        )
+
+    def test_hardcoded_seed(self):
+        self.check(self.artificial_run_vhdl, args=["lib.tb_seed*", "--seed=0123456789AbCdEf"])
+        check_report(
+            self.report_file,
+            [
+                ("passed", "lib.tb_seed.test_1"),
+                ("passed", "lib.tb_seed.test_2"),
+            ],
+        )
+
+    def test_repeated_seed(self):
+        self.check(self.artificial_run_vhdl, args=["lib.tb_seed*", "--seed=repeat"])
+        check_report(
+            self.report_file,
+            [
+                ("passed", "lib.tb_seed.test_1"),
+                ("passed", "lib.tb_seed.test_2"),
+            ],
+        )
+
+    def test_generated_seed(self):
+        self.check(self.artificial_run_vhdl, args=["lib.tb_seed*"])
+        check_report(
+            self.report_file,
+            [
+                ("passed", "lib.tb_seed.test_1"),
+                ("passed", "lib.tb_seed.test_2"),
+            ],
+        )
+
+    def test_not_executing_package_init_on_package_addition(self):
+        self.check(self.artificial_run_vhdl, args=["lib.tb_vunit_pkg.all"])
+        check_report(
+            self.report_file,
+            [("passed", "lib.tb_vunit_pkg.all")],
+        )
 
     def _test_artificial(self, args=None):
         """
@@ -129,6 +177,7 @@ class TestVunitArtificial(unittest.TestCase):
                 ("passed", "lib.tb_magic_paths.Test magic paths are correct"),
                 ("passed", "lib.tb_with_define.test 1"),
                 ("failed", "lib.tb_fail_on_warning.fail"),
+                ("failed", "lib.tb_fail_on_warning_from_python.fail"),
                 ("failed", "lib.tb_fail_on_fatal_and_early_finish.fatal0"),
                 ("failed", "lib.tb_fail_on_fatal_and_early_finish.fatal1"),
                 ("failed", "lib.tb_fail_on_fatal_and_early_finish.finish0"),
@@ -144,6 +193,12 @@ class TestVunitArtificial(unittest.TestCase):
                 ("passed", "lib.tb_same_sim_some_fail.Test 1"),
                 ("failed", "lib.tb_same_sim_some_fail.Test 2"),
                 ("skipped", "lib.tb_same_sim_some_fail.Test 3"),
+                ("passed", "lib.tb_same_sim_from_python_all_pass.cfg.Test 1"),
+                ("passed", "lib.tb_same_sim_from_python_all_pass.cfg.Test 2"),
+                ("passed", "lib.tb_same_sim_from_python_all_pass.cfg.Test 3"),
+                ("passed", "lib.tb_same_sim_from_python_some_fail.Test 1"),
+                ("failed", "lib.tb_same_sim_from_python_some_fail.Test 2"),
+                ("skipped", "lib.tb_same_sim_from_python_some_fail.Test 3"),
                 ("passed", "lib.tb_with_runner.pass"),
                 ("failed", "lib.tb_with_runner.fail"),
             ],
@@ -183,7 +238,9 @@ EXPECTED_REPORT = (
     ("failed", "lib.tb_fail.all"),
     ("passed", "lib.tb_infinite_events.all"),
     ("failed", "lib.tb_fail_on_warning.all"),
-    ("passed", "lib.tb_no_fail_on_warning.all"),
+    ("failed", "lib.tb_fail_on_warning_from_python.all"),
+    ("passed", "lib.tb_no_fail_on_warning.cfg1"),
+    ("passed", "lib.tb_no_fail_on_warning.cfg2"),
     ("passed", "lib.tb_with_vhdl_runner.pass"),
     ("passed", "lib.tb_with_vhdl_runner.Test with spaces"),
     ("failed", "lib.tb_with_vhdl_runner.fail"),
@@ -197,6 +254,12 @@ EXPECTED_REPORT = (
     ("passed", "lib.tb_same_sim_some_fail.Test 1"),
     ("failed", "lib.tb_same_sim_some_fail.Test 2"),
     ("skipped", "lib.tb_same_sim_some_fail.Test 3"),
+    ("passed", "lib.tb_same_sim_from_python_all_pass.cfg.Test 1"),
+    ("passed", "lib.tb_same_sim_from_python_all_pass.cfg.Test 2"),
+    ("passed", "lib.tb_same_sim_from_python_all_pass.cfg.Test 3"),
+    ("passed", "lib.tb_same_sim_from_python_some_fail.Test 1"),
+    ("failed", "lib.tb_same_sim_from_python_some_fail.Test 2"),
+    ("skipped", "lib.tb_same_sim_from_python_some_fail.Test 3"),
     ("passed", "lib.tb_with_checks.Test passing check"),
     ("failed", "lib.tb_with_checks.Test failing check"),
     ("failed", "lib.tb_with_checks.Test non-stopping failing check"),
@@ -257,4 +320,13 @@ EXPECTED_REPORT = (
         "passed",
         "lib.tb_with_vhdl_configuration.cfg3.test 3",
     ),
+    ("passed", "lib.tb_test_prio_1.test_1"),
+    ("failed", "lib.tb_test_prio_1.test_2"),
+    ("passed", "lib.tb_test_prio_1.test_3"),
+    ("passed", "lib.tb_test_prio_1.test_4"),
+    ("passed", "lib.tb_test_prio_2.test_1"),
+    ("failed", "lib.tb_test_prio_2.test_2"),
+    ("passed", "lib.tb_seed.test_1"),
+    ("passed", "lib.tb_seed.test_2"),
+    ("passed", "lib.tb_vunit_pkg.all"),
 )

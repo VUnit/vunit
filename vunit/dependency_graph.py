@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Functionality to compute a dependency graph
@@ -94,10 +94,12 @@ class DependencyGraph(Generic[T]):
             callback(node)
 
         visited: Set[T] = set()
+        path: Set[T] = set()
+        path_ordered: List[T] = []
         for node in nodes:
             if node not in visited:
-                path: Set[T] = set()
-                path_ordered: List[T] = []
+                path = set()
+                path_ordered = []
                 visit(node)
 
     def get_dependent(self, nodes: Iterable[T]) -> Set[T]:

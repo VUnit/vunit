@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -10,9 +10,16 @@ use ieee.numeric_std_unsigned.all;
 
 use std.textio.all;
 
-context work.vunit_context;
-context work.com_context;
 use work.axi_stream_pkg.all;
+use work.axi_stream_private_pkg.all;
+use work.check_pkg.all;
+use work.checker_pkg.all;
+use work.event_common_pkg.is_active;
+use work.integer_array_pkg.all;
+use work.log_levels_pkg.all;
+use work.logger_pkg.all;
+use work.run_pkg.all;
+use work.run_types_pkg.all;
 
 entity axi_stream_protocol_checker is
   generic (
@@ -24,12 +31,12 @@ entity axi_stream_protocol_checker is
     tready   : in std_logic := '1';
     tdata    : in std_logic_vector(data_length(protocol_checker) - 1 downto 0);
     tlast    : in std_logic                                                    := '1';
-    tkeep    : in std_logic_vector(data_length(protocol_checker)/8-1 downto 0) := (others => '0');
-    tstrb    : in std_logic_vector(data_length(protocol_checker)/8-1 downto 0) := (others => '0');
+    tkeep    : in std_logic_vector(data_length(protocol_checker)/8-1 downto 0) := (others => '1');
+    tstrb    : in std_logic_vector(data_length(protocol_checker)/8-1 downto 0) := (others => 'U');
     tid      : in std_logic_vector(id_length(protocol_checker)-1 downto 0)     := (others => '0');
     tdest    : in std_logic_vector(dest_length(protocol_checker)-1 downto 0)   := (others => '0');
     tuser    : in std_logic_vector(user_length(protocol_checker)-1 downto 0)   := (others => '0')
-    );
+  );
 end entity;
 
 architecture a of axi_stream_protocol_checker is
@@ -71,6 +78,7 @@ architecture a of axi_stream_protocol_checker is
   signal not_tvalid  : std_logic;
 
   signal tdata_normalized : std_logic_vector(tdata'range);
+  signal tstrb_resolved : std_logic_vector(tstrb'range);
 
   function normalize_tdata(data, strb, keep : std_logic_vector) return std_logic_vector is
     variable ret : std_logic_vector(data'range);
@@ -84,6 +92,7 @@ architecture a of axi_stream_protocol_checker is
     return ret;
   end function;
 begin
+  tstrb_resolved <= resolve_tstrb(tkeep, tstrb);
   handshake_is_not_x <= '1' when not is_x(tvalid) and not is_x(tready) else '0';
 
   -- AXI4STREAM_ERRM_TDATA_STABLE TDATA remains stable when TVALID is asserted,
@@ -126,7 +135,8 @@ begin
 
   -- AXI4STREAM_ERRM_TDATA_X A value of X on TDATA is not permitted when TVALID
   -- is HIGH
-  tdata_normalized <= normalize_tdata(tdata, tstrb, tkeep) when protocol_checker.p_allow_x_in_non_data_bytes else tdata;
+  tdata_normalized <= normalize_tdata(tdata, tstrb_resolved, tkeep) when protocol_checker.p_allow_x_in_non_data_bytes
+    else tdata;
   check_not_unknown(rule5_checker, aclk, tvalid, tdata_normalized, result("for tdata when tvalid is high"));
 
   -- AXI4STREAM_ERRM_TLAST_X A value of X on TLAST is not permitted when TVALID
@@ -218,9 +228,9 @@ begin
 
   -- AXI4STREAM_ERRM_TSTRB_STABLE TSTRB remains stable when TVALID is asserted,
   -- and TREADY is LOW
-  enable_rule14_check <= '1' when (handshake_is_not_x = '1') and not is_x(tstrb) else '0';
+  enable_rule14_check <= '1' when (handshake_is_not_x = '1') and not is_x(tstrb_resolved) else '0';
   check_stable(
-    rule14_checker, aclk, enable_rule14_check, tvalid, tready, tstrb,
+    rule14_checker, aclk, enable_rule14_check, tvalid, tready, tstrb_resolved,
     result("for tstrb while waiting for tready"));
 
   -- AXI4STREAM_ERRM_TKEEP_STABLE TKEEP remains stable when TVALID is asserted,
@@ -240,23 +250,26 @@ begin
 
   -- AXI4STREAM_ERRM_TSTRB_X A value of X on TSTRB is not permitted when TVALID
   -- is HIGH
-  check_not_unknown(rule18_checker, aclk, tvalid, tstrb, result("for tstrb when tvalid is high"));
+  check_not_unknown(rule18_checker, aclk, tvalid, tstrb_resolved, result("for tstrb when tvalid is high"));
 
   -- AXI4STREAM_ERRM_TKEEP_X A value of X on TKEEP is not permitted when TVALID
   -- is HIGH
   check_not_unknown(rule19_checker, aclk, tvalid, tkeep, result("for tkeep when tvalid is high"));
 
   -- AXI4STREAM_ERRM_TKEEP_TSTRB If TKEEP is de-asserted, then TSTRB must also be de-asserted
-  -- eschmidscs: Binding this to tvalid. ARM does not include that, but makes more sense this way?
-  rule20_check_value <= not(or(((not tkeep) and tstrb)));
+  -- Binding this to tvalid. ARM does not include that, but makes more sense this way?
+  rule20_check_value <= not(or(((not tkeep) and tstrb_resolved)));
   check_true(rule20_checker, aclk, tvalid, rule20_check_value, result("for tstrb de-asserted when tkeep de-asserted"));
 
   -- AXI4STREAM_AUXM_TID_TDTEST_WIDTH  The value of ID_WIDTH + DEST_WIDTH must not exceed 24
-  -- eschmidscs: Must wait a short while to allow testing of the rule.
+  -- Must wait a short while to allow testing of the rule.
   process
   begin
     wait for 1 ps;
-    check_true(rule21_checker, tid'length + tdest'length <= 24, result("for tid width and tdest width together must be less than 25"));
+    check_true(
+      rule21_checker, tid'length + tdest'length <= 24,
+      result("for tid width and tdest width together must be less than 25")
+    );
     wait;
   end process;
 
@@ -269,7 +282,9 @@ begin
   end process;
   areset_rose <= areset_n and not areset_n_d;
   not_tvalid   <= not tvalid;
-  check_implication(rule22_checker, aclk, areset_n, areset_rose, not_tvalid, result("for tvalid de-asserted after reset release"));
+  check_implication(
+    rule22_checker, aclk, areset_n, areset_rose, not_tvalid, result("for tvalid de-asserted after reset release")
+  );
 
   -- for * being DATA, KEEP, STRB, ID, DEST or USER
   -- AXI4STREAM_ERRM_T*_TIEOFF T* must be stable while *_WIDTH has been set to zero

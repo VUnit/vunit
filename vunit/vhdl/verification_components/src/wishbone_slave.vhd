@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 -- Author Slawomir Siluk slaweksiluk@gazeta.pl
 -- Wishbone slave wrapper for Vunit memory VC
 -- TODO:
@@ -13,13 +13,16 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-context work.vunit_context;
-context work.com_context;
-use work.memory_pkg.all;
-use work.wishbone_pkg.all;
-
 library osvvm;
-use osvvm.RandomPkg.all;
+use osvvm.RandomPkg.RandomPType;
+
+use work.com_pkg.net;
+use work.com_pkg.receive;
+use work.com_pkg.send;
+use work.com_types_pkg.all;
+use work.memory_pkg.read_word;
+use work.memory_pkg.write_word;
+use work.wishbone_pkg.all;
 
 entity wishbone_slave is
   generic (

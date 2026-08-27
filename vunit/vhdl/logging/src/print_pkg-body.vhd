@@ -2,9 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
-
-use work.log_handler_pkg.stdout_file_name;
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 package body print_pkg is
 

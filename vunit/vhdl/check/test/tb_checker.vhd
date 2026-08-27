@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 library vunit_lib;
 use vunit_lib.string_ops.all;
@@ -94,6 +94,11 @@ begin
         assert_true(stat1 + stat2 = (31, 16, 15), "Expected sum = (31, 16, 15)");
         passed := to_string(stat1) = "checker_stat'(n_checks => 20, n_failed => 13, n_passed => 7)";
         assert_true(passed, "Format error of checker_stat_t. Got:" & to_string(stat1));
+
+      elsif run("Test checker to/from integer conversion") then
+        assert_true(to_checker(to_integer(my_checker)) = my_checker);
+        assert_true(to_checker(to_integer(null_checker)) = null_checker);
+
       end if;
     end loop;
 

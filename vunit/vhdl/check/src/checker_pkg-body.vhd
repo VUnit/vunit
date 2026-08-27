@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 
 package body checker_pkg is
@@ -311,5 +311,15 @@ package body checker_pkg is
             "n_passed => " & integer'image(stat.n_passed) &
             ")");
   end function;
+
+  impure function to_integer(checker : checker_t) return integer is
+  begin
+    return to_integer(checker.p_data);
+  end;
+
+  impure function to_checker(value : integer) return checker_t is
+  begin
+    return (p_data => to_integer_vector_ptr(value));
+  end;
 
 end package body;

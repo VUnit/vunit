@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2023, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -22,4 +22,14 @@ package axi_pkg is
   subtype axi4_len_t is std_logic_vector(7 downto 0);
   constant max_axi4_burst_length : natural := 2**axi4_len_t'length;
   subtype axi4_size_t is std_logic_vector(2 downto 0);
+
+  -- This policy controls what value the bus signals are assigned when not driving valid
+  -- data. All zeros, all ones, all unknown values, holding last valid value, or
+  -- random zeros and ones.
+
+  -- 'X' violates the all lower case naming rule but is kept to match the corresponding
+  -- std_logic value it represents.
+  -- vsg_off type_500
+  type inactive_bus_policy_t is ('0', '1', 'X', hold, rand01);
+  -- vsg_on
 end package;
