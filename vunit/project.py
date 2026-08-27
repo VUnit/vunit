@@ -360,7 +360,7 @@ See https://github.com/VUnit/vunit/issues/777 and http://vunit.github.io/hdl_lib
 
     def _find_verilog_module_dependencies(self, source_file):
         """
-        Find dependencies from instantiation of verilog modules
+        Find dependencies from instantiation of verilog modules or vhdl entities
         """
         for module_name in source_file.module_dependencies:
             if module_name in source_file.library.modules:
@@ -372,7 +372,12 @@ See https://github.com/VUnit/vunit/issues/777 and http://vunit.github.io/hdl_lib
                         design_unit = library.modules[module_name]
                         yield design_unit.source_file
                     except KeyError:
-                        pass
+                        try:
+                            # VHDL?
+                            design_unit = library.primary_design_units[module_name]
+                            yield design_unit.source_file
+                        except KeyError:
+                            pass
 
     @staticmethod
     def _find_component_design_unit_dependencies(source_file):
