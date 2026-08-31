@@ -1059,16 +1059,34 @@ class VHDLReference(object):
         return references
 
     @classmethod
+    def _find_local_package_names(cls, code):
+        """
+        Names introduced by local or generic package instantiations, e.g.
+
+            package th_pkg is new work.overlay_th_pkg generic map (<>)
+
+        Such a name is visible by its simple name and must not be mistaken
+        for a library name in a later 'use th_pkg.all;' clause.
+        """
+        return {match.group("new_name").lower() for match in cls._package_instance_re.finditer(code)}
+
+    @classmethod
     def find(cls, code):
         """
         Find entity, use, context and configuration references within the code
         """
-        return (
+        local_package_names = cls._find_local_package_names(code)
+        references = (
             cls._find_uses(code)
             + cls._find_entity_references(code)
             + cls._find_configuration_references(code)
             + cls._find_package_instance_references(code)
         )
+        return [
+            ref
+            for ref in references
+            if not (ref.is_package_reference() and ref.library.lower() in local_package_names)
+        ]
 
     def __init__(self, reference_type, library, design_unit, name_within=None):
         assert reference_type in self._reference_types
