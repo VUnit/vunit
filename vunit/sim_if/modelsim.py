@@ -881,6 +881,11 @@ proc _vunit_sim_restart {} {
         if args is None:
             args = []
 
+        # Check if at least one valid coverage file exists.
+        if not any(file_exists(f) for f in self._coverage_files):
+            LOGGER.warning("No existing coverage files found. Skipping coverage database creation.")
+            return
+
         coverage_files = str(Path(self._output_path) / "coverage_files.txt")
         vcover_cmd = [str(Path(self._prefix) / "vcover"), "merge", "-inputs"] + [coverage_files] + args + [file_name]
         with Path(coverage_files).open("w", encoding="utf-8") as fptr:
