@@ -1261,6 +1261,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         runner = TestRunner(
             report,
             str(Path(self._output_path) / TEST_OUTPUT_PATH),
+            self._run_script_path,
             verbosity=verbosity,
             num_threads=self._args.num_threads,
             fail_fast=self._args.fail_fast,
