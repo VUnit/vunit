@@ -1,0 +1,218 @@
+name: 'python bridge'
+
+# Tests of the VHDL Python integration, add_python(), in the environments
+# push.yml does not provide: CPython from python.org, on Linux
+# (bridge compiled on first use) and Windows (prebuilt MSVC DLLs), and the
+# content of the package.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+
+#
+# Linux and macOS, bridge compiled on first use
+#
+
+  posix:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # The oldest and newest supported CPython; every GHDL backend, since
+        # the bridge library is loaded differently by the ones that link ahead
+        # of time (llvm, gcc), on the latest release; the NVC release VUnit is
+        # developed against.
+        #
+        # Canaries (allowed to fail): the GHDL nightly builds and NVC built
+        # from its master branch, with Python 3.14, where simulator changes
+        # show up first.
+        include:
+          - { os: ubuntu-24.04, py: '3.10', sim: nvc, nvc: '1.22.1' }
+          - { os: ubuntu-24.04, py: '3.14', sim: nvc, nvc: '1.22.1' }
+          - { os: ubuntu-24.04, py: '3.14', sim: nvc, nvc: master, canary: true }
+          - { os: ubuntu-24.04, py: '3.10', sim: ghdl, backend: mcode, ghdl: latest }
+          - { os: ubuntu-24.04, py: '3.14', sim: ghdl, backend: mcode, ghdl: nightly, canary: true }
+          - { os: ubuntu-24.04, py: '3.14', sim: ghdl, backend: llvm-jit, ghdl: latest }
+          - { os: ubuntu-24.04, py: '3.14', sim: ghdl, backend: llvm-jit, ghdl: nightly, canary: true }
+          - { os: ubuntu-24.04, py: '3.14', sim: ghdl, backend: llvm, ghdl: latest }
+          - { os: ubuntu-24.04, py: '3.14', sim: ghdl, backend: llvm, ghdl: nightly, canary: true }
+          - { os: ubuntu-24.04, py: '3.14', sim: ghdl, backend: gcc, ghdl: latest }
+          - { os: ubuntu-24.04, py: '3.14', sim: ghdl, backend: gcc, ghdl: nightly, canary: true }
+          - { os: macos-15, py: '3.14', sim: nvc, nvc: brew }
+          # macos-15: setup-ghdl has no build for newer macOS versions yet, and only the llvm backend
+          - { os: macos-15, py: '3.14', sim: ghdl, backend: llvm, ghdl: latest }
+    name: '${{ matrix.os }} · Python ${{ matrix.py }} · ${{ matrix.sim }} ${{ matrix.backend }}${{ matrix.ghdl }}${{ matrix.nvc }}'
+    continue-on-error: ${{ matrix.canary || false }}
+    env:
+      VUNIT_SIMULATOR: ${{ matrix.sim }}
+    steps:
+
+    - name: '🧰 Checkout'
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: '🐍 Setup Python'
+      uses: actions/setup-python@v6
+      with:
+        python-version: ${{ matrix.py }}
+
+    - name: '⚙️ Setup NVC'
+      if: matrix.sim == 'nvc' && matrix.nvc != 'brew' && matrix.nvc != 'master'
+      run: |
+        curl -fsSL -o nvc.deb "https://github.com/nickg/nvc/releases/download/r${{ matrix.nvc }}/nvc_${{ matrix.nvc }}-1_amd64_ubuntu-24.04.deb"
+        sudo apt-get install -y ./nvc.deb
+
+    # As in NVC's README
+    - name: '⚙️ Build NVC from its master branch'
+      if: matrix.nvc == 'master'
+      run: |
+        sudo apt-get install -y -qq build-essential automake autoconf flex check llvm-dev pkg-config zlib1g-dev libdw-dev libffi-dev libzstd-dev
+        git clone --depth 1 https://github.com/nickg/nvc.git "$RUNNER_TEMP/nvc"
+        cd "$RUNNER_TEMP/nvc" && ./autogen.sh && mkdir build && cd build && ../configure && make -j"$(nproc)" && sudo make install
+        nvc --version
+
+    - name: '⚙️ Setup NVC with Homebrew'
+      if: matrix.nvc == 'brew'
+      run: brew install nvc
+
+    - name: '⚙️ Setup GHDL'
+      if: matrix.sim == 'ghdl'
+      uses: ghdl/setup-ghdl@main
+      with:
+        version: ${{ matrix.ghdl }}
+        backend: ${{ matrix.backend }}
+
+    # The environment and the output go to the runner's temporary directory,
+    # outside the checkout, so nothing built can end up in the tree. The space
+    # in the path is deliberate: the bridge builds command lines and simulator
+    # options from these paths.
+    - name: '🐍 Install VUnit in a virtual environment'
+      run: |
+        python -m venv "$RUNNER_TEMP/venv with space"
+        echo "$RUNNER_TEMP/venv with space/bin" >> "$GITHUB_PATH"
+        "$RUNNER_TEMP/venv with space/bin/pip" install -e . --progress-bar off
+
+    - name: '🚧 Feature tests'
+      run: python vunit/vhdl/python/run.py -p 4 -o "$RUNNER_TEMP/out dir"
+
+    - name: '🚧 Example'
+      run: python examples/vhdl/embedded_python/run.py -p 4 --without-attributes .optional_deps --without-attributes .expected_failure
+
+#
+# Windows, prebuilt MSVC DLLs
+#
+
+  dlls:
+    uses: ./.github/workflows/python_bridge_dlls.yml
+
+  windows:
+    needs: dlls
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        py: ['3.10', '3.12', '3.14']
+        sim: [nvc, ghdl]
+    name: '🟦 Windows · Python ${{ matrix.py }} · ${{ matrix.sim }}'
+    env:
+      VUNIT_SIMULATOR: ${{ matrix.sim }}
+    steps:
+
+    - name: '🧰 Checkout'
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: '📥 Download bridge DLLs'
+      uses: actions/download-artifact@v4
+      with:
+        name: python-bridge-dlls
+        path: vunit/python_bridge/bin
+
+    - name: '🐍 Setup Python'
+      uses: actions/setup-python@v6
+      with:
+        python-version: ${{ matrix.py }}
+        architecture: x64
+
+    - name: '⚙️ Setup NVC'
+      if: matrix.sim == 'nvc'
+      shell: pwsh
+      run: |
+        Invoke-WebRequest -Uri https://github.com/nickg/nvc/releases/download/r1.22.1/nvc-1.22.1.msi -OutFile nvc.msi
+        Start-Process msiexec.exe -Wait -ArgumentList '/i', 'nvc.msi', '/qn', '/norestart'
+        $bin = Get-ChildItem -Path 'C:\Program Files*' -Recurse -Filter nvc.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+        $bin.DirectoryName | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+    - name: '⚙️ Setup GHDL'
+      if: matrix.sim == 'ghdl'
+      uses: ghdl/setup-ghdl@main
+      with:
+        backend: mcode
+
+    # Same as on Linux: outside the checkout, with a space in the path
+    - name: '🐍 Install VUnit in a virtual environment'
+      run: |
+        python -m venv "$RUNNER_TEMP/venv with space"
+        echo "$RUNNER_TEMP/venv with space/Scripts" >> "$GITHUB_PATH"
+        "$RUNNER_TEMP/venv with space/Scripts/pip" install -e . --progress-bar off
+
+    # No compiler on PATH: the prebuilt DLLs must be used
+    - name: '🚧 Feature tests'
+      run: |
+        ! command -v cl
+        python vunit/vhdl/python/run.py -p 4 -o "$RUNNER_TEMP/out dir"
+
+    - name: '🚧 Example'
+      run: python examples/vhdl/embedded_python/run.py -p 4 --without-attributes .optional_deps --without-attributes .expected_failure
+
+#
+# Packaging, sources and DLLs included, no Linux binaries
+#
+
+  packaging:
+    needs: dlls
+    runs-on: ubuntu-latest
+    name: '📦 Packaging'
+    steps:
+
+    - name: '🧰 Checkout'
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: '📥 Download bridge DLLs'
+      uses: actions/download-artifact@v4
+      with:
+        name: python-bridge-dlls
+        path: vunit/python_bridge/bin
+
+    - name: '🐍 Setup Python'
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.13'
+
+    - name: '📦 Build sdist'
+      run: |
+        pip install -U setuptools wheel --progress-bar off
+        python setup.py sdist
+
+    # Sources of every kind, the five DLLs, no Linux binary
+    - name: '🔍 Check sdist content'
+      run: |
+        tar tzf dist/*.tar.gz > content.txt
+        for file in python_bridge/runtime.py python_bridge/native/bridge.h vhdl/python/src/python_bridge_pkg.vhd.in \
+                    vhdl/python/src/python_pkg.vhd vhdl/python/src/python_pkg_vhpi.c \
+                    python_bridge/foreign_application.py; do
+          grep -q "vunit/$file\$" content.txt || { echo "missing $file"; exit 1; }
+        done
+        test "$(grep -c 'vunit/python_bridge/bin/vunit_python_bridge-cp3[0-9]*-win_amd64.dll$' content.txt)" = 5
+        ! grep -q '\.so$' content.txt
