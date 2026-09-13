@@ -40,6 +40,7 @@ often"* approach through automation. :ref:`Read more <about>`
    com/user_guide
    verification_components/user_guide
    data_types/user_guide
+   python_bridge/user_guide
 
 .. toctree::
    :caption: Reference
