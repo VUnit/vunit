@@ -201,7 +201,7 @@ class TestRun(object):
     def set_test_cases(self, test_cases):
         self._test_cases = test_cases
 
-    def run(self, output_path, read_output):
+    def run(self, output_path, read_output, run_script_path):
         """
         Run selected test cases within the test suite
 
@@ -218,7 +218,7 @@ class TestRun(object):
         # Ensure result file exists
         ostools.write_file(get_result_file_name(output_path), "")
 
-        sim_ok = self._simulate(output_path)
+        sim_ok = self._simulate(output_path, run_script_path)
 
         if self._elaborate_only:
             status = PASSED if sim_ok else FAILED
@@ -254,7 +254,7 @@ class TestRun(object):
 
         return False, results
 
-    def _simulate(self, output_path):
+    def _simulate(self, output_path, run_script_path):
         """
         Add runner_cfg generic values and run simulation
         """
@@ -275,6 +275,7 @@ class TestRun(object):
             "output path": output_path.replace("\\", "/") + "/",
             "active python runner": True,
             "tb path": config.tb_path.replace("\\", "/") + "/",
+            "run script path": str(run_script_path).replace("\\", "/"),
             "seed": seed,
         }
 
