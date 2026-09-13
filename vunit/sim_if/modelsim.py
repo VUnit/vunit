@@ -19,6 +19,7 @@ from ..ostools import write_file, Process, file_exists
 from ..vhdl_standard import VHDL
 from . import SimulatorInterface, ListOfStringOption, StringOption, BooleanOption, check_output
 from .vsim_simulator_mixin import VsimSimulatorMixin, fix_path
+from ..python_bridge import simulator_hooks
 
 LOGGER = logging.getLogger(__name__)
 
@@ -160,6 +161,13 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         return True
 
     @classmethod
+    def supported_foreign_language_interfaces(cls):
+        """
+        Returns set of supported foreign interfaces
+        """
+        return set(["FLI"])
+
+    @classmethod
     def supports_vhdl_package_generics(cls):
         """
         Returns True when this simulator supports VHDL package generics
@@ -228,6 +236,11 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         """
         Add libraries from INI file and add coverage flags
         """
+        self._vsim_process_flags[:] = [
+            flag
+            for flag in simulator_hooks.modelsim_vsim_flags(project)
+            if self._find_in_help(self._prefix, "vsim", flag)
+        ]
         mapped_libraries = self._get_mapped_libraries()
         for library_name in mapped_libraries:
             if not project.has_library(library_name):

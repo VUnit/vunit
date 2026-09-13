@@ -22,6 +22,7 @@ from . import SimulatorInterface, ListOfStringOption, StringOption
 from . import run_command, check_executable
 from ._viewermixin import ViewerMixin
 from ..vhdl_standard import VHDL
+from ..python_bridge import simulator_hooks
 
 LOGGER = logging.getLogger(__name__)
 
@@ -153,6 +154,13 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
         Returns True when this simulator supports VHDL package generics
         """
         return True
+
+    @classmethod
+    def supported_foreign_language_interfaces(cls):
+        """
+        Returns set of supported foreign interfaces
+        """
+        return set(["VHPIDIRECT_NVC"])
 
     def setup_library_mapping(self, project):
         """
@@ -306,6 +314,7 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
                     config.vhdl_assert_stop_level
                 )
             cmd += config_sim_options
+            cmd += simulator_hooks.nvc_run_flags(self._project)
             cmd += [f"--exit-severity={config.vhdl_assert_stop_level}"]
 
             if not self._ieee_warnings_global and config.sim_options.get("disable_ieee_warnings", False):

@@ -16,6 +16,7 @@ import importlib.resources
 import importlib.util
 import re
 import operator
+import sys
 from dataclasses import dataclass
 from typing import TypeVar, Any, Tuple
 
@@ -28,6 +29,7 @@ except ModuleNotFoundError:
 from vunit.vhdl_standard import VHDL, VHDLStandard
 from vunit.ui.common import get_checked_file_names_from_globs
 from vunit.about import version, VUnitVersion
+from vunit.python_bridge.foreign_application import setup_vhpi_application
 
 
 LOGGER = logging.getLogger(__name__)
@@ -56,6 +58,7 @@ class Builtins(object):
         self._vhdl_standard = vhdl_standard
         self._simulator_class = simulator_class
         self._builtins_adder = BuiltinsAdder()
+        self._vhdl_builtins_added = False
 
         def add(name, deps=tuple()):
             self._builtins_adder.add_type(name, getattr(self, f"_add_{name!s}"), deps)
@@ -65,6 +68,7 @@ class Builtins(object):
         add("verification_components", ["com", "osvvm"])
         add("osvvm")
         add("random", ["osvvm"])
+        add("python")
 
     def add(self, name, args=None):
         self._builtins_adder.add(name, args)
@@ -485,6 +489,75 @@ in your VUnit Git repository? You have to do this first if installing using setu
 
             self._vunit_lib.add_source_file(file_name)
 
+    def _add_python(self):
+        """
+        Add the Python package (python_pkg and python_context) and the foreign language interface
+        implementing it for the selected simulator.
+        """
+        if not self._vhdl_builtins_added:
+            raise RuntimeError("add_python() requires add_vhdl_builtins() to be called first")
+
+        if not self._vhdl_standard >= VHDL.STD_2008:
+            raise RuntimeError("Python package only supports vhdl 2008 and later")
+
+        python_package_supported_flis = {"VHPI", "FLI", "VHPIDIRECT_NVC", "VHPIDIRECT_GHDL"}
+        if self._simulator_class is None:
+            raise RuntimeError(
+                "Python package requires a simulator supporting one of "
+                f"{', '.join(sorted(python_package_supported_flis))} but no simulator was found"
+            )
+        simulator_supported_flis = self._simulator_class.supported_foreign_language_interfaces()
+        if not python_package_supported_flis & simulator_supported_flis:
+            raise RuntimeError(
+                f"Python package requires support for one of {', '.join(sorted(python_package_supported_flis))} "
+                f"but {self._simulator_class.name} supports none of them"
+            )
+
+        src_path = VHDL_PATH / "python" / "src"
+        self._vunit_lib.add_source_file(src_path / "python_context.vhd")
+        self._vunit_lib.add_source_file(src_path / "python_pkg.vhd")
+        if "VHPI" in simulator_supported_flis:
+            # Riviera-PRO/Active-HDL, the simulators served by the VHPI application
+            self._vunit_lib.add_source_file(src_path / "python_pkg_vhpi.vhd")
+            self._setup_python_application(setup_vhpi_application)
+        else:
+            self._add_python_bridge()
+
+    def _setup_python_application(self, setup):
+        """
+        Build the VHPI application of the Python package under the output path when needed.
+        """
+        try:
+            setup(
+                self._vunit_obj._output_path,  # pylint: disable=protected-access
+                self._simulator_class,
+            )
+        except RuntimeError as exc:
+            LOGGER.error("%s", exc)
+            sys.exit(1)
+
+    def _add_python_bridge(self):
+        """
+        Add the VUnit Python bridge, the implementation of the Python package for NVC and GHDL
+        (VHPIDIRECT) and Questa/ModelSim (FLI), building its native library when needed.
+        """
+        # pylint: disable=import-outside-toplevel
+        from vunit.python_bridge.bridge import setup
+        from vunit.python_bridge.native_library import PythonBridgeError
+
+        try:
+            bridge = setup(
+                self._vunit_obj._project,  # pylint: disable=protected-access
+                self._vunit_obj._output_path,  # pylint: disable=protected-access
+                self._simulator_class,
+                self._vunit_obj._run_script_path,  # pylint: disable=protected-access
+            )
+        except PythonBridgeError as exc:
+            LOGGER.error("%s", exc)
+            sys.exit(1)
+        for file_name in bridge.vhdl_files:
+            self._vunit_lib.add_source_file(file_name)
+
     def add_verilog_builtins(self):
         """
         Add Verilog builtins
@@ -518,6 +591,7 @@ in your VUnit Git repository? You have to do this first if installing using setu
             "path",
         ):
             self._add_files(VHDL_PATH / path / "src" / "*.vhd")
+        self._vhdl_builtins_added = True
 
 
 def osvvm_is_installed():

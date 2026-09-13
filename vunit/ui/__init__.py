@@ -1319,6 +1319,25 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         """
         self._builtins.add("array_util")
 
+    def add_python(self):
+        """
+        Add the Python package, see :ref:`python_bridge`.
+
+        Lets VHDL testbenches execute Python code and call Python functions through
+        ``context vunit_lib.python_context``. Requires :meth:`add_vhdl_builtins` to have been
+        called, VHDL-2008 or later, and a simulator with a supported foreign language
+        interface (NVC, GHDL and Questa/ModelSim use the VUnit Python bridge;
+        Riviera-PRO/Active-HDL use a VHPI application).
+
+        :example:
+
+        .. code-block:: python
+
+           prj.add_vhdl_builtins()
+           prj.add_python()
+        """
+        self._builtins.add("python")
+
     def add_random(self):
         """
         Add random
