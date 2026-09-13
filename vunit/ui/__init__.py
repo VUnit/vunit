@@ -12,6 +12,7 @@ Public VUnit User Interface (UI)
 
 import csv
 import sys
+import inspect
 import traceback
 import logging
 import json
@@ -47,6 +48,28 @@ from .common import LOGGER, TEST_OUTPUT_PATH, select_vhdl_standard, check_not_em
 from .source import SourceFile, SourceFileList
 from .library import Library, LibraryList
 from .results import Results
+
+
+def _find_run_script_path() -> Path:
+    """
+    Return the path of the run script: the file of the first call-stack frame
+    whose file is not inside the vunit package directory.
+    """
+    vunit_package_dir = Path(__file__).resolve().parent.parent
+    for frame_info in inspect.stack(0):
+        candidate = Path(frame_info.filename)
+        if not candidate.is_file():
+            continue
+        candidate = candidate.resolve()
+        try:
+            candidate.relative_to(vunit_package_dir)
+        except ValueError:
+            return candidate
+
+    if Path(sys.argv[0]).is_file():
+        return Path(sys.argv[0]).resolve()
+
+    return Path.cwd()
 
 
 class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-public-methods
@@ -140,6 +163,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self._args = args
         self._configure_logging(args.log_level)
         self._output_path = str(Path(args.output_path).resolve())
+        self._run_script_path = _find_run_script_path()
 
         if args.no_color:
             self._printer = NO_COLOR_PRINTER
@@ -1232,6 +1256,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         runner = TestRunner(
             report,
             str(Path(self._output_path) / TEST_OUTPUT_PATH),
+            self._run_script_path,
             verbosity=verbosity,
             num_threads=self._args.num_threads,
             fail_fast=self._args.fail_fast,

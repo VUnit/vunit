@@ -216,6 +216,10 @@ begin
         check_result := internal_check(true);
         assert_true(check_result.p_is_pass, "Should return check_result.is_pass = true on passing check");
         assert_true(check_result.p_checker = default_checker);
+        assert_true(is_pass(check_result), "Should return is_pass = true on passing check");
+        assert_true(get_checker(check_result) = default_checker);
+        assert_true(get_line_num(check_result) = check_result.p_line_num);
+        assert_true(get_file_name(check_result) = to_string(check_result.p_file_name));
         verify_passed_checks(stat, 4);
 
         get_checker_stat(check_checker, stat);
@@ -236,6 +240,8 @@ begin
         check_result := internal_check(true);
         assert_true(to_string(check_result.p_msg) = prefix & "passed.", "Got : " & to_string(check_result.p_msg));
         assert_true(check_result.p_level = pass);
+        assert_true(get_msg(check_result) = to_string(check_result.p_msg));
+        assert_true(get_log_level(check_result) = pass);
 
         internal_check(true, "");
         check_only_log(check_logger, "", pass);
