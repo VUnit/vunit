@@ -129,6 +129,15 @@ The context provides the package root, the library created for the package, the 
 its sources, the VUnit output path, the path of the run script and the selected simulator.
 Errors raised by the setup function are reported as an error for the package.
 
+A package building something against the simulator installation itself has to know which one at setup
+time, before any simulator interface exists to ask.
+``context.simulator_class`` is the class of the selected simulator interface and
+``context.simulator_name`` its name, both ``None`` when no simulator was found.
+``context.simulator_prefix`` is the path the executables of that simulator were found in and
+``context.simulator_backend`` says how the installation found there was built, which is simulator
+specific: for GHDL it is its code generator, ``"mcode"``, ``"llvm"``, ``"llvm-jit"`` or ``"gcc"``,
+and for a simulator with no such notion it is ``None``.
+
 Simulator Hooks
 ---------------
 
@@ -195,6 +204,8 @@ the setup function runs when :meth:`add_package() <vunit.ui.VUnit.add_package>` 
 object, which is before :meth:`main() <vunit.ui.VUnit.main>` creates the interface.
 
 The simulator interface a hook is called with also tells how the simulator was found.
+``simulator_interface.prefix`` is the path its executables were found in, the same the setup function
+saw as ``context.simulator_prefix``.
 ``GHDLInterface.backend`` is the code generator of the GHDL used, ``"mcode"``, ``"llvm"``,
 ``"llvm-jit"`` or ``"gcc"``, which decides how a native library is bound to the design:
 ``"llvm"`` and ``"gcc"`` link it at elaboration while the others load it at run time.
