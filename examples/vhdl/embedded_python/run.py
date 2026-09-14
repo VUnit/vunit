@@ -12,7 +12,7 @@ Demonstrates calling Python from VHDL with ``add_python()``: executing Python
 code and calling Python functions, for example NumPy/Matplotlib reference
 models, from a testbench. The test cases cover ``exec`` and ``eval`` with the
 types they convert, calls with positional, keyword and keyword group
-arguments, wide ``unsigned``/``signed`` and ``std_logic`` argument values, an
+arguments, wide ``unsigned``/``signed`` and ``std_ulogic`` argument values, an
 ``integer_array_t`` image shared with NumPy, Python files executed with
 ``exec_file`` or imported with ``import_module_from_file``, two models loaded
 into a session each, error reporting, and ``python_model``, a verification

@@ -47,7 +47,7 @@ package python_bridge_pkg is
   attribute foreign of vpy_execute : function is "{foreign:vpy_execute}";
 
   -- Evaluate the buffer as a Python expression and convert the value to the
-  -- VHDL type given by kind. width is the length of a std_logic_vector,
+  -- VHDL type given by kind. width is the length of a std_ulogic_vector,
   -- signed or unsigned result, -1 when it is not known.
   impure function vpy_eval(kind, width : integer) return integer;
   attribute foreign of vpy_eval : function is "{foreign:vpy_eval}";

@@ -258,9 +258,9 @@ begin
         end if;
         check_true(call_boolean("device_model.is_busy"));
 
-        -- A single bit and a vector of bits, std_logic characters on the Python side
-        check_equal(call_std_logic("device_model.parity"), '1', result("for the parity of the status"));
-        check_equal(call_std_logic_vector("device_model.status_bits"), std_logic_vector'(x"BEEF"));
+        -- A single bit and a vector of bits, std_ulogic characters on the Python side
+        check_equal(call_std_ulogic("device_model.parity"), '1', result("for the parity of the status"));
+        check_equal(call_std_ulogic_vector("device_model.status_bits"), std_ulogic_vector'(x"BEEF"));
 
         -- The procedure form takes the width of the result from the variable it writes to
         call_unsigned("device_model.status_word", status);
@@ -406,7 +406,7 @@ begin
 
       elsif run("Test wide integers and status bits") then
         -- An unsigned or signed argument of any width becomes an exact Python integer and
-        -- is therefore not limited to the range of a VHDL integer, while a std_logic
+        -- is therefore not limited to the range of a VHDL integer, while a std_ulogic
         -- argument becomes a bool. These have names of their own rather than being arg
         -- overloads since a string literal belongs to every character array type.
         import_device_model;

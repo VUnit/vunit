@@ -46,14 +46,14 @@ ARG_SIGNATURE = ", ".join(["string"] + ["arg_t"] * len(ARGS) + ["python_session_
 # The unsigned and signed values are passed to typed names, arg_unsigned and
 # arg_signed, on purpose: plain overloads would make a string literal
 # argument, arg("Hello"), ambiguous since a string literal belongs to every
-# character array type. std_logic needs no such name, being a scalar, and
-# std_logic_vector is deliberately not among the types at all. Such values
+# character array type. std_ulogic needs no such name, being a scalar, and
+# std_ulogic_vector is deliberately not among the types at all. Such values
 # are passed as arg(to_string(slv)) and arg_unsigned(unsigned(slv)).
 ARG_VALUES = [
     dict(vhdl="real_vector", impure=False, suffix="", bridge=False),
     dict(vhdl="integer_vector_ptr_t", impure=True, suffix="", bridge=False),
     dict(vhdl="integer_array_t", impure=True, suffix="", bridge=True),
-    dict(vhdl="std_logic", impure=True, suffix="", bridge=False),
+    dict(vhdl="std_ulogic", impure=True, suffix="", bridge=False),
     dict(vhdl="unsigned", impure=True, suffix="_unsigned", bridge=False),
     dict(vhdl="signed", impure=True, suffix="_signed", bridge=False),
 ]
@@ -121,24 +121,24 @@ RESULTS = [
         hand_written_call=False,
     ),
     dict(
-        name="std_logic",
-        vhdl="std_logic",
-        kind="p_kind_std_logic",
-        value="p_to_std_logic(p_result_string(1))",
+        name="std_ulogic",
+        vhdl="std_ulogic",
+        kind="p_kind_std_ulogic",
+        value="p_to_std_ulogic(p_result_string(1))",
         default="'U'",
         hand_written_eval=False,
         hand_written_call=False,
     ),
     dict(
-        name="std_logic_vector",
-        vhdl="std_logic_vector",
-        kind="p_kind_std_logic_vector",
-        value="p_to_std_logic_vector(p_result_string)",
+        name="std_ulogic_vector",
+        vhdl="std_ulogic_vector",
+        kind="p_kind_std_ulogic_vector",
+        value="p_to_std_ulogic_vector(p_result_string)",
         default='""',
         hand_written_eval=False,
         hand_written_call=False,
         # No eval/call alias: check_equal(eval("17"), 17) would otherwise be ambiguous
-        # with check_equal(std_logic_vector, natural). Use the explicit names.
+        # with check_equal(std_ulogic_vector, natural). Use the explicit names.
         alias_eval=False,
         alias_call=False,
     ),
@@ -159,22 +159,22 @@ RESULTS = [
 # Result types whose width is given by the actual of the result parameter
 PROCEDURE_RESULTS = [
     dict(
-        name="std_logic_vector",
-        vhdl="std_logic_vector",
-        kind="p_kind_std_logic_vector",
-        value="p_to_std_logic_vector(p_result_string)",
+        name="std_ulogic_vector",
+        vhdl="std_ulogic_vector",
+        kind="p_kind_std_ulogic_vector",
+        value="p_to_std_ulogic_vector(p_result_string)",
     ),
     dict(
         name="signed",
         vhdl="signed",
         kind="p_kind_signed",
-        value="signed(p_to_std_logic_vector(p_result_string))",
+        value="signed(p_to_std_ulogic_vector(p_result_string))",
     ),
     dict(
         name="unsigned",
         vhdl="unsigned",
         kind="p_kind_unsigned",
-        value="unsigned(p_to_std_logic_vector(p_result_string))",
+        value="unsigned(p_to_std_ulogic_vector(p_result_string))",
     ),
 ]
 

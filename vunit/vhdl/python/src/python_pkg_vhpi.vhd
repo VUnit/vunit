@@ -73,8 +73,8 @@ package python_ffi_pkg is
   constant p_kind_real : integer := 1;
   constant p_kind_boolean : integer := 2;
   constant p_kind_string : integer := 3;
-  constant p_kind_std_logic : integer := 4;
-  constant p_kind_std_logic_vector : integer := 5;
+  constant p_kind_std_ulogic : integer := 4;
+  constant p_kind_std_ulogic_vector : integer := 5;
   constant p_kind_signed : integer := 6;
   constant p_kind_unsigned : integer := 7;
   constant p_kind_integer_array : integer := 8;
@@ -90,7 +90,7 @@ package python_ffi_pkg is
   ) return boolean;
 
   -- Evaluate expr and convert the value to the VHDL type given by kind. width
-  -- is the length of a std_logic_vector, signed or unsigned result, -1 when
+  -- is the length of a std_ulogic_vector, signed or unsigned result, -1 when
   -- it is not known.
   impure function p_eval(
     expr      : string;

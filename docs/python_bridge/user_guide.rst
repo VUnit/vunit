@@ -222,18 +222,18 @@ bridge, ``eval`` has more result types:
 * ``eval_boolean``, returning ``boolean``. Only ``bool``/``numpy.bool_`` is
   accepted. It also makes the result of ``eval`` usable as a condition:
   ``if eval("model.is_done()") then``.
-* ``eval_std_logic``, returning ``std_logic``.
-* ``eval_std_logic_vector``, returning an unconstrained ``std_logic_vector``.
+* ``eval_std_ulogic``, returning ``std_ulogic``.
+* ``eval_std_ulogic_vector``, returning an unconstrained ``std_ulogic_vector``.
 * ``eval_integer_array``, returning ``integer_array_t``, see
   :ref:`python_bridge:integer_array`.
 
-``eval_boolean`` and ``eval_std_logic`` are aliased ``eval`` like the other
-result types. ``eval_std_logic_vector`` and ``eval_integer_array`` are not,
+``eval_boolean`` and ``eval_std_ulogic`` are aliased ``eval`` like the other
+result types. ``eval_std_ulogic_vector`` and ``eval_integer_array`` are not,
 since that would make ``check_equal(eval("17"), 17)`` and
 ``length(eval("[1, 2]"))`` ambiguous: use their explicit names.
 
-``std_logic_vector``, ``signed`` and ``unsigned`` results are also available
-as the procedures ``eval_std_logic_vector``, ``eval_signed`` and
+``std_ulogic_vector``, ``signed`` and ``unsigned`` results are also available
+as the procedures ``eval_std_ulogic_vector``, ``eval_signed`` and
 ``eval_unsigned``, that take the result as an ``out`` parameter. The width is
 given by the actual, and a Python value that does not fit that width is an
 error. ``signed`` and ``unsigned`` results are only available in the
@@ -241,10 +241,10 @@ procedure form, since a function cannot know the width of the result.
 
 .. code-block:: vhdl
 
-    variable byte : std_logic_vector(7 downto 0);
+    variable byte : std_ulogic_vector(7 downto 0);
     variable level : signed(15 downto 0);
   begin
-    eval_std_logic_vector("format(value, '08b')", byte);
+    eval_std_ulogic_vector("format(value, '08b')", byte);
     eval_signed("model.level()", level);
 
 call, arg, kwarg and to_call_str
@@ -281,7 +281,7 @@ VHDL                       Python
 ``integer_vector``         ``list`` of ``int``
 ``real_vector``            ``list`` of ``float``
 ``integer_vector_ptr_t``   ``list`` of ``int``
-``std_logic``              ``bool``, 1 and H give ``True``, 0 and L give ``False``
+``std_ulogic``              ``bool``, 1 and H give ``True``, 0 and L give ``False``
 ``unsigned``               ``int``, passed as ``arg_unsigned``/``kwarg_unsigned``
 ``signed``                 ``int``, passed as ``arg_signed``/``kwarg_signed``
 ``integer_array_t``        NumPy array, not on Riviera-PRO/Active-HDL
@@ -292,12 +292,12 @@ integer, so it is not limited to the range of a VHDL ``integer``. The two have
 names of their own rather than ``arg`` overloads, since a string literal
 belongs to every character array type and an overload would therefore make
 ``arg("hello")`` ambiguous. ``H`` and ``L`` are read as 1 and 0 in a
-``std_logic``, ``unsigned`` or ``signed`` value; any other metavalue is an
+``std_ulogic``, ``unsigned`` or ``signed`` value; any other metavalue is an
 error.
 
 An aggregate or a literal does not select an overload by itself and needs a
 qualified expression: ``arg(real_vector'(1.0, 2.0))``,
-``arg(integer_vector'(1, 2, 3))``. There is no ``std_logic_vector`` value,
+``arg(integer_vector'(1, 2, 3))``. There is no ``std_ulogic_vector`` value,
 which would be ambiguous for the same reason as ``unsigned``. Such a value is
 passed as a number or as the string of its characters:
 
@@ -307,11 +307,11 @@ passed as a number or as the string of its characters:
     call("model.push", arg(to_string(slv)));
 
 On NVC, GHDL and Questa, ``call`` returns the same types as ``eval``:
-``call_boolean``, ``call_std_logic``, ``call_std_logic_vector``,
+``call_boolean``, ``call_std_ulogic``, ``call_std_ulogic_vector``,
 ``call_integer_array``, ``call_string``, ``call_real_vector`` and
-``call_integer_vector_ptr``, plus the procedures ``call_std_logic_vector``,
+``call_integer_vector_ptr``, plus the procedures ``call_std_ulogic_vector``,
 ``call_signed`` and ``call_unsigned`` taking the result as an ``out``
-parameter. All of the functions but ``call_std_logic_vector`` are aliased
+parameter. All of the functions but ``call_std_ulogic_vector`` are aliased
 ``call``.
 
 ``to_call_str`` builds the Python call expression itself, as a string, which
@@ -398,7 +398,7 @@ Type mapping
 * ``integer_vector`` ↔ ``list`` of ``int``.
 * ``real_vector`` ↔ ``list`` of ``float`` (``call_real_vector`` needs the bridge).
 * ``integer_vector_ptr_t`` ↔ ``list`` of ``int``.
-* ``std_logic``/``std_logic_vector`` ↔ ``str``, one character per element
+* ``std_ulogic``/``std_ulogic_vector`` ↔ ``str``, one character per element
   out of ``U X 0 1 Z W L H -``, left to right (results only, Python bridge).
 * ``signed``/``unsigned`` ↔ ``int`` (procedure results only, Python bridge).
 * ``integer_array_t`` ↔ ``numpy.ndarray`` (Python bridge), see
@@ -538,7 +538,7 @@ installation change, so a run script needs nothing beyond :meth:`add_python()
 
 This application differs from the Python bridge in a few ways: only the
 default session exists, the operations implemented by the bridge
-(``integer_array_t`` values, the ``boolean``, ``std_logic``, vector and
+(``integer_array_t`` values, the ``boolean``, ``std_ulogic``, vector and
 ``integer_array_t`` results, ``exec_file``) report that they require NVC, GHDL
 or Questa, a Python error stops the simulation with the message printed by the
 application rather than through ``python_logger``, and ``real`` values outside
@@ -550,7 +550,7 @@ a complete example covering all three simulator families.
 Its ``tb_example.vhd`` has a test case for each part of the API: ``exec`` and
 ``eval`` with the types they convert, calls with positional, keyword and
 keyword group arguments, a 20 register status dump, wide
-``arg_unsigned``/``arg_signed`` and ``std_logic`` argument values, a 2-D
+``arg_unsigned``/``arg_signed`` and ``std_ulogic`` argument values, a 2-D
 ``integer_array_t`` image transposed by NumPy, the result types of ``eval`` and
 ``call``, Python files executed with ``exec_file`` or imported with
 ``import_module_from_file``, two models loaded into a session each, and a

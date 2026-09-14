@@ -57,7 +57,7 @@ def status_word():
 
 def status_bits():
     """
-    The status register as std_logic characters, for call_std_logic_vector.
+    The status register as std_ulogic characters, for call_std_ulogic_vector.
     """
     return format(STATUS, "016b")
 
@@ -71,7 +71,7 @@ def is_busy():
 
 def parity():
     """
-    Odd parity of the status register as a std_logic character, for call_std_logic.
+    Odd parity of the status register as a std_ulogic character, for call_std_ulogic.
     """
     return "1" if bin(STATUS).count("1") % 2 else "0"
 

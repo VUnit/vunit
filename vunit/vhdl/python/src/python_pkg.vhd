@@ -97,12 +97,12 @@ package python_pkg is
   -- More argument values of call
   -----------------------------------------------------------------------------
   -- real_vector and integer_vector_ptr_t values become Python lists, a
-  -- std_logic value becomes True or False, and an unsigned or signed value of
+  -- std_ulogic value becomes True or False, and an unsigned or signed value of
   -- any width becomes a Python integer written as a hexadecimal literal, which
   -- is therefore not limited to the range of a VHDL integer.
   --
   -- An aggregate or a literal needs a qualified expression to select the
-  -- overload, for example arg(real_vector'(1.0, 2.0)). A std_logic_vector is
+  -- overload, for example arg(real_vector'(1.0, 2.0)). A std_ulogic_vector is
   -- passed as a string, arg(to_string(slv)), or as a number,
   -- arg_unsigned(unsigned(slv)). The unsigned and signed values have names of
   -- their own since an overload would make a string literal argument,
@@ -113,8 +113,8 @@ package python_pkg is
   function kwarg(kw : string; value : real_vector) return arg_t;
   impure function arg(value : integer_vector_ptr_t) return arg_t;
   impure function kwarg(kw : string; value : integer_vector_ptr_t) return arg_t;
-  impure function arg(value : std_logic) return arg_t;
-  impure function kwarg(kw : string; value : std_logic) return arg_t;
+  impure function arg(value : std_ulogic) return arg_t;
+  impure function kwarg(kw : string; value : std_ulogic) return arg_t;
   impure function arg_unsigned(value : unsigned) return arg_t;
   impure function kwarg_unsigned(kw : string; value : unsigned) return arg_t;
   impure function arg_signed(value : signed) return arg_t;
@@ -153,9 +153,9 @@ package python_pkg is
   impure function kwarg(kw : string; value : integer_array_t) return arg_t;
 
   -----------------------------------------------------------------------------
-  -- Results of eval: boolean, std_logic, vectors and arrays
+  -- Results of eval: boolean, std_ulogic, vectors and arrays
   -----------------------------------------------------------------------------
-  -- std_logic_vector and integer_array_t results are only available under
+  -- std_ulogic_vector and integer_array_t results are only available under
   -- their explicit names, not as eval overloads, which keeps
   -- check_equal(eval("17"), 17) and length(eval("[1, 2]")) unambiguous.
   -- signed and unsigned results are only available in the procedure form
@@ -165,21 +165,21 @@ package python_pkg is
   ) return boolean;
   alias eval is eval_boolean[string, python_session_t return boolean];
 
-  impure function eval_std_logic(
+  impure function eval_std_ulogic(
     expr : string; session : python_session_t := default_session
-  ) return std_logic;
-  alias eval is eval_std_logic[string, python_session_t return std_logic];
+  ) return std_ulogic;
+  alias eval is eval_std_ulogic[string, python_session_t return std_ulogic];
 
-  impure function eval_std_logic_vector(
+  impure function eval_std_ulogic_vector(
     expr : string; session : python_session_t := default_session
-  ) return std_logic_vector;
+  ) return std_ulogic_vector;
 
   impure function eval_integer_array(
     expr : string; session : python_session_t := default_session
   ) return integer_array_t;
 
-  procedure eval_std_logic_vector(
-    expr : string; result : out std_logic_vector; session : python_session_t := default_session
+  procedure eval_std_ulogic_vector(
+    expr : string; result : out std_ulogic_vector; session : python_session_t := default_session
   );
   procedure eval_signed(
     expr : string; result : out signed; session : python_session_t := default_session
@@ -189,7 +189,7 @@ package python_pkg is
   );
 
   -----------------------------------------------------------------------------
-  -- Results of call: string, boolean, std_logic, vectors and arrays
+  -- Results of call: string, boolean, std_ulogic, vectors and arrays
   -----------------------------------------------------------------------------
   impure function call_real_vector(
     identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
@@ -219,17 +219,17 @@ package python_pkg is
   alias call is call_boolean[
     string, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, python_session_t return boolean];
 
-  impure function call_std_logic(
+  impure function call_std_ulogic(
     identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
     session : python_session_t := default_session
-  ) return std_logic;
-  alias call is call_std_logic[
-    string, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, python_session_t return std_logic];
+  ) return std_ulogic;
+  alias call is call_std_ulogic[
+    string, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, python_session_t return std_ulogic];
 
-  impure function call_std_logic_vector(
+  impure function call_std_ulogic_vector(
     identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
     session : python_session_t := default_session
-  ) return std_logic_vector;
+  ) return std_ulogic_vector;
 
   impure function call_integer_array(
     identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
@@ -238,8 +238,8 @@ package python_pkg is
   alias call is call_integer_array[
     string, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, python_session_t return integer_array_t];
 
-  procedure call_std_logic_vector(
-    identifier : string; result : out std_logic_vector;
+  procedure call_std_ulogic_vector(
+    identifier : string; result : out std_ulogic_vector;
     arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
     session : python_session_t := default_session
   );
@@ -545,7 +545,7 @@ package body python_pkg is
     return to_py_list_str(value);
   end;
 
-  impure function p_arg_value(value : std_logic; operation : string) return string is
+  impure function p_arg_value(value : std_ulogic; operation : string) return string is
   begin
     if to_x01(value) = '1' then
       return "True";
@@ -554,13 +554,13 @@ package body python_pkg is
     end if;
     failure(
       python_logger,
-      operation & " cannot convert " & std_logic'image(value) & "; expected '0', '1', 'L' or 'H'"
+      operation & " cannot convert " & std_ulogic'image(value) & "; expected '0', '1', 'L' or 'H'"
     );
     return "";
   end;
 
   -- True when the vector has an element other than 0, 1, L and H
-  function p_has_metavalue(value : std_logic_vector) return boolean is
+  function p_has_metavalue(value : std_ulogic_vector) return boolean is
   begin
     for idx in value'range loop
       if to_x01(value(idx)) = 'X' then
@@ -572,10 +572,10 @@ package body python_pkg is
 
   -- The Python hexadecimal literal of the magnitude given by the bits, for
   -- example 0x1F or -0x80. A null range gives 0x0.
-  function p_to_hex_literal(bits : std_logic_vector; negative : boolean) return string is
+  function p_to_hex_literal(bits : std_ulogic_vector; negative : boolean) return string is
     constant hex_digits : string(1 to 16) := "0123456789ABCDEF";
     constant padding : natural := (4 - bits'length mod 4) mod 4;
-    variable padded : std_logic_vector(bits'length + padding - 1 downto 0) := (others => '0');
+    variable padded : std_ulogic_vector(bits'length + padding - 1 downto 0) := (others => '0');
     variable result : line;
     variable digit : natural;
     variable leading : boolean := true;
@@ -608,39 +608,39 @@ package body python_pkg is
   end;
 
   -- The error reported for a vector value that cannot be converted
-  function p_metavalue_error(value : std_logic_vector; operation : string) return string is
+  function p_metavalue_error(value : std_ulogic_vector; operation : string) return string is
   begin
     return operation & " cannot convert """ & to_string(value) & """; the value has metavalues";
   end;
 
   impure function p_arg_value(value : unsigned; operation : string) return string is
   begin
-    if p_has_metavalue(std_logic_vector(value)) then
-      failure(python_logger, p_metavalue_error(std_logic_vector(value), operation));
+    if p_has_metavalue(std_ulogic_vector(value)) then
+      failure(python_logger, p_metavalue_error(std_ulogic_vector(value), operation));
       return "";
     end if;
-    return p_to_hex_literal(to_x01(std_logic_vector(value)), false);
+    return p_to_hex_literal(to_x01(std_ulogic_vector(value)), false);
   end;
 
   impure function p_arg_value(value : signed; operation : string) return string is
     variable folded : signed(value'length - 1 downto 0);
     variable magnitude : signed(value'length downto 0);
   begin
-    if p_has_metavalue(std_logic_vector(value)) then
-      failure(python_logger, p_metavalue_error(std_logic_vector(value), operation));
+    if p_has_metavalue(std_ulogic_vector(value)) then
+      failure(python_logger, p_metavalue_error(std_ulogic_vector(value), operation));
       return "";
     end if;
     if value'length = 0 then
       return "0x0";
     end if;
 
-    folded := signed(to_x01(std_logic_vector(value)));
+    folded := signed(to_x01(std_ulogic_vector(value)));
     if folded(folded'left) = '0' then
-      return p_to_hex_literal(std_logic_vector(folded), false);
+      return p_to_hex_literal(std_ulogic_vector(folded), false);
     end if;
     -- Resizing before negating keeps the magnitude of signed'low representable
     magnitude := -resize(folded, value'length + 1);
-    return p_to_hex_literal(std_logic_vector(magnitude), true);
+    return p_to_hex_literal(std_ulogic_vector(magnitude), true);
   end;
 
   function arg(value : real_vector) return arg_t is
@@ -679,7 +679,7 @@ package body python_pkg is
     return (kw, text);
   end;
 
-  impure function arg(value : std_logic) return arg_t is
+  impure function arg(value : std_ulogic) return arg_t is
     constant text : string := p_arg_value(value, "arg");
   begin
     if text = "" then
@@ -688,7 +688,7 @@ package body python_pkg is
     return (p_positional_arg, text);
   end;
 
-  impure function kwarg(kw : string; value : std_logic) return arg_t is
+  impure function kwarg(kw : string; value : std_ulogic) return arg_t is
     constant text : string := p_arg_value(value, "kwarg");
   begin
     if text = "" then
@@ -781,14 +781,14 @@ package body python_pkg is
   -----------------------------------------------------------------------------
   -- Operations implemented by the Python bridge (NVC, GHDL and Questa)
   -----------------------------------------------------------------------------
-  -- Python represents std_logic values by these characters
-  constant p_std_logic_characters : string(1 to 9) := "UX01ZWLH-";
+  -- Python represents std_ulogic values by these characters
+  constant p_std_ulogic_characters : string(1 to 9) := "UX01ZWLH-";
 
-  function p_to_std_logic(value : character) return std_logic is
+  function p_to_std_ulogic(value : character) return std_ulogic is
   begin
-    for idx in p_std_logic_characters'range loop
-      if p_std_logic_characters(idx) = value then
-        return std_logic'val(idx - 1);
+    for idx in p_std_ulogic_characters'range loop
+      if p_std_ulogic_characters(idx) = value then
+        return std_ulogic'val(idx - 1);
       end if;
     end loop;
     -- The bridge only returns the characters above
@@ -796,12 +796,12 @@ package body python_pkg is
   end;
 
   -- The elements of the characters, the first character becoming the leftmost element
-  function p_to_std_logic_vector(value : string) return std_logic_vector is
+  function p_to_std_ulogic_vector(value : string) return std_ulogic_vector is
     alias normalized : string(1 to value'length) is value;
-    variable result : std_logic_vector(value'length - 1 downto 0);
+    variable result : std_ulogic_vector(value'length - 1 downto 0);
   begin
     for idx in normalized'range loop
-      result(value'length - idx) := p_to_std_logic(normalized(idx));
+      result(value'length - idx) := p_to_std_ulogic(normalized(idx));
     end loop;
     return result;
   end;
@@ -899,22 +899,22 @@ package body python_pkg is
     return false;
   end;
 
-  impure function eval_std_logic(
+  impure function eval_std_ulogic(
     expr : string; session : python_session_t := default_session
-  ) return std_logic is
+  ) return std_ulogic is
   begin
-    if p_eval(expr, p_kind_std_logic, -1, p_eval_operation(expr, session), session) then
-      return p_to_std_logic(p_result_string(1));
+    if p_eval(expr, p_kind_std_ulogic, -1, p_eval_operation(expr, session), session) then
+      return p_to_std_ulogic(p_result_string(1));
     end if;
     return 'U';
   end;
 
-  impure function eval_std_logic_vector(
+  impure function eval_std_ulogic_vector(
     expr : string; session : python_session_t := default_session
-  ) return std_logic_vector is
+  ) return std_ulogic_vector is
   begin
-    if p_eval(expr, p_kind_std_logic_vector, -1, p_eval_operation(expr, session), session) then
-      return p_to_std_logic_vector(p_result_string);
+    if p_eval(expr, p_kind_std_ulogic_vector, -1, p_eval_operation(expr, session), session) then
+      return p_to_std_ulogic_vector(p_result_string);
     end if;
     return "";
   end;
@@ -929,12 +929,12 @@ package body python_pkg is
     return null_integer_array;
   end;
 
-  procedure eval_std_logic_vector(
-    expr : string; result : out std_logic_vector; session : python_session_t := default_session
+  procedure eval_std_ulogic_vector(
+    expr : string; result : out std_ulogic_vector; session : python_session_t := default_session
   ) is
   begin
-    if p_eval(expr, p_kind_std_logic_vector, result'length, p_eval_operation(expr, session), session) then
-      result := p_to_std_logic_vector(p_result_string);
+    if p_eval(expr, p_kind_std_ulogic_vector, result'length, p_eval_operation(expr, session), session) then
+      result := p_to_std_ulogic_vector(p_result_string);
     end if;
   end;
 
@@ -943,7 +943,7 @@ package body python_pkg is
   ) is
   begin
     if p_eval(expr, p_kind_signed, result'length, p_eval_operation(expr, session), session) then
-      result := signed(p_to_std_logic_vector(p_result_string));
+      result := signed(p_to_std_ulogic_vector(p_result_string));
     end if;
   end;
 
@@ -952,7 +952,7 @@ package body python_pkg is
   ) is
   begin
     if p_eval(expr, p_kind_unsigned, result'length, p_eval_operation(expr, session), session) then
-      result := unsigned(p_to_std_logic_vector(p_result_string));
+      result := unsigned(p_to_std_ulogic_vector(p_result_string));
     end if;
   end;
 
@@ -999,22 +999,22 @@ package body python_pkg is
     );
   end;
 
-  impure function call_std_logic(
+  impure function call_std_ulogic(
     identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
     session : python_session_t := default_session
-  ) return std_logic is
+  ) return std_ulogic is
   begin
-    return eval_std_logic(
+    return eval_std_ulogic(
       p_to_call_str(identifier, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10), session
     );
   end;
 
-  impure function call_std_logic_vector(
+  impure function call_std_ulogic_vector(
     identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
     session : python_session_t := default_session
-  ) return std_logic_vector is
+  ) return std_ulogic_vector is
   begin
-    return eval_std_logic_vector(
+    return eval_std_ulogic_vector(
       p_to_call_str(identifier, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10), session
     );
   end;
@@ -1029,13 +1029,13 @@ package body python_pkg is
     );
   end;
 
-  procedure call_std_logic_vector(
-    identifier : string; result : out std_logic_vector;
+  procedure call_std_ulogic_vector(
+    identifier : string; result : out std_ulogic_vector;
     arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
     session : python_session_t := default_session
   ) is
   begin
-    eval_std_logic_vector(
+    eval_std_ulogic_vector(
       p_to_call_str(identifier, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10), result, session
     );
   end;

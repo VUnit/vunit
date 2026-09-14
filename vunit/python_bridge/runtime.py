@@ -30,8 +30,8 @@ KIND_INTEGER = 0
 KIND_REAL = 1
 KIND_BOOLEAN = 2
 KIND_STRING = 3
-KIND_STD_LOGIC = 4
-KIND_STD_LOGIC_VECTOR = 5
+KIND_STD_ULOGIC = 4
+KIND_STD_ULOGIC_VECTOR = 5
 KIND_SIGNED = 6
 KIND_UNSIGNED = 7
 KIND_INTEGER_ARRAY = 8
@@ -43,8 +43,8 @@ VHDL_TYPE_NAMES = {
     KIND_REAL: "real",
     KIND_BOOLEAN: "boolean",
     KIND_STRING: "string",
-    KIND_STD_LOGIC: "std_logic",
-    KIND_STD_LOGIC_VECTOR: "std_logic_vector",
+    KIND_STD_ULOGIC: "std_ulogic",
+    KIND_STD_ULOGIC_VECTOR: "std_ulogic_vector",
     KIND_SIGNED: "signed",
     KIND_UNSIGNED: "unsigned",
     KIND_INTEGER_ARRAY: "integer_array_t",
@@ -52,7 +52,7 @@ VHDL_TYPE_NAMES = {
     KIND_REAL_VECTOR: "real_vector",
 }
 
-STD_LOGIC_VALUES = frozenset("UX01ZWLH-")
+STD_ULOGIC_VALUES = frozenset("UX01ZWLH-")
 INTEGER_LOW = -(2**31)
 INTEGER_HIGH = 2**31 - 1
 TEXT_ENCODING = "utf-8"
@@ -372,7 +372,7 @@ class Runtime:  # pylint: disable=too-many-instance-attributes
         Evaluate a Python expression in the session namespace and convert the
         value to the VHDL type given by kind.
 
-        :param width: Width of a std_logic_vector/signed/unsigned result, -1 if not given by VHDL.
+        :param width: Width of a std_ulogic_vector/signed/unsigned result, -1 if not given by VHDL.
         :returns: (integer, real, data bytes, metadata tuple)
         """
         self._result = _NO_VALUE
@@ -464,7 +464,7 @@ class Runtime:  # pylint: disable=too-many-instance-attributes
         """
         Convert the value of the last evaluation to the VHDL type given by kind.
 
-        :param width: Width of a std_logic_vector/signed/unsigned result, -1 if not given by VHDL.
+        :param width: Width of a std_ulogic_vector/signed/unsigned result, -1 if not given by VHDL.
         :returns: (integer, real, data bytes, metadata tuple)
         """
         value = self._result
@@ -479,8 +479,8 @@ class Runtime:  # pylint: disable=too-many-instance-attributes
             KIND_REAL: self._real_result,
             KIND_BOOLEAN: self._boolean_result,
             KIND_STRING: self._string_result,
-            KIND_STD_LOGIC: self._std_logic_result,
-            KIND_STD_LOGIC_VECTOR: self._std_logic_vector_result,
+            KIND_STD_ULOGIC: self._std_ulogic_result,
+            KIND_STD_ULOGIC_VECTOR: self._std_ulogic_vector_result,
             KIND_SIGNED: self._bits_result,
             KIND_UNSIGNED: self._bits_result,
             KIND_INTEGER_VECTOR: self._integer_vector_result,
@@ -536,23 +536,23 @@ class Runtime:  # pylint: disable=too-many-instance-attributes
         return (0, 0.0, data, (len(data),))
 
     @staticmethod
-    def _std_logic_result(kind, value, _width):
+    def _std_ulogic_result(kind, value, _width):
         """
         Convert a one character str result.
         """
-        if not isinstance(value, str) or len(value) != 1 or value not in STD_LOGIC_VALUES:
+        if not isinstance(value, str) or len(value) != 1 or value not in STD_ULOGIC_VALUES:
             raise _type_error(kind, value, "a one character str, one of 'UX01ZWLH-'")
         return (0, 0.0, value.encode("ascii"), (1,))
 
     @staticmethod
-    def _std_logic_vector_result(kind, value, width):
+    def _std_ulogic_vector_result(kind, value, width):
         """
         Convert a str result, one character per element.
         """
-        if not isinstance(value, str) or not STD_LOGIC_VALUES.issuperset(value):
+        if not isinstance(value, str) or not STD_ULOGIC_VALUES.issuperset(value):
             raise _type_error(kind, value, "a str of the characters 'UX01ZWLH-'")
         if width >= 0 and len(value) != width:
-            raise ValueError(f"Got {len(value)} std_logic values but the VHDL result has length {width}")
+            raise ValueError(f"Got {len(value)} std_ulogic values but the VHDL result has length {width}")
         return (0, 0.0, value.encode("ascii"), (len(value),))
 
     def _bits_result(self, kind, value, width):

@@ -21,7 +21,7 @@ entity tb_python_pkg_bridge is
 end entity;
 
 architecture tb of tb_python_pkg_bridge is
-  constant std_logic_characters : string(1 to 9) := "UX01ZWLH-";
+  constant std_ulogic_characters : string(1 to 9) := "UX01ZWLH-";
   constant group_error : string := "Only keyword arguments can be combined with & into a keyword argument group";
 begin
   main : process
@@ -29,10 +29,10 @@ begin
     constant fixed_point : python_session_t := "fixed_point";
     variable arr, arr_b, result : integer_array_t;
     variable ptr : integer_vector_ptr_t;
-    variable slv4 : std_logic_vector(3 downto 0);
-    variable slv9_desc : std_logic_vector(8 downto 0) := "UX01ZWLH-";
-    variable slv9_asc : std_logic_vector(0 to 8) := "UX01ZWLH-";
-    variable result_vec9 : std_logic_vector(8 downto 0);
+    variable slv4 : std_ulogic_vector(3 downto 0);
+    variable slv9_desc : std_ulogic_vector(8 downto 0) := "UX01ZWLH-";
+    variable slv9_asc : std_ulogic_vector(0 to 8) := "UX01ZWLH-";
+    variable result_vec9 : std_ulogic_vector(8 downto 0);
     variable s8 : signed(7 downto 0);
     variable u8 : unsigned(7 downto 0);
     variable u1 : unsigned(0 downto 0) := "1";
@@ -300,23 +300,23 @@ begin
         check_equal(call_string("identity", arg(string'("hello"))), string'("hello"));
         check_equal(call_string("identity", arg(string'("café å"))), string'("café å"));
 
-      elsif run("Test std_logic round trip of all 9 states") then
+      elsif run("Test std_ulogic round trip of all 9 states") then
         exec("def identity(x):" + "    return x");
-        for idx in std_logic_characters'range loop
+        for idx in std_ulogic_characters'range loop
           check_equal(
-            call_std_logic("identity", arg(string'(1 => std_logic_characters(idx)))),
-            std_logic'val(idx - 1)
+            call_std_ulogic("identity", arg(string'(1 => std_ulogic_characters(idx)))),
+            std_ulogic'val(idx - 1)
           );
         end loop;
 
-      elsif run("Test std_logic_vector round trip with descending range") then
+      elsif run("Test std_ulogic_vector round trip with descending range") then
         exec("def identity(x):" + "    return x");
-        result_vec9 := call_std_logic_vector("identity", arg(to_string(slv9_desc)));
+        result_vec9 := call_std_ulogic_vector("identity", arg(to_string(slv9_desc)));
         check_equal(result_vec9, slv9_desc);
 
-      elsif run("Test std_logic_vector round trip with ascending range") then
+      elsif run("Test std_ulogic_vector round trip with ascending range") then
         exec("def identity(x):" + "    return x");
-        call_std_logic_vector("identity", result_vec9, arg(to_string(slv9_asc)));
+        call_std_ulogic_vector("identity", result_vec9, arg(to_string(slv9_asc)));
         check_equal(result_vec9, slv9_asc);
 
       elsif run("Test signed and unsigned procedure results including exact bounds") then
@@ -448,14 +448,14 @@ begin
         );
         unmock(python_logger);
 
-      elsif run("Test that a std_logic_vector length mismatch in a procedure result fails") then
+      elsif run("Test that a std_ulogic_vector length mismatch in a procedure result fails") then
         exec("def wrong_length_bits():" + "    return '01011'");
         mock(python_logger, failure);
-        call_std_logic_vector("wrong_length_bits", slv4);
+        call_std_ulogic_vector("wrong_length_bits", slv4);
         check_only_log(
           python_logger,
           "eval(""wrong_length_bits()"") failed:" & LF &
-          "ValueError: Got 5 std_logic values but the VHDL result has length 4",
+          "ValueError: Got 5 std_ulogic values but the VHDL result has length 4",
           failure
         );
         unmock(python_logger);
@@ -489,13 +489,13 @@ begin
         check_equal(call_string("describe", arg(ptr)), "[-1, 0, 1]");
         check_equal(call_string("describe", kwarg("v", ptr)), "v=[-1, 0, 1]");
 
-      elsif run("Test std_logic_vector, signed and unsigned arguments") then
+      elsif run("Test std_ulogic_vector, signed and unsigned arguments") then
         -- There are no arg overloads for these types, which would make a
         -- string literal argument ambiguous. They are passed as a string, as
         -- an integer or through arg_unsigned/arg_signed instead.
         define_describe;
         check_equal(call_string("describe", arg(to_string(slv9_desc))), "'UX01ZWLH-'");
-        check_equal(call_string("describe", kwarg("v", to_string(std_logic_vector'("10XZ")))), "v='10XZ'");
+        check_equal(call_string("describe", kwarg("v", to_string(std_ulogic_vector'("10XZ")))), "v='10XZ'");
         s8 := to_signed(-128, 8);
         u8 := to_unsigned(255, 8);
         check_equal(call_string("describe", arg(to_integer(s8)), arg(to_integer(u8))), "-128, 255");
@@ -618,7 +618,7 @@ begin
         unmock(python_logger);
 
       ---------------------------------------------------------------------
-      -- Wide and std_logic argument values
+      -- Wide and std_ulogic argument values
       ---------------------------------------------------------------------
       elsif run("Test unsigned arguments of any width") then
         define_as_str;
@@ -673,12 +673,12 @@ begin
         );
         unmock(python_logger);
 
-      elsif run("Test std_logic arguments") then
+      elsif run("Test std_ulogic arguments") then
         define_describe;
         check_equal(call_string("describe", arg('1'), arg('0')), "True, False");
         check_equal(call_string("describe", kwarg("v", '1'), kwarg("w", 'L')), "v=True, w=False");
 
-      elsif run("Test that a metavalue std_logic argument fails") then
+      elsif run("Test that a metavalue std_ulogic argument fails") then
         define_describe;
         mock(python_logger, failure);
         check_equal(call_string("describe", arg('X')), "");
