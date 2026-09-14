@@ -29,6 +29,7 @@ from .. import ostools
 from ..vunit_cli import VUnitCLI
 from ..sim_if.factory import SIMULATOR_FACTORY
 from ..sim_if import SimulatorInterface
+from ..sim_if.hooks import clear_hooks as clear_simulator_hooks
 from ..color_printer import COLOR_PRINTER, NO_COLOR_PRINTER
 
 from ..project import Project
@@ -165,6 +166,9 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self._configure_logging(args.log_level)
         self._output_path = str(Path(args.output_path).resolve())
         self._run_script_path = _find_run_script_path()
+
+        # Simulator hooks are registered by the packages of this project
+        clear_simulator_hooks()
 
         if args.no_color:
             self._printer = NO_COLOR_PRINTER
@@ -1319,6 +1323,8 @@ other preprocessors. Lowest value first. The order between preprocessors with th
           :class:`.PackageContext` once the sources of the package have been added. The setup
           function is what a package uses to do work that cannot be expressed with static sources,
           for example building a native library or registering simulator hooks.
+
+        See :ref:`packages` for more details.
 
         :param package_name: The name of the Python package. Dashes and dots are, just like for
                              PyPI package names, equivalent to underscores.

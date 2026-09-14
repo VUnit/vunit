@@ -23,6 +23,7 @@ from . import SimulatorInterface, ListOfStringOption, StringOption, BooleanOptio
 from . import check_executable
 from ..vhdl_standard import VHDL
 from ._viewermixin import ViewerMixin
+from . import hooks
 
 LOGGER = logging.getLogger(__name__)
 
@@ -320,6 +321,7 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
         if self._has_output_flag():
             cmd += ["-o", bin_path]
         cmd += config.sim_options.get("ghdl.elab_flags", [])
+        cmd += hooks.get_elab_flags(self)
         if config.sim_options.get("enable_coverage", False):
             if self._backend == "gcc":
                 # Enable coverage in linker
@@ -334,6 +336,7 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
             cmd += [config.entity_name, config.architecture_name]
 
         sim = config.sim_options.get("ghdl.sim_flags", [])
+        sim += hooks.get_run_flags(self)
         for name, value in config.generics.items():
             sim += [f"-g{name!s}={value!s}"]
         sim += [f"--assert-level={config.vhdl_assert_stop_level!s}"]
@@ -403,7 +406,7 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
                 self._coverage_files.add(str(Path(script_path) / f"{test_suite_name!s}.json"))
 
         try:
-            proc = Process(cmd, env=gcov_env)
+            proc = Process(cmd, env=hooks.get_run_env(self, gcov_env))
             proc.consume_output()
         except Process.NonZeroExitCode:
             status = False
