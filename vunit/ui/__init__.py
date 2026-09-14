@@ -1307,7 +1307,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         """
         self._builtins.add_vhdl_builtins(external=external, use_external_log=use_external_log)
 
-    def add_package(self, package_name: str) -> None:
+    def add_package(self, package_name: str, allow_setup: bool = False) -> None:
         """
         Add a VUnit package, that is an installed Python package providing HDL code and
         described by a ``vunit_pkg.toml`` file in its root directory.
@@ -1323,18 +1323,22 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         * ``setup``: A ``"module:function"`` string pointing out a setup function called with a
           :class:`.PackageContext` once the sources of the package have been added. The setup
           function is what a package uses to do work that cannot be expressed with static sources,
-          for example building a native library or registering simulator hooks.
+          for example building a native library or registering simulator hooks. Running it must
+          be allowed with ``allow_setup=True``, otherwise adding the package is an error.
 
         See :ref:`packages` for more details.
 
         :param package_name: The name of the Python package. Dashes and dots are, just like for
                              PyPI package names, equivalent to underscores.
+        :param allow_setup: Allow the setup function of the package to run. Defaults to ``False``,
+                            which makes a package declaring a setup function an error such that no
+                            Python code of a package runs unless the run script asks for it.
 
         :example:
 
         .. code-block:: python
 
-            VU.add_package("vunit-json-for-vhdl")
+            VU.add_package("vunit-json-for-vhdl", allow_setup=True)
 
         .. code-block:: toml
            :caption: vunit_pkg.toml
@@ -1349,7 +1353,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
             include = ["src/*.vhd"]
         """
 
-        self._builtins.add_package(package_name)
+        self._builtins.add_package(package_name, allow_setup=allow_setup)
 
     def add_com(self):
         """

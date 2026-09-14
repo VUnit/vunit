@@ -17,7 +17,7 @@ import importlib.util
 import re
 import operator
 from dataclasses import dataclass
-from typing import TypeVar, Any, Tuple
+from typing import TypeVar, Any, Optional, Tuple
 
 try:
     # Python 3.11+
@@ -250,8 +250,8 @@ class Builtins(object):
 
         raise RuntimeError(f"Failed to find location of package {package_name}.")
 
-    def add_package(self, package_name: str) -> None:
-        """Add VUnit package."""
+    def add_package(self, package_name: str, allow_setup: bool = False) -> None:
+        """Add VUnit package, running its setup function if allowed."""
         # The following future improvements are planned:
         # - Support for user specified library name
         # - Support for shared libraries across multiple packages
@@ -273,31 +273,7 @@ class Builtins(object):
                 f"{package['requires-vunit']} but current version is {vunit_version}."
             )
 
-        package_vhdl_standard = package.get("requires-vhdl", "")
-        if not self._meets_required_version(VHDLStandard, str(self._vhdl_standard), package_vhdl_standard):
-            use_vhdl_standard = None
-            for vhdl_standard in VHDL.STANDARDS:
-                if self._meets_required_version(VHDLStandard, str(vhdl_standard), package_vhdl_standard):
-                    use_vhdl_standard = str(vhdl_standard)
-                    break
-
-            if not use_vhdl_standard:
-                raise RuntimeError(
-                    f"Package {package_name} requires VHDL standard "
-                    f"{package['requires-vhdl']}. Failed to find a compatible standard."
-                )
-
-            LOGGER.warning(
-                "Package %s requires VHDL standard %s but current standard is %s. "
-                "Proceeding with mixed-language compilation using VHDL standard %s for the package.",
-                package_name,
-                package["requires-vhdl"],
-                self._vhdl_standard,
-                use_vhdl_standard,
-            )
-
-        else:
-            use_vhdl_standard = None
+        use_vhdl_standard = self._find_vhdl_standard(package_name, package)
 
         library = None
         sources = package.get("sources", [])
@@ -317,6 +293,12 @@ class Builtins(object):
 
         setup = package.get("setup")
         if setup:
+            if not allow_setup:
+                raise RuntimeError(
+                    f"Package {package_name} requires running Python code when it is added ({setup}). "
+                    "Pass allow_setup=True to add_package to allow it."
+                )
+
             self._call_setup(
                 package_name,
                 setup,
@@ -328,6 +310,40 @@ class Builtins(object):
                     self._simulator_class,
                 ),
             )
+
+    def _find_vhdl_standard(self, package_name: str, package: dict) -> Optional[str]:
+        """
+        Find the VHDL standard to compile the sources of a package with.
+
+        The standard of the project is used when the package supports it, otherwise the first
+        standard the package supports, and None stands for the standard of the project.
+        """
+        package_vhdl_standard = package.get("requires-vhdl", "")
+        if self._meets_required_version(VHDLStandard, str(self._vhdl_standard), package_vhdl_standard):
+            return None
+
+        use_vhdl_standard = None
+        for vhdl_standard in VHDL.STANDARDS:
+            if self._meets_required_version(VHDLStandard, str(vhdl_standard), package_vhdl_standard):
+                use_vhdl_standard = str(vhdl_standard)
+                break
+
+        if not use_vhdl_standard:
+            raise RuntimeError(
+                f"Package {package_name} requires VHDL standard "
+                f"{package['requires-vhdl']}. Failed to find a compatible standard."
+            )
+
+        LOGGER.warning(
+            "Package %s requires VHDL standard %s but current standard is %s. "
+            "Proceeding with mixed-language compilation using VHDL standard %s for the package.",
+            package_name,
+            package["requires-vhdl"],
+            self._vhdl_standard,
+            use_vhdl_standard,
+        )
+
+        return use_vhdl_standard
 
     @staticmethod
     def _call_setup(package_name: str, setup: str, context: PackageContext) -> None:

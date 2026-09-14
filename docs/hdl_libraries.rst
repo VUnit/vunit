@@ -114,6 +114,17 @@ adds a ``setup`` key naming a ``"module:function"`` setup function:
    [[package.sources]]
    include = ["src/*.vhd"]
 
+Running the function takes both the package declaring it and the project allowing it:
+
+.. code-block:: python
+
+   vu.add_package("foo", allow_setup=True)
+
+Adding a package declaring a setup function without ``allow_setup=True`` is an error naming the
+function that would have run.
+A package of nothing but VHDL never runs code of its own, and the Python code a project does allow
+to run is visible in the run script rather than in a manifest the project never reads.
+
 VUnit imports the module and calls the function with a :class:`PackageContext <vunit.package_context.PackageContext>`
 once the sources listed in the manifest have been added:
 
