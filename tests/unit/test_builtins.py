@@ -416,6 +416,8 @@ include=["hdl/src1/*.vhd"]
             self.assertEqual(context.run_script_path, Path("run.py"))
             self.assertIsNone(context.simulator_name)
             self.assertIsNone(context.simulator_class)
+            self.assertIsNone(context.simulator_prefix)
+            self.assertIsNone(context.simulator_backend)
 
             context.add_library("baz")
             self.vu.add_library.assert_called_with("baz")
@@ -460,6 +462,64 @@ setup = "foo_setup:setup"
             self.assertEqual(context.vhdl_standard, VHDL.standard("2008"))
             self.assertEqual(context.simulator_name, "ghdl")
             self.assertEqual(context.simulator_class, simulator_class)
+
+    def test_setup_function_gets_simulator_prefix_and_backend(self):
+        class SimulatorWithBackend:
+            """A simulator interface class determining a backend from its prefix, like GHDL."""
+
+            name = "ghdl"
+
+            @classmethod
+            def find_prefix(cls):
+                return "ghdl/bin"
+
+            @classmethod
+            def determine_backend(cls, prefix):
+                return {"ghdl/bin": "llvm"}[prefix]
+
+        class SimulatorWithoutBackend:
+            """A simulator interface class with no notion of a backend."""
+
+            name = "nvc"
+
+            @classmethod
+            def find_prefix(cls):
+                return "nvc/bin"
+
+        for simulator_class, prefix, backend in (
+            (SimulatorWithBackend, "ghdl/bin", "llvm"),
+            (SimulatorWithoutBackend, "nvc/bin", None),
+        ):
+            with (
+                create_tempdir() as tempdir,
+                pkg_env(tempdir),
+                importable_module(
+                    tempdir,
+                    "foo_setup",
+                    """\
+contexts = []
+
+
+def setup(context):
+    contexts.append(context)
+""",
+                ),
+            ):
+                self._write_toml(
+                    tempdir,
+                    """\
+[package]
+setup = "foo_setup:setup"
+""",
+                )
+
+                Builtins(self.vu, VHDLStandard("2008"), simulator_class).add_package("foo")
+
+                import foo_setup  # pylint: disable=import-outside-toplevel
+
+                context = foo_setup.contexts[0]
+                self.assertEqual(context.simulator_prefix, prefix)
+                self.assertEqual(context.simulator_backend, backend)
 
     def test_setup_function_registers_simulator_hooks(self):
         self.addCleanup(hooks.clear_hooks)

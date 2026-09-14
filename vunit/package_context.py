@@ -89,6 +89,33 @@ class PackageContext(object):
         """
         return self._simulator_class
 
+    @property
+    def simulator_prefix(self) -> Optional[str]:
+        """
+        The path the executables of the selected simulator were found in, None if no simulator
+        was found. The setup function of a package gets what it builds against from here, before
+        any simulator interface exists to ask.
+        """
+        return self._simulator_class.find_prefix() if self._simulator_class else None
+
+    @property
+    def simulator_backend(self) -> Optional[str]:
+        """
+        How the selected simulator installation was built, None for a simulator with no such
+        notion. What it says is simulator specific.
+
+        GHDL is the simulator having one: its code generator, ``"mcode"``, ``"llvm"``,
+        ``"llvm-jit"`` or ``"gcc"``, which decides how a native library is bound to the design.
+        It follows from the prefix, so it cannot be had from the simulator class alone.
+        """
+        determine_backend = getattr(self._simulator_class, "determine_backend", None)
+        prefix = self.simulator_prefix
+
+        if determine_backend is None or prefix is None:
+            return None
+
+        return determine_backend(prefix)
+
     def register_simulator_hooks(
         self,
         simulator_name: str,
