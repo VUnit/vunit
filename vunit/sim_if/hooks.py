@@ -16,31 +16,14 @@ The registry is cleared when a new VUnit object is created, that is the hooks re
 a project do not leak into the next one.
 """
 
-from dataclasses import dataclass, field
 from os import environ
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Optional, Tuple
 
 FlagsHook = Callable[..., List[str]]
 EnvHook = Callable[..., Dict[str, str]]
 
-
-@dataclass
-class _Hooks:
-    """The hooks registered for a simulator."""
-
-    elab_flags: List[FlagsHook] = field(default_factory=list)
-    run_flags: List[FlagsHook] = field(default_factory=list)
-    process_flags: List[FlagsHook] = field(default_factory=list)
-    run_env: List[EnvHook] = field(default_factory=list)
-
-
-_HOOKS: Dict[str, _Hooks] = {}
-
-
-def _check_callable(name: str, hook, simulator_name: str) -> None:
-    """Check that a hook is callable."""
-    if hook is not None and not callable(hook):
-        raise ValueError(f"{name} hook for simulator {simulator_name} is not callable.")
+# The hooks registered for a simulator name and a kind of hook
+_HOOKS: Dict[Tuple[str, str], List[Callable]] = {}
 
 
 def register_hooks(
@@ -69,24 +52,14 @@ def register_hooks(
     if not isinstance(simulator_name, str) or not simulator_name:
         raise ValueError("Simulator name must be a non-empty string.")
 
-    _check_callable("elab_flags", elab_flags, simulator_name)
-    _check_callable("run_flags", run_flags, simulator_name)
-    _check_callable("process_flags", process_flags, simulator_name)
-    _check_callable("run_env", run_env, simulator_name)
+    new_hooks = {"elab_flags": elab_flags, "run_flags": run_flags, "process_flags": process_flags, "run_env": run_env}
+    for kind, hook in new_hooks.items():
+        if hook is not None and not callable(hook):
+            raise ValueError(f"{kind} hook for simulator {simulator_name} is not callable.")
 
-    hooks = _HOOKS.setdefault(simulator_name, _Hooks())
-
-    if elab_flags is not None:
-        hooks.elab_flags.append(elab_flags)
-
-    if run_flags is not None:
-        hooks.run_flags.append(run_flags)
-
-    if process_flags is not None:
-        hooks.process_flags.append(process_flags)
-
-    if run_env is not None:
-        hooks.run_env.append(run_env)
+    for kind, hook in new_hooks.items():
+        if hook is not None:
+            _HOOKS.setdefault((simulator_name, kind), []).append(hook)
 
 
 def clear_hooks() -> None:
@@ -96,42 +69,12 @@ def clear_hooks() -> None:
     _HOOKS.clear()
 
 
-def _hooks(simulator_interface) -> _Hooks:
-    """Return the hooks registered for the simulator of the interface."""
-    return _HOOKS.get(simulator_interface.name, _Hooks())
-
-
-def get_elab_flags(simulator_interface) -> List[str]:
+def get_flags(simulator_interface, kind: str) -> List[str]:
     """
-    Return the extra elaboration flags provided by the hooks of the simulator.
+    Return the extra flags provided by the hooks of the simulator of a kind, that is
+    "elab_flags", "run_flags" or "process_flags".
     """
-    flags: List[str] = []
-    for hook in _hooks(simulator_interface).elab_flags:
-        flags += list(hook(simulator_interface))
-
-    return flags
-
-
-def get_run_flags(simulator_interface) -> List[str]:
-    """
-    Return the extra simulation flags provided by the hooks of the simulator.
-    """
-    flags: List[str] = []
-    for hook in _hooks(simulator_interface).run_flags:
-        flags += list(hook(simulator_interface))
-
-    return flags
-
-
-def get_process_flags(simulator_interface) -> List[str]:
-    """
-    Return the extra flags for the simulator process provided by the hooks of the simulator.
-    """
-    flags: List[str] = []
-    for hook in _hooks(simulator_interface).process_flags:
-        flags += list(hook(simulator_interface))
-
-    return flags
+    return [flag for hook in _HOOKS.get((simulator_interface.name, kind), []) for flag in hook(simulator_interface)]
 
 
 def get_run_env(simulator_interface, env: Optional[Dict[str, str]] = None) -> Optional[Dict[str, str]]:
@@ -142,7 +85,7 @@ def get_run_env(simulator_interface, env: Optional[Dict[str, str]] = None) -> Op
     inherits the environment of VUnit, in which case a copy of that environment is given to the
     hooks.
     """
-    hooks = _hooks(simulator_interface).run_env
+    hooks = _HOOKS.get((simulator_interface.name, "run_env"), [])
     if not hooks:
         return env
 

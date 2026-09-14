@@ -303,11 +303,13 @@ class Builtins(object):
                 package_name,
                 setup,
                 PackageContext(
-                    self._vunit_obj,
                     package_root,
                     library,
                     VHDL.standard(use_vhdl_standard) if use_vhdl_standard else self._vhdl_standard,
+                    Path(self._vunit_obj._output_path),  # pylint: disable=protected-access
+                    self._vunit_obj._run_script_path,  # pylint: disable=protected-access
                     self._simulator_class,
+                    self._vunit_obj,
                 ),
             )
 
@@ -322,11 +324,14 @@ class Builtins(object):
         if self._meets_required_version(VHDLStandard, str(self._vhdl_standard), package_vhdl_standard):
             return None
 
-        use_vhdl_standard = None
-        for vhdl_standard in VHDL.STANDARDS:
-            if self._meets_required_version(VHDLStandard, str(vhdl_standard), package_vhdl_standard):
-                use_vhdl_standard = str(vhdl_standard)
-                break
+        use_vhdl_standard = next(
+            (
+                str(standard)
+                for standard in VHDL.STANDARDS
+                if self._meets_required_version(VHDLStandard, str(standard), package_vhdl_standard)
+            ),
+            None,
+        )
 
         if not use_vhdl_standard:
             raise RuntimeError(

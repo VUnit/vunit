@@ -857,7 +857,7 @@ proc _vunit_sim_restart {} {
         if self._gui:
             vopt_extra_args = config.sim_options.get("modelsim.vopt_flags.gui", vopt_extra_args)
 
-        return " ".join(vopt_extra_args + hooks.get_elab_flags(self))
+        return " ".join(vopt_extra_args + hooks.get_flags(self, "elab_flags"))
 
     def _vsim_extra_args(self, config):
         """
@@ -869,7 +869,7 @@ proc _vunit_sim_restart {} {
         if self._gui:
             vsim_extra_args = config.sim_options.get("modelsim.vsim_flags.gui", vsim_extra_args)
 
-        return " ".join(vsim_extra_args + hooks.get_run_flags(self))
+        return " ".join(vsim_extra_args + hooks.get_flags(self, "run_flags"))
 
     def merge_coverage(self, file_name, args=None):
         """

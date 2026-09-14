@@ -614,9 +614,9 @@ setup = "foo_setup:setup"
 
             simulator_interface = mock.Mock()
             simulator_interface.name = "ghdl"
-            self.assertEqual(hooks.get_elab_flags(simulator_interface), ["-Wl,-lfoo"])
-            self.assertEqual(hooks.get_run_flags(simulator_interface), ["--load=foo"])
-            self.assertEqual(hooks.get_process_flags(simulator_interface), ["-noautoldlibpath"])
+            self.assertEqual(hooks.get_flags(simulator_interface, "elab_flags"), ["-Wl,-lfoo"])
+            self.assertEqual(hooks.get_flags(simulator_interface, "run_flags"), ["--load=foo"])
+            self.assertEqual(hooks.get_flags(simulator_interface, "process_flags"), ["-noautoldlibpath"])
             self.assertEqual(hooks.get_run_env(simulator_interface, {}), {"FOO": "1"})
 
     def test_raises_if_setup_has_invalid_format(self):

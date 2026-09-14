@@ -369,7 +369,7 @@ proc vunit_load {{}} {{
         if self._gui:
             vsim_extra_args = config.sim_options.get("rivierapro.vsim_flags.gui", vsim_extra_args)
 
-        return " ".join(vsim_extra_args + hooks.get_run_flags(self))
+        return " ".join(vsim_extra_args + hooks.get_flags(self, "run_flags"))
 
     @staticmethod
     def _create_run_function():

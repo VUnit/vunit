@@ -3,3 +3,4 @@ its setup function. A hook provides extra elaboration flags, extra simulation fl
 simulator process VUnit starts or the environment of the simulation for one simulator, which is what a
 package whose HDL code depends on something built outside the simulator needs to have that found and
 loaded.
+A simulator interface gives a hook the prefix it was found in with its new ``prefix`` property.

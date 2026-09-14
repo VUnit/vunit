@@ -277,7 +277,7 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
         cmd += ["-e"]
 
         cmd += config.sim_options.get("nvc.elab_flags", [])
-        cmd += hooks.get_elab_flags(self)
+        cmd += hooks.get_flags(self, "elab_flags")
 
         if config.sim_options.get("enable_coverage", False):
             coverage_file_path = str(Path(output_path) / "coverage.ncdb")
@@ -308,7 +308,7 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
                     config.vhdl_assert_stop_level
                 )
             cmd += config_sim_options
-            cmd += hooks.get_run_flags(self)
+            cmd += hooks.get_flags(self, "run_flags")
             cmd += [f"--exit-severity={config.vhdl_assert_stop_level}"]
 
             if not self._ieee_warnings_global and config.sim_options.get("disable_ieee_warnings", False):

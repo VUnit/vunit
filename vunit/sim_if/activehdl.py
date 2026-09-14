@@ -222,7 +222,7 @@ class ActiveHDLInterface(SimulatorInterface):
         if self._gui:
             vsim_extra_args = config.sim_options.get("activehdl.vsim_flags.gui", vsim_extra_args)
 
-        return " ".join(vsim_extra_args + hooks.get_run_flags(self))
+        return " ".join(vsim_extra_args + hooks.get_flags(self, "run_flags"))
 
     def _create_load_function(self, config, output_path):
         """

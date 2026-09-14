@@ -31,7 +31,7 @@ class VsimSimulatorMixin(object):
 
         prefix = self._prefix  # Avoid circular dependency inhibiting process destruction
         env = hooks.get_run_env(self, self.get_env())
-        process_flags = hooks.get_process_flags(self)
+        process_flags = hooks.get_flags(self, "process_flags")
 
         def create_process(ident):
             return Process(
@@ -335,7 +335,7 @@ proc vunit_run {} {
             if extra_args:
                 args += extra_args
 
-            args += hooks.get_process_flags(self)
+            args += hooks.get_flags(self, "process_flags")
 
             proc = Process(
                 args,

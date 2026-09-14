@@ -25,6 +25,8 @@ from vunit.sim_if.vsim_simulator_mixin import VsimSimulatorMixin
 from vunit.vhdl_standard import VHDL
 from tests.common import create_tempdir
 
+FLAG_KINDS = ("elab_flags", "run_flags", "process_flags")
+
 
 def make_config(**kwargs):
     """Create a minimal test configuration."""
@@ -60,9 +62,8 @@ class TestSimulatorHooks(unittest.TestCase):
 
     def test_no_hooks_by_default(self):
         simulator = self._simulator("ghdl")
-        self.assertEqual(hooks.get_elab_flags(simulator), [])
-        self.assertEqual(hooks.get_run_flags(simulator), [])
-        self.assertEqual(hooks.get_process_flags(simulator), [])
+        for kind in FLAG_KINDS:
+            self.assertEqual(hooks.get_flags(simulator, kind), [])
         self.assertIsNone(hooks.get_run_env(simulator))
         self.assertEqual(hooks.get_run_env(simulator, {"FOO": "1"}), {"FOO": "1"})
 
@@ -76,23 +77,25 @@ class TestSimulatorHooks(unittest.TestCase):
             run_env=lambda interface, env: dict(env, FOO=interface.name),
         )
 
-        self.assertEqual(hooks.get_elab_flags(simulator), ["-Wl,-lghdl"])
-        self.assertEqual(hooks.get_run_flags(simulator), ["--load"])
-        self.assertEqual(hooks.get_process_flags(simulator), ["-ghdl"])
+        self.assertEqual(hooks.get_flags(simulator, "elab_flags"), ["-Wl,-lghdl"])
+        self.assertEqual(hooks.get_flags(simulator, "run_flags"), ["--load"])
+        self.assertEqual(hooks.get_flags(simulator, "process_flags"), ["-ghdl"])
         self.assertEqual(hooks.get_run_env(simulator, {"BAR": "1"}), {"BAR": "1", "FOO": "ghdl"})
 
     def test_combines_hooks_in_registration_order(self):
         simulator = self._simulator("ghdl")
-        hooks.register_hooks("ghdl", elab_flags=lambda interface: ["first"])
-        hooks.register_hooks("ghdl", elab_flags=lambda interface: ["second"])
+        for kind in FLAG_KINDS:
+            hooks.register_hooks("ghdl", **{kind: lambda interface: ["first"]})
+            hooks.register_hooks("ghdl", **{kind: lambda interface: ["second"]})
 
-        self.assertEqual(hooks.get_elab_flags(simulator), ["first", "second"])
+            self.assertEqual(hooks.get_flags(simulator, kind), ["first", "second"])
 
     def test_hooks_are_specific_to_a_simulator(self):
-        hooks.register_hooks("ghdl", run_flags=lambda interface: ["--load"])
+        for kind in FLAG_KINDS:
+            hooks.register_hooks("ghdl", **{kind: lambda interface: ["--load"]})
 
-        self.assertEqual(hooks.get_run_flags(self._simulator("ghdl")), ["--load"])
-        self.assertEqual(hooks.get_run_flags(self._simulator("nvc")), [])
+            self.assertEqual(hooks.get_flags(self._simulator("ghdl"), kind), ["--load"])
+            self.assertEqual(hooks.get_flags(self._simulator("nvc"), kind), [])
 
     def test_copies_the_environment_when_there_is_none(self):
         simulator = self._simulator("ghdl")
@@ -107,14 +110,7 @@ class TestSimulatorHooks(unittest.TestCase):
         hooks.register_hooks("ghdl", elab_flags=lambda interface: ["--load"])
         hooks.clear_hooks()
 
-        self.assertEqual(hooks.get_elab_flags(simulator), [])
-
-    def test_combines_process_flags_hooks_in_registration_order(self):
-        simulator = self._simulator("modelsim")
-        hooks.register_hooks("modelsim", process_flags=lambda interface: ["first"])
-        hooks.register_hooks("modelsim", process_flags=lambda interface: ["second"])
-
-        self.assertEqual(hooks.get_process_flags(simulator), ["first", "second"])
+        self.assertEqual(hooks.get_flags(simulator, "elab_flags"), [])
 
     def test_raises_if_hook_is_not_callable(self):
         with self.assertRaisesRegex(ValueError, "run_flags hook for simulator ghdl is not callable."):
@@ -136,7 +132,7 @@ class TestSimulatorHooks(unittest.TestCase):
         ):
             VUnit.from_argv(argv=["--output-path=%s" % tempdir])
 
-        self.assertEqual(hooks.get_elab_flags(self._simulator("ghdl")), [])
+        self.assertEqual(hooks.get_flags(self._simulator("ghdl"), "elab_flags"), [])
 
 
 class TestSimulatorHooksAreUsed(unittest.TestCase):
