@@ -122,6 +122,18 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
         self._coverage_files = set()  # For --coverage
         self._version = self.determine_version(self.find_prefix())
 
+    @property
+    def backend(self):
+        """
+        The code generator backend of the GHDL used: "mcode", "llvm", "llvm-jit" or "gcc".
+
+        A simulator hook of a VUnit package is given this interface and can let its result
+        depend on the backend, which decides how a native library is bound to the design:
+        the ahead-of-time linking backends, "llvm" and "gcc", link it at elaboration while
+        the others load it at run time.
+        """
+        return self._backend
+
     def has_valid_exit_code(self):  # pylint: disable=arguments-differ
         """
         Return if the simulation should fail with nonzero exit codes
