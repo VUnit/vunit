@@ -21,22 +21,43 @@
 -- variants of this package declare the same primitives and implement them by
 -- reporting a failure.
 
+use work.id_pkg.all;
 use work.integer_array_pkg.all;
+use work.integer_vector_ptr_pkg.all;
 use work.logger_pkg.all;
 use work.python_bridge_pkg.all;
 
 package python_ffi_pkg is
-  -- Logger used to report Python errors, for example exceptions with their traceback
-  constant python_logger : logger_t := get_logger("vunit_lib:python");
+  -- The identity of the Python interface. It is the parent of the session
+  -- identities and of python_logger.
+  constant p_python_id : id_t := get_id("vunit_lib:python");
 
-  -- A session is a named Python namespace. Sessions are created on first use
-  -- and are isolated from each other, for example
+  -- Logger used to report Python errors, for example exceptions with their
+  -- traceback. An operation performed in a session other than the default one
+  -- reports on the logger of that session, get_logger(<its name>,
+  -- python_logger), which is a child of python_logger.
+  constant python_logger : logger_t := get_logger(p_python_id);
+
+  -- A session is a named Python namespace. Sessions are isolated from each
+  -- other and are created from their name, which is an identity under the
+  -- identity of the Python interface:
   --
-  --   constant golden_model : python_session_t := "golden_model";
+  --   constant golden_model : python_session_t := new_session("golden_model");
   --
-  -- The default session is the __main__ namespace.
-  type python_session_t is array (positive range <>) of character;
-  constant default_session : python_session_t := "default";
+  -- The Python namespace is created on first use. The default session is the
+  -- __main__ namespace.
+  type python_session_t is record
+    p_data : integer_vector_ptr_t;
+  end record;
+
+  impure function new_session(name : string) return python_session_t;
+  impure function name(session : python_session_t) return string;
+
+  -- The session the operations are performed in when no other one is given.
+  -- It is created the way new_session does, which cannot be called here since
+  -- its body is not elaborated until the package body is.
+  constant default_session : python_session_t :=
+    (p_data => new_integer_vector_ptr(1, value => to_integer(get_id("default", parent => p_python_id))));
 
   -- Start the embedded Python interpreter eagerly. Optional and idempotent:
   -- without it the interpreter starts on first use.
@@ -86,18 +107,23 @@ package python_ffi_pkg is
   constant p_kind_integer_vector : integer := 9;
   constant p_kind_real_vector : integer := 10;
 
+  -- The logger the operations of a session report on
+  impure function p_logger(session : python_session_t := default_session) return logger_t;
+
   -- Names of the operations, used in the error messages
-  function p_exec_operation(session : python_session_t := default_session) return string;
-  function p_exec_file_operation(
+  impure function p_exec_operation(session : python_session_t := default_session) return string;
+  impure function p_exec_file_operation(
     file_name : string; session : python_session_t := default_session
   ) return string;
-  function p_eval_operation(expr : string; session : python_session_t := default_session) return string;
+  impure function p_eval_operation(expr : string; session : python_session_t := default_session) return string;
 
   -- The error of the last failed bridge operation, typically a Python traceback
   impure function p_error_text return string;
 
   -- Report a failed operation (status /= 0) with its error. True if it succeeded.
-  impure function p_succeeded(status : integer; operation : string) return boolean;
+  impure function p_succeeded(
+    status : integer; operation : string; logger : logger_t := python_logger
+  ) return boolean;
 
   -- Transfer a string to the bridge buffer. Returns the bridge status.
   impure function p_send(text : string) return integer;
@@ -144,32 +170,67 @@ end package;
 
 package body python_ffi_pkg is
   -----------------------------------------------------------------------------
-  -- Operation names
+  -- Sessions
   -----------------------------------------------------------------------------
-  function p_exec_operation(session : python_session_t := default_session) return string is
+  impure function new_session(name : string) return python_session_t is
   begin
-    if session = default_session then
-      return "exec";
-    end if;
-    return "exec(session => """ & string(session) & """)";
+    return (p_data => new_integer_vector_ptr(1, value => to_integer(get_id(name, parent => p_python_id))));
   end;
 
-  function p_exec_file_operation(
+  -- The identity of a session, which is what two sessions are compared by
+  impure function p_id(session : python_session_t) return id_t is
+  begin
+    return to_id(get(session.p_data, 0));
+  end;
+
+  impure function name(session : python_session_t) return string is
+  begin
+    return name(p_id(session));
+  end;
+
+  impure function p_is_default(session : python_session_t) return boolean is
+  begin
+    return p_id(session) = p_id(default_session);
+  end;
+
+  -- Mocking a logger does not capture the logs of its children, so the
+  -- operations of the default session report on python_logger itself rather
+  -- than on a logger of their own.
+  impure function p_logger(session : python_session_t := default_session) return logger_t is
+  begin
+    if p_is_default(session) then
+      return python_logger;
+    end if;
+    return get_logger(p_id(session));
+  end;
+
+  -----------------------------------------------------------------------------
+  -- Operation names
+  -----------------------------------------------------------------------------
+  impure function p_exec_operation(session : python_session_t := default_session) return string is
+  begin
+    if p_is_default(session) then
+      return "exec";
+    end if;
+    return "exec(session => """ & name(session) & """)";
+  end;
+
+  impure function p_exec_file_operation(
     file_name : string; session : python_session_t := default_session
   ) return string is
   begin
-    if session = default_session then
+    if p_is_default(session) then
       return "exec_file(""" & file_name & """)";
     end if;
-    return "exec_file(""" & file_name & """, session => """ & string(session) & """)";
+    return "exec_file(""" & file_name & """, session => """ & name(session) & """)";
   end;
 
-  function p_eval_operation(expr : string; session : python_session_t := default_session) return string is
+  impure function p_eval_operation(expr : string; session : python_session_t := default_session) return string is
   begin
-    if session = default_session then
+    if p_is_default(session) then
       return "eval(""" & expr & """)";
     end if;
-    return "eval(""" & expr & """, session => """ & string(session) & """)";
+    return "eval(""" & expr & """, session => """ & name(session) & """)";
   end;
 
   -----------------------------------------------------------------------------
@@ -190,12 +251,14 @@ package body python_ffi_pkg is
     return result;
   end;
 
-  impure function p_succeeded(status : integer; operation : string) return boolean is
+  impure function p_succeeded(
+    status : integer; operation : string; logger : logger_t := python_logger
+  ) return boolean is
   begin
     if status = 0 then
       return true;
     end if;
-    failure(python_logger, operation & " failed:" & LF & p_error_text);
+    failure(logger, operation & " failed:" & LF & p_error_text);
     return false;
   end;
 
@@ -216,8 +279,9 @@ package body python_ffi_pkg is
   end;
 
   impure function p_begin(session : python_session_t; operation : string) return boolean is
+    constant logger : logger_t := p_logger(session);
   begin
-    return p_succeeded(p_send(string(session)), operation) and p_succeeded(vpy_begin, operation);
+    return p_succeeded(p_send(name(session)), operation, logger) and p_succeeded(vpy_begin, operation, logger);
   end;
 
   impure function p_exec(
@@ -226,10 +290,11 @@ package body python_ffi_pkg is
     operation : string;
     session   : python_session_t := default_session
   ) return boolean is
+    constant logger : logger_t := p_logger(session);
   begin
     return p_begin(session, operation)
-      and p_succeeded(p_send(text), operation)
-      and p_succeeded(vpy_execute(is_file), operation);
+      and p_succeeded(p_send(text), operation, logger)
+      and p_succeeded(vpy_execute(is_file), operation, logger);
   end;
 
   impure function p_exec_file(
@@ -246,10 +311,11 @@ package body python_ffi_pkg is
     operation : string;
     session   : python_session_t := default_session
   ) return boolean is
+    constant logger : logger_t := p_logger(session);
   begin
     return p_begin(session, operation)
-      and p_succeeded(p_send(expr), operation)
-      and p_succeeded(vpy_eval(kind, width), operation);
+      and p_succeeded(p_send(expr), operation, logger)
+      and p_succeeded(vpy_eval(kind, width), operation, logger);
   end;
 
   -----------------------------------------------------------------------------

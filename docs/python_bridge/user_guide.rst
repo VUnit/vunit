@@ -100,19 +100,20 @@ Every operation that runs Python code or evaluates a Python expression --
 ``import_run_script`` and ``import_module_from_file`` -- takes an optional
 trailing parameter,
 ``session : python_session_t := default_session``, that selects the namespace
-the operation runs in. A session is created the first time it is used; the
+the operation runs in. A session is made from its name with ``new_session``
+and its Python namespace is created the first time it is used; the
 ``default_session`` constant used when the parameter is omitted runs in
 ``__main__``.
 
 .. code-block:: vhdl
 
-    constant golden : python_session_t := "golden";
-    constant fixed_point : python_session_t := "fixed_point";
+    constant golden : python_session_t := new_session("golden");
+    constant fixed_point : python_session_t := new_session("fixed_point");
 
     ...
 
     exec("x = 1", session => golden);
-    exec_file("models/fixed_point.py", session => fixed_point);
+    exec_file("fixed_point.py", session => fixed_point);
 
     expected := eval("model(x)", session => golden);
     got := call("model", arg(x), session => fixed_point);
@@ -120,6 +121,22 @@ the operation runs in. A session is created the first time it is used; the
 Since ``session`` comes after up to 10 positional arguments in ``call``, it is
 normally given by name, as above. Both sessions in the example can define
 ``model`` without interfering with each other.
+
+The name of a session is a VUnit :ref:`identity <id_user_guide>` under
+``vunit_lib:python``, the identity of ``python_logger``, and ``name(session)``
+returns it. Two sessions made from the same name are the same session, so a
+session does not have to be passed around to be used in several places.
+
+Errors of an operation performed in a session other than the default one are
+reported on the logger of that session, ``get_logger(<its name>,
+python_logger)``, which is a child of ``python_logger``. Mocking a logger does
+not capture what its children log, which is why the default session reports on
+``python_logger`` itself and why a test that mocks the errors of a session
+mocks that session's logger:
+
+.. code-block:: vhdl
+
+    mock(get_logger("golden", python_logger), failure);
 
 On Riviera-PRO/Active-HDL (VHPI), only the default session is supported:
 passing any other session fails with a clear error.

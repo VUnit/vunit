@@ -38,8 +38,13 @@ architecture tb of tb_python_pkg_bridge is
     "describe(v=__vunit__.error(""kwarg_unsigned cannot convert \""1010X010\""; the value has metavalues""))";
 begin
   main : process
-    constant golden : python_session_t := "golden";
-    constant fixed_point : python_session_t := "fixed_point";
+    constant golden : python_session_t := new_session("golden");
+    constant fixed_point : python_session_t := new_session("fixed_point");
+
+    -- Operations of a session other than the default one report on the logger
+    -- of the session, a child of python_logger
+    constant golden_logger : logger_t := get_logger("golden", python_logger);
+    constant fixed_point_logger : logger_t := get_logger("fixed_point", python_logger);
     variable arr, arr_b, result : integer_array_t;
     variable ptr : integer_vector_ptr_t;
     variable slv4 : std_ulogic_vector(3 downto 0);
@@ -917,17 +922,17 @@ begin
       elsif run("Test that a name defined in another session is not visible") then
         define_error_helper;
         exec("def only_in_golden(): return 1", golden);
-        mock(python_logger, failure);
+        mock(fixed_point_logger, failure);
         discard_int := call("only_in_golden", session => fixed_point);
         check_only_log(
-          python_logger,
+          fixed_point_logger,
           "eval(""only_in_golden()"", session => ""fixed_point"") failed:" & LF &
           call_string(
             "expected_error", arg(string'("only_in_golden()")), arg(string'("<eval fixed_point #1>")), arg(true)
           ),
           failure
         );
-        unmock(python_logger);
+        unmock(fixed_point_logger);
 
       elsif run("Test executing a file in different sessions") then
         exec_file("models/counter.py", golden);
@@ -956,15 +961,24 @@ begin
 
       elsif run("Test error context names the session") then
         define_error_helper;
-        mock(python_logger, failure);
+        mock(golden_logger, failure);
         exec("1 / 0", golden);
         check_only_log(
-          python_logger,
+          golden_logger,
           "exec(session => ""golden"") failed:" & LF &
           call_string("expected_error", arg(string'("1 / 0")), arg(string'("<exec golden #2>"))),
           failure
         );
-        unmock(python_logger);
+        unmock(golden_logger);
+
+      elsif run("Test that a session is an identity under the Python interface") then
+        check_equal(name(golden), "golden");
+        check_equal(name(default_session), "default");
+        check_equal(get_full_name(get_logger(name(golden), python_logger)), "vunit_lib:python:golden");
+        -- The same name is the same session
+        check_equal(name(new_session("golden")), "golden");
+        exec("session_marker = 1", golden);
+        check_equal(eval_integer("session_marker", new_session("golden")), 1);
 
       end if;
     end loop;

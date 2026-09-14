@@ -52,8 +52,8 @@ begin
 
     -- A session is a Python namespace of its own, which is what makes it
     -- possible to have two models that both define model and config
-    constant golden : python_session_t := "golden";
-    constant fixed_point : python_session_t := "fixed_point";
+    constant golden : python_session_t := new_session("golden");
+    constant fixed_point : python_session_t := new_session("fixed_point");
 
     variable cycles : unsigned(63 downto 0) := x"123456789ABCDEF0";
     variable value : unsigned(31 downto 0) := x"DEADBEEF";
