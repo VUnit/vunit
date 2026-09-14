@@ -36,7 +36,9 @@ ARG_SIGNATURE = ", ".join(["string"] + ["arg_t"] * len(ARGS) + ["python_session_
 # template.
 #
 # vhdl:   the VHDL type
-# impure: true when the conversion can fail, which makes the functions impure
+# impure: true when the functions must be impure
+# fails:  true when the conversion can fail, which makes p_arg_value take the
+#         name of the operation to report the value it cannot convert
 # suffix: appended to the arg and kwarg names, empty for an overload
 #
 # The integer_array_t value is transferred by the Python bridge, which makes it
@@ -50,12 +52,12 @@ ARG_SIGNATURE = ", ".join(["string"] + ["arg_t"] * len(ARGS) + ["python_session_
 # std_ulogic_vector is deliberately not among the types at all. Such values
 # are passed as arg(to_string(slv)) and arg_unsigned(unsigned(slv)).
 ARG_VALUES = [
-    dict(vhdl="real_vector", impure=False, suffix=""),
-    dict(vhdl="integer_vector_ptr_t", impure=True, suffix=""),
-    dict(vhdl="std_ulogic", impure=True, suffix=""),
-    dict(vhdl="unsigned", impure=True, suffix="_unsigned"),
-    dict(vhdl="signed", impure=True, suffix="_signed"),
-    dict(vhdl="integer_array_t", impure=True, suffix=""),
+    dict(vhdl="real_vector", impure=False, fails=False, suffix=""),
+    dict(vhdl="integer_vector_ptr_t", impure=True, fails=False, suffix=""),
+    dict(vhdl="std_ulogic", impure=True, fails=True, suffix=""),
+    dict(vhdl="unsigned", impure=True, fails=True, suffix="_unsigned"),
+    dict(vhdl="signed", impure=True, fails=True, suffix="_signed"),
+    dict(vhdl="integer_array_t", impure=True, fails=True, suffix=""),
 ]
 
 # Result types of eval and call.
@@ -217,10 +219,11 @@ def arg_functions():
             (f"arg{suffix}", f"value : {value_type}", "(p_positional_arg, text)"),
             (f"kwarg{suffix}", f"kw : string; value : {value_type}", "(kw, text)"),
         ]:
+            operation = f', "{name}"' if value["fails"] else ""
             parts.append(
                 f"""\
   {purity}function {name}({parameters}) return arg_t is
-    constant text : string := p_arg_value(value, "{name}");
+    constant text : string := p_arg_value(value{operation});
   begin
     if text = "" then
       return null_arg;

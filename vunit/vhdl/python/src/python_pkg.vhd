@@ -474,14 +474,15 @@ package body python_pkg is
     end if;
   end;
 
-  -- The Python source text of an argument value. The operation is only used to
-  -- report a value that cannot be converted, which gives an empty string.
-  function p_arg_value(value : real_vector; operation : string) return string is
+  -- The Python source text of an argument value. The overloads whose
+  -- conversion can fail take the name of the operation, used to report a value
+  -- that cannot be converted, which gives an empty string.
+  function p_arg_value(value : real_vector) return string is
   begin
     return to_py_list_str(value);
   end;
 
-  impure function p_arg_value(value : integer_vector_ptr_t; operation : string) return string is
+  impure function p_arg_value(value : integer_vector_ptr_t) return string is
   begin
     return to_py_list_str(value);
   end;
@@ -594,7 +595,7 @@ package body python_pkg is
   end;
 
   function arg(value : real_vector) return arg_t is
-    constant text : string := p_arg_value(value, "arg");
+    constant text : string := p_arg_value(value);
   begin
     if text = "" then
       return null_arg;
@@ -603,7 +604,7 @@ package body python_pkg is
   end;
 
   function kwarg(kw : string; value : real_vector) return arg_t is
-    constant text : string := p_arg_value(value, "kwarg");
+    constant text : string := p_arg_value(value);
   begin
     if text = "" then
       return null_arg;
@@ -612,7 +613,7 @@ package body python_pkg is
   end;
 
   impure function arg(value : integer_vector_ptr_t) return arg_t is
-    constant text : string := p_arg_value(value, "arg");
+    constant text : string := p_arg_value(value);
   begin
     if text = "" then
       return null_arg;
@@ -621,7 +622,7 @@ package body python_pkg is
   end;
 
   impure function kwarg(kw : string; value : integer_vector_ptr_t) return arg_t is
-    constant text : string := p_arg_value(value, "kwarg");
+    constant text : string := p_arg_value(value);
   begin
     if text = "" then
       return null_arg;
