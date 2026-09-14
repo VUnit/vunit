@@ -164,6 +164,20 @@ ModelSim/Questa where the flags are given to ``vopt``.
 ``run_env(simulator_interface, env)`` returns the environment of the simulation, given the environment
 it would otherwise have, and is used by GHDL and NVC.
 
+The simulator interface a hook is called with also tells how the simulator was found.
+``GHDLInterface.backend`` is the code generator of the GHDL used, ``"mcode"``, ``"llvm"``,
+``"llvm-jit"`` or ``"gcc"``, which decides how a native library is bound to the design:
+``"llvm"`` and ``"gcc"`` link it at elaboration while the others load it at run time.
+A hook picks what to return from it:
+
+.. code-block:: python
+   :caption: foo/vunit_setup.py
+
+   def elab_flags(simulator_interface):
+       if simulator_interface.backend not in ("llvm", "gcc"):
+           return []
+       return [f"-Wl,-L{library.parent}"]
+
 System Verilog
 ==============
 
