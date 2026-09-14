@@ -333,7 +333,7 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
         if self._has_output_flag():
             cmd += ["-o", bin_path]
         cmd += config.sim_options.get("ghdl.elab_flags", [])
-        cmd += hooks.get_elab_flags(self)
+        cmd += hooks.get_flags(self, "elab_flags")
         if config.sim_options.get("enable_coverage", False):
             if self._backend == "gcc":
                 # Enable coverage in linker
@@ -348,7 +348,7 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
             cmd += [config.entity_name, config.architecture_name]
 
         sim = config.sim_options.get("ghdl.sim_flags", [])
-        sim += hooks.get_run_flags(self)
+        sim += hooks.get_flags(self, "run_flags")
         for name, value in config.generics.items():
             sim += [f"-g{name!s}={value!s}"]
         sim += [f"--assert-level={config.vhdl_assert_stop_level!s}"]
