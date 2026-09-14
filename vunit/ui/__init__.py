@@ -12,6 +12,7 @@ Public VUnit User Interface (UI)
 
 import csv
 import sys
+import inspect
 import traceback
 import logging
 import json
@@ -47,6 +48,29 @@ from .common import LOGGER, TEST_OUTPUT_PATH, select_vhdl_standard, check_not_em
 from .source import SourceFile, SourceFileList
 from .library import Library, LibraryList
 from .results import Results
+
+
+def _find_run_script_path() -> Path:
+    """
+    Return the path of the run script, that is the file of the first call stack
+    frame which is not part of the vunit package.
+    """
+    vunit_package_dir = Path(__file__).resolve().parent.parent
+    for frame_info in inspect.stack(0):
+        candidate = Path(frame_info.filename)
+        if not candidate.is_file():
+            continue
+
+        candidate = candidate.resolve()
+        try:
+            candidate.relative_to(vunit_package_dir)
+        except ValueError:
+            return candidate
+
+    if Path(sys.argv[0]).is_file():
+        return Path(sys.argv[0]).resolve()
+
+    return Path.cwd()
 
 
 class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-public-methods
@@ -140,6 +164,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self._args = args
         self._configure_logging(args.log_level)
         self._output_path = str(Path(args.output_path).resolve())
+        self._run_script_path = _find_run_script_path()
 
         if args.no_color:
             self._printer = NO_COLOR_PRINTER
@@ -1278,7 +1303,44 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         self._builtins.add_vhdl_builtins(external=external, use_external_log=use_external_log)
 
     def add_package(self, package_name: str) -> None:
-        """Add VUnit package."""
+        """
+        Add a VUnit package, that is an installed Python package providing HDL code and
+        described by a ``vunit_pkg.toml`` file in its root directory.
+
+        The ``vunit_pkg.toml`` file has a single ``[package]`` table supporting these keys:
+
+        * ``library``: The name of the library created for the sources of the package. Mandatory
+          if the package has sources.
+        * ``sources``: A list of tables with an ``include`` key listing the paths, relative to the
+          package root, of the sources to add.
+        * ``requires-vunit``: The VUnit versions supported by the package, for example ``">=5.0.0"``.
+        * ``requires-vhdl``: The VHDL standards supported by the package, for example ``">=2008"``.
+        * ``setup``: A ``"module:function"`` string pointing out a setup function called with a
+          :class:`.PackageContext` once the sources of the package have been added. The setup
+          function is what a package uses to do work that cannot be expressed with static sources,
+          for example building a native library or registering simulator hooks.
+
+        :param package_name: The name of the Python package. Dashes and dots are, just like for
+                             PyPI package names, equivalent to underscores.
+
+        :example:
+
+        .. code-block:: python
+
+            VU.add_package("vunit-json-for-vhdl")
+
+        .. code-block:: toml
+           :caption: vunit_pkg.toml
+
+            [package]
+            requires-vunit = ">=5.0.0"
+            requires-vhdl = ">=2008"
+            library = "json4vhdl_lib"
+            setup = "json4vhdl.vunit_setup:setup"
+
+            [[package.sources]]
+            include = ["src/*.vhd"]
+        """
 
         self._builtins.add_package(package_name)
 
