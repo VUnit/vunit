@@ -338,23 +338,29 @@ is useful to embed a call inside a larger ``exec``/``eval`` string:
 Every unused trailing argument of ``call``/``to_call_str`` defaults to an
 ignored placeholder, so calls with fewer than 10 arguments need no padding.
 
-Keyword argument groups
-~~~~~~~~~~~~~~~~~~~~~~~~
+Argument groups
+~~~~~~~~~~~~~~~~
 
-Keyword arguments combined with ``&`` become a single argument, which makes it
-possible to pass more than 10 keyword arguments and to build the keyword
-arguments of a call in steps. ``null_arg`` is the identity of the operation and
-only keyword arguments, or groups of them, can be combined:
+Arguments combined with ``&`` become a single argument, which makes it
+possible to pass more than 10 arguments and to build the arguments of a call
+in steps. ``null_arg`` is the identity of the operation:
 
 .. code-block:: vhdl
 
     -- Calls plot(data, **dict(title="Step response", grid=True))
     call("plot", arg(data), kwarg("title", string'("Step response")) & kwarg("grid", true));
 
-The group is passed to Python as ``**dict(...)`` and therefore keeps Python's
-own rules: it must come after the positional arguments of the call and a
-keyword must not be repeated within it. It uses one of the 10 argument slots,
-no matter how many keyword arguments it holds.
+    -- Calls scale(*(1, 2,), **dict(gain=3))
+    call("scale", arg(1) & arg(2) & kwarg("gain", 3));
+
+A group of positional arguments is passed to Python as ``*(1, 2,)``, a group
+of keyword arguments as ``**dict(a=1, b=2)`` and a group of both as
+``*(1,), **dict(a=1)``. It uses one of the 10 argument slots, no matter how
+many arguments it holds, and keeps Python's own rules: a group with keyword
+arguments must come after the positional arguments of the call and a keyword
+must not be repeated within it. Appending a positional argument to a group
+that already has keyword arguments is an error for the same reason, reported
+as ``positional argument after keyword arguments``.
 
 import_run_script
 ------------------
@@ -559,8 +565,8 @@ See :vunit_example:`➚ examples/vhdl/embedded_python <vhdl/embedded_python>` fo
 a complete example covering all three simulator families.
 
 Its ``tb_example.vhd`` has a test case for each part of the API: ``exec`` and
-``eval`` with the types they convert, calls with positional, keyword and
-keyword group arguments, a 20 register status dump, wide
+``eval`` with the types they convert, calls with positional, keyword and group
+arguments, a 20 register status dump, wide
 ``arg_unsigned``/``arg_signed`` and ``std_ulogic`` argument values, a 2-D
 ``integer_array_t`` image transposed by NumPy, the result types of ``eval`` and
 ``call``, Python files executed with ``exec_file`` or imported with

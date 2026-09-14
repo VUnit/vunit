@@ -49,6 +49,7 @@ package python_pkg is
   end record;
   constant p_positional_arg : string := ".";
   constant p_ignore_arg : string := "-";
+  constant p_group_arg : string := "*";
   constant null_arg : arg_t := (name => p_ignore_arg, value => "");
 
   function arg(value : integer) return arg_t;
@@ -128,18 +129,20 @@ package python_pkg is
     string, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, python_session_t return real];
 
   -----------------------------------------------------------------------------
-  -- Keyword argument groups
+  -- Argument groups
   -----------------------------------------------------------------------------
-  -- Keyword arguments combined with & become a single argument, so that a call
-  -- can pass more than 10 keyword arguments and can build its keyword
-  -- arguments in steps:
+  -- Arguments combined with & become a single argument, so that a call can
+  -- pass more than the 10 arguments it takes and can build its arguments in
+  -- steps:
   --
   --   call("f", arg(x), kwarg("a", 1) & kwarg("b", 2));
   --
-  -- calls f(x, **dict(a=1, b=2)). null_arg is the identity of the operation
-  -- and only keyword arguments, or groups of them, can be combined. Python
-  -- keeps its own rules: a repeated keyword and a group followed by a
-  -- positional argument are syntax errors.
+  -- calls f(x, **dict(a=1, b=2)). A group of positional arguments becomes
+  -- *(1, 2,) and a group with both kinds *(1,), **dict(a=1). null_arg is the
+  -- identity of the operation. Python keeps its own rules: a repeated keyword
+  -- within a group is a syntax error and so is a group followed by a
+  -- positional argument of the call. Appending a positional argument to a
+  -- group that already has keyword arguments is an error for the same reason.
   impure function "&"(l, r : arg_t) return arg_t;
 
   -----------------------------------------------------------------------------
@@ -647,6 +650,121 @@ package body python_pkg is
     return (kw, p_arg_value(value, "kwarg"));
   end;
 
+  -----------------------------------------------------------------------------
+  -- Argument groups
+  -----------------------------------------------------------------------------
+  -- A group is one argument whose Python source text is spliced into the call
+  -- like a positional argument: *(1, 2,) for positional arguments,
+  -- **dict(a=1, b=2) for keyword arguments and *(1,), **dict(a=1) for both.
+  -- Its name is the group marker followed by the length of the positional
+  -- part, which is what tells the two parts apart when more arguments are
+  -- appended to the group.
+  constant p_positional_group : string := "*(";
+  constant p_keyword_group : string := "**dict(";
+
+  function p_is_group(value : arg_t) return boolean is
+    alias name : string(1 to value.name'length) is value.name;
+  begin
+    if name'length <= p_group_arg'length then
+      return false;
+    end if;
+    return name(1 to p_group_arg'length) = p_group_arg;
+  end;
+
+  -- The length of the positional part of a group, 0 when it has none
+  function p_group_split(value : arg_t) return natural is
+    alias name : string(1 to value.name'length) is value.name;
+  begin
+    return natural'value(name(p_group_arg'length + 1 to name'length));
+  end;
+
+  -- The positional arguments of an operand as they are written within *(...).
+  -- Every argument is followed by a comma, which is what makes *(1,) a tuple.
+  function p_positional_items(value : arg_t) return string is
+    alias text : string(1 to value.value'length) is value.value;
+  begin
+    if value.name = p_positional_arg then
+      return text & ",";
+    elsif p_is_group(value) then
+      if p_group_split(value) = 0 then
+        return "";
+      end if;
+      -- Drop the *( prefix and the ) of the positional part
+      return text(p_positional_group'length + 1 to p_group_split(value) - 1);
+    end if;
+    return "";
+  end;
+
+  -- The keyword arguments of an operand as they are written within **dict(...)
+  function p_keyword_items(value : arg_t) return string is
+    alias text : string(1 to value.value'length) is value.value;
+  begin
+    if value.name = p_ignore_arg or value.name = p_positional_arg then
+      return "";
+    elsif not p_is_group(value) then
+      return value.name & "=" & value.value;
+    elsif p_group_split(value) = text'length then
+      return "";
+    elsif p_group_split(value) = 0 then
+      -- Keyword arguments only: drop the **dict( prefix and the trailing )
+      return text(p_keyword_group'length + 1 to text'length - 1);
+    end if;
+    -- Both kinds: the keyword part follows the positional part and ", "
+    return text(p_group_split(value) + 2 + p_keyword_group'length + 1 to text'length - 1);
+  end;
+
+  -- The arguments of both operands, separated
+  function p_join(l, r, separator : string) return string is
+  begin
+    if l = "" then
+      return r;
+    elsif r = "" then
+      return l;
+    end if;
+    return l & separator & r;
+  end;
+
+  -- *(...) or **dict(...) of the arguments, nothing when there are none
+  function p_group_text(prefix, items : string) return string is
+  begin
+    if items = "" then
+      return "";
+    end if;
+    return prefix & items & ")";
+  end;
+
+  -- The group holding the given positional and keyword arguments
+  function p_group(positional_items, keyword_items : string) return arg_t is
+    constant positional : string := p_group_text(p_positional_group, positional_items);
+    constant keywords : string := p_group_text(p_keyword_group, keyword_items);
+  begin
+    if positional = "" then
+      return (p_group_arg & integer'image(0), keywords);
+    elsif keywords = "" then
+      return (p_group_arg & integer'image(positional'length), positional);
+    end if;
+    return (p_group_arg & integer'image(positional'length), positional & ", " & keywords);
+  end;
+
+  impure function "&"(l, r : arg_t) return arg_t is
+    constant l_positional : string := p_positional_items(l);
+    constant l_keywords : string := p_keyword_items(l);
+    constant r_positional : string := p_positional_items(r);
+    constant r_keywords : string := p_keyword_items(r);
+  begin
+    if l.name = p_ignore_arg then
+      return r;
+    elsif r.name = p_ignore_arg then
+      return l;
+    elsif l_keywords /= "" and r_positional /= "" then
+      -- Python's own rule
+      failure(python_logger, "positional argument after keyword arguments");
+      return null_arg;
+    end if;
+
+    return p_group(p_join(l_positional, r_positional, " "), p_join(l_keywords, r_keywords, ", "));
+  end;
+
   impure function to_call_str(
     identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg
   ) return string is
@@ -662,7 +780,8 @@ package body python_pkg is
         swrite(result, ", ");
       end if;
       first := false;
-      if value.name = p_positional_arg then
+      if value.name = p_positional_arg or p_is_group(value) then
+        -- A group is spliced into the call like a positional argument
         swrite(result, value.value);
       else
         swrite(result, value.name & "=" & value.value);
@@ -715,51 +834,6 @@ package body python_pkg is
   ) return real is
   begin
     return eval(to_call_str(identifier, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10), session);
-  end;
-
-  -----------------------------------------------------------------------------
-  -- Keyword argument groups
-  -----------------------------------------------------------------------------
-  -- A group of keyword arguments is a positional argument whose Python source
-  -- text is **dict(a=1, b=2), spliced into the call like any other positional
-  -- argument. The text of an arg(string) value is quoted and the text of the
-  -- other positional values is a number, a list or a name, so none of them can
-  -- be mistaken for a group.
-  constant p_group_prefix : string := "**dict(";
-
-  function p_is_group(value : arg_t) return boolean is
-    alias text : string(1 to value.value'length) is value.value;
-  begin
-    if value.name /= p_positional_arg or text'length < p_group_prefix'length then
-      return false;
-    end if;
-    return text(1 to p_group_prefix'length) = p_group_prefix;
-  end;
-
-  -- The keyword arguments of an operand as they are written within **dict(...)
-  function p_group_items(value : arg_t) return string is
-    alias text : string(1 to value.value'length) is value.value;
-  begin
-    if value.name = p_positional_arg then
-      -- A group: drop the **dict( prefix and the trailing )
-      return text(p_group_prefix'length + 1 to text'length - 1);
-    end if;
-    return value.name & "=" & value.value;
-  end;
-
-  impure function "&"(l, r : arg_t) return arg_t is
-  begin
-    if l.name = p_ignore_arg then
-      return r;
-    elsif r.name = p_ignore_arg then
-      return l;
-    elsif (l.name = p_positional_arg and not p_is_group(l)) or
-          (r.name = p_positional_arg and not p_is_group(r)) then
-      failure(python_logger, "Only keyword arguments can be combined with & into a keyword argument group");
-      return null_arg;
-    end if;
-
-    return (p_positional_arg, p_group_prefix & p_group_items(l) & ", " & p_group_items(r) & ")");
   end;
 
   -----------------------------------------------------------------------------

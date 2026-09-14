@@ -22,7 +22,7 @@ end entity;
 
 architecture tb of tb_python_pkg_bridge is
   constant std_ulogic_characters : string(1 to 9) := "UX01ZWLH-";
-  constant group_error : string := "Only keyword arguments can be combined with & into a keyword argument group";
+  constant group_error : string := "positional argument after keyword arguments";
 
   -- The Python triple quote, used to keep a source text with quotes of its own
   constant py_quotes : string := "'''";
@@ -546,7 +546,7 @@ begin
         bump_twice(arg(arr));
 
       ---------------------------------------------------------------------
-      -- Keyword argument groups
+      -- Argument groups
       ---------------------------------------------------------------------
       elsif run("Test a keyword argument group") then
         define_describe;
@@ -624,14 +624,34 @@ begin
         );
         unmock(python_logger);
 
-      elsif run("Test that combining a positional argument with & fails") then
+      elsif run("Test a positional argument group") then
+        define_describe;
+        -- The group is a single argument holding the arguments of both operands
+        check_equal(call_string("describe", arg(1) & arg(string'("x"))), "1, 'x'");
+        check_equal(call_string("describe", (arg(1) & arg(2)) & (arg(3) & arg(4))), "1, 2, 3, 4");
+        check_equal(call_string("describe", arg(0), arg(1) & arg(2)), "0, 1, 2");
+        check_equal(call_string("describe", null_arg & arg(1) & null_arg), "1");
+
+      elsif run("Test a mixed argument group") then
+        define_describe;
+        check_equal(call_string("describe", arg(1) & kwarg("a", 2)), "1, a=2");
+        check_equal(
+          call_string("describe", (arg(1) & arg(2)) & (kwarg("a", 3) & kwarg("b", 4))), "1, 2, a=3, b=4"
+        );
+        check_equal(call_string("describe", arg(1) & (kwarg("a", 2) & kwarg("b", 3))), "1, a=2, b=3");
+        check_equal(call_string("describe", ((arg(1) & kwarg("a", 2)) & kwarg("b", 3)) & null_arg), "1, a=2, b=3");
+        -- Also through to_call_str, which splices the group like a positional argument
+        exec("def add(x, y=0):" + "    return x + y");
+        check_equal(integer'(call("add", arg(1) & kwarg("y", 2))), 3);
+
+      elsif run("Test that a positional argument after a keyword argument fails") then
         define_describe;
         mock(python_logger, failure);
-        check_equal(call_string("describe", arg(1) & kwarg("a", 2)), "");
+        check_equal(call_string("describe", kwarg("a", 1) & arg(2)), "");
         check_log(python_logger, group_error, failure);
-        check_equal(call_string("describe", kwarg("a", 2) & arg(1)), "");
+        check_equal(call_string("describe", (arg(1) & kwarg("a", 2)) & arg(3)), "");
         check_log(python_logger, group_error, failure);
-        check_equal(call_string("describe", (kwarg("a", 1) & kwarg("b", 2)) & arg(3)), "");
+        check_equal(call_string("describe", (kwarg("a", 1) & kwarg("b", 2)) & (arg(3) & arg(4))), "");
         check_only_log(python_logger, group_error, failure);
         unmock(python_logger);
 

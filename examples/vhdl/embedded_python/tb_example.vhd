@@ -375,10 +375,10 @@ begin
         check_equal(eval("l[0]"), 2);
         check_equal(eval("l[1]"), 1);
 
-      elsif run("Test keyword argument groups") then
-        -- Keyword arguments combined with & become a single argument. That makes it
+      elsif run("Test argument groups") then
+        -- Arguments combined with & become a single argument. That makes it
         -- possible to pass more than the 10 arguments call takes, and to build the
-        -- keyword arguments of a call in steps, for example one group per register block.
+        -- arguments of a call in steps, for example one group per register block.
         import_device_model;
 
         -- A register dump: five samples passed positionally and 20 status registers
