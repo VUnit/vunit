@@ -129,6 +129,41 @@ The context provides the package root, the library created for the package, the 
 its sources, the VUnit output path, the path of the run script and the selected simulator.
 Errors raised by the setup function are reported as an error for the package.
 
+Simulator Hooks
+---------------
+
+The HDL code of a package can depend on something built outside the simulator, a native library or
+generated files, and then the simulator typically has to be given extra options to find it: flags for
+the elaboration of a test, flags for its simulation or environment variables.
+``context.register_simulator_hooks(simulator_name, ...)`` registers, for one simulator, functions
+returning those extras.
+The hooks are called with the simulator interface such that what they return can depend on how the
+simulator was configured and they only apply to the project they were registered for.
+Here the flags give the simulator the search path of a library the package built and ask it to load
+it:
+
+.. code-block:: python
+   :caption: foo/vunit_setup.py
+
+   def setup(context):
+       library = build_native_library(context.package_root / "c", context.output_path / "foo")
+
+       context.register_simulator_hooks(
+           "nvc",
+           run_flags=lambda simulator_interface: [f"--load={library}"],
+       )
+
+       context.register_simulator_hooks(
+           "ghdl",
+           elab_flags=lambda simulator_interface: [f"-Wl,{library}"],
+       )
+
+``elab_flags`` is only used by simulators with a separate elaboration step, that is GHDL, NVC and
+ModelSim/Questa where the flags are given to ``vopt``.
+``run_flags`` is used by all simulators.
+``run_env(simulator_interface, env)`` returns the environment of the simulation, given the environment
+it would otherwise have, and is used by GHDL and NVC.
+
 System Verilog
 ==============
 

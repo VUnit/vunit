@@ -19,6 +19,7 @@ from vunit.builtins import Builtins, BuiltinsAdder
 from vunit.about import version
 from vunit.vhdl_standard import VHDL, VHDLStandard
 from vunit.project import Project
+from vunit.sim_if import hooks
 from tests.common import create_tempdir
 from contextlib import contextmanager
 from importlib.machinery import ModuleSpec
@@ -459,6 +460,42 @@ setup = "foo_setup:setup"
             self.assertEqual(context.vhdl_standard, VHDL.standard("2008"))
             self.assertEqual(context.simulator_name, "ghdl")
             self.assertEqual(context.simulator_class, simulator_class)
+
+    def test_setup_function_registers_simulator_hooks(self):
+        self.addCleanup(hooks.clear_hooks)
+
+        with (
+            create_tempdir() as tempdir,
+            pkg_env(tempdir),
+            importable_module(
+                tempdir,
+                "foo_setup",
+                """\
+def setup(context):
+    context.register_simulator_hooks(
+        "ghdl",
+        elab_flags=lambda simulator_interface: ["-Wl,-lfoo"],
+        run_flags=lambda simulator_interface: ["--load=foo"],
+        run_env=lambda simulator_interface, env: dict(env, FOO="1"),
+    )
+""",
+            ),
+        ):
+            self._write_toml(
+                tempdir,
+                """\
+[package]
+setup = "foo_setup:setup"
+""",
+            )
+
+            self.builtins.add_package("foo")
+
+            simulator_interface = mock.Mock()
+            simulator_interface.name = "ghdl"
+            self.assertEqual(hooks.get_elab_flags(simulator_interface), ["-Wl,-lfoo"])
+            self.assertEqual(hooks.get_run_flags(simulator_interface), ["--load=foo"])
+            self.assertEqual(hooks.get_run_env(simulator_interface, {}), {"FOO": "1"})
 
     def test_raises_if_setup_has_invalid_format(self):
         for setup in ["foo_setup", "foo_setup:", "foo setup:setup", "foo_setup.setup"]:

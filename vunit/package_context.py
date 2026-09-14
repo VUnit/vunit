@@ -11,6 +11,7 @@ The context given to the setup function of a VUnit package
 from pathlib import Path
 from typing import Optional
 
+from vunit.sim_if.hooks import EnvHook, FlagsHook, register_hooks
 from vunit.vhdl_standard import VHDLStandard
 
 
@@ -87,6 +88,32 @@ class PackageContext(object):
         The class of the selected simulator interface.
         """
         return self._simulator_class
+
+    def register_simulator_hooks(
+        self,
+        simulator_name: str,
+        *,
+        elab_flags: Optional[FlagsHook] = None,
+        run_flags: Optional[FlagsHook] = None,
+        run_env: Optional[EnvHook] = None,
+    ) -> None:
+        """
+        Register hooks extending what a simulator does for a test, see :ref:`packages`.
+
+        :param simulator_name: The name of the simulator the hooks apply to, for example "ghdl".
+        :param elab_flags: A ``elab_flags(simulator_interface)`` function returning extra flags for
+                           the elaboration of a test.
+        :param run_flags: A ``run_flags(simulator_interface)`` function returning extra flags for
+                          the simulation of a test.
+        :param run_env: A ``run_env(simulator_interface, env)`` function returning the environment
+                        of the simulation of a test.
+        """
+        register_hooks(
+            simulator_name,
+            elab_flags=elab_flags,
+            run_flags=run_flags,
+            run_env=run_env,
+        )
 
     def add_library(self, library_name: str):
         """

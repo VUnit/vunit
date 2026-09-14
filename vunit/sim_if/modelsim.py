@@ -19,6 +19,7 @@ from ..ostools import write_file, Process, file_exists
 from ..vhdl_standard import VHDL
 from . import SimulatorInterface, ListOfStringOption, StringOption, BooleanOption, check_output
 from .vsim_simulator_mixin import VsimSimulatorMixin, fix_path
+from . import hooks
 
 LOGGER = logging.getLogger(__name__)
 
@@ -856,7 +857,7 @@ proc _vunit_sim_restart {} {
         if self._gui:
             vopt_extra_args = config.sim_options.get("modelsim.vopt_flags.gui", vopt_extra_args)
 
-        return " ".join(vopt_extra_args)
+        return " ".join(vopt_extra_args + hooks.get_elab_flags(self))
 
     def _vsim_extra_args(self, config):
         """
@@ -868,7 +869,7 @@ proc _vunit_sim_restart {} {
         if self._gui:
             vsim_extra_args = config.sim_options.get("modelsim.vsim_flags.gui", vsim_extra_args)
 
-        return " ".join(vsim_extra_args)
+        return " ".join(vsim_extra_args + hooks.get_run_flags(self))
 
     def merge_coverage(self, file_name, args=None):
         """
