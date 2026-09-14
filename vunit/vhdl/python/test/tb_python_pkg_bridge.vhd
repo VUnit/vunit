@@ -41,10 +41,21 @@ begin
     constant golden : python_session_t := new_session("golden");
     constant fixed_point : python_session_t := new_session("fixed_point");
 
-    -- Operations of a session other than the default one report on the logger
-    -- of the session, a child of python_logger
-    constant golden_logger : logger_t := get_logger("golden", python_logger);
-    constant fixed_point_logger : logger_t := get_logger("fixed_point", python_logger);
+    -- A session created from an identity of its own, placed outside of the
+    -- identity of the Python interface
+    constant model : python_session_t := new_session(get_id("tb_python_pkg_bridge:model"));
+
+    -- Two sessions with the same name but different identities
+    constant left_model : python_session_t := new_session(get_id("left:model"));
+    constant right_model : python_session_t := new_session(get_id("right:model"));
+
+    -- The operations of a session report on the logger of the identity of the
+    -- session, python_logger being the parent of the loggers of the sessions
+    -- created from a name
+    constant default_logger : logger_t := get_logger(get_id(default_session));
+    constant golden_logger : logger_t := get_logger(get_id(golden));
+    constant fixed_point_logger : logger_t := get_logger(get_id(fixed_point));
+
     variable arr, arr_b, result : integer_array_t;
     variable ptr : integer_vector_ptr_t;
     variable slv4 : std_ulogic_vector(3 downto 0);
@@ -210,30 +221,30 @@ begin
       elsif run("Test that exec_file with a missing file fails") then
         -- The error message shows the path in the native format of the OS
         exec("import os" + "def native_repr(path):" + "    return repr(os.path.normpath(path))");
-        mock(python_logger, failure);
+        mock(default_logger, failure);
         exec_file("models/does_not_exist.py");
         check_only_log(
-          python_logger,
+          default_logger,
           "exec_file(""" & join(tb_path(runner_cfg), "models/does_not_exist.py") & """) failed:" & LF &
           "FileNotFoundError: [Errno 2] No such file or directory: " &
           call_string("native_repr", arg(string'(join(tb_path(runner_cfg), "models/does_not_exist.py")))),
           failure
         );
-        unmock(python_logger);
+        unmock(default_logger);
 
       elsif run("Test that a Python exception with traceback logs a failure") then
         define_error_helper;
-        mock(python_logger, failure);
+        mock(default_logger, failure);
         exec("raise ValueError('boom')");
         check_only_log(
-          python_logger,
+          default_logger,
           "exec failed:" & LF &
           call_string(
             "expected_error", arg(string'("raise ValueError('boom')")), arg(string'("<exec #2>"))
           ),
           failure
         );
-        unmock(python_logger);
+        unmock(default_logger);
 
       elsif run("Test that operations work after python_cleanup") then
         exec("cleanup_marker = 1");
@@ -301,15 +312,15 @@ begin
         check_equal(eval_real("1 / 3"), 1.0 / 3.0);
 
       elsif run("Test that eval of real rejects an int") then
-        mock(python_logger, failure);
+        mock(default_logger, failure);
         check_equal(eval_real("1"), 0.0);
         check_only_log(
-          python_logger,
+          default_logger,
           "eval(""1"") failed:" & LF &
           "TypeError: Cannot convert Python int (1) to VHDL real; expected float",
           failure
         );
-        unmock(python_logger);
+        unmock(default_logger);
 
       elsif run("Test boolean round trip") then
         exec("def identity(x):" + "    return x");
@@ -376,10 +387,10 @@ begin
         check_equal(get(ptr, 2), 1);
 
       elsif run("Test that eval of integer_vector is strict about element types") then
-        mock(python_logger, failure);
+        mock(default_logger, failure);
         discard(eval_integer_vector("[1, 2.0]"));
         check_log(
-          python_logger,
+          default_logger,
           "eval(""[1, 2.0]"") failed:" & LF &
           "TypeError: Cannot convert element 1 of the Python list, a float (2.0), " &
           "to a VHDL integer; expected int",
@@ -387,7 +398,7 @@ begin
         );
         discard(eval_integer_vector("[True]"));
         check_log(
-          python_logger,
+          default_logger,
           "eval(""[True]"") failed:" & LF &
           "TypeError: Cannot convert element 0 of the Python list, a bool (True), " &
           "to a VHDL integer; expected int",
@@ -395,107 +406,107 @@ begin
         );
         discard(eval_integer_vector("17"));
         check_only_log(
-          python_logger,
+          default_logger,
           "eval(""17"") failed:" & LF &
           "TypeError: Cannot convert Python int (17) to VHDL integer_vector; expected a list or tuple",
           failure
         );
-        unmock(python_logger);
+        unmock(default_logger);
 
       elsif run("Test that eval of real_vector is strict about element types") then
         reals := eval_real_vector("(1.5, -0.25, 0.0)");
         check_equal(reals(1), -0.25);
 
-        mock(python_logger, failure);
+        mock(default_logger, failure);
         discard(eval_real_vector("[1.0, 2]"));
         check_log(
-          python_logger,
+          default_logger,
           "eval(""[1.0, 2]"") failed:" & LF &
           "TypeError: Cannot convert element 1 of the Python list, a int (2), to a VHDL real; expected float",
           failure
         );
         discard(eval_real_vector("[True]"));
         check_only_log(
-          python_logger,
+          default_logger,
           "eval(""[True]"") failed:" & LF &
           "TypeError: Cannot convert element 0 of the Python list, a bool (True), to a VHDL real; expected float",
           failure
         );
-        unmock(python_logger);
+        unmock(default_logger);
 
       elsif run("Test that a wrong return type fails") then
         exec("def returns_none():" + "    return None");
-        mock(python_logger, failure);
+        mock(default_logger, failure);
         discard_int := call("returns_none");
         check_only_log(
-          python_logger,
+          default_logger,
           "eval(""returns_none()"") failed:" & LF &
           "TypeError: Cannot convert Python NoneType (None) to VHDL integer; expected int",
           failure
         );
-        unmock(python_logger);
+        unmock(default_logger);
 
       elsif run("Test that integer overflow fails") then
         exec("def too_big():" + "    return 2**31");
-        mock(python_logger, failure);
+        mock(default_logger, failure);
         discard_int := call("too_big");
         check_only_log(
-          python_logger,
+          default_logger,
           "eval(""too_big()"") failed:" & LF &
           "OverflowError: 2147483648 is outside the range of VHDL integer (-2147483648 to 2147483647)",
           failure
         );
-        unmock(python_logger);
+        unmock(default_logger);
 
       elsif run("Test that signed overflow in a procedure result fails") then
         exec("def identity(x):" + "    return x");
-        mock(python_logger, failure);
+        mock(default_logger, failure);
         call_signed("identity", s8, arg(200));
         check_only_log(
-          python_logger,
+          default_logger,
           "eval(""identity(200)"") failed:" & LF &
           "OverflowError: 200 does not fit in a 8 bit signed (-128 to 127)",
           failure
         );
-        unmock(python_logger);
+        unmock(default_logger);
 
       elsif run("Test that unsigned overflow in a procedure result fails") then
         exec("def identity(x):" + "    return x");
-        mock(python_logger, failure);
+        mock(default_logger, failure);
         call_unsigned("identity", u8, arg(-1));
         check_only_log(
-          python_logger,
+          default_logger,
           "eval(""identity(-1)"") failed:" & LF &
           "OverflowError: -1 does not fit in a 8 bit unsigned (0 to 255)",
           failure
         );
-        unmock(python_logger);
+        unmock(default_logger);
 
       elsif run("Test that a std_ulogic_vector length mismatch in a procedure result fails") then
         exec("def wrong_length_bits():" + "    return '01011'");
-        mock(python_logger, failure);
+        mock(default_logger, failure);
         call_std_ulogic_vector("wrong_length_bits", slv4);
         check_only_log(
-          python_logger,
+          default_logger,
           "eval(""wrong_length_bits()"") failed:" & LF &
           "ValueError: Got 5 std_ulogic values but the VHDL result has length 4",
           failure
         );
-        unmock(python_logger);
+        unmock(default_logger);
 
       elsif run("Test that an undefined function fails") then
         define_error_helper;
-        mock(python_logger, failure);
+        mock(default_logger, failure);
         discard_int := call("no_such_function");
         check_only_log(
-          python_logger,
+          default_logger,
           "eval(""no_such_function()"") failed:" & LF &
           call_string(
             "expected_error", arg(string'("no_such_function()")), arg(string'("<eval #1>")), arg(true)
           ),
           failure
         );
-        unmock(python_logger);
+        unmock(default_logger);
 
       ---------------------------------------------------------------------
       -- Argument values
@@ -603,31 +614,31 @@ begin
 
       elsif run("Test that a repeated keyword in a group is a Python error") then
         define_error_helper;
-        mock(python_logger, failure);
+        mock(default_logger, failure);
         check_equal(call_string("describe", kwarg("a", 1) & kwarg("a", 2)), "");
         check_only_log(
-          python_logger,
+          default_logger,
           "eval(""describe(**dict(a=1, a=2))"") failed:" & LF &
           call_string(
             "expected_error", arg(string'("describe(**dict(a=1, a=2))")), arg(string'("<eval #1>")), arg(true)
           ),
           failure
         );
-        unmock(python_logger);
+        unmock(default_logger);
 
       elsif run("Test that a keyword argument group before a positional argument is a Python error") then
         define_error_helper;
-        mock(python_logger, failure);
+        mock(default_logger, failure);
         check_equal(call_string("describe", kwarg("a", 1) & kwarg("b", 2), arg(3)), "");
         check_only_log(
-          python_logger,
+          default_logger,
           "eval(""describe(**dict(a=1, b=2), 3)"") failed:" & LF &
           call_string(
             "expected_error", arg(string'("describe(**dict(a=1, b=2), 3)")), arg(string'("<eval #1>")), arg(true)
           ),
           failure
         );
-        unmock(python_logger);
+        unmock(default_logger);
 
       elsif run("Test a positional argument group") then
         define_describe;
@@ -734,13 +745,16 @@ begin
         -- without the argument
         define_describe;
         define_error_helper;
+        -- The value is reported on python_logger, which has no session, and
+        -- the call it is used in on the logger of the session it is made in
         mock(python_logger, failure);
+        mock(default_logger, failure);
 
         check_equal(call_string("describe", arg('X')), "");
         check_log(python_logger, std_ulogic_arg_error, failure);
         exec("failing_source = r" & py_quotes & std_ulogic_arg_call & py_quotes);
         check_log(
-          python_logger,
+          default_logger,
           "eval(""" & std_ulogic_arg_call & """) failed:" & LF &
           eval_string("expected_error(failing_source, '<eval #1>', True)"),
           failure
@@ -751,12 +765,13 @@ begin
         check_log(python_logger, unsigned_arg_error, failure);
         exec("failing_source = r" & py_quotes & unsigned_arg_call & py_quotes);
         check_only_log(
-          python_logger,
+          default_logger,
           "eval(""" & unsigned_arg_call & """) failed:" & LF &
           eval_string("expected_error(failing_source, '<eval #3>', True)"),
           failure
         );
         unmock(python_logger);
+        unmock(default_logger);
 
       elsif run("Test keyword forms of the typed argument values") then
         define_describe;
@@ -928,7 +943,10 @@ begin
           fixed_point_logger,
           "eval(""only_in_golden()"", session => ""fixed_point"") failed:" & LF &
           call_string(
-            "expected_error", arg(string'("only_in_golden()")), arg(string'("<eval fixed_point #1>")), arg(true)
+            "expected_error",
+            arg(string'("only_in_golden()")),
+            arg(string'("<eval vunit_lib:python:fixed_point #1>")),
+            arg(true)
           ),
           failure
         );
@@ -966,7 +984,9 @@ begin
         check_only_log(
           golden_logger,
           "exec(session => ""golden"") failed:" & LF &
-          call_string("expected_error", arg(string'("1 / 0")), arg(string'("<exec golden #2>"))),
+          call_string(
+            "expected_error", arg(string'("1 / 0")), arg(string'("<exec vunit_lib:python:golden #2>"))
+          ),
           failure
         );
         unmock(golden_logger);
@@ -974,11 +994,70 @@ begin
       elsif run("Test that a session is an identity under the Python interface") then
         check_equal(name(golden), "golden");
         check_equal(name(default_session), "default");
-        check_equal(get_full_name(get_logger(name(golden), python_logger)), "vunit_lib:python:golden");
+        check(get_id(golden) = get_id("golden", parent => p_python_id));
+        check_equal(full_name(get_id(golden)), "vunit_lib:python:golden");
+        check_equal(get_full_name(get_logger(get_id(golden))), "vunit_lib:python:golden");
         -- The same name is the same session
         check_equal(name(new_session("golden")), "golden");
         exec("session_marker = 1", golden);
         check_equal(eval_integer("session_marker", new_session("golden")), 1);
+
+      elsif run("Test a session created from an identity of its own") then
+        -- An identity that is not under the identity of the Python interface
+        -- places the session elsewhere in the identity tree
+        check_equal(name(model), "model");
+        check_equal(full_name(get_id(model)), "tb_python_pkg_bridge:model");
+        check_equal(get_full_name(get_logger(get_id(model))), "tb_python_pkg_bridge:model");
+        -- The same identity is the same session
+        check(get_id(new_session(get_id("tb_python_pkg_bridge:model"))) = get_id(model));
+
+        -- and its namespace is one of its own
+        exec("session_marker = 1", model);
+        exec("session_marker = 2");
+        check_equal(eval_integer("session_marker", model), 1);
+        check_equal(eval_integer("session_marker"), 2);
+
+      elsif run("Test that sessions with the same name but different identities differ") then
+        check_equal(name(left_model), name(right_model));
+        check(get_id(left_model) /= get_id(right_model));
+
+        exec("session_marker = 1", left_model);
+        exec("session_marker = 2", right_model);
+        check_equal(eval_integer("session_marker", left_model), 1);
+        check_equal(eval_integer("session_marker", right_model), 2);
+
+      elsif run("Test that a failure is reported on the logger of its session") then
+        define_error_helper;
+        -- python_logger is the parent of the loggers the sessions created from
+        -- a name report on, but mocking a logger does not capture what its
+        -- children log. An operation that fails is therefore caught by mocking
+        -- the logger of the session it is performed in, the default session
+        -- included.
+        mock(python_logger, failure);
+        mock(default_logger, failure);
+        mock(golden_logger, failure);
+
+        exec("1 / 0", golden);
+        check_only_log(
+          golden_logger,
+          "exec(session => ""golden"") failed:" & LF &
+          call_string(
+            "expected_error", arg(string'("1 / 0")), arg(string'("<exec vunit_lib:python:golden #2>"))
+          ),
+          failure
+        );
+
+        exec("1 / 0");
+        check_only_log(
+          default_logger,
+          "exec failed:" & LF &
+          call_string("expected_error", arg(string'("1 / 0")), arg(string'("<exec #3>"))),
+          failure
+        );
+
+        unmock(python_logger);
+        unmock(default_logger);
+        unmock(golden_logger);
 
       end if;
     end loop;

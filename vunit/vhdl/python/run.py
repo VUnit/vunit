@@ -17,9 +17,9 @@ from vunit import VUnit, VUnitCLI
 ROOT = Path(__file__).parent
 
 # The VHPI application reports Python errors fatally rather than as failures
-# on python_logger, so the negative tests of tb_python_pkg cannot mock the
-# logger there and fail by design. The Python bridge (NVC, GHDL, Questa) makes
-# them observable from VHDL and there the whole testbench passes.
+# on the logger of the session, so the negative tests of tb_python_pkg cannot
+# mock that logger there and fail by design. The Python bridge (NVC, GHDL,
+# Questa) makes them observable from VHDL and there the whole testbench passes.
 EXPECTED_FAILURES_VHPI = [
     "lib.tb_python_pkg.Test eval of integer with overflow from Python to C",
     "lib.tb_python_pkg.Test eval of integer with underflow from Python to C",

@@ -55,6 +55,11 @@ begin
     constant golden : python_session_t := new_session("golden");
     constant fixed_point : python_session_t := new_session("fixed_point");
 
+    -- The operations of a session report on the logger of the identity of the
+    -- session. python_logger is the parent of these loggers, so it is the one
+    -- to configure, while it is the logger of the session that is mocked.
+    constant default_logger : logger_t := get_logger(get_id(default_session));
+
     variable cycles : unsigned(63 downto 0) := x"123456789ABCDEF0";
     variable value : unsigned(31 downto 0) := x"DEADBEEF";
     variable offset : signed(15 downto 0) := to_signed(-12345, 16);
@@ -456,16 +461,17 @@ begin
         vhdl_integer := eval("1 / 0"); -- Division by zero exception
 
       elsif run("Test error handling of a Python model") then
-        -- The failures above are reported on python_logger and that logger can be mocked.
-        -- That is how a model is tested for what it does with invalid input, here an
-        -- empty sine table, without the test failing.
+        -- The failures above are reported on the logger of the session the failing
+        -- operation was performed in, here the default session, and that logger can be
+        -- mocked. That is how a model is tested for what it does with invalid input,
+        -- here an empty sine table, without the test failing.
         import_device_model;
         exec("from device_model import sine_table, failure_text");
 
-        mock(python_logger, failure);
+        mock(default_logger, failure);
         table := call_integer_vector_ptr("sine_table", arg(0));
         check_only_log(
-          python_logger,
+          default_logger,
           -- The message is the failing operation and the Python traceback, ending with
           -- the text of the exception. failure_text reproduces the traceback by
           -- evaluating the same expression; the source name in the traceback is the one
@@ -477,7 +483,7 @@ begin
           ),
           failure
         );
-        unmock(python_logger);
+        unmock(default_logger);
 
       -------------------------------------------------------------------------------------
       -- Examples related to the simulation environment

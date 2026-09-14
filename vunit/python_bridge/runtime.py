@@ -58,7 +58,9 @@ INTEGER_HIGH = 2**31 - 1
 TEXT_ENCODING = "utf-8"
 TEXT_ERRORS = "surrogateescape"
 
-DEFAULT_SESSION = "default"
+# Key of the default session namespace. A session is keyed by the full name of
+# its VUnit identity, see default_session in python_ffi_pkg.
+DEFAULT_SESSION = "vunit_lib:python:default"
 
 # Name of the bridge object injected into every session namespace.
 HANDLE_NAME = "__vunit__"
@@ -285,7 +287,10 @@ class Runtime:  # pylint: disable=too-many-instance-attributes
 
     def select_session(self, name):
         """
-        Make the namespace of a session current, creating it on first use.
+        Make the namespace of a session current, creating it on first use. The
+        name is the full name of the VUnit identity of the session, which makes
+        two sessions with the same name but different identities namespaces of
+        their own.
         """
         if name not in self._sessions:
             self._sessions[name] = {

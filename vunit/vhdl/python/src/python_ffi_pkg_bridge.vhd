@@ -12,8 +12,9 @@
 --
 -- Deviations from the other variants:
 --   * The subprograms are impure since they call impure foreign subprograms.
---   * Errors are reported as failures on python_logger rather than aborting
---     the simulation directly, which makes them observable from VHDL.
+--   * Errors are reported as failures on the logger of the session they were
+--     performed in rather than aborting the simulation directly, which makes
+--     them observable from VHDL.
 --   * Sessions other than the default one are supported.
 --
 -- The p_ prefixed declarations are the private primitives the bridge
@@ -28,29 +29,43 @@ use work.logger_pkg.all;
 use work.python_bridge_pkg.all;
 
 package python_ffi_pkg is
-  -- The identity of the Python interface. It is the parent of the session
-  -- identities and of python_logger.
+  -- The identity of the Python interface. It is the identity of
+  -- python_logger and the parent of the identities of the sessions created
+  -- from a name.
   constant p_python_id : id_t := get_id("vunit_lib:python");
 
-  -- Logger used to report Python errors, for example exceptions with their
-  -- traceback. An operation performed in a session other than the default one
-  -- reports on the logger of that session, get_logger(<its name>,
-  -- python_logger), which is a child of python_logger.
+  -- Logger of the Python interface. It is the parent of the session loggers
+  -- an operation reports its errors on, so log levels and log handler
+  -- settings made on python_logger apply to all sessions. It is also the
+  -- logger used to report what has no session of its own: an argument value
+  -- that cannot be converted to Python and the transfer of an integer_array_t.
   constant python_logger : logger_t := get_logger(p_python_id);
 
-  -- A session is a named Python namespace. Sessions are isolated from each
-  -- other and are created from their name, which is an identity under the
-  -- identity of the Python interface:
+  -- A session is a Python namespace. Sessions are isolated from each other
+  -- and have an identity, which is what they are created from:
   --
   --   constant golden_model : python_session_t := new_session("golden_model");
   --
-  -- The Python namespace is created on first use. The default session is the
-  -- __main__ namespace.
+  -- new_session(name) creates the identity name under the identity of the
+  -- Python interface, while new_session(id) takes an existing identity, which
+  -- puts the session anywhere in the identity tree, for example under the
+  -- identity of what it serves. Two sessions with the same identity are the
+  -- same session.
+  --
+  -- The Python namespace is created on first use and the operations of a
+  -- session report their errors on get_logger(get_id(session)). The default
+  -- session is the __main__ namespace.
   type python_session_t is record
     p_data : integer_vector_ptr_t;
   end record;
 
   impure function new_session(name : string) return python_session_t;
+  impure function new_session(id : id_t) return python_session_t;
+
+  -- The identity of a session, which is what two sessions are compared by
+  impure function get_id(session : python_session_t) return id_t;
+
+  -- The name of the identity of a session, without hierarchy
   impure function name(session : python_session_t) return string;
 
   -- The session the operations are performed in when no other one is given.
@@ -106,9 +121,6 @@ package python_ffi_pkg is
   constant p_kind_integer_array : integer := 8;
   constant p_kind_integer_vector : integer := 9;
   constant p_kind_real_vector : integer := 10;
-
-  -- The logger the operations of a session report on
-  impure function p_logger(session : python_session_t := default_session) return logger_t;
 
   -- Names of the operations, used in the error messages
   impure function p_exec_operation(session : python_session_t := default_session) return string;
@@ -174,34 +186,27 @@ package body python_ffi_pkg is
   -----------------------------------------------------------------------------
   impure function new_session(name : string) return python_session_t is
   begin
-    return (p_data => new_integer_vector_ptr(1, value => to_integer(get_id(name, parent => p_python_id))));
+    return new_session(get_id(name, parent => p_python_id));
   end;
 
-  -- The identity of a session, which is what two sessions are compared by
-  impure function p_id(session : python_session_t) return id_t is
+  impure function new_session(id : id_t) return python_session_t is
+  begin
+    return (p_data => new_integer_vector_ptr(1, value => to_integer(id)));
+  end;
+
+  impure function get_id(session : python_session_t) return id_t is
   begin
     return to_id(get(session.p_data, 0));
   end;
 
   impure function name(session : python_session_t) return string is
   begin
-    return name(p_id(session));
+    return name(get_id(session));
   end;
 
   impure function p_is_default(session : python_session_t) return boolean is
   begin
-    return p_id(session) = p_id(default_session);
-  end;
-
-  -- Mocking a logger does not capture the logs of its children, so the
-  -- operations of the default session report on python_logger itself rather
-  -- than on a logger of their own.
-  impure function p_logger(session : python_session_t := default_session) return logger_t is
-  begin
-    if p_is_default(session) then
-      return python_logger;
-    end if;
-    return get_logger(p_id(session));
+    return get_id(session) = get_id(default_session);
   end;
 
   -----------------------------------------------------------------------------
@@ -278,10 +283,14 @@ package body python_ffi_pkg is
     return status;
   end;
 
+  -- The full name of the identity of the session is the key of its Python
+  -- namespace, so that two sessions with the same name but different
+  -- identities are namespaces of their own.
   impure function p_begin(session : python_session_t; operation : string) return boolean is
-    constant logger : logger_t := p_logger(session);
+    constant logger : logger_t := get_logger(get_id(session));
   begin
-    return p_succeeded(p_send(name(session)), operation, logger) and p_succeeded(vpy_begin, operation, logger);
+    return p_succeeded(p_send(full_name(get_id(session))), operation, logger)
+      and p_succeeded(vpy_begin, operation, logger);
   end;
 
   impure function p_exec(
@@ -290,7 +299,7 @@ package body python_ffi_pkg is
     operation : string;
     session   : python_session_t := default_session
   ) return boolean is
-    constant logger : logger_t := p_logger(session);
+    constant logger : logger_t := get_logger(get_id(session));
   begin
     return p_begin(session, operation)
       and p_succeeded(p_send(text), operation, logger)
@@ -311,7 +320,7 @@ package body python_ffi_pkg is
     operation : string;
     session   : python_session_t := default_session
   ) return boolean is
-    constant logger : logger_t := p_logger(session);
+    constant logger : logger_t := get_logger(get_id(session));
   begin
     return p_begin(session, operation)
       and p_succeeded(p_send(expr), operation, logger)

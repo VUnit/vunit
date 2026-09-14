@@ -14,17 +14,25 @@ use work.integer_vector_ptr_pkg.all;
 use work.logger_pkg.all;
 
 package python_ffi_pkg is
-  -- The identity of the Python interface, the parent of the session identities
+  -- The identity of the Python interface, the identity of python_logger and
+  -- the parent of the identities of the sessions created from a name
   constant p_python_id : id_t := get_id("vunit_lib:python");
 
-  -- A session is a named Python namespace, created from its name. Only the
-  -- default session, the __main__ namespace, is supported by this foreign
-  -- language interface.
+  -- A session is a Python namespace with an identity, created from a name
+  -- under the identity of the Python interface or from an identity of its
+  -- own. Only the default session, the __main__ namespace, is supported by
+  -- this foreign language interface.
   type python_session_t is record
     p_data : integer_vector_ptr_t;
   end record;
 
   impure function new_session(name : string) return python_session_t;
+  impure function new_session(id : id_t) return python_session_t;
+
+  -- The identity of a session, which is what two sessions are compared by
+  impure function get_id(session : python_session_t) return id_t;
+
+  -- The name of the identity of a session, without hierarchy
   impure function name(session : python_session_t) return string;
 
   -- The session the operations are performed in when no other one is given.
@@ -81,7 +89,7 @@ package python_ffi_pkg is
   -- below are declared so that python_pkg has one body for every simulator,
   -- but they report a failure when they are used.
 
-  -- Logger used to report Python errors
+  -- Logger of the Python interface, the parent of the session loggers
   constant python_logger : logger_t := get_logger(p_python_id);
 
   -- Result kinds, must match vunit/python_bridge/runtime.py
@@ -129,23 +137,27 @@ end package;
 package body python_ffi_pkg is
   impure function new_session(name : string) return python_session_t is
   begin
-    return (p_data => new_integer_vector_ptr(1, value => to_integer(get_id(name, parent => p_python_id))));
+    return new_session(get_id(name, parent => p_python_id));
   end;
 
-  -- The identity of a session, which is what two sessions are compared by
-  impure function p_id(session : python_session_t) return id_t is
+  impure function new_session(id : id_t) return python_session_t is
+  begin
+    return (p_data => new_integer_vector_ptr(1, value => to_integer(id)));
+  end;
+
+  impure function get_id(session : python_session_t) return id_t is
   begin
     return to_id(get(session.p_data, 0));
   end;
 
   impure function name(session : python_session_t) return string is
   begin
-    return name(p_id(session));
+    return name(get_id(session));
   end;
 
   impure function p_is_default(session : python_session_t) return boolean is
   begin
-    return p_id(session) = p_id(default_session);
+    return get_id(session) = get_id(default_session);
   end;
 
   procedure p_check_session(session : python_session_t) is

@@ -23,6 +23,10 @@ architecture tb of tb_python_pkg is
     "(" & integer'image(integer'low) & " to " & integer'image(integer'high) & ")";
 begin
   test_runner : process
+    -- The operations of a session report on the logger of the identity of the
+    -- session, python_logger being the parent of the session loggers
+    constant default_logger : logger_t := get_logger(get_id(default_session));
+
     constant empty_integer_vector : integer_vector(0 downto 1) := (others => 0);
     constant empty_real_vector : real_vector(0 downto 1) := (others => 0.0);
     constant test_real_vector : real_vector := (-3.4028234664e38, -1.9, 0.0, 1.1, -3.4028234664e38);
@@ -74,48 +78,48 @@ begin
         check_equal(eval("-2**31"), integer'low);
 
       elsif run("Test eval of integer with overflow from Python to C") then
-        mock(python_logger, failure);
+        mock(default_logger, failure);
         vhdl_int := eval("2**63");
         check_only_log(
-          python_logger,
+          default_logger,
           "eval(""2**63"") failed:" & LF &
           "OverflowError: 9223372036854775808 is outside the range of VHDL integer " & integer_range,
           failure
         );
-        unmock(python_logger);
+        unmock(default_logger);
 
       elsif run("Test eval of integer with underflow from Python to C") then
-        mock(python_logger, failure);
+        mock(default_logger, failure);
         vhdl_int := eval("-2**63 - 1");
         check_only_log(
-          python_logger,
+          default_logger,
           "eval(""-2**63 - 1"") failed:" & LF &
           "OverflowError: -9223372036854775809 is outside the range of VHDL integer " & integer_range,
           failure
         );
-        unmock(python_logger);
+        unmock(default_logger);
 
       elsif run("Test eval of integer with overflow from C to VHDL") then
-        mock(python_logger, failure);
+        mock(default_logger, failure);
         vhdl_int := eval("2**31");
         check_only_log(
-          python_logger,
+          default_logger,
           "eval(""2**31"") failed:" & LF &
           "OverflowError: 2147483648 is outside the range of VHDL integer " & integer_range,
           failure
         );
-        unmock(python_logger);
+        unmock(default_logger);
 
       elsif run("Test eval of integer with underflow from C to VHDL") then
-        mock(python_logger, failure);
+        mock(default_logger, failure);
         vhdl_int := eval("-2**31 - 1");
         check_only_log(
-          python_logger,
+          default_logger,
           "eval(""-2**31 - 1"") failed:" & LF &
           "OverflowError: -2147483649 is outside the range of VHDL integer " & integer_range,
           failure
         );
-        unmock(python_logger);
+        unmock(default_logger);
 
       elsif run("Test eval of real expression") then
         check_equal(eval("3.40282346e38"), 3.40282346e38);
@@ -129,35 +133,35 @@ begin
         check_equal(eval("1.0e300"), 1.0e300);
 
         -- A value that is not finite has no VHDL real representation
-        mock(python_logger, failure);
+        mock(default_logger, failure);
         vhdl_real := eval("float('inf')");
         check_only_log(
-          python_logger,
+          default_logger,
           "eval(""float('inf')"") failed:" & LF &
           "ValueError: inf cannot be represented as VHDL real",
           failure
         );
-        unmock(python_logger);
+        unmock(default_logger);
 
       elsif run("Test eval of real with underflow from C to VHDL") then
         check_equal(eval("-1.0e300"), -1.0e300);
 
-        mock(python_logger, failure);
+        mock(default_logger, failure);
         vhdl_real := eval("-float('inf')");
         check_log(
-          python_logger,
+          default_logger,
           "eval(""-float('inf')"") failed:" & LF &
           "ValueError: -inf cannot be represented as VHDL real",
           failure
         );
         vhdl_real := eval("float('nan')");
         check_only_log(
-          python_logger,
+          default_logger,
           "eval(""float('nan')"") failed:" & LF &
           "ValueError: nan cannot be represented as VHDL real",
           failure
         );
-        unmock(python_logger);
+        unmock(default_logger);
 
       elsif run("Test converting integer_vector to Python list string") then
         check_equal(to_py_list_str(empty_integer_vector), "[]");
@@ -322,51 +326,51 @@ begin
           "doing_something_wrong = doing_something_right_misspelled'"
         );
 
-        mock(python_logger, failure);
+        mock(default_logger, failure);
         exec(
           "doing_something_right = 17" & LF &
           "doing_something_wrong = doing_something_right_misspelled"
         );
         check_only_log(
-          python_logger,
+          default_logger,
           "exec failed:" & LF & eval_string("expected_error(failing_source, '<exec #3>')"),
           failure
         );
-        unmock(python_logger);
+        unmock(default_logger);
 
       elsif run("Test exceptions in eval") then
         define_error_helper;
 
-        mock(python_logger, failure);
+        mock(default_logger, failure);
         vhdl_int := eval("1 / 0");
         check_only_log(
-          python_logger,
+          default_logger,
           "eval(""1 / 0"") failed:" & LF &
           call_string(
             "expected_error", arg(string'("1 / 0")), arg(string'("<eval #1>")), arg(true)
           ),
           failure
         );
-        unmock(python_logger);
+        unmock(default_logger);
 
       elsif run("Test eval with type error") then
-        mock(python_logger, failure);
+        mock(default_logger, failure);
         vhdl_int := eval("10 / 2");
         check_only_log(
-          python_logger,
+          default_logger,
           "eval(""10 / 2"") failed:" & LF &
           "TypeError: Cannot convert Python float (5.0) to VHDL integer; expected int",
           failure
         );
-        unmock(python_logger);
+        unmock(default_logger);
 
       elsif run("Test raising exception") then
         define_error_helper;
 
-        mock(python_logger, failure);
+        mock(default_logger, failure);
         exec("raise RuntimeError('An exception')");
         check_only_log(
-          python_logger,
+          default_logger,
           "exec failed:" & LF &
           call_string(
             "expected_error",
@@ -375,7 +379,7 @@ begin
           ),
           failure
         );
-        unmock(python_logger);
+        unmock(default_logger);
 
       ---------------------------------------------------------------------
       -- Misc tests
