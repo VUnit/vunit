@@ -403,17 +403,6 @@ package body python_pkg is
     return "";
   end;
 
-  -- True when the vector has an element other than 0, 1, L and H
-  function p_has_metavalue(value : std_ulogic_vector) return boolean is
-  begin
-    for idx in value'range loop
-      if to_x01(value(idx)) = 'X' then
-        return true;
-      end if;
-    end loop;
-    return false;
-  end;
-
   -- The Python hexadecimal literal of the magnitude given by the bits, for
   -- example 0x1F or -0x80. A null range gives 0x0.
   function p_to_hex_literal(bits : std_ulogic_vector; negative : boolean) return string is
@@ -459,7 +448,7 @@ package body python_pkg is
 
   impure function p_arg_value(value : unsigned; operation : string) return string is
   begin
-    if p_has_metavalue(std_ulogic_vector(value)) then
+    if is_x(std_ulogic_vector(value)) then
       failure(python_logger, p_metavalue_error(std_ulogic_vector(value), operation));
       return "";
     end if;
@@ -470,7 +459,7 @@ package body python_pkg is
     variable folded : signed(value'length - 1 downto 0);
     variable magnitude : signed(value'length downto 0);
   begin
-    if p_has_metavalue(std_ulogic_vector(value)) then
+    if is_x(std_ulogic_vector(value)) then
       failure(python_logger, p_metavalue_error(std_ulogic_vector(value), operation));
       return "";
     end if;
