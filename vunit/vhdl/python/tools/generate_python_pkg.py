@@ -38,10 +38,10 @@ ARG_SIGNATURE = ", ".join(["string"] + ["arg_t"] * len(ARGS) + ["python_session_
 # vhdl:   the VHDL type
 # impure: true when the conversion can fail, which makes the functions impure
 # suffix: appended to the arg and kwarg names, empty for an overload
-# bridge: true when the value is transferred by the Python bridge, which makes
-#         it available for NVC, GHDL and Questa only. The other values are
-#         built from the Python source text of the value alone and work on any
-#         simulator.
+#
+# The integer_array_t value is transferred by the Python bridge, which makes it
+# available for NVC, GHDL and Questa only. The other values are built from the
+# Python source text of the value alone and work on any simulator.
 #
 # The unsigned and signed values are passed to typed names, arg_unsigned and
 # arg_signed, on purpose: plain overloads would make a string literal
@@ -50,12 +50,12 @@ ARG_SIGNATURE = ", ".join(["string"] + ["arg_t"] * len(ARGS) + ["python_session_
 # std_ulogic_vector is deliberately not among the types at all. Such values
 # are passed as arg(to_string(slv)) and arg_unsigned(unsigned(slv)).
 ARG_VALUES = [
-    dict(vhdl="real_vector", impure=False, suffix="", bridge=False),
-    dict(vhdl="integer_vector_ptr_t", impure=True, suffix="", bridge=False),
-    dict(vhdl="integer_array_t", impure=True, suffix="", bridge=True),
-    dict(vhdl="std_ulogic", impure=True, suffix="", bridge=False),
-    dict(vhdl="unsigned", impure=True, suffix="_unsigned", bridge=False),
-    dict(vhdl="signed", impure=True, suffix="_signed", bridge=False),
+    dict(vhdl="real_vector", impure=False, suffix=""),
+    dict(vhdl="integer_vector_ptr_t", impure=True, suffix=""),
+    dict(vhdl="std_ulogic", impure=True, suffix=""),
+    dict(vhdl="unsigned", impure=True, suffix="_unsigned"),
+    dict(vhdl="signed", impure=True, suffix="_signed"),
+    dict(vhdl="integer_array_t", impure=True, suffix=""),
 ]
 
 # Result types of eval and call.
@@ -190,14 +190,12 @@ def call_name(result):
 # -------------------------------------------------------------------------
 # arg and kwarg
 # -------------------------------------------------------------------------
-def arg_declarations(bridge):
+def arg_declarations():
     """
     Declarations of the generated arg and kwarg subprograms.
     """
     lines = []
     for value in ARG_VALUES:
-        if value["bridge"] != bridge:
-            continue
         purity = "impure " if value["impure"] else ""
         suffix = value["suffix"]
         lines.append(f"  {purity}function arg{suffix}(value : {value['vhdl']}) return arg_t;")
@@ -205,15 +203,13 @@ def arg_declarations(bridge):
     return "\n".join(lines)
 
 
-def arg_functions(bridge):
+def arg_functions():
     """
     Bodies of the generated arg and kwarg subprograms. p_arg_value returns an
     empty string when the value cannot be converted, having reported it.
     """
     parts = []
     for value in ARG_VALUES:
-        if value["bridge"] != bridge:
-            continue
         purity = "impure " if value["impure"] else ""
         value_type = value["vhdl"]
         suffix = value["suffix"]
@@ -373,12 +369,10 @@ def generate_package():
     """
     template = (TEMPLATE_PATH / "python_pkg.vhd.in").read_text(encoding="utf-8")
     return Template(template).substitute(
-        value_arg_declarations=arg_declarations(bridge=False),
-        value_arg_functions=arg_functions(bridge=False),
-        arg_declarations=arg_declarations(bridge=True),
+        arg_declarations=arg_declarations(),
+        arg_functions=arg_functions(),
         eval_declarations=eval_declarations(),
         call_declarations=call_declarations(),
-        arg_functions=arg_functions(bridge=True),
         eval_subprograms=eval_subprograms(),
         call_subprograms=call_subprograms(),
     )

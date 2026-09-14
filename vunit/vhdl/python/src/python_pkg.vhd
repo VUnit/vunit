@@ -66,6 +66,36 @@ package python_pkg is
   function arg(value : boolean) return arg_t;
   function kwarg(kw : string; value : boolean) return arg_t;
 
+  -- real_vector and integer_vector_ptr_t values become Python lists, a
+  -- std_ulogic value becomes True or False, and an unsigned or signed value of
+  -- any width becomes a Python integer written as a hexadecimal literal, which
+  -- is therefore not limited to the range of a VHDL integer.
+  --
+  -- An aggregate or a literal needs a qualified expression to select the
+  -- overload, for example arg(real_vector'(1.0, 2.0)). A std_ulogic_vector is
+  -- passed as a string, arg(to_string(slv)), or as a number,
+  -- arg_unsigned(unsigned(slv)). The unsigned and signed values have names of
+  -- their own since an overload would make a string literal argument,
+  -- arg("Hello"), ambiguous.
+  --
+  -- H and L are read as 1 and 0. Any other metavalue is an error.
+  --
+  -- An integer_array_t value is transferred to Python by the Python bridge,
+  -- which is only available for NVC, GHDL and Questa, and is referred to by
+  -- the expression, which means that it can be used in several calls.
+  function arg(value : real_vector) return arg_t;
+  function kwarg(kw : string; value : real_vector) return arg_t;
+  impure function arg(value : integer_vector_ptr_t) return arg_t;
+  impure function kwarg(kw : string; value : integer_vector_ptr_t) return arg_t;
+  impure function arg(value : std_ulogic) return arg_t;
+  impure function kwarg(kw : string; value : std_ulogic) return arg_t;
+  impure function arg_unsigned(value : unsigned) return arg_t;
+  impure function kwarg_unsigned(kw : string; value : unsigned) return arg_t;
+  impure function arg_signed(value : signed) return arg_t;
+  impure function kwarg_signed(kw : string; value : signed) return arg_t;
+  impure function arg(value : integer_array_t) return arg_t;
+  impure function kwarg(kw : string; value : integer_array_t) return arg_t;
+
   impure function call_integer_w_arg(
     identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
     session : python_session_t := default_session
@@ -94,33 +124,6 @@ package python_pkg is
     string, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, python_session_t return real];
 
   -----------------------------------------------------------------------------
-  -- More argument values of call
-  -----------------------------------------------------------------------------
-  -- real_vector and integer_vector_ptr_t values become Python lists, a
-  -- std_ulogic value becomes True or False, and an unsigned or signed value of
-  -- any width becomes a Python integer written as a hexadecimal literal, which
-  -- is therefore not limited to the range of a VHDL integer.
-  --
-  -- An aggregate or a literal needs a qualified expression to select the
-  -- overload, for example arg(real_vector'(1.0, 2.0)). A std_ulogic_vector is
-  -- passed as a string, arg(to_string(slv)), or as a number,
-  -- arg_unsigned(unsigned(slv)). The unsigned and signed values have names of
-  -- their own since an overload would make a string literal argument,
-  -- arg("Hello"), ambiguous.
-  --
-  -- H and L are read as 1 and 0. Any other metavalue is an error.
-  function arg(value : real_vector) return arg_t;
-  function kwarg(kw : string; value : real_vector) return arg_t;
-  impure function arg(value : integer_vector_ptr_t) return arg_t;
-  impure function kwarg(kw : string; value : integer_vector_ptr_t) return arg_t;
-  impure function arg(value : std_ulogic) return arg_t;
-  impure function kwarg(kw : string; value : std_ulogic) return arg_t;
-  impure function arg_unsigned(value : unsigned) return arg_t;
-  impure function kwarg_unsigned(kw : string; value : unsigned) return arg_t;
-  impure function arg_signed(value : signed) return arg_t;
-  impure function kwarg_signed(kw : string; value : signed) return arg_t;
-
-  -----------------------------------------------------------------------------
   -- Keyword argument groups
   -----------------------------------------------------------------------------
   -- Keyword arguments combined with & become a single argument, so that a call
@@ -143,14 +146,6 @@ package python_pkg is
   -- report a failure when they are used. Like the other operations, every one
   -- of them takes the session it is performed in as its last parameter,
   -- defaulting to the default session.
-
-  -----------------------------------------------------------------------------
-  -- Argument values of call: integer arrays
-  -----------------------------------------------------------------------------
-  -- An integer_array_t value is transferred to Python and referred to by the
-  -- expression, which means that it can be used in several calls.
-  impure function arg(value : integer_array_t) return arg_t;
-  impure function kwarg(kw : string; value : integer_array_t) return arg_t;
 
   -----------------------------------------------------------------------------
   -- Results of eval: boolean, std_ulogic, vectors and arrays
@@ -479,61 +474,6 @@ package body python_pkg is
     end if;
   end;
 
-  impure function to_call_str(
-    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t
-  ) return string is
-
-    function arg_to_str(value : arg_t) return string is
-    begin
-      if value.name = p_ignore_arg then
-        return "";
-      elsif value.name = p_positional_arg then
-        return value.value;
-      else
-        return value.name & "=" & value.value;
-      end if;
-    end;
-
-    constant args : string := "('" & arg_to_str(arg1) & "','" & arg_to_str(arg2) & "','" & arg_to_str(arg3) & "','" & arg_to_str(arg4) & "','" & arg_to_str(arg5) & "','" & arg_to_str(arg6) & "','" & arg_to_str(arg7) & "','" & arg_to_str(arg8) & "','" & arg_to_str(arg9) & "','" & arg_to_str(arg10) & "')";
-  begin
-    return eval_string("'" & identifier & "(' + ', '.join((arg for arg in " & args & " if arg)) + ')'");
-  end;
-
-  impure function call_integer_w_arg(
-    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
-    session : python_session_t := default_session
-  ) return integer is
-  begin
-    return eval(to_call_str(identifier, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10), session);
-  end;
-
-  procedure call(
-    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
-    session : python_session_t := default_session
-  ) is
-  begin
-    exec(to_call_str(identifier, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10), session);
-  end;
-
-  impure function call_integer_vector(
-    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
-    session : python_session_t := default_session
-  ) return integer_vector is
-  begin
-    return eval(to_call_str(identifier, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10), session);
-  end;
-
-  impure function call_real(
-    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
-    session : python_session_t := default_session
-  ) return real is
-  begin
-    return eval(to_call_str(identifier, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10), session);
-  end;
-
-  -----------------------------------------------------------------------------
-  -- More argument values of call
-  -----------------------------------------------------------------------------
   -- The Python source text of an argument value. The operation is only used to
   -- report a value that cannot be converted, which gives an empty string.
   function p_arg_value(value : real_vector; operation : string) return string is
@@ -644,6 +584,15 @@ package body python_pkg is
     return p_to_hex_literal(std_ulogic_vector(magnitude), true);
   end;
 
+  impure function p_arg_value(value : integer_array_t; operation : string) return string is
+    constant staged_id : integer := p_stage_array(value, operation);
+  begin
+    if staged_id < 1 then
+      return "";
+    end if;
+    return "__vunit__.staged(" & integer'image(staged_id) & ")";
+  end;
+
   function arg(value : real_vector) return arg_t is
     constant text : string := p_arg_value(value, "arg");
   begin
@@ -732,6 +681,76 @@ package body python_pkg is
       return null_arg;
     end if;
     return (kw, text);
+  end;
+
+  impure function arg(value : integer_array_t) return arg_t is
+    constant text : string := p_arg_value(value, "arg");
+  begin
+    if text = "" then
+      return null_arg;
+    end if;
+    return (p_positional_arg, text);
+  end;
+
+  impure function kwarg(kw : string; value : integer_array_t) return arg_t is
+    constant text : string := p_arg_value(value, "kwarg");
+  begin
+    if text = "" then
+      return null_arg;
+    end if;
+    return (kw, text);
+  end;
+
+  impure function to_call_str(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t
+  ) return string is
+
+    function arg_to_str(value : arg_t) return string is
+    begin
+      if value.name = p_ignore_arg then
+        return "";
+      elsif value.name = p_positional_arg then
+        return value.value;
+      else
+        return value.name & "=" & value.value;
+      end if;
+    end;
+
+    constant args : string := "('" & arg_to_str(arg1) & "','" & arg_to_str(arg2) & "','" & arg_to_str(arg3) & "','" & arg_to_str(arg4) & "','" & arg_to_str(arg5) & "','" & arg_to_str(arg6) & "','" & arg_to_str(arg7) & "','" & arg_to_str(arg8) & "','" & arg_to_str(arg9) & "','" & arg_to_str(arg10) & "')";
+  begin
+    return eval_string("'" & identifier & "(' + ', '.join((arg for arg in " & args & " if arg)) + ')'");
+  end;
+
+  impure function call_integer_w_arg(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
+    session : python_session_t := default_session
+  ) return integer is
+  begin
+    return eval(to_call_str(identifier, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10), session);
+  end;
+
+  procedure call(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
+    session : python_session_t := default_session
+  ) is
+  begin
+    exec(to_call_str(identifier, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10), session);
+  end;
+
+  impure function call_integer_vector(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
+    session : python_session_t := default_session
+  ) return integer_vector is
+  begin
+    return eval(to_call_str(identifier, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10), session);
+  end;
+
+  impure function call_real(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
+    session : python_session_t := default_session
+  ) return real is
+  begin
+    return eval(to_call_str(identifier, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10), session);
   end;
 
   -----------------------------------------------------------------------------
@@ -846,36 +865,6 @@ package body python_pkg is
     swrite(result, ")");
 
     return result.all;
-  end;
-
-  -----------------------------------------------------------------------------
-  -- arg and kwarg
-  -----------------------------------------------------------------------------
-  impure function p_arg_value(value : integer_array_t; operation : string) return string is
-    constant staged_id : integer := p_stage_array(value, operation);
-  begin
-    if staged_id < 1 then
-      return "";
-    end if;
-    return "__vunit__.staged(" & integer'image(staged_id) & ")";
-  end;
-
-  impure function arg(value : integer_array_t) return arg_t is
-    constant text : string := p_arg_value(value, "arg");
-  begin
-    if text = "" then
-      return null_arg;
-    end if;
-    return (p_positional_arg, text);
-  end;
-
-  impure function kwarg(kw : string; value : integer_array_t) return arg_t is
-    constant text : string := p_arg_value(value, "kwarg");
-  begin
-    if text = "" then
-      return null_arg;
-    end if;
-    return (kw, text);
   end;
 
   -----------------------------------------------------------------------------
