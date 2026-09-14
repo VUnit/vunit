@@ -138,11 +138,17 @@ package python_pkg is
   --   call("f", arg(x), kwarg("a", 1) & kwarg("b", 2));
   --
   -- calls f(x, **dict(a=1, b=2)). A group of positional arguments becomes
-  -- *(1, 2,) and a group with both kinds *(1,), **dict(a=1). null_arg is the
-  -- identity of the operation. Python keeps its own rules: a repeated keyword
-  -- within a group is a syntax error and so is a group followed by a
-  -- positional argument of the call. Appending a positional argument to a
-  -- group that already has keyword arguments is an error for the same reason.
+  -- *(1, 2,) and a group with both kinds *(1,), **dict(a=1). Python keeps its
+  -- own rules: a repeated keyword within a group is a syntax error and so is a
+  -- group followed by a positional argument of the call. Appending a
+  -- positional argument to a group that already has keyword arguments is an
+  -- error for the same reason.
+  --
+  -- null_arg is the identity of the operation, which is what makes a group
+  -- possible to build one argument at a time, ending with null_arg, and what
+  -- lets a helper that contributes an optional argument return null_arg when
+  -- it has none. An empty group is a valid call with no arguments rather than
+  -- an error.
   impure function "&"(l, r : arg_t) return arg_t;
 
   -----------------------------------------------------------------------------

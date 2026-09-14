@@ -343,7 +343,7 @@ Argument groups
 
 Arguments combined with ``&`` become a single argument, which makes it
 possible to pass more than 10 arguments and to build the arguments of a call
-in steps. ``null_arg`` is the identity of the operation:
+in steps:
 
 .. code-block:: vhdl
 
@@ -361,6 +361,28 @@ arguments must come after the positional arguments of the call and a keyword
 must not be repeated within it. Appending a positional argument to a group
 that already has keyword arguments is an error for the same reason, reported
 as ``positional argument after keyword arguments``.
+
+``null_arg`` is the identity of the operation. That is what makes a group
+possible to build one argument at a time, ending with ``null_arg``, and what
+lets a helper that contributes an optional argument return ``null_arg`` when
+it has none. An empty group is a call with no arguments rather than an error.
+Since ``arg_t`` holds unconstrained strings, a group is grown by a function
+rather than by assigning to a variable in a loop:
+
+.. code-block:: vhdl
+
+    -- The registers from idx and up, an empty group when there are none
+    impure function registers(idx : natural) return arg_t is
+    begin
+      if idx = num_registers then
+        return null_arg;
+      end if;
+      return kwarg(name(idx), value(idx)) & registers(idx + 1);
+    end;
+
+    ...
+
+    call("model.configure", registers(0));
 
 import_run_script
 ------------------
