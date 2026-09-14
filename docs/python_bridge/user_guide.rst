@@ -319,7 +319,7 @@ is useful to embed a call inside a larger ``exec``/``eval`` string:
 
 .. code-block:: vhdl
 
-    exec("gcd = " & to_call_str("py_gcd", to_string(35), to_string(77)));
+    exec("gcd = " & to_call_str("py_gcd", arg(35), arg(77)));
 
 Every unused trailing argument of ``call``/``to_call_str`` defaults to an
 ignored placeholder, so calls with fewer than 10 arguments need no padding.

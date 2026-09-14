@@ -43,10 +43,6 @@ package python_pkg is
   ) return integer_vector_ptr_t;
   alias eval is eval_integer_vector_ptr[string, python_session_t return integer_vector_ptr_t];
 
-  function to_call_str(
-    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : string := ""
-  ) return string;
-
   type arg_t is record
     name : string;
     value : string;
@@ -84,6 +80,14 @@ package python_pkg is
   -- which is only available for NVC, GHDL and Questa, and is referred to by
   -- the expression, which means that it can be used in several calls.
 $arg_declarations
+
+  -- The Python expression calling identifier with the given arguments, for
+  -- example to embed a call in a larger exec or eval string:
+  --
+  --   exec("gcd = " & to_call_str("gcd", arg(35), arg(77)));
+  impure function to_call_str(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg
+  ) return string;
 
   impure function call_integer_w_arg(
     identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
@@ -292,32 +296,6 @@ package body python_pkg is
     return result;
   end;
 
-  function to_call_str(
-    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : string := ""
-  ) return string is
-    -- The non-empty arguments, separated by ", "
-    function append(args, arg : string) return string is
-    begin
-      if arg = "" then
-        return args;
-      elsif args = "" then
-        return arg;
-      else
-        return args & ", " & arg;
-      end if;
-    end;
-  begin
-    return identifier & "(" & append(append(append(append(append(append(append(append(append(append(
-      "", arg1), arg2), arg3), arg4), arg5), arg6), arg7), arg8), arg9), arg10) & ")";
-  end;
-
-  procedure call(
-    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : string := ""
-  ) is
-  begin
-    exec(to_call_str(identifier, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10));
-  end;
-
   function arg(value : integer) return arg_t is
   begin
     return (p_positional_arg, to_string(value));
@@ -488,7 +466,7 @@ package body python_pkg is
 $arg_functions
 
   impure function to_call_str(
-    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg
   ) return string is
 
     function arg_to_str(value : arg_t) return string is

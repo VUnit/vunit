@@ -361,7 +361,7 @@ begin
         check_equal(gcd, 7);
 
         -- Calls within an exec string can also be simplified
-        exec("gcd = " & to_call_str("gcd", to_string(35), to_string(77), to_string(119)));
+        exec("gcd = " & to_call_str("gcd", arg(35), arg(77), arg(119)));
         check_equal(eval("gcd"), 7);
 
         -- Calls to functions without a return value can be simplified with the call procedure
