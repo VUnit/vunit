@@ -304,7 +304,8 @@ begin
         -- The difference shows for a file that has a state of its own.
 
         -- exec_file executes the file in the namespace we have been using all along,
-        -- which puts counter and bump there. The file name is relative to the run script.
+        -- which puts counter and bump there. A relative file name is relative to the
+        -- directory of this testbench file, where bump.py is.
         exec_file("bump.py");
         check_equal(integer'(call("bump")), 1);
         check_equal(integer'(call("bump")), 2);

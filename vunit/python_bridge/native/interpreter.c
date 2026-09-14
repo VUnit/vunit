@@ -170,13 +170,14 @@ static int create_runtime(void) {
       "_module = importlib.util.module_from_spec(_spec)\n"
       "sys.modules[_spec.name] = _module\n"
       "_spec.loader.exec_module(_module)\n"
-      "runtime = _module.Runtime(base_dir=base_dir, prefix=prefix)\n";
+      "runtime = _module.Runtime(run_script_dir=run_script_dir, prefix=prefix)\n";
   PyObject *globals = PyDict_New();
   PyObject *ret = NULL;
   int status = VPY_ERROR;
 
   if (globals == NULL || PyDict_SetItemString(globals, "__builtins__", PyEval_GetBuiltins()) < 0 ||
-      set_item(globals, "runtime_path", g_config.runtime) < 0 || set_item(globals, "base_dir", g_config.base_dir) < 0 ||
+      set_item(globals, "runtime_path", g_config.runtime) < 0 ||
+      set_item(globals, "run_script_dir", g_config.run_script_dir) < 0 ||
       set_item(globals, "prefix", g_config.prefix) < 0) {
     vpy_set_error_from_python();
     goto done;

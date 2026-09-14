@@ -160,40 +160,41 @@ begin
         check_equal(integer'(call("inc")), 3);
 
       elsif run("Test executing a file with a relative file name") then
-        exec_file("test/models/reference_model.py");
-        check_equal(call_string("get_model_dir"), tb_path(runner_cfg) & "models");
+        -- A relative file name is relative to the directory of the testbench
+        exec_file("models/reference_model.py");
+        check_equal(call_string("get_model_dir"), join(tb_path(runner_cfg), "models"));
 
       elsif run("Test executing a file with an absolute file name") then
-        exec_file(tb_path(runner_cfg) & "models/reference_model.py");
-        check_equal(call_string("get_model_dir"), tb_path(runner_cfg) & "models");
+        exec_file(join(tb_path(runner_cfg), "models/reference_model.py"));
+        check_equal(call_string("get_model_dir"), join(tb_path(runner_cfg), "models"));
 
       elsif run("Test that __file__ is set during file execution and restored after") then
-        exec_file("test/models/reference_model.py");
-        check_equal(call_string("get_file_during_exec"), tb_path(runner_cfg) & "models/reference_model.py");
+        exec_file("models/reference_model.py");
+        check_equal(call_string("get_file_during_exec"), join(tb_path(runner_cfg), "models/reference_model.py"));
         exec("def after_file_absent():" + "    return '__file__' not in globals()");
         check_true(call_boolean("after_file_absent"));
 
       elsif run("Test sibling import without PYTHONPATH and that sys.path is restored") then
         exec("GAIN = 3");
-        exec_file("test/models/importer.py");
+        exec_file("models/importer.py");
         check_equal(integer'(call("scaled", arg(2))), 9); -- fir(2) = 3, 3 * GAIN(3) = 9
         check_false(call_boolean("dir_in_syspath"));
 
       elsif run("Test that re-executing a file executes it again") then
-        exec_file("test/models/counter.py");
-        exec_file("test/models/counter.py");
+        exec_file("models/counter.py");
+        exec_file("models/counter.py");
         check_equal(integer'(call("get_call_count")), 2);
 
       elsif run("Test that exec_file with a missing file fails") then
         -- The error message shows the path in the native format of the OS
         exec("import os" + "def native_repr(path):" + "    return repr(os.path.normpath(path))");
         mock(python_logger, failure);
-        exec_file(tb_path(runner_cfg) & "models/does_not_exist.py");
+        exec_file("models/does_not_exist.py");
         check_only_log(
           python_logger,
-          "exec_file(""" & tb_path(runner_cfg) & "models/does_not_exist.py"") failed:" & LF &
+          "exec_file(""" & join(tb_path(runner_cfg), "models/does_not_exist.py") & """) failed:" & LF &
           "FileNotFoundError: [Errno 2] No such file or directory: " &
-          call_string("native_repr", arg(string'(tb_path(runner_cfg) & "models/does_not_exist.py"))),
+          call_string("native_repr", arg(string'(join(tb_path(runner_cfg), "models/does_not_exist.py")))),
           failure
         );
         unmock(python_logger);
@@ -864,9 +865,9 @@ begin
         unmock(python_logger);
 
       elsif run("Test executing a file in different sessions") then
-        exec_file("test/models/counter.py", golden);
-        exec_file("test/models/counter.py", golden);
-        exec_file("test/models/counter.py", fixed_point);
+        exec_file("models/counter.py", golden);
+        exec_file("models/counter.py", golden);
+        exec_file("models/counter.py", fixed_point);
         check_equal(integer'(call("get_call_count", session => golden)), 2);
         check_equal(integer'(call("get_call_count", session => fixed_point)), 1);
 

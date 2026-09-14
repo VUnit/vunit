@@ -182,8 +182,8 @@ class Runtime:  # pylint: disable=too-many-instance-attributes
     shared by all exec and eval operations of a simulation.
     """
 
-    def __init__(self, base_dir, prefix):
-        self._base_dir = Path(base_dir)
+    def __init__(self, run_script_dir, prefix):
+        self._run_script_dir = Path(run_script_dir)
         self._handle = BridgeHandle(self)
         # One namespace per session. The default session uses __main__.
         self._sessions = {DEFAULT_SESSION: __main__.__dict__}
@@ -199,9 +199,12 @@ class Runtime:  # pylint: disable=too-many-instance-attributes
 
         self._check_environment(prefix)
 
-        # Mimic "python run.py": the run script directory is sys.path[0].
-        if str(self._base_dir) not in sys.path:
-            sys.path.insert(0, str(self._base_dir))
+        # Mimic "python run.py": the run script directory is sys.path[0]. It is
+        # not used to resolve file names, which VHDL does, but import_run_script
+        # imports the run script as a module and it can then import its siblings
+        # like it does when the run script is started by python.
+        if str(self._run_script_dir) not in sys.path:
+            sys.path.insert(0, str(self._run_script_dir))
 
     @staticmethod
     def _check_environment(prefix):
@@ -325,16 +328,15 @@ class Runtime:  # pylint: disable=too-many-instance-attributes
         code = compile(source, file_name, "exec", dont_inherit=True)
         exec(code, self._namespace, self._namespace)  # pylint: disable=exec-used
 
-    def _resolve_file(self, file_name):
+    @staticmethod
+    def _resolve_file(file_name):
         """
-        Absolute path of a Python file, relative names are relative to the run script directory.
+        Absolute path of a Python file. VHDL resolves a relative file name
+        against the directory of its testbench before it gets here.
         """
         if file_name == "":
             raise ValueError("Empty Python file name")
-        path = Path(file_name)
-        if not path.is_absolute():
-            path = self._base_dir / path
-        return Path(os.path.normpath(path.absolute()))
+        return Path(os.path.normpath(Path(file_name).absolute()))
 
     def _execute_file(self, file_name):
         """

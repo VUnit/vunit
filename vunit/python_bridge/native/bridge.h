@@ -94,11 +94,11 @@ int vpy_has_error(void);
 
 /* config.c */
 typedef struct {
-  char *executable; /* sys.executable of the Python running VUnit */
-  char *prefix;     /* its sys.prefix, verified by the runtime */
-  char *runtime;    /* path of runtime.py */
-  char *base_dir;   /* base of relative Python file names */
-  char *python_dll; /* Windows only: path of the Python DLL */
+  char *executable;     /* sys.executable of the Python running VUnit */
+  char *prefix;         /* its sys.prefix, verified by the runtime */
+  char *runtime;        /* path of runtime.py */
+  char *run_script_dir; /* directory of the run script, put on sys.path */
+  char *python_dll;     /* Windows only: path of the Python DLL */
 } vpy_config_t;
 
 int vpy_read_config(vpy_config_t *config);

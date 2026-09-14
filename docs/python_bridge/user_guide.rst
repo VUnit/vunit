@@ -376,7 +376,7 @@ what ``import_run_script`` uses internally:
 
 .. code-block:: vhdl
 
-    import_module_from_file(tb_path(runner_cfg) & "reference_model.py", "reference_model");
+    import_module_from_file(join(tb_path(runner_cfg), "reference_model.py"), "reference_model");
     exec("reference_model.configure(gain=4)");
 
 ``to_py_list_str`` converts an ``integer_vector``, ``integer_vector_ptr_t`` or
@@ -491,13 +491,10 @@ while it executes so that it can import sibling modules without setting
 ``PYTHONPATH``. Imports are therefore expected at the top level of the file.
 Executing the same file twice executes it twice.
 
-A relative file name is relative to the directory of the VUnit run script
-(the script started by ``python``), independently of the simulator and of
-the current working directory. That directory is also the run script's own
-first entry of ``sys.path``. Absolute paths work too, for example
-``tb_path(runner_cfg) & "model.py"`` for a file next to the testbench.
-Like the other operations, it takes an optional trailing
-:ref:`session <python_bridge:sessions>` parameter.
+A relative file name is relative to the directory of the testbench file
+(``tb_path``); an absolute path is used as given. Like the other operations,
+it takes an optional trailing :ref:`session <python_bridge:sessions>`
+parameter.
 
 .. _python_bridge:semantics:
 

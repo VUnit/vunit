@@ -161,8 +161,9 @@ $call_declarations
   -- Execution of Python files
   -----------------------------------------------------------------------------
   -- Execute a Python file. A relative file name is relative to the directory
-  -- of the run script. The file is executed with __file__ set and its own
-  -- directory on sys.path so that it can import its siblings.
+  -- of the testbench file, tb_path, and an absolute file name is used as it
+  -- is given. The file is executed with __file__ set and its own directory on
+  -- sys.path so that it can import its siblings.
   procedure exec_file(file_name : string; session : python_session_t := default_session);
 end package;
 
@@ -679,10 +680,35 @@ $arg_functions
   -----------------------------------------------------------------------------
   -- exec
   -----------------------------------------------------------------------------
+  -- True when the file name is absolute: /a/b, \\server\share\a, C:\a or C:/a
+  function p_is_absolute(file_name : string) return boolean is
+    alias name : string(1 to file_name'length) is file_name;
+  begin
+    if name'length = 0 then
+      return false;
+    elsif name(1) = '/' or name(1) = '\' then
+      return true;
+    elsif name'length >= 2 then
+      -- A Windows drive
+      return name(2) = ':';
+    end if;
+    return false;
+  end;
+
+  -- The file name of exec_file, a relative one taken from the directory of the
+  -- testbench file like the file names of the other VUnit subprograms
+  impure function p_file_path(file_name : string) return string is
+  begin
+    if p_is_absolute(file_name) then
+      return file_name;
+    end if;
+    return join(tb_path(get_cfg(runner_state)), file_name);
+  end;
+
   procedure exec_file(file_name : string; session : python_session_t := default_session) is
     variable ok : boolean;
   begin
-    ok := p_exec_file(file_name, session);
+    ok := p_exec_file(p_file_path(file_name), session);
   end;
 
   -----------------------------------------------------------------------------

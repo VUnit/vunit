@@ -92,7 +92,7 @@ EXPECTED_EXPORTS = (
 
 def _write_run_script(path: Path) -> Path:
     """
-    A stub run script; its directory is the base of relative Python file names.
+    A stub run script; its directory is put on sys.path by the runtime.
     """
     path.write_text("# run script stub\n", encoding="utf-8")
     return path
@@ -225,8 +225,8 @@ class TestAddPython(unittest.TestCase):
             builtins.add("python")
 
         # The bridge must be handed the VUnit object's own project, output
-        # path, simulator class and run script path (the base of relative
-        # Python file names, shared with import_run_script).
+        # path, simulator class and run script path (whose directory the
+        # runtime puts on sys.path, like python does for a run script).
         setup_mock.assert_called_once_with(
             self.vu._project, self.vu._output_path, simulator, self.vu._run_script_path
         )
@@ -607,20 +607,20 @@ class TestConfigFile(unittest.TestCase):
 
     def test_config_keys_linux(self):
         with mock.patch("sys.platform", "linux"):
-            text = bridge_setup._config_text("/base/dir")  # pylint: disable=protected-access
+            text = bridge_setup._config_text("/run/script/dir")  # pylint: disable=protected-access
         keys = dict(line.split("=", 1) for line in text.splitlines())
-        self.assertEqual(set(keys), {"executable", "prefix", "runtime", "base_dir"})
+        self.assertEqual(set(keys), {"executable", "prefix", "runtime", "run_script_dir"})
         self.assertEqual(keys["executable"], sys.executable)
         self.assertEqual(keys["prefix"], sys.prefix)
         self.assertEqual(keys["runtime"], str(bridge_setup.RUNTIME_SOURCE))
-        self.assertEqual(keys["base_dir"], "/base/dir")
+        self.assertEqual(keys["run_script_dir"], "/run/script/dir")
 
     def test_config_keys_windows_include_python_dll(self):
         with (
             mock.patch("sys.platform", "win32"),
             mock.patch("vunit.python_bridge.bridge.windows_python_dll", return_value=r"C:\python.dll"),
         ):
-            text = bridge_setup._config_text("/base/dir")  # pylint: disable=protected-access
+            text = bridge_setup._config_text("/run/script/dir")  # pylint: disable=protected-access
         keys = dict(line.split("=", 1) for line in text.splitlines())
         self.assertEqual(keys["python_dll"], r"C:\python.dll")
 
@@ -639,7 +639,7 @@ class TestConfigFile(unittest.TestCase):
             bridge_setup._write_if_changed(path, "world")  # pylint: disable=protected-access
             self.assertEqual(path.read_text(encoding="utf-8"), "world")
 
-    def test_base_dir_is_the_directory_of_the_run_script(self):
+    def test_run_script_dir_is_the_directory_of_the_run_script(self):
         with create_tempdir() as tempdir:
             run_script = _write_run_script(tempdir / "run.py")
             fake_library_file = tempdir / "cache" / "libvunit_python_bridge.so"
@@ -647,7 +647,7 @@ class TestConfigFile(unittest.TestCase):
                 bridge_setup.setup(_BridgeKey(), tempdir / "out", None, run_script)
             config = (fake_library_file.parent / bridge_setup.CONFIG_FILE_NAME).read_text(encoding="utf-8")
             keys = dict(line.split("=", 1) for line in config.splitlines())
-            self.assertEqual(keys["base_dir"], str(tempdir.resolve()))
+            self.assertEqual(keys["run_script_dir"], str(tempdir.resolve()))
 
     def test_config_paths_with_spaces_and_unicode_written_as_utf8(self):
         with create_tempdir() as tempdir:
@@ -663,7 +663,7 @@ class TestConfigFile(unittest.TestCase):
     def test_line_break_in_path_raises(self):
         with mock.patch("sys.executable", "/usr/bin/py\nthon"):
             with self.assertRaisesRegex(RuntimeError, "line breaks"):
-                bridge_setup._config_text("/base/dir")  # pylint: disable=protected-access
+                bridge_setup._config_text("/run/script/dir")  # pylint: disable=protected-access
 
 
 class TestWindowsDllSelection(unittest.TestCase):

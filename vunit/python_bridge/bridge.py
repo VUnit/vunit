@@ -62,8 +62,8 @@ def setup(project, output_path: str, simulator_class, run_script_path: Path) -> 
     """
     Prepare the Python bridge for a project. Called by add_python().
 
-    :param run_script_path: The run script. Its directory is the base of
-                            relative Python file names, like for import_run_script.
+    :param run_script_path: The run script. Its directory is put on sys.path
+                            by the runtime, like when it is started by python.
     :returns: The bridge. Its vhdl_files are to be added to vunit_lib.
     """
     simulator_name = None if simulator_class is None else simulator_class.name
@@ -78,8 +78,8 @@ def setup(project, output_path: str, simulator_class, run_script_path: Path) -> 
     is_fli = simulator_name in FLI_SIMULATORS
     root = Path(output_path) / "python_bridge"
     library_file = prepare_library(root, Path(simulator_class.find_prefix()) if is_fli else None)
-    base_dir = str(Path(run_script_path).resolve().parent)
-    _write_if_changed(library_file.parent / CONFIG_FILE_NAME, _config_text(base_dir))
+    run_script_dir = str(Path(run_script_path).resolve().parent)
+    _write_if_changed(library_file.parent / CONFIG_FILE_NAME, _config_text(run_script_dir))
 
     bridge_package = root / "vhdl" / "python_bridge_pkg.vhd"
     _write_if_changed(
@@ -144,7 +144,7 @@ def get_bridge(project) -> Optional[PythonBridge]:
     return _BRIDGES.get(project)
 
 
-def _config_text(base_dir: str) -> str:
+def _config_text(run_script_dir: str) -> str:
     """
     Content of the configuration file read by the bridge library at run time.
     """
@@ -152,7 +152,7 @@ def _config_text(base_dir: str) -> str:
         "executable": sys.executable,
         "prefix": sys.prefix,
         "runtime": str(RUNTIME_SOURCE),
-        "base_dir": base_dir,
+        "run_script_dir": run_script_dir,
     }
     if sys.platform == "win32":
         lines["python_dll"] = windows_python_dll()

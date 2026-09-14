@@ -142,8 +142,8 @@ static char **config_field(vpy_config_t *config, const char *key) {
   if (strcmp(key, "runtime") == 0) {
     return &config->runtime;
   }
-  if (strcmp(key, "base_dir") == 0) {
-    return &config->base_dir;
+  if (strcmp(key, "run_script_dir") == 0) {
+    return &config->run_script_dir;
   }
   if (strcmp(key, "python_dll") == 0) {
     return &config->python_dll;
@@ -185,7 +185,8 @@ int vpy_read_config(vpy_config_t *config) {
   }
   fclose(file);
 
-  if (config->executable == NULL || config->prefix == NULL || config->runtime == NULL || config->base_dir == NULL) {
+  if (config->executable == NULL || config->prefix == NULL || config->runtime == NULL ||
+      config->run_script_dir == NULL) {
     vpy_set_error("Incomplete Python bridge configuration file");
     return VPY_ERROR;
   }
