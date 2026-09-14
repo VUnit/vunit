@@ -9,6 +9,7 @@ Test the simulator hooks
 """
 
 import unittest
+from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 
@@ -20,6 +21,7 @@ from vunit.sim_if.ghdl import GHDLInterface
 from vunit.sim_if.modelsim import ModelSimInterface
 from vunit.sim_if.nvc import NVCInterface
 from vunit.sim_if.rivierapro import RivieraProInterface
+from vunit.sim_if.vsim_simulator_mixin import VsimSimulatorMixin
 from vunit.vhdl_standard import VHDL
 from tests.common import create_tempdir
 
@@ -60,6 +62,7 @@ class TestSimulatorHooks(unittest.TestCase):
         simulator = self._simulator("ghdl")
         self.assertEqual(hooks.get_elab_flags(simulator), [])
         self.assertEqual(hooks.get_run_flags(simulator), [])
+        self.assertEqual(hooks.get_process_flags(simulator), [])
         self.assertIsNone(hooks.get_run_env(simulator))
         self.assertEqual(hooks.get_run_env(simulator, {"FOO": "1"}), {"FOO": "1"})
 
@@ -69,11 +72,13 @@ class TestSimulatorHooks(unittest.TestCase):
             "ghdl",
             elab_flags=lambda interface: [f"-Wl,-l{interface.name}"],
             run_flags=lambda interface: ["--load"],
+            process_flags=lambda interface: [f"-{interface.name}"],
             run_env=lambda interface, env: dict(env, FOO=interface.name),
         )
 
         self.assertEqual(hooks.get_elab_flags(simulator), ["-Wl,-lghdl"])
         self.assertEqual(hooks.get_run_flags(simulator), ["--load"])
+        self.assertEqual(hooks.get_process_flags(simulator), ["-ghdl"])
         self.assertEqual(hooks.get_run_env(simulator, {"BAR": "1"}), {"BAR": "1", "FOO": "ghdl"})
 
     def test_combines_hooks_in_registration_order(self):
@@ -104,9 +109,19 @@ class TestSimulatorHooks(unittest.TestCase):
 
         self.assertEqual(hooks.get_elab_flags(simulator), [])
 
+    def test_combines_process_flags_hooks_in_registration_order(self):
+        simulator = self._simulator("modelsim")
+        hooks.register_hooks("modelsim", process_flags=lambda interface: ["first"])
+        hooks.register_hooks("modelsim", process_flags=lambda interface: ["second"])
+
+        self.assertEqual(hooks.get_process_flags(simulator), ["first", "second"])
+
     def test_raises_if_hook_is_not_callable(self):
         with self.assertRaisesRegex(ValueError, "run_flags hook for simulator ghdl is not callable."):
             hooks.register_hooks("ghdl", run_flags="--load")
+
+        with self.assertRaisesRegex(ValueError, "process_flags hook for simulator ghdl is not callable."):
+            hooks.register_hooks("ghdl", process_flags="-noautoldlibpath")
 
     def test_raises_if_simulator_name_is_invalid(self):
         with self.assertRaisesRegex(ValueError, "Simulator name must be a non-empty string."):
@@ -217,6 +232,95 @@ class TestSimulatorHooksAreUsed(unittest.TestCase):
 
         simif = SimpleNamespace(name=ActiveHDLInterface.name, _gui=False)
         self.assertEqual(ActiveHDLInterface._vsim_extra_args(simif, make_config()), "-bar")
+
+
+class _VsimSimulator(VsimSimulatorMixin):
+    """
+    A minimal vsim based simulator interface
+    """
+
+    name = "modelsim"
+
+    def __init__(self, sim_cfg_file_name, persistent):
+        self._gui = False
+        VsimSimulatorMixin.__init__(self, "prefix", persistent, sim_cfg_file_name)
+
+    @staticmethod
+    def get_env():
+        return {"BASE": "1"}
+
+
+class TestVsimProcessHooks(unittest.TestCase):
+    """
+    Test that the vsim based interfaces use the hooks of the vsim process they start
+    """
+
+    def setUp(self):
+        hooks.clear_hooks()
+
+    def tearDown(self):
+        hooks.clear_hooks()
+
+    def test_no_process_hooks_by_default(self):
+        with (
+            create_tempdir() as tempdir,
+            mock.patch("vunit.sim_if.vsim_simulator_mixin.Process", autospec=True) as process,
+        ):
+            simif = _VsimSimulator(str(Path(tempdir) / "modelsim.ini"), persistent=True)
+            simif._persistent_shell._create_process(1)  # pylint: disable=protected-access
+            self.assertNotIn("-noautoldlibpath", process.call_args[0][0])
+            self.assertEqual(process.call_args[1]["env"], {"BASE": "1"})
+
+            simif._run_batch_file(str(Path(tempdir) / "batch.do"))  # pylint: disable=protected-access
+            self.assertIsNone(process.call_args[1]["env"])
+
+    def test_persistent_vsim_process_uses_hooks(self):
+        hooks.register_hooks(
+            "modelsim",
+            process_flags=lambda interface: ["-noautoldlibpath"],
+            run_env=lambda interface, env: dict(env, FOO="1"),
+        )
+
+        with (
+            create_tempdir() as tempdir,
+            mock.patch("vunit.sim_if.vsim_simulator_mixin.Process", autospec=True) as process,
+        ):
+            simif = _VsimSimulator(str(Path(tempdir) / "modelsim.ini"), persistent=True)
+            simif._persistent_shell._create_process(1)  # pylint: disable=protected-access
+
+        args = process.call_args[0][0]
+        self.assertEqual(args[-1], "-noautoldlibpath")
+        self.assertEqual(process.call_args[1]["env"], {"BASE": "1", "FOO": "1"})
+
+    def test_batch_vsim_process_uses_hooks(self):
+        hooks.register_hooks(
+            "modelsim",
+            process_flags=lambda interface: ["-noautoldlibpath"],
+            run_env=lambda interface, env: dict(env, FOO="1"),
+        )
+
+        with (
+            create_tempdir() as tempdir,
+            mock.patch("vunit.sim_if.vsim_simulator_mixin.Process", autospec=True) as process,
+        ):
+            simif = _VsimSimulator(str(Path(tempdir) / "modelsim.ini"), persistent=False)
+            simif._run_batch_file(str(Path(tempdir) / "batch.do"))  # pylint: disable=protected-access
+
+        args = process.call_args[0][0]
+        self.assertEqual(args[-1], "-noautoldlibpath")
+        self.assertEqual(process.call_args[1]["env"]["FOO"], "1")
+
+    def test_process_flags_are_specific_to_a_simulator(self):
+        hooks.register_hooks("rivierapro", process_flags=lambda interface: ["-noautoldlibpath"])
+
+        with (
+            create_tempdir() as tempdir,
+            mock.patch("vunit.sim_if.vsim_simulator_mixin.Process", autospec=True) as process,
+        ):
+            simif = _VsimSimulator(str(Path(tempdir) / "modelsim.ini"), persistent=False)
+            simif._run_batch_file(str(Path(tempdir) / "batch.do"))  # pylint: disable=protected-access
+
+        self.assertNotIn("-noautoldlibpath", process.call_args[0][0])
 
 
 if __name__ == "__main__":

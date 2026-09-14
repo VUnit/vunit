@@ -15,6 +15,7 @@ from pathlib import Path
 from ..ostools import write_file, Process
 from ..test.suites import get_result_file_name
 from ..persistent_tcl_shell import PersistentTclShell
+from . import hooks
 
 
 class VsimSimulatorMixin(object):
@@ -29,7 +30,8 @@ class VsimSimulatorMixin(object):
         self._sim_cfg_file_name = sim_cfg_file_name
 
         prefix = self._prefix  # Avoid circular dependency inhibiting process destruction
-        env = self.get_env()
+        env = hooks.get_run_env(self, self.get_env())
+        process_flags = hooks.get_process_flags(self)
 
         def create_process(ident):
             return Process(
@@ -40,7 +42,8 @@ class VsimSimulatorMixin(object):
                     str(Path(sim_cfg_file_name).parent / f"transcript{ident}"),
                     "-do",
                     str((Path(__file__).parent / "tcl_read_eval_loop.tcl").resolve()),
-                ],
+                ]
+                + process_flags,
                 cwd=str(Path(sim_cfg_file_name).parent),
                 env=env,
             )
@@ -332,7 +335,13 @@ proc vunit_run {} {
             if extra_args:
                 args += extra_args
 
-            proc = Process(args, cwd=str(Path(self._sim_cfg_file_name).parent))
+            args += hooks.get_process_flags(self)
+
+            proc = Process(
+                args,
+                cwd=str(Path(self._sim_cfg_file_name).parent),
+                env=hooks.get_run_env(self),
+            )
             proc.consume_output()
         except Process.NonZeroExitCode:
             return False

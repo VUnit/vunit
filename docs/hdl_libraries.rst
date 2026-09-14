@@ -134,7 +134,8 @@ Simulator Hooks
 
 The HDL code of a package can depend on something built outside the simulator, a native library or
 generated files, and then the simulator typically has to be given extra options to find it: flags for
-the elaboration of a test, flags for its simulation or environment variables.
+the elaboration of a test, flags for its simulation, flags for the simulator process VUnit starts or
+environment variables.
 ``context.register_simulator_hooks(simulator_name, ...)`` registers, for one simulator, functions
 returning those extras.
 The hooks are called with the simulator interface such that what they return can depend on how the
@@ -158,11 +159,40 @@ it:
            elab_flags=lambda simulator_interface: [f"-Wl,{library}"],
        )
 
-``elab_flags`` is only used by simulators with a separate elaboration step, that is GHDL, NVC and
-ModelSim/Questa where the flags are given to ``vopt``.
-``run_flags`` is used by all simulators.
-``run_env(simulator_interface, env)`` returns the environment of the simulation, given the environment
-it would otherwise have, and is used by GHDL and NVC.
+There are four kinds of hooks, each used by the simulators for which it makes sense:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 45 35
+
+   * - Hook
+     - What it returns
+     - Used by
+   * - ``elab_flags(simulator_interface)``
+     - Extra flags for the elaboration of a test.
+     - GHDL, NVC and ModelSim/Questa, where they are given to ``vopt``.
+   * - ``run_flags(simulator_interface)``
+     - Extra flags for the simulation of a test.
+     - All simulators. For the vsim based ones these reach the ``vsim`` command of the generated
+       do-file, not the ``vsim`` process itself.
+   * - ``process_flags(simulator_interface)``
+     - Extra flags for the simulator process VUnit starts.
+     - ModelSim/Questa and Riviera-PRO, for both the persistent and the batch ``vsim`` process.
+   * - ``run_env(simulator_interface, env)``
+     - The environment of the simulation, given the environment it would otherwise have.
+     - GHDL, NVC and, for the ``vsim`` process, ModelSim/Questa and Riviera-PRO.
+
+``run_flags`` and ``process_flags`` are separate because a vsim based simulator runs the simulation
+from a script: ``run_flags`` extends the ``vsim`` command in that script, which is what options
+selecting what to load into the simulation belong on, while ``process_flags`` extends the command line
+of the ``vsim`` process VUnit starts, which is where an option affecting how that process itself is
+set up has to go. Questa's ``-noautoldlibpath``, which keeps the bundled runtime libraries out of the
+dynamic library search path, is only honoured there.
+
+``process_flags`` and ``run_env`` are read when VUnit constructs the simulator interface, so they have
+to be registered before that happens. A package registering them from its setup function is in time:
+the setup function runs when :meth:`add_package() <vunit.ui.VUnit.add_package>` is called on the VUnit
+object, which is before :meth:`main() <vunit.ui.VUnit.main>` creates the interface.
 
 The simulator interface a hook is called with also tells how the simulator was found.
 ``GHDLInterface.backend`` is the code generator of the GHDL used, ``"mcode"``, ``"llvm"``,

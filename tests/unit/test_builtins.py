@@ -476,6 +476,7 @@ def setup(context):
         "ghdl",
         elab_flags=lambda simulator_interface: ["-Wl,-lfoo"],
         run_flags=lambda simulator_interface: ["--load=foo"],
+        process_flags=lambda simulator_interface: ["-noautoldlibpath"],
         run_env=lambda simulator_interface, env: dict(env, FOO="1"),
     )
 """,
@@ -495,6 +496,7 @@ setup = "foo_setup:setup"
             simulator_interface.name = "ghdl"
             self.assertEqual(hooks.get_elab_flags(simulator_interface), ["-Wl,-lfoo"])
             self.assertEqual(hooks.get_run_flags(simulator_interface), ["--load=foo"])
+            self.assertEqual(hooks.get_process_flags(simulator_interface), ["-noautoldlibpath"])
             self.assertEqual(hooks.get_run_env(simulator_interface, {}), {"FOO": "1"})
 
     def test_raises_if_setup_has_invalid_format(self):

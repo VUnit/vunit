@@ -30,6 +30,7 @@ class _Hooks:
 
     elab_flags: List[FlagsHook] = field(default_factory=list)
     run_flags: List[FlagsHook] = field(default_factory=list)
+    process_flags: List[FlagsHook] = field(default_factory=list)
     run_env: List[EnvHook] = field(default_factory=list)
 
 
@@ -47,6 +48,7 @@ def register_hooks(
     *,
     elab_flags: Optional[FlagsHook] = None,
     run_flags: Optional[FlagsHook] = None,
+    process_flags: Optional[FlagsHook] = None,
     run_env: Optional[EnvHook] = None,
 ) -> None:
     """
@@ -58,6 +60,9 @@ def register_hooks(
                        do not call this hook.
     :param run_flags: A ``run_flags(simulator_interface)`` function returning extra flags for the
                       simulation of a test.
+    :param process_flags: A ``process_flags(simulator_interface)`` function returning extra flags for
+                          the simulator process VUnit starts. Only simulators driving the simulation
+                          from a separate process, that is the vsim based ones, call this hook.
     :param run_env: A ``run_env(simulator_interface, env)`` function returning the environment
                     of the simulation of a test, given the environment it would otherwise have.
     """
@@ -66,6 +71,7 @@ def register_hooks(
 
     _check_callable("elab_flags", elab_flags, simulator_name)
     _check_callable("run_flags", run_flags, simulator_name)
+    _check_callable("process_flags", process_flags, simulator_name)
     _check_callable("run_env", run_env, simulator_name)
 
     hooks = _HOOKS.setdefault(simulator_name, _Hooks())
@@ -75,6 +81,9 @@ def register_hooks(
 
     if run_flags is not None:
         hooks.run_flags.append(run_flags)
+
+    if process_flags is not None:
+        hooks.process_flags.append(process_flags)
 
     if run_env is not None:
         hooks.run_env.append(run_env)
@@ -109,6 +118,17 @@ def get_run_flags(simulator_interface) -> List[str]:
     """
     flags: List[str] = []
     for hook in _hooks(simulator_interface).run_flags:
+        flags += list(hook(simulator_interface))
+
+    return flags
+
+
+def get_process_flags(simulator_interface) -> List[str]:
+    """
+    Return the extra flags for the simulator process provided by the hooks of the simulator.
+    """
+    flags: List[str] = []
+    for hook in _hooks(simulator_interface).process_flags:
         flags += list(hook(simulator_interface))
 
     return flags
