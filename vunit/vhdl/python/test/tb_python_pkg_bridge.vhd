@@ -23,6 +23,19 @@ end entity;
 architecture tb of tb_python_pkg_bridge is
   constant std_ulogic_characters : string(1 to 9) := "UX01ZWLH-";
   constant group_error : string := "Only keyword arguments can be combined with & into a keyword argument group";
+
+  -- The Python triple quote, used to keep a source text with quotes of its own
+  constant py_quotes : string := "'''";
+
+  -- The messages reported for argument values that cannot be converted and the
+  -- Python source text of the calls they are used in, where the quotes of the
+  -- message are escaped
+  constant std_ulogic_arg_error : string := "arg cannot convert 'X'; expected '0', '1', 'L' or 'H'";
+  constant std_ulogic_arg_call : string :=
+    "describe(__vunit__.error(""arg cannot convert 'X'; expected '0', '1', 'L' or 'H'""))";
+  constant unsigned_arg_error : string := "kwarg_unsigned cannot convert ""1010X010""; the value has metavalues";
+  constant unsigned_arg_call : string :=
+    "describe(v=__vunit__.error(""kwarg_unsigned cannot convert \""1010X010\""; the value has metavalues""))";
 begin
   main : process
     constant golden : python_session_t := "golden";
@@ -51,6 +64,10 @@ begin
     end;
 
     procedure discard(value : real_vector) is
+    begin
+    end;
+
+    procedure discard(value : arg_t) is
     begin
     end;
 
@@ -469,7 +486,7 @@ begin
           python_logger,
           "eval(""no_such_function()"") failed:" & LF &
           call_string(
-            "expected_error", arg(string'("no_such_function()")), arg(string'("<eval #2>")), arg(true)
+            "expected_error", arg(string'("no_such_function()")), arg(string'("<eval #1>")), arg(true)
           ),
           failure
         );
@@ -660,15 +677,14 @@ begin
         check_equal(call_string("describe", arg('H'), arg('L')), "True, False");
 
       elsif run("Test that a metavalue in an unsigned or signed argument fails") then
-        define_describe;
         mock(python_logger, failure);
-        check_equal(call_string("describe", arg_unsigned(unsigned'("1010X010"))), "");
+        discard(arg_unsigned(unsigned'("1010X010")));
         check_log(
           python_logger, "arg_unsigned cannot convert ""1010X010""; the value has metavalues", failure
         );
-        check_equal(call_string("describe", arg_signed(signed'("10Z0"))), "");
+        discard(arg_signed(signed'("10Z0")));
         check_log(python_logger, "arg_signed cannot convert ""10Z0""; the value has metavalues", failure);
-        check_equal(call_string("describe", kwarg_unsigned("v", unsigned'("U"))), "");
+        discard(kwarg_unsigned("v", unsigned'("U")));
         check_only_log(
           python_logger, "kwarg_unsigned cannot convert ""U""; the value has metavalues", failure
         );
@@ -680,12 +696,41 @@ begin
         check_equal(call_string("describe", kwarg("v", '1'), kwarg("w", 'L')), "v=True, w=False");
 
       elsif run("Test that a metavalue std_ulogic argument fails") then
-        define_describe;
         mock(python_logger, failure);
-        check_equal(call_string("describe", arg('X')), "");
+        discard(arg('X'));
         check_log(python_logger, "arg cannot convert 'X'; expected '0', '1', 'L' or 'H'", failure);
-        check_equal(call_string("describe", kwarg("v", '-')), "");
+        discard(kwarg("v", '-'));
         check_only_log(python_logger, "kwarg cannot convert '-'; expected '0', '1', 'L' or 'H'", failure);
+        unmock(python_logger);
+
+      elsif run("Test that a call with an argument that could not be converted fails") then
+        -- The failed argument becomes an expression raising the message that
+        -- was reported, so that the call fails with it rather than being made
+        -- without the argument
+        define_describe;
+        define_error_helper;
+        mock(python_logger, failure);
+
+        check_equal(call_string("describe", arg('X')), "");
+        check_log(python_logger, std_ulogic_arg_error, failure);
+        exec("failing_source = r" & py_quotes & std_ulogic_arg_call & py_quotes);
+        check_log(
+          python_logger,
+          "eval(""" & std_ulogic_arg_call & """) failed:" & LF &
+          eval_string("expected_error(failing_source, '<eval #1>', True)"),
+          failure
+        );
+
+        -- A quote in the message is escaped to keep the Python source text valid
+        check_equal(call_string("describe", kwarg_unsigned("v", unsigned'("1010X010"))), "");
+        check_log(python_logger, unsigned_arg_error, failure);
+        exec("failing_source = r" & py_quotes & unsigned_arg_call & py_quotes);
+        check_only_log(
+          python_logger,
+          "eval(""" & unsigned_arg_call & """) failed:" & LF &
+          eval_string("expected_error(failing_source, '<eval #3>', True)"),
+          failure
+        );
         unmock(python_logger);
 
       elsif run("Test keyword forms of the typed argument values") then
@@ -858,7 +903,7 @@ begin
           python_logger,
           "eval(""only_in_golden()"", session => ""fixed_point"") failed:" & LF &
           call_string(
-            "expected_error", arg(string'("only_in_golden()")), arg(string'("<eval fixed_point #2>")), arg(true)
+            "expected_error", arg(string'("only_in_golden()")), arg(string'("<eval fixed_point #1>")), arg(true)
           ),
           failure
         );

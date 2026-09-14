@@ -207,28 +207,25 @@ def arg_declarations():
 
 def arg_functions():
     """
-    Bodies of the generated arg and kwarg subprograms. p_arg_value returns an
-    empty string when the value cannot be converted, having reported it.
+    Bodies of the generated arg and kwarg subprograms. p_arg_value reports a
+    value it cannot convert and gives it a Python source text raising the same
+    message, so that the call the argument is used in fails as well.
     """
     parts = []
     for value in ARG_VALUES:
         purity = "impure " if value["impure"] else ""
         value_type = value["vhdl"]
         suffix = value["suffix"]
-        for name, parameters, result in [
-            (f"arg{suffix}", f"value : {value_type}", "(p_positional_arg, text)"),
-            (f"kwarg{suffix}", f"kw : string; value : {value_type}", "(kw, text)"),
+        for name, parameters, target in [
+            (f"arg{suffix}", f"value : {value_type}", "p_positional_arg"),
+            (f"kwarg{suffix}", f"kw : string; value : {value_type}", "kw"),
         ]:
-            operation = f', "{name}"' if value["fails"] else ""
+            arg_value = f'p_arg_value(value, "{name}")' if value["fails"] else "p_arg_value(value)"
             parts.append(
                 f"""\
   {purity}function {name}({parameters}) return arg_t is
-    constant text : string := p_arg_value(value{operation});
   begin
-    if text = "" then
-      return null_arg;
-    end if;
-    return {result};
+    return ({target}, {arg_value});
   end;
 """
             )
@@ -343,7 +340,7 @@ def call_subprograms():
   ) return {result['vhdl']} is
   begin
     return eval_{result['name']}(
-      p_to_call_str(identifier, {ARG_ACTUALS}), session
+      to_call_str(identifier, {ARG_ACTUALS}), session
     );
   end;
 """
@@ -358,7 +355,7 @@ def call_subprograms():
   ) is
   begin
     eval_{result['name']}(
-      p_to_call_str(identifier, {ARG_ACTUALS}), result, session
+      to_call_str(identifier, {ARG_ACTUALS}), result, session
     );
   end;
 """

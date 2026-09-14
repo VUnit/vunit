@@ -295,6 +295,20 @@ belongs to every character array type and an overload would therefore make
 ``std_ulogic``, ``unsigned`` or ``signed`` value; any other metavalue is an
 error.
 
+A value that cannot be converted is reported as a failure on
+``python_logger``, and the argument becomes an expression raising the same
+message in Python. The call it is used in therefore fails with that message as
+well instead of being made without the argument, which is what would otherwise
+happen when the logger is mocked and the simulation continues:
+
+.. code-block:: text
+
+    FAILURE - vunit_lib:python - arg cannot convert 'X'; expected '0', '1', 'L' or 'H'
+    FAILURE - vunit_lib:python - eval("model(__vunit__.error("arg cannot convert 'X'; ..."))") failed:
+    Traceback (most recent call last):
+      ...
+    RuntimeError: arg cannot convert 'X'; expected '0', '1', 'L' or 'H'
+
 An aggregate or a literal does not select an overload by itself and needs a
 qualified expression: ``arg(real_vector'(1.0, 2.0))``,
 ``arg(integer_vector'(1, 2, 3))``. There is no ``std_ulogic_vector`` value,

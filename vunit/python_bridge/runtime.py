@@ -172,6 +172,17 @@ class BridgeHandle:
         """
         return self._runtime.staged(staged_id)
 
+    @staticmethod
+    def error(message):
+        """
+        Raise the error VHDL reported for an argument it could not convert.
+
+        Such an argument becomes __vunit__.error(<message>) in the Python
+        source text of the call, so that the call fails with the same message
+        instead of silently being made without the argument.
+        """
+        raise RuntimeError(message)
+
     def __repr__(self):
         return "<VUnit python bridge>"
 

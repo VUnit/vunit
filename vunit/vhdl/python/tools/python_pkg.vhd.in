@@ -354,9 +354,38 @@ package body python_pkg is
     end if;
   end;
 
+  -- The Python source text of a message, escaped for a double quoted Python
+  -- string. A quote, a backslash and a line break are the characters that
+  -- cannot be written as they are.
+  function p_quoted(message : string) return string is
+    variable result : line;
+  begin
+    swrite(result, """");
+    for idx in message'range loop
+      case message(idx) is
+        when '"' | '\' => swrite(result, "\" & message(idx));
+        when LF => swrite(result, "\n");
+        when CR => swrite(result, "\r");
+        when others => swrite(result, string'(1 => message(idx)));
+      end case;
+    end loop;
+    swrite(result, """");
+
+    return result.all;
+  end;
+
+  -- Report a value that could not be converted and give it a Python source
+  -- text raising the same message, so that the call the argument is used in
+  -- fails the same way rather than being made without the argument.
+  impure function p_failed_value(message : string) return string is
+  begin
+    failure(python_logger, message);
+    return "__vunit__.error(" & p_quoted(message) & ")";
+  end;
+
   -- The Python source text of an argument value. The overloads whose
   -- conversion can fail take the name of the operation, used to report a value
-  -- that cannot be converted, which gives an empty string.
+  -- that cannot be converted.
   function p_arg_value(value : real_vector) return string is
   begin
     return to_py_list_str(value);
@@ -374,11 +403,9 @@ package body python_pkg is
     elsif to_x01(value) = '0' then
       return "False";
     end if;
-    failure(
-      python_logger,
+    return p_failed_value(
       operation & " cannot convert " & std_ulogic'image(value) & "; expected '0', '1', 'L' or 'H'"
     );
-    return "";
   end;
 
   -- The Python hexadecimal literal of the magnitude given by the bits, for
@@ -427,8 +454,7 @@ package body python_pkg is
   impure function p_arg_value(value : unsigned; operation : string) return string is
   begin
     if is_x(std_ulogic_vector(value)) then
-      failure(python_logger, p_metavalue_error(std_ulogic_vector(value), operation));
-      return "";
+      return p_failed_value(p_metavalue_error(std_ulogic_vector(value), operation));
     end if;
     return p_to_hex_literal(to_x01(std_ulogic_vector(value)), false);
   end;
@@ -438,8 +464,7 @@ package body python_pkg is
     variable magnitude : signed(value'length downto 0);
   begin
     if is_x(std_ulogic_vector(value)) then
-      failure(python_logger, p_metavalue_error(std_ulogic_vector(value), operation));
-      return "";
+      return p_failed_value(p_metavalue_error(std_ulogic_vector(value), operation));
     end if;
     if value'length = 0 then
       return "0x0";
@@ -458,7 +483,8 @@ package body python_pkg is
     constant staged_id : integer := p_stage_array(value, operation);
   begin
     if staged_id < 1 then
-      return "";
+      -- p_stage_array reported the error of the transfer
+      return "__vunit__.error(" & p_quoted(operation & " failed") & ")";
     end if;
     return "__vunit__.staged(" & integer'image(staged_id) & ")";
   end;
@@ -468,21 +494,39 @@ $arg_functions
   impure function to_call_str(
     identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg
   ) return string is
+    variable result : line;
+    variable first : boolean := true;
 
-    function arg_to_str(value : arg_t) return string is
+    procedure append(value : arg_t) is
     begin
       if value.name = p_ignore_arg then
-        return "";
-      elsif value.name = p_positional_arg then
-        return value.value;
+        return;
+      end if;
+      if not first then
+        swrite(result, ", ");
+      end if;
+      first := false;
+      if value.name = p_positional_arg then
+        swrite(result, value.value);
       else
-        return value.name & "=" & value.value;
+        swrite(result, value.name & "=" & value.value);
       end if;
     end;
-
-    constant args : string := "('" & arg_to_str(arg1) & "','" & arg_to_str(arg2) & "','" & arg_to_str(arg3) & "','" & arg_to_str(arg4) & "','" & arg_to_str(arg5) & "','" & arg_to_str(arg6) & "','" & arg_to_str(arg7) & "','" & arg_to_str(arg8) & "','" & arg_to_str(arg9) & "','" & arg_to_str(arg10) & "')";
   begin
-    return eval_string("'" & identifier & "(' + ', '.join((arg for arg in " & args & " if arg)) + ')'");
+    swrite(result, identifier & "(");
+    append(arg1);
+    append(arg2);
+    append(arg3);
+    append(arg4);
+    append(arg5);
+    append(arg6);
+    append(arg7);
+    append(arg8);
+    append(arg9);
+    append(arg10);
+    swrite(result, ")");
+
+    return result.all;
   end;
 
   impure function call_integer_w_arg(
@@ -588,47 +632,6 @@ $arg_functions
       result(value'length - idx) := p_to_std_ulogic(normalized(idx));
     end loop;
     return result;
-  end;
-
-  -----------------------------------------------------------------------------
-  -- The Python expression calling identifier with the given arguments
-  -----------------------------------------------------------------------------
-  function p_to_call_str(
-    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg
-  ) return string is
-    variable result : line;
-    variable first : boolean := true;
-
-    procedure append(value : arg_t) is
-    begin
-      if value.name = p_ignore_arg then
-        return;
-      end if;
-      if not first then
-        swrite(result, ", ");
-      end if;
-      first := false;
-      if value.name = p_positional_arg then
-        swrite(result, value.value);
-      else
-        swrite(result, value.name & "=" & value.value);
-      end if;
-    end;
-  begin
-    swrite(result, identifier & "(");
-    append(arg1);
-    append(arg2);
-    append(arg3);
-    append(arg4);
-    append(arg5);
-    append(arg6);
-    append(arg7);
-    append(arg8);
-    append(arg9);
-    append(arg10);
-    swrite(result, ")");
-
-    return result.all;
   end;
 
   -----------------------------------------------------------------------------
