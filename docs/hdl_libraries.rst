@@ -72,6 +72,63 @@ Moreover, multiple approaches are supported for using `OSVVMLibraries <https://g
 VUnit.
 See :ref:`OSVB: Examples » SISO AXI4 Stream <osvb:Examples:AXI4Stream>`.
 
+.. _packages:
+
+Packages
+========
+
+HDL code can also be distributed as a Python package that VUnit adds with
+:meth:`add_package() <vunit.ui.VUnit.add_package>`.
+A package is an installed Python package containing a ``vunit_pkg.toml`` file in its root directory:
+
+.. code-block:: toml
+   :caption: vunit_pkg.toml
+
+   [package]
+   requires-vunit = ">=5.0.0"
+   requires-vhdl = ">=2008"
+   library = "foo_lib"
+
+   [[package.sources]]
+   include = ["src/*.vhd"]
+
+The sources are compiled into the library named by ``library``, which is created by VUnit and owned by
+the package.
+``requires-vunit`` and ``requires-vhdl`` state the VUnit versions and the VHDL standards the package
+supports.
+
+Setup Function
+--------------
+
+Not everything a package needs to do can be expressed with a list of sources.
+A package building a native library, generating sources or depending on simulator options
+adds a ``setup`` key naming a ``"module:function"`` setup function:
+
+.. code-block:: toml
+   :caption: vunit_pkg.toml
+
+   [package]
+   library = "foo_lib"
+   setup = "foo.vunit_setup:setup"
+
+   [[package.sources]]
+   include = ["src/*.vhd"]
+
+VUnit imports the module and calls the function with a :class:`PackageContext <vunit.package_context.PackageContext>`
+once the sources listed in the manifest have been added:
+
+.. code-block:: python
+   :caption: foo/vunit_setup.py
+
+   def setup(context):
+       build_dir = context.output_path / "foo"
+       build_native_library(context.package_root / "c", build_dir)
+       context.add_source_files("foo_lib", build_dir / "*.vhd")
+
+The context provides the package root, the library created for the package, the VHDL standard used for
+its sources, the VUnit output path, the path of the run script and the selected simulator.
+Errors raised by the setup function are reported as an error for the package.
+
 System Verilog
 ==============
 

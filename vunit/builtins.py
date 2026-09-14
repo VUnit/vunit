@@ -28,12 +28,16 @@ except ModuleNotFoundError:
 from vunit.vhdl_standard import VHDL, VHDLStandard
 from vunit.ui.common import get_checked_file_names_from_globs
 from vunit.about import version, VUnitVersion
+from vunit.package_context import PackageContext
 
 
 LOGGER = logging.getLogger(__name__)
 
 VHDL_PATH = (Path(__file__).parent / "vhdl").resolve()
 VERILOG_PATH = (Path(__file__).parent / "verilog").resolve()
+
+# The setup function of a package is given on the format module:function
+RE_SETUP = re.compile(r"^[A-Za-z_]\w*(\.[A-Za-z_]\w*)*:[A-Za-z_]\w*$")
 
 
 @dataclass(frozen=True)
@@ -177,7 +181,13 @@ class Builtins(object):
         errors.extend(
             self._check_valid_keys(
                 package,
-                valid={"requires-vunit": str, "requires-vhdl": str, "library": str, "sources": list},
+                valid={
+                    "requires-vunit": str,
+                    "requires-vhdl": str,
+                    "library": str,
+                    "sources": list,
+                    "setup": str,
+                },
                 path="package",
             )
         )
@@ -198,6 +208,14 @@ class Builtins(object):
                                     message="Path must be a string.",
                                 )
                             )
+
+        if isinstance(package.get("setup"), str) and not RE_SETUP.match(package["setup"]):
+            errors.append(
+                ValidationError(
+                    path="package.setup",
+                    message="'setup' must be on the format 'module:function'.",
+                )
+            )
 
         self._log_validation_errors(errors)
 
@@ -281,6 +299,7 @@ class Builtins(object):
         else:
             use_vhdl_standard = None
 
+        library = None
         sources = package.get("sources", [])
         if sources:
             library_name = package.get("library")
@@ -295,6 +314,43 @@ class Builtins(object):
             for source in sources:
                 for include in source["include"]:
                     library.add_source_files(package_root / include, vhdl_standard=use_vhdl_standard)
+
+        setup = package.get("setup")
+        if setup:
+            self._call_setup(
+                package_name,
+                setup,
+                PackageContext(
+                    self._vunit_obj,
+                    package_root,
+                    library,
+                    VHDL.standard(use_vhdl_standard) if use_vhdl_standard else self._vhdl_standard,
+                    self._simulator_class,
+                ),
+            )
+
+    @staticmethod
+    def _call_setup(package_name: str, setup: str, context: PackageContext) -> None:
+        """Call the setup function of a package with its context."""
+        module_name, function_name = setup.split(":")
+
+        try:
+            module = importlib.import_module(module_name)
+        except ImportError as exc:
+            raise RuntimeError(
+                f"Failed to import module {module_name} of the setup function for package {package_name}."
+            ) from exc
+
+        function = getattr(module, function_name, None)
+        if not callable(function):
+            raise RuntimeError(
+                f"Could not find setup function {function_name} in module {module_name} for package {package_name}."
+            )
+
+        try:
+            function(context)
+        except Exception as exc:  # pylint: disable=broad-except
+            raise RuntimeError(f"Setup function {setup} for package {package_name} failed: {exc}") from exc
 
     def _add_files(self, pattern=None, allow_empty=True):
         """

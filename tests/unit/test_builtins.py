@@ -9,17 +9,31 @@ Test builtins.py
 """
 
 from tempfile import tempdir
+import sys
 import unittest
 import re
+from pathlib import Path
 from unittest import mock
 from vunit import VUnit
 from vunit.builtins import Builtins, BuiltinsAdder
 from vunit.about import version
-from vunit.vhdl_standard import VHDLStandard
+from vunit.vhdl_standard import VHDL, VHDLStandard
 from vunit.project import Project
 from tests.common import create_tempdir
 from contextlib import contextmanager
 from importlib.machinery import ModuleSpec
+
+
+@contextmanager
+def importable_module(tempdir, name, code):
+    """Make a module importable from tempdir for the duration of the context."""
+    (tempdir / f"{name}.py").write_text(code, encoding="utf-8")
+    sys.path.insert(0, str(tempdir))
+    try:
+        yield
+    finally:
+        sys.path.remove(str(tempdir))
+        sys.modules.pop(name, None)
 
 
 @contextmanager
@@ -46,6 +60,9 @@ class TestBuiltins(unittest.TestCase):
             return self.library_mock
 
         self.vu.add_library.side_effect = add_library
+
+        self.vu._output_path = "output_path"
+        self.vu._run_script_path = Path("run.py")
 
         self.builtins = Builtins(self.vu, VHDLStandard("2002"), None)
 
@@ -356,6 +373,198 @@ include=["hdl/src1/*.vhd"]
                 "Library bar previously defined. Skipping addition of foo.",
             )
             self.library_mock.add_source_files.assert_called_once()
+
+    def test_calls_setup_function(self):
+        with (
+            create_tempdir() as tempdir,
+            pkg_env(tempdir),
+            importable_module(
+                tempdir,
+                "foo_setup",
+                """\
+contexts = []
+
+
+def setup(context):
+    contexts.append(context)
+""",
+            ),
+        ):
+            self._write_toml(
+                tempdir,
+                """\
+[package]
+requires-vhdl=">=2008"
+library = "bar"
+setup = "foo_setup:setup"
+[[package.sources]]
+include=["hdl/src1/*.vhd"]
+""",
+            )
+
+            self.builtins.add_package("foo")
+
+            import foo_setup  # pylint: disable=import-outside-toplevel
+
+            self.assertEqual(len(foo_setup.contexts), 1)
+            context = foo_setup.contexts[0]
+            self.assertEqual(context.package_root, tempdir)
+            self.assertEqual(context.library, self.library_mock)
+            self.assertEqual(context.vhdl_standard, VHDL.standard("2008"))
+            self.assertEqual(context.output_path, Path("output_path"))
+            self.assertEqual(context.run_script_path, Path("run.py"))
+            self.assertIsNone(context.simulator_name)
+            self.assertIsNone(context.simulator_class)
+
+            context.add_library("baz")
+            self.vu.add_library.assert_called_with("baz")
+
+            context.add_source_files("baz", tempdir / "*.vhd")
+            self.vu.add_source_files.assert_called_once_with(tempdir / "*.vhd", "baz", vhdl_standard="2008")
+
+    def test_calls_setup_function_of_package_without_sources(self):
+        simulator_class = mock.Mock()
+        simulator_class.name = "ghdl"
+        builtins = Builtins(self.vu, VHDLStandard("2008"), simulator_class)
+
+        with (
+            create_tempdir() as tempdir,
+            pkg_env(tempdir),
+            importable_module(
+                tempdir,
+                "foo_setup",
+                """\
+contexts = []
+
+
+def setup(context):
+    contexts.append(context)
+""",
+            ),
+        ):
+            self._write_toml(
+                tempdir,
+                """\
+[package]
+setup = "foo_setup:setup"
+""",
+            )
+
+            builtins.add_package("foo")
+
+            import foo_setup  # pylint: disable=import-outside-toplevel
+
+            context = foo_setup.contexts[0]
+            self.assertIsNone(context.library)
+            self.assertEqual(context.vhdl_standard, VHDL.standard("2008"))
+            self.assertEqual(context.simulator_name, "ghdl")
+            self.assertEqual(context.simulator_class, simulator_class)
+
+    def test_raises_if_setup_has_invalid_format(self):
+        for setup in ["foo_setup", "foo_setup:", "foo setup:setup", "foo_setup.setup"]:
+            with (
+                create_tempdir() as tempdir,
+                pkg_env(tempdir),
+                self.assertLogs("vunit.builtins", "ERROR") as mock_error,
+                self.assertRaisesRegex(RuntimeError, re.escape("Invalid vunit_pkg.toml: 1 error(s) found.")),
+            ):
+                self._write_toml(
+                    tempdir,
+                    f"""\
+[package]
+setup = "{setup}"
+""",
+                )
+                try:
+                    self.builtins.add_package("foo")
+                finally:
+                    self._assertLogContent(
+                        mock_error,
+                        "ERROR",
+                        "package.setup: 'setup' must be on the format 'module:function'.",
+                    )
+
+    def test_raises_if_setup_is_not_a_string(self):
+        with (
+            create_tempdir() as tempdir,
+            pkg_env(tempdir),
+            self.assertLogs("vunit.builtins", "ERROR") as mock_error,
+            self.assertRaisesRegex(RuntimeError, re.escape("Invalid vunit_pkg.toml: 1 error(s) found.")),
+        ):
+            self._write_toml(
+                tempdir,
+                """\
+[package]
+setup = 17
+""",
+            )
+            try:
+                self.builtins.add_package("foo")
+            finally:
+                self._assertLogContent(mock_error, "ERROR", "package.setup: 'setup' must be a string.")
+
+    def test_raises_if_setup_module_cannot_be_imported(self):
+        with (
+            create_tempdir() as tempdir,
+            pkg_env(tempdir),
+            self.assertRaisesRegex(
+                RuntimeError,
+                re.escape("Failed to import module missing_setup of the setup function for package foo."),
+            ),
+        ):
+            self._write_toml(
+                tempdir,
+                """\
+[package]
+setup = "missing_setup:setup"
+""",
+            )
+            self.builtins.add_package("foo")
+
+    def test_raises_if_setup_function_is_missing(self):
+        with (
+            create_tempdir() as tempdir,
+            pkg_env(tempdir),
+            importable_module(tempdir, "foo_setup", "not_a_function = 17\n"),
+            self.assertRaisesRegex(
+                RuntimeError,
+                re.escape("Could not find setup function not_a_function in module foo_setup for package foo."),
+            ),
+        ):
+            self._write_toml(
+                tempdir,
+                """\
+[package]
+setup = "foo_setup:not_a_function"
+""",
+            )
+            self.builtins.add_package("foo")
+
+    def test_raises_if_setup_function_fails(self):
+        with (
+            create_tempdir() as tempdir,
+            pkg_env(tempdir),
+            importable_module(
+                tempdir,
+                "foo_setup",
+                """\
+def setup(context):
+    raise ValueError("Something went wrong")
+""",
+            ),
+            self.assertRaisesRegex(
+                RuntimeError,
+                re.escape("Setup function foo_setup:setup for package foo failed: Something went wrong"),
+            ),
+        ):
+            self._write_toml(
+                tempdir,
+                """\
+[package]
+setup = "foo_setup:setup"
+""",
+            )
+            self.builtins.add_package("foo")
 
 
 class TestBuiltinsAdder(unittest.TestCase):
