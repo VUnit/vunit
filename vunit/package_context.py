@@ -95,6 +95,7 @@ class PackageContext(object):
         *,
         elab_flags: Optional[FlagsHook] = None,
         run_flags: Optional[FlagsHook] = None,
+        process_flags: Optional[FlagsHook] = None,
         run_env: Optional[EnvHook] = None,
     ) -> None:
         """
@@ -105,6 +106,9 @@ class PackageContext(object):
                            the elaboration of a test.
         :param run_flags: A ``run_flags(simulator_interface)`` function returning extra flags for
                           the simulation of a test.
+        :param process_flags: A ``process_flags(simulator_interface)`` function returning extra flags
+                              for the simulator process VUnit starts, used by the vsim based
+                              simulators.
         :param run_env: A ``run_env(simulator_interface, env)`` function returning the environment
                         of the simulation of a test.
         """
@@ -112,6 +116,7 @@ class PackageContext(object):
             simulator_name,
             elab_flags=elab_flags,
             run_flags=run_flags,
+            process_flags=process_flags,
             run_env=run_env,
         )
 
