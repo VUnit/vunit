@@ -375,6 +375,66 @@ include=["hdl/src1/*.vhd"]
             )
             self.library_mock.add_source_files.assert_called_once()
 
+    def test_raises_if_setup_is_not_allowed(self):
+        with (
+            create_tempdir() as tempdir,
+            pkg_env(tempdir),
+            importable_module(
+                tempdir,
+                "foo_setup",
+                """\
+contexts = []
+
+
+def setup(context):
+    contexts.append(context)
+""",
+            ),
+            self.assertRaisesRegex(
+                RuntimeError,
+                re.escape(
+                    "Package foo requires running Python code when it is added (foo_setup:setup). "
+                    "Pass allow_setup=True to add_package to allow it."
+                ),
+            ),
+        ):
+            self._write_toml(
+                tempdir,
+                """\
+[package]
+library = "bar"
+setup = "foo_setup:setup"
+[[package.sources]]
+include=["hdl/src1/*.vhd"]
+""",
+            )
+
+            try:
+                self.builtins.add_package("foo")
+            finally:
+                import foo_setup  # pylint: disable=import-outside-toplevel
+
+                self.assertEqual(foo_setup.contexts, [])
+                self.library_mock.add_source_files.assert_called_once_with(
+                    tempdir / "hdl/src1/*.vhd", vhdl_standard=None
+                )
+
+    def test_allowing_setup_of_package_without_setup_function(self):
+        with create_tempdir() as tempdir, pkg_env(tempdir):
+            self._write_toml(
+                tempdir,
+                """\
+[package]
+library = "bar"
+[[package.sources]]
+include=["hdl/src1/*.vhd"]
+""",
+            )
+
+            self.builtins.add_package("foo", allow_setup=True)
+
+            self.library_mock.add_source_files.assert_called_once_with(tempdir / "hdl/src1/*.vhd", vhdl_standard=None)
+
     def test_calls_setup_function(self):
         with (
             create_tempdir() as tempdir,
@@ -403,7 +463,7 @@ include=["hdl/src1/*.vhd"]
 """,
             )
 
-            self.builtins.add_package("foo")
+            self.builtins.add_package("foo", allow_setup=True)
 
             import foo_setup  # pylint: disable=import-outside-toplevel
 
@@ -453,7 +513,7 @@ setup = "foo_setup:setup"
 """,
             )
 
-            builtins.add_package("foo")
+            builtins.add_package("foo", allow_setup=True)
 
             import foo_setup  # pylint: disable=import-outside-toplevel
 
@@ -513,7 +573,7 @@ setup = "foo_setup:setup"
 """,
                 )
 
-                Builtins(self.vu, VHDLStandard("2008"), simulator_class).add_package("foo")
+                Builtins(self.vu, VHDLStandard("2008"), simulator_class).add_package("foo", allow_setup=True)
 
                 import foo_setup  # pylint: disable=import-outside-toplevel
 
@@ -550,7 +610,7 @@ setup = "foo_setup:setup"
 """,
             )
 
-            self.builtins.add_package("foo")
+            self.builtins.add_package("foo", allow_setup=True)
 
             simulator_interface = mock.Mock()
             simulator_interface.name = "ghdl"
@@ -618,7 +678,7 @@ setup = 17
 setup = "missing_setup:setup"
 """,
             )
-            self.builtins.add_package("foo")
+            self.builtins.add_package("foo", allow_setup=True)
 
     def test_raises_if_setup_function_is_missing(self):
         with (
@@ -637,7 +697,7 @@ setup = "missing_setup:setup"
 setup = "foo_setup:not_a_function"
 """,
             )
-            self.builtins.add_package("foo")
+            self.builtins.add_package("foo", allow_setup=True)
 
     def test_raises_if_setup_function_fails(self):
         with (
@@ -663,7 +723,7 @@ def setup(context):
 setup = "foo_setup:setup"
 """,
             )
-            self.builtins.add_package("foo")
+            self.builtins.add_package("foo", allow_setup=True)
 
 
 class TestBuiltinsAdder(unittest.TestCase):
