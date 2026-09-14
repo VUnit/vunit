@@ -24,6 +24,7 @@ import sys
 import traceback
 from pathlib import Path
 import __main__
+import numpy  # type: ignore[import-not-found]
 
 # Result kinds, must match python_ffi_pkg
 KIND_INTEGER = 0
@@ -74,10 +75,7 @@ def _type_name(value):
 
 def _is_bool(value):
     """True for Python and NumPy booleans."""
-    if isinstance(value, bool):
-        return True
-    numpy = sys.modules.get("numpy")
-    return numpy is not None and isinstance(value, numpy.bool_)
+    return isinstance(value, (bool, numpy.bool_))
 
 
 def _is_float(value):
@@ -87,10 +85,7 @@ def _is_float(value):
     An int is not accepted, matching the PyFloat_Check of the other
     python_ffi_pkg implementations.
     """
-    if isinstance(value, float):
-        return True
-    numpy = sys.modules.get("numpy")
-    return numpy is not None and isinstance(value, numpy.floating)
+    return isinstance(value, (float, numpy.floating))
 
 
 def _is_integer(value):
@@ -112,50 +107,6 @@ def _type_error(kind, value, expected):
         f"Cannot convert Python {_type_name(value)} ({value!r:.200}) "
         f"to VHDL {VHDL_TYPE_NAMES[kind]}; expected {expected}"
     )
-
-
-class StagedValues:
-    """
-    Values transferred from VHDL and kept under an id.
-
-    VHDL transfers an integer_array_t once and then refers to it as
-    ``__vunit__.staged(<id>)`` in the Python expressions it evaluates. Staged
-    values live until the simulation ends, or until python_cleanup releases
-    them early, so that one VHDL constant can be used in several calls. Every
-    use gets its own copy of the NumPy array so that a function modifying it in
-    place does not affect the next use.
-    """
-
-    def __init__(self):
-        self._values = {}  # id -> (value, bit_width, is_signed)
-
-    def stage(self, value, bit_width, is_signed):
-        """
-        Stage a value and return its id.
-        """
-        staged_id = len(self._values) + 1
-        self._values[staged_id] = (value, bit_width, bool(is_signed))
-        return staged_id
-
-    def get(self, staged_id):
-        """
-        A copy of a staged value with its metadata, as (value, bit_width, is_signed).
-        """
-        entry = self._values.get(staged_id)
-        if entry is None:
-            raise ValueError(f"There is no value staged under the id {staged_id!r}")
-        value, bit_width, is_signed = entry
-        numpy = sys.modules.get("numpy")
-        if numpy is not None and isinstance(value, numpy.ndarray):
-            # The user code may modify it in place, keep the staged value intact
-            value = value.copy()
-        return (value, bit_width, is_signed)
-
-    def clear(self):
-        """
-        Drop all staged values.
-        """
-        self._values.clear()
 
 
 class BridgeHandle:
@@ -208,7 +159,13 @@ class Runtime:  # pylint: disable=too-many-instance-attributes
         # Metadata of the integer_array_t values handed to the current
         # operation, keyed by id() of the NumPy array created for them.
         self._array_meta = {}
-        self._staged = StagedValues()
+        # Values transferred from VHDL, id -> (value, bit_width, is_signed).
+        # VHDL transfers an integer_array_t once and then refers to it as
+        # __vunit__.staged(<id>) in the Python expressions it evaluates. Staged
+        # values live until the simulation ends, or until python_cleanup
+        # releases them early, so that one VHDL constant can be used in
+        # several calls.
+        self._staged = {}
 
         self._check_environment(prefix)
 
@@ -262,15 +219,6 @@ class Runtime:  # pylint: disable=too-many-instance-attributes
     # ------------------------------------------------------------------
     # Lifecycle
     # ------------------------------------------------------------------
-
-    def setup(self):
-        """
-        Prepare for the operations to come. Idempotent: the interpreter and the
-        namespaces are created once and python_setup may be called any number
-        of times. Calling it at all is optional since every operation starts
-        the interpreter if it is not running.
-        """
-        self._flush()
 
     def cleanup(self):
         """
@@ -417,12 +365,15 @@ class Runtime:  # pylint: disable=too-many-instance-attributes
     def staged(self, staged_id):
         """
         The value staged under an id, used from Python as __vunit__.staged(id).
+        Every use gets its own copy so that a function modifying it in place
+        does not affect the next use.
         """
-        value, bit_width, is_signed = self._staged.get(staged_id)
-        numpy = sys.modules.get("numpy")
-        if numpy is not None and isinstance(value, numpy.ndarray):
-            # An expression returning this very array keeps its word size
-            self._array_meta[id(value)] = (value, bit_width, is_signed)
+        if staged_id not in self._staged:
+            raise ValueError(f"There is no value staged under the id {staged_id!r}")
+        value, bit_width, is_signed = self._staged[staged_id]
+        value = value.copy()
+        # An expression returning this very array keeps its word size
+        self._array_meta[id(value)] = (value, bit_width, is_signed)
         return value
 
     def stage_value(self, value):
@@ -434,21 +385,9 @@ class Runtime:  # pylint: disable=too-many-instance-attributes
             bit_width, is_signed = meta[1], meta[2]
         else:
             bit_width, is_signed = 32, True
-        return self._staged.stage(value, bit_width, is_signed)
-
-    @staticmethod
-    def _numpy():
-        """
-        Import NumPy, which is only needed when integer_array_t values are exchanged.
-        """
-        try:
-            import numpy  # type: ignore[import-not-found]  # pylint: disable=import-outside-toplevel
-        except ImportError as exc:
-            raise ImportError(
-                "integer_array_t values are exchanged as NumPy arrays but NumPy could not be imported "
-                f"in the Python environment used by VUnit ({sys.executable}): {exc}"
-            ) from exc
-        return numpy
+        staged_id = len(self._staged) + 1
+        self._staged[staged_id] = (value, bit_width, bool(is_signed))
+        return staged_id
 
     @staticmethod
     def _shape(length, width, height, depth):
@@ -469,7 +408,6 @@ class Runtime:  # pylint: disable=too-many-instance-attributes
         Create the NumPy array for an integer_array_t value. The bridge
         fills the storage (native int32) after this call returns.
         """
-        numpy = self._numpy()
         array = numpy.frombuffer(storage, dtype=numpy.int32).reshape(self._shape(length, width, height, depth))
         self._array_meta[id(array)] = (array, bit_width, bool(is_signed))
         return array
@@ -492,23 +430,12 @@ class Runtime:  # pylint: disable=too-many-instance-attributes
         if value is _NO_VALUE:
             raise RuntimeError("Internal error: no Python result available")
 
-        converters = {
-            KIND_INTEGER: self._integer_result,
-            KIND_REAL: self._real_result,
-            KIND_BOOLEAN: self._boolean_result,
-            KIND_STRING: self._string_result,
-            KIND_STD_ULOGIC: self._std_ulogic_result,
-            KIND_STD_ULOGIC_VECTOR: self._std_ulogic_vector_result,
-            KIND_SIGNED: self._bits_result,
-            KIND_UNSIGNED: self._bits_result,
-            KIND_INTEGER_VECTOR: self._integer_vector_result,
-            KIND_REAL_VECTOR: self._real_vector_result,
-        }
         if kind == KIND_INTEGER_ARRAY:
             return self._array_result(value, array_meta)
-        if kind not in converters:
+        if kind not in VHDL_TYPE_NAMES:
             raise RuntimeError(f"Internal error: unknown result kind {kind}")
-        return converters[kind](kind, value, width)
+        converter = "bits" if kind in (KIND_SIGNED, KIND_UNSIGNED) else VHDL_TYPE_NAMES[kind]
+        return getattr(self, f"_{converter}_result")(kind, value, width)
 
     @staticmethod
     def _integer_result(kind, value, _width):
@@ -664,9 +591,8 @@ class Runtime:  # pylint: disable=too-many-instance-attributes
         """
         Convert a NumPy array (or nested int sequence) to integer_array_t data.
         """
-        numpy = self._numpy()
         original = value
-        value = self._integer_ndarray(numpy, value)
+        value = self._integer_ndarray(value)
         bit_width, is_signed = self._word_size(original, value, array_meta)
 
         low, high = (-(1 << (bit_width - 1)), (1 << (bit_width - 1)) - 1) if is_signed else (0, (1 << bit_width) - 1)
@@ -686,7 +612,7 @@ class Runtime:  # pylint: disable=too-many-instance-attributes
         return (0, 0.0, data, (value.size, width, height, depth, bit_width, int(is_signed)))
 
     @staticmethod
-    def _integer_ndarray(numpy, value):
+    def _integer_ndarray(value):
         """
         The result as an integer NumPy array with 1 to 3 dimensions.
         """

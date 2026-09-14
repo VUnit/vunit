@@ -21,7 +21,7 @@ import subprocess
 import sys
 import sysconfig
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 PACKAGE_PATH = Path(__file__).parent.resolve()
 # C sources of the bridge library
@@ -51,13 +51,6 @@ def check_python_build() -> None:
         raise PythonBridgeError(f"VHDL Python support requires CPython, not {sys.implementation.name}")
 
 
-def library_file_name(fli: bool = False) -> str:
-    """
-    File name of the bridge library built on POSIX platforms.
-    """
-    return "libvunit_python_bridge_fli.so" if fli else "libvunit_python_bridge.so"
-
-
 def prepare_library(root: Path, simulator_prefix: Optional[Path] = None) -> Path:
     """
     Path of the bridge library for the running Python, built or selected under root.
@@ -74,12 +67,11 @@ def prepare_library(root: Path, simulator_prefix: Optional[Path] = None) -> Path
     return _prepare_posix_library(root, simulator_prefix)
 
 
-def windows_dll_name(version_info: Optional[Tuple[int, ...]] = None) -> str:
+def windows_dll_name() -> str:
     """
-    File name of the prebuilt bridge DLL for a Python version.
+    File name of the prebuilt bridge DLL for the running Python.
     """
-    major, minor = sys.version_info[:2] if version_info is None else version_info[:2]
-    return f"vunit_python_bridge-cp{major}{minor}-win_amd64.dll"
+    return f"vunit_python_bridge-cp{sys.version_info[0]}{sys.version_info[1]}-win_amd64.dll"
 
 
 def windows_python_dll() -> str:
@@ -170,13 +162,12 @@ def _python_library() -> Path:
     )
 
 
-def _include_dirs() -> List[str]:
+def _include_dirs(candidates: Optional[List[str]] = None) -> List[str]:
     """
-    Include directories of the Python development headers.
+    Include directories of the Python development headers, by default the ones sysconfig names.
     """
-    result = []
-    for name in ("include", "platinclude"):
-        path = sysconfig.get_paths().get(name)
+    result: List[str] = []
+    for path in candidates or [sysconfig.get_paths().get(name, "") for name in ("include", "platinclude")]:
         if path and path not in result:
             result.append(path)
     for path in result:
@@ -207,14 +198,13 @@ def _compiler() -> List[str]:
     )
 
 
-def bridge_sources(native_path: Optional[Path] = None, fli: bool = False) -> List[Path]:
+def bridge_sources(fli: bool = False) -> List[Path]:
     """
     The C source files of the bridge library. fli adds the FLI front end.
     """
-    path = NATIVE_PATH if native_path is None else native_path
-    sources = sorted(item for item in path.glob("*.c") if item.name != FLI_SOURCE_NAME)
+    sources = sorted(item for item in NATIVE_PATH.glob("*.c") if item.name != FLI_SOURCE_NAME)
     if fli:
-        sources.append(path / FLI_SOURCE_NAME)
+        sources.append(NATIVE_PATH / FLI_SOURCE_NAME)
     return sources
 
 
@@ -276,7 +266,7 @@ def _prepare_posix_library(root: Path, simulator_prefix: Optional[Path] = None) 
     if simulator_prefix is not None:
         include_dirs = include_dirs + [_fli_include_dir(simulator_prefix)]
 
-    name = library_file_name(fli)
+    name = "libvunit_python_bridge_fli.so" if fli else "libvunit_python_bridge.so"
     directory = _posix_cache_directory(root, python_library, include_dirs)
     library_file = directory / name
     if library_file.is_file():
@@ -295,10 +285,18 @@ def _prepare_posix_library(root: Path, simulator_prefix: Optional[Path] = None) 
         + ([f"-Wl,-install_name,@rpath/{name}"] if sys.platform == "darwin" else [f"-Wl,-soname,{name}"])
         + (["-ldl"] if sys.platform.startswith("linux") else [])
     )
+    return compile_library(cmd, tmp, library_file)
+
+
+def compile_library(cmd: List[str], tmp: Path, library_file: Path) -> Path:
+    """
+    Run a compiler command building tmp and move the result to library_file, failing with the
+    compiler output.
+    """
     try:
         proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
     except OSError as exc:
-        raise PythonBridgeError(f"Failed to run the C compiler {compiler[0]!r}: {exc}") from exc
+        raise PythonBridgeError(f"Failed to run the C compiler {cmd[0]!r}: {exc}") from exc
     if proc.returncode != 0:
         tmp.unlink(missing_ok=True)
         raise PythonBridgeError(
@@ -307,7 +305,8 @@ def _prepare_posix_library(root: Path, simulator_prefix: Optional[Path] = None) 
             + "\n"
             + proc.stdout.decode(errors="replace")
         )
-    os.replace(tmp, library_file)
+    if tmp != library_file:
+        os.replace(tmp, library_file)
     return library_file
 
 
@@ -339,13 +338,8 @@ def _build_windows_fli_library(root: Path, simulator_prefix: Path) -> Path:
     include = _fli_include_dir(simulator_prefix)
     gcc = _questa_mingw_gcc(simulator_prefix)
     python_home = Path(sys.executable).parent.resolve()
-    python_include = python_home / "include"
+    python_include = _include_dirs([str(python_home / "include")])[0]
     python_libs = python_home / "libs"
-    if not (python_include / "Python.h").is_file():
-        raise PythonBridgeError(
-            f"VHDL Python support needs the Python development headers (Python.h) of {sys.executable} "
-            f"to build the Python bridge library, but they were not found in {python_include!s}"
-        )
 
     key_items = [_source_fingerprint(), sys.version, str(python_home), str(simulator_prefix), gcc]
     key = hashlib.sha256("\n".join(key_items).encode("utf-8")).hexdigest()[:16]
@@ -358,23 +352,10 @@ def _build_windows_fli_library(root: Path, simulator_prefix: Path) -> Path:
     tmp = directory / f"vunit_python_bridge_fli.dll.{os.getpid()}.tmp"
     cmd = (
         [gcc, "-shared", "-m64", "-O2", "-D__USE_MINGW_ANSI_STDIO=1", "-freg-struct-return"]
-        + [f"-I{include}", f"-I{python_include!s}"]
+        + [f"-I{include}", f"-I{python_include}"]
         + [str(path) for path in bridge_sources(fli=True)]
         + ["-o", str(tmp)]
         + [f"-L{python_libs!s}", f"-lpython{sys.version_info[0]}{sys.version_info[1]}"]
         + [f"-L{simulator_prefix!s}", "-lmtipli"]
     )
-    try:
-        proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
-    except OSError as exc:
-        raise PythonBridgeError(f"Failed to run the C compiler {gcc!r}: {exc}") from exc
-    if proc.returncode != 0:
-        tmp.unlink(missing_ok=True)
-        raise PythonBridgeError(
-            "Failed to build the Python bridge library:\n"
-            + " ".join(shlex.quote(item) for item in cmd)
-            + "\n"
-            + proc.stdout.decode(errors="replace")
-        )
-    os.replace(tmp, library_file)
-    return library_file
+    return compile_library(cmd, tmp, library_file)

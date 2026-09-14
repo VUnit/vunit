@@ -71,17 +71,11 @@ static int load_python_library(void) {
   module = LoadLibraryExW(wpath, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
   free(wpath);
   if (module == NULL) {
-    unsigned long code = (unsigned long)GetLastError();
-    size_t size = strlen(g_config.python_dll) + 80;
-    char *message = (char *)malloc(size);
+    char message[4096];
 
-    if (message == NULL) {
-      vpy_set_error("Failed to load the Python DLL");
-    } else {
-      snprintf(message, size, "Failed to load the Python DLL %s (Windows error %lu)", g_config.python_dll, code);
-      vpy_set_error(message);
-      free(message);
-    }
+    snprintf(message, sizeof(message), "Failed to load the Python DLL %s (Windows error %lu)", g_config.python_dll,
+             (unsigned long)GetLastError());
+    vpy_set_error(message);
     return VPY_ERROR;
   }
   /* Intentionally never freed: the interpreter lives until process exit. */

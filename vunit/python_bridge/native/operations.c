@@ -41,21 +41,12 @@ static void flush_c_streams(void) {
 }
 
 /*
- * Start the interpreter. Eager and idempotent: later calls only re-run the
- * runtime's setup, which does nothing but flush. Optional: every operation
+ * Start the interpreter. Eager and idempotent. Optional: every operation
  * starts the interpreter if it is not running, see vpy_begin.
  */
 VPY_EXPORT int32_t vpy_setup(void) {
-  PyGILState_STATE gil;
-  int status;
-
   flush_c_streams();
-  if (vpy_initialize() != VPY_OK || vpy_enter(&gil) != VPY_OK) {
-    return VPY_ERROR;
-  }
-  status = vpy_finish_call(PyObject_CallMethod(vpy_runtime(), "setup", NULL));
-  PyGILState_Release(gil);
-  return status;
+  return vpy_initialize();
 }
 
 /*

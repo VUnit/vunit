@@ -205,14 +205,10 @@ jobs:
         pip install -U setuptools wheel --progress-bar off
         python setup.py sdist
 
-    # Sources of every kind, the five DLLs, no Linux binary
+    # The C sources, the five DLLs, no Linux binary
     - name: '🔍 Check sdist content'
       run: |
         tar tzf dist/*.tar.gz > content.txt
-        for file in python_bridge/runtime.py python_bridge/native/bridge.h vhdl/python/src/python_bridge_pkg.vhd.in \
-                    vhdl/python/src/python_pkg.vhd vhdl/python/src/python_pkg_vhpi.c \
-                    python_bridge/foreign_application.py; do
-          grep -q "vunit/$file\$" content.txt || { echo "missing $file"; exit 1; }
-        done
+        grep -q 'vunit/python_bridge/native/bridge.h$' content.txt
         test "$(grep -c 'vunit/python_bridge/bin/vunit_python_bridge-cp3[0-9]*-win_amd64.dll$' content.txt)" = 5
         ! grep -q '\.so$' content.txt

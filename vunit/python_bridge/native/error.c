@@ -10,6 +10,7 @@
 
 #include "bridge.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -36,21 +37,10 @@ void vpy_set_error(const char *text) { vpy_set_error_bytes(text, strlen(text)); 
 
 /* prefix may be the current error text, it is copied before being replaced. */
 void vpy_set_error2(const char *prefix, const char *detail) {
-  size_t prefix_length = strlen(prefix);
-  size_t detail_length = detail == NULL ? 0 : strlen(detail);
-  char *text = (char *)malloc(prefix_length + detail_length + 1);
+  char text[4096];
+  int length = snprintf(text, sizeof(text), "%s%s", prefix, detail == NULL ? "" : detail);
 
-  if (text == NULL) {
-    vpy_set_error(prefix);
-    return;
-  }
-  memcpy(text, prefix, prefix_length);
-  if (detail_length > 0) {
-    memcpy(text + prefix_length, detail, detail_length);
-  }
-  text[prefix_length + detail_length] = '\0';
-  vpy_set_error_bytes(text, prefix_length + detail_length);
-  free(text);
+  vpy_set_error_bytes(text, length < 0 ? 0 : (length < (int)sizeof(text) ? (size_t)length : sizeof(text) - 1));
 }
 
 int vpy_has_error(void) { return g_error != NULL; }

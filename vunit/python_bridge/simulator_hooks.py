@@ -38,7 +38,7 @@ def ghdl_elab_flags(project, backend) -> List[str]:
     bridge = get_bridge(project)
     if bridge is None or backend not in GHDL_LINKING_BACKENDS:
         return []
-    return [f"-Wl,-L{bridge.directory!s}"]
+    return [f"-Wl,-L{bridge.library_file.parent!s}"]
 
 
 def ghdl_run_env(project, env: Dict[str, str]) -> Dict[str, str]:
@@ -50,7 +50,7 @@ def ghdl_run_env(project, env: Dict[str, str]) -> Dict[str, str]:
         return env
     variable = {"win32": "PATH", "darwin": "DYLD_LIBRARY_PATH"}.get(sys.platform, "LD_LIBRARY_PATH")
     env = dict(env)
-    env[variable] = os.pathsep.join(item for item in (str(bridge.directory), env.get(variable, "")) if item)
+    env[variable] = os.pathsep.join(item for item in (str(bridge.library_file.parent), env.get(variable, "")) if item)
     return env
 
 

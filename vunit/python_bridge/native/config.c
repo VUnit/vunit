@@ -12,6 +12,7 @@
 
 #include "bridge.h"
 
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -133,20 +134,20 @@ static FILE *open_config_file(void) {
 
 /* The field of config for a key, NULL for unknown keys. */
 static char **config_field(vpy_config_t *config, const char *key) {
-  if (strcmp(key, "executable") == 0) {
-    return &config->executable;
-  }
-  if (strcmp(key, "prefix") == 0) {
-    return &config->prefix;
-  }
-  if (strcmp(key, "runtime") == 0) {
-    return &config->runtime;
-  }
-  if (strcmp(key, "run_script_dir") == 0) {
-    return &config->run_script_dir;
-  }
-  if (strcmp(key, "python_dll") == 0) {
-    return &config->python_dll;
+  static const struct {
+    const char *key;
+    size_t offset;
+  } fields[] = {{"executable", offsetof(vpy_config_t, executable)},
+                {"prefix", offsetof(vpy_config_t, prefix)},
+                {"runtime", offsetof(vpy_config_t, runtime)},
+                {"run_script_dir", offsetof(vpy_config_t, run_script_dir)},
+                {"python_dll", offsetof(vpy_config_t, python_dll)}};
+  size_t index;
+
+  for (index = 0; index < sizeof(fields) / sizeof(fields[0]); index++) {
+    if (strcmp(key, fields[index].key) == 0) {
+      return (char **)((char *)config + fields[index].offset);
+    }
   }
   return NULL;
 }

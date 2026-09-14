@@ -182,12 +182,15 @@ class TestAddPython(unittest.TestCase):
         simulator = self._simulator_with_flis("rivierapro", {"VHPI"})
         builtins = self._builtins(simulator=simulator)
         builtins.add_vhdl_builtins()
-        with mock.patch("vunit.python_bridge.bridge.setup") as setup_mock, mock.patch(
-            "vunit.builtins.setup_vhpi_application"
-        ) as vhpi_mock:
+        with (
+            mock.patch("vunit.python_bridge.bridge.setup") as setup_mock,
+            mock.patch("vunit.builtins.setup_vhpi_application") as vhpi_mock,
+        ):
             builtins.add("python")
         setup_mock.assert_not_called()
-        vhpi_mock.assert_called_once_with(builtins._vunit_obj._output_path, simulator)  # pylint: disable=protected-access
+        vhpi_mock.assert_called_once_with(
+            builtins._vunit_obj._output_path, simulator
+        )  # pylint: disable=protected-access
 
         src_path = VHDL_PATH / "python" / "src"
         added_files = self._added_files()
@@ -199,9 +202,10 @@ class TestAddPython(unittest.TestCase):
         simulator = self._simulator_with_flis("rivierapro", {"VHPI"})
         builtins = self._builtins(simulator=simulator)
         builtins.add_vhdl_builtins()
-        with mock.patch("vunit.builtins.setup_vhpi_application", side_effect=RuntimeError("no compiler")), mock.patch(
-            "vunit.builtins.LOGGER"
-        ) as logger:
+        with (
+            mock.patch("vunit.builtins.setup_vhpi_application", side_effect=RuntimeError("no compiler")),
+            mock.patch("vunit.builtins.LOGGER") as logger,
+        ):
             with self.assertRaises(SystemExit):
                 builtins.add("python")
         logger.error.assert_called_once_with("%s", mock.ANY)
@@ -227,9 +231,7 @@ class TestAddPython(unittest.TestCase):
         # The bridge must be handed the VUnit object's own project, output
         # path, simulator class and run script path (whose directory the
         # runtime puts on sys.path, like python does for a run script).
-        setup_mock.assert_called_once_with(
-            self.vu._project, self.vu._output_path, simulator, self.vu._run_script_path
-        )
+        setup_mock.assert_called_once_with(self.vu._project, self.vu._output_path, simulator, self.vu._run_script_path)
 
         src_path = VHDL_PATH / "python" / "src"
         added_files = self._added_files()
@@ -250,9 +252,10 @@ class TestAddPython(unittest.TestCase):
         simulator = self._simulator_with_flis("modelsim", {"FLI"})
         builtins = self._builtins(simulator=simulator)
         builtins.add_vhdl_builtins()
-        with mock.patch("vunit.python_bridge.bridge.setup"), mock.patch(
-            "vunit.builtins.setup_vhpi_application"
-        ) as vhpi_mock:
+        with (
+            mock.patch("vunit.python_bridge.bridge.setup"),
+            mock.patch("vunit.builtins.setup_vhpi_application") as vhpi_mock,
+        ):
             builtins.add("python")
         vhpi_mock.assert_not_called()
 
@@ -323,30 +326,17 @@ class TestBridgePackageSubstitution(unittest.TestCase):
         declared = set(re.findall(r'VHPIDIRECT \S+ (\w+)"', text))
         self.assertEqual(declared, set(EXPECTED_EXPORTS))
 
-    def test_token_is_library_file_name_for_nvc(self):
-        bridge = self._setup(_FakeSimulator("nvc"))
-        text = self._ffi_text(bridge)
-        self.assertIn('"VHPIDIRECT libvunit_python_bridge.so vpy_begin"', text)
-
-    def test_token_is_library_file_name_for_ghdl_mcode(self):
-        bridge = self._setup(_FakeSimulator("ghdl", backend="mcode"))
-        text = self._ffi_text(bridge)
-        self.assertIn('"VHPIDIRECT libvunit_python_bridge.so vpy_begin"', text)
-
-    def test_token_is_library_file_name_for_ghdl_llvm_jit(self):
-        bridge = self._setup(_FakeSimulator("ghdl", backend="llvm-jit"))
-        text = self._ffi_text(bridge)
-        self.assertIn('"VHPIDIRECT libvunit_python_bridge.so vpy_begin"', text)
-
-    def test_token_is_link_flag_for_ghdl_llvm(self):
-        bridge = self._setup(_FakeSimulator("ghdl", backend="llvm"))
-        text = self._ffi_text(bridge)
-        self.assertIn('"VHPIDIRECT -lvunit_python_bridge vpy_begin"', text)
-
-    def test_token_is_link_flag_for_ghdl_gcc(self):
-        bridge = self._setup(_FakeSimulator("ghdl", backend="gcc"))
-        text = self._ffi_text(bridge)
-        self.assertIn('"VHPIDIRECT -lvunit_python_bridge vpy_begin"', text)
+    def test_token_is_the_file_name_or_the_link_flag_of_the_backend(self):
+        # Only the GHDL backends linking ahead of time get the linker flag
+        for simulator, token in (
+            (_FakeSimulator("nvc"), "libvunit_python_bridge.so"),
+            (_FakeSimulator("ghdl", backend="mcode"), "libvunit_python_bridge.so"),
+            (_FakeSimulator("ghdl", backend="llvm-jit"), "libvunit_python_bridge.so"),
+            (_FakeSimulator("ghdl", backend="llvm"), "-lvunit_python_bridge"),
+            (_FakeSimulator("ghdl", backend="gcc"), "-lvunit_python_bridge"),
+        ):
+            with self.subTest(simulator=simulator.name, backend=simulator.determine_backend(None)):
+                self.assertIn(f'"VHPIDIRECT {token} vpy_begin"', self._ffi_text(self._setup(simulator)))
 
     def test_no_remaining_placeholder(self):
         for bridge in (self._setup(_FakeSimulator("nvc")), self._fli_setup()):
@@ -600,6 +590,10 @@ class TestPosixBuildAndCache(unittest.TestCase):
         self.assertEqual(matches, [])
 
 
+def _config_keys(text):
+    return dict(line.split("=", 1) for line in text.splitlines())
+
+
 class TestConfigFile(unittest.TestCase):
     """
     _config_text / _write_if_changed
@@ -608,7 +602,7 @@ class TestConfigFile(unittest.TestCase):
     def test_config_keys_linux(self):
         with mock.patch("sys.platform", "linux"):
             text = bridge_setup._config_text("/run/script/dir")  # pylint: disable=protected-access
-        keys = dict(line.split("=", 1) for line in text.splitlines())
+        keys = _config_keys(text)
         self.assertEqual(set(keys), {"executable", "prefix", "runtime", "run_script_dir"})
         self.assertEqual(keys["executable"], sys.executable)
         self.assertEqual(keys["prefix"], sys.prefix)
@@ -621,7 +615,7 @@ class TestConfigFile(unittest.TestCase):
             mock.patch("vunit.python_bridge.bridge.windows_python_dll", return_value=r"C:\python.dll"),
         ):
             text = bridge_setup._config_text("/run/script/dir")  # pylint: disable=protected-access
-        keys = dict(line.split("=", 1) for line in text.splitlines())
+        keys = _config_keys(text)
         self.assertEqual(keys["python_dll"], r"C:\python.dll")
 
     def test_write_if_changed_does_not_rewrite_identical_content(self):
@@ -646,7 +640,7 @@ class TestConfigFile(unittest.TestCase):
             with mock.patch("vunit.python_bridge.bridge.prepare_library", return_value=fake_library_file):
                 bridge_setup.setup(_BridgeKey(), tempdir / "out", None, run_script)
             config = (fake_library_file.parent / bridge_setup.CONFIG_FILE_NAME).read_text(encoding="utf-8")
-            keys = dict(line.split("=", 1) for line in config.splitlines())
+            keys = _config_keys(config)
             self.assertEqual(keys["run_script_dir"], str(tempdir.resolve()))
 
     def test_config_paths_with_spaces_and_unicode_written_as_utf8(self):
@@ -675,16 +669,14 @@ class TestWindowsDllSelection(unittest.TestCase):
 
     def test_windows_dll_name_for_supported_versions(self):
         for minor in range(10, 15):
-            self.assertEqual(
-                native_library.windows_dll_name((3, minor)),
-                f"vunit_python_bridge-cp3{minor}-win_amd64.dll",
-            )
+            with mock.patch("sys.version_info", (3, minor)):
+                self.assertEqual(native_library.windows_dll_name(), f"vunit_python_bridge-cp3{minor}-win_amd64.dll")
 
     def _prepare(self, tempdir, dll_bytes, version_info=(3, 12)):
         binary_path = tempdir / "bin"
         binary_path.mkdir(exist_ok=True)
-        name = native_library.windows_dll_name(version_info)
-        (binary_path / name).write_bytes(dll_bytes)
+        with mock.patch("sys.version_info", version_info):
+            (binary_path / native_library.windows_dll_name()).write_bytes(dll_bytes)
         root = tempdir / "root"
         with (
             mock.patch("vunit.python_bridge.native_library.BINARY_PATH", binary_path),
@@ -846,119 +838,69 @@ class TestSimulatorIntegration(unittest.TestCase):
         os.chdir(self.scratch_dir)
         self.addCleanup(os.chdir, self.cwd)
 
-    def test_ghdl_get_command_only_adds_wl_L_for_linking_backends(self):
+    BRIDGE_LIBRARY = Path("/bridge/dir/libvunit_python_bridge.so")
+
+    def _config(self):
         from tests.unit.test_test_bench import Entity  # pylint: disable=import-outside-toplevel
-        from vunit.sim_if.ghdl import GHDLInterface  # pylint: disable=import-outside-toplevel
-        from vunit.project import Project  # pylint: disable=import-outside-toplevel
         from vunit.configuration import Configuration  # pylint: disable=import-outside-toplevel
-        from vunit.vhdl_standard import VHDL  # pylint: disable=import-outside-toplevel
 
         design_unit = Entity("tb_entity", file_name=str(Path("tempdir") / "file.vhd"))
         design_unit.original_file_name = str(Path("tempdir") / "other_path" / "original_file.vhd")
         design_unit.generic_names = ["runner_cfg", "tb_path"]
-        config = Configuration("name", design_unit)
+        return Configuration("name", design_unit)
+
+    def _prepare(self, simif, with_bridge):
+        """
+        Give a simulator interface a project, with the bridge enabled or not.
+        """
+        from vunit.project import Project  # pylint: disable=import-outside-toplevel
+        from vunit.vhdl_standard import VHDL  # pylint: disable=import-outside-toplevel
+
+        simif._vhdl_standard = VHDL.standard("2008")  # pylint: disable=protected-access
+        simif._project = Project()  # pylint: disable=protected-access
+        simif._project.add_library("lib", str(self.scratch_dir))  # pylint: disable=protected-access
+        if with_bridge:
+            bridge = bridge_setup.PythonBridge(library_file=self.BRIDGE_LIBRARY, vhdl_files=[])
+            bridge_setup._BRIDGES[simif._project] = bridge  # pylint: disable=protected-access
+            self.addCleanup(bridge_setup._BRIDGES.pop, simif._project, None)  # pylint: disable=protected-access
+
+    def test_ghdl_get_command_only_adds_wl_L_for_linking_backends(self):
+        from vunit.sim_if.ghdl import GHDLInterface  # pylint: disable=import-outside-toplevel
 
         for backend, expect_flag in (("llvm", True), ("gcc", True), ("mcode", False), ("llvm-jit", False)):
             with mock.patch.object(GHDLInterface, "determine_version", return_value=5.0):
                 simif = GHDLInterface(prefix="prefix", output_path="", backend=backend)
-            simif._vhdl_standard = VHDL.standard("2008")  # pylint: disable=protected-access
-            simif._project = Project()  # pylint: disable=protected-access
-            simif._project.add_library("lib", "lib_path")  # pylint: disable=protected-access
-
-            bridge = bridge_setup.PythonBridge(
-                library_file=Path("/bridge/dir/libvunit_python_bridge.so"), vhdl_files=[]
+            self._prepare(simif, with_bridge=True)
+            cmd = simif._get_command(  # pylint: disable=protected-access
+                self._config(), str(Path("output_path") / "ghdl"), True, False, "tb_entity", None
             )
-            bridge_setup._BRIDGES[simif._project] = bridge  # pylint: disable=protected-access
-            try:
-                cmd = simif._get_command(  # pylint: disable=protected-access
-                    config, str(Path("output_path") / "ghdl"), True, False, "tb_entity", None
-                )
-            finally:
-                bridge_setup._BRIDGES.pop(simif._project, None)  # pylint: disable=protected-access
-
-            flag = f"-Wl,-L{Path('/bridge/dir')!s}"
+            flag = f"-Wl,-L{self.BRIDGE_LIBRARY.parent!s}"
             if expect_flag:
                 self.assertIn(flag, cmd, f"backend={backend}")
             else:
                 self.assertNotIn(flag, cmd, f"backend={backend}")
 
-    def test_nvc_simulate_loads_bridge_after_dash_r(self):
+    def _nvc_simulate(self, with_bridge):
+        """
+        The nvc command of a simulation.
+        """
         from vunit.sim_if.nvc import NVCInterface  # pylint: disable=import-outside-toplevel
-        from tests.unit.test_test_bench import Entity  # pylint: disable=import-outside-toplevel
-        from vunit.project import Project  # pylint: disable=import-outside-toplevel
-        from vunit.configuration import Configuration  # pylint: disable=import-outside-toplevel
-        from vunit.vhdl_standard import VHDL  # pylint: disable=import-outside-toplevel
 
-        design_unit = Entity("tb_entity", file_name=str(Path("tempdir") / "file.vhd"))
-        design_unit.original_file_name = str(Path("tempdir") / "other_path" / "original_file.vhd")
-        design_unit.generic_names = ["runner_cfg", "tb_path"]
-        config = Configuration("name", design_unit)
+        with mock.patch.object(NVCInterface, "determine_version", return_value=(1, 99)):
+            simif = NVCInterface(output_path=str(self.scratch_dir), prefix="prefix", num_threads=1)
+        self._prepare(simif, with_bridge)
+        with mock.patch("vunit.sim_if.nvc.Process") as process:
+            simif.simulate(str(self.scratch_dir), "tb_entity", self._config(), elaborate_only=False)
+        return process.call_args.args[0]
 
-        with create_tempdir() as tempdir:
-            with mock.patch.object(NVCInterface, "determine_version", return_value=(1, 99)):
-                simif = NVCInterface(output_path=str(tempdir), prefix="prefix", num_threads=1)
-            simif._vhdl_standard = VHDL.standard("2008")  # pylint: disable=protected-access
-            simif._project = Project()  # pylint: disable=protected-access
-            simif._project.add_library("lib", str(tempdir))  # pylint: disable=protected-access
-
-            bridge = bridge_setup.PythonBridge(
-                library_file=Path("/bridge/dir/libvunit_python_bridge.so"), vhdl_files=[]
-            )
-            bridge_setup._BRIDGES[simif._project] = bridge  # pylint: disable=protected-access
-
-            captured = {}
-
-            class _FakeProcess:
-                def __init__(self, cmd, env=None):
-                    captured["cmd"] = cmd
-
-                def consume_output(self):
-                    pass
-
-            try:
-                with mock.patch("vunit.sim_if.nvc.Process", _FakeProcess):
-                    simif.simulate(str(tempdir), "tb_entity", config, elaborate_only=False)
-            finally:
-                bridge_setup._BRIDGES.pop(simif._project, None)  # pylint: disable=protected-access
-
-            cmd = captured["cmd"]
-            self.assertIn("-r", cmd)
-            load = f"--load={Path('/bridge/dir/libvunit_python_bridge.so')!s}"
-            self.assertIn(load, cmd)
-            self.assertGreater(cmd.index(load), cmd.index("-r"))
+    def test_nvc_simulate_loads_bridge_after_dash_r(self):
+        cmd = self._nvc_simulate(with_bridge=True)
+        load = f"--load={self.BRIDGE_LIBRARY!s}"
+        self.assertIn(load, cmd)
+        self.assertGreater(cmd.index(load), cmd.index("-r"))
 
     def test_nvc_simulate_has_no_load_flag_without_bridge(self):
-        from vunit.sim_if.nvc import NVCInterface  # pylint: disable=import-outside-toplevel
-        from tests.unit.test_test_bench import Entity  # pylint: disable=import-outside-toplevel
-        from vunit.project import Project  # pylint: disable=import-outside-toplevel
-        from vunit.configuration import Configuration  # pylint: disable=import-outside-toplevel
-        from vunit.vhdl_standard import VHDL  # pylint: disable=import-outside-toplevel
-
-        design_unit = Entity("tb_entity", file_name=str(Path("tempdir") / "file.vhd"))
-        design_unit.original_file_name = str(Path("tempdir") / "other_path" / "original_file.vhd")
-        design_unit.generic_names = ["runner_cfg", "tb_path"]
-        config = Configuration("name", design_unit)
-
-        with create_tempdir() as tempdir:
-            with mock.patch.object(NVCInterface, "determine_version", return_value=(1, 99)):
-                simif = NVCInterface(output_path=str(tempdir), prefix="prefix", num_threads=1)
-            simif._vhdl_standard = VHDL.standard("2008")  # pylint: disable=protected-access
-            simif._project = Project()  # pylint: disable=protected-access
-            simif._project.add_library("lib", str(tempdir))  # pylint: disable=protected-access
-
-            captured = {}
-
-            class _FakeProcess:
-                def __init__(self, cmd, env=None):
-                    captured["cmd"] = cmd
-
-                def consume_output(self):
-                    pass
-
-            with mock.patch("vunit.sim_if.nvc.Process", _FakeProcess):
-                simif.simulate(str(tempdir), "tb_entity", config, elaborate_only=False)
-
-            self.assertFalse(any(flag.startswith("--load=") for flag in captured["cmd"]))
+        self.assertFalse(any(flag.startswith("--load=") for flag in self._nvc_simulate(with_bridge=False)))
 
 
 class TestForeignApplicationBuild(unittest.TestCase):
@@ -968,10 +910,7 @@ class TestForeignApplicationBuild(unittest.TestCase):
 
     @staticmethod
     def _simulator(prefix):
-        simulator = mock.Mock()
-        simulator.name = "rivierapro"
-        simulator.find_prefix.return_value = str(prefix)
-        return simulator
+        return _FakeSimulator("rivierapro", prefix=str(prefix))
 
     def test_builds_once_and_rebuilds_when_the_fingerprint_changes(self):
         with create_tempdir() as tempdir:
@@ -1013,4 +952,3 @@ class TestForeignApplicationBuild(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
