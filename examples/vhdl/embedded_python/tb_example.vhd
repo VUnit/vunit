@@ -150,7 +150,7 @@ begin
     -- module device_model.py, next to this testbench
     procedure import_device_model is
     begin
-      import_module_from_file(tb_path(runner_cfg) & "device_model.py", "device_model");
+      import_module_from_file(join(tb_path(runner_cfg), "device_model.py"), "device_model");
     end;
 
   begin
@@ -314,7 +314,7 @@ begin
         check_equal(integer'(call("bump")), 1, result("for the counter after re-executing the file"));
 
         -- import_module_from_file gives us the module object, which keeps its state
-        import_module_from_file(tb_path(runner_cfg) & "bump.py", "bumper");
+        import_module_from_file(join(tb_path(runner_cfg), "bump.py"), "bumper");
         check_equal(integer'(call("bumper.bump")), 1);
         check_equal(integer'(call("bumper.bump")), 2);
 
@@ -588,7 +588,7 @@ begin
         -- integer_array_t is the VUnit type for data sets such as images and it is passed
         -- to Python as a NumPy array of the same shape. An array returned by Python
         -- becomes a new integer_array_t. The indexing matches: get(a, x, y) is a[y, x].
-        import_module_from_file(tb_path(runner_cfg) & "image_model.py", "image_model");
+        import_module_from_file(join(tb_path(runner_cfg), "image_model.py"), "image_model");
 
         -- A 4 x 3 image with the column in the ones and the row in the tens
         image := new_2d(width => 4, height => 3, bit_width => 8, is_signed => false);
@@ -765,6 +765,6 @@ begin
 
   -- A component whose behaviour is a Python function
   python_model_inst : entity work.python_model
-    generic map(model_file => tb_path(runner_cfg) & "python_model.py")
+    generic map(model_file => join(tb_path(runner_cfg), "python_model.py"))
     port map(x => model_x, y => model_y);
 end;
