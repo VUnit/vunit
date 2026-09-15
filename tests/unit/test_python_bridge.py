@@ -278,16 +278,26 @@ class TestAddPython(unittest.TestCase):
 
 class TestFindRunScriptPath(unittest.TestCase):
     """
-    vunit.ui._find_run_script_path(): the file of the first call-stack frame
-    outside the vunit package, used as the VUnit object's ``_run_script_path``
-    (fed to the Python bridge and, through run_script_path(runner_cfg), to
-    import_run_script).
+    The run script is the file Python was started with, not the caller of VUnit
     """
 
-    def test_returns_the_file_of_the_caller_outside_vunit(self):
+    def test_returns_the_file_python_was_started_with(self):
         from vunit.ui import _find_run_script_path  # pylint: disable=import-outside-toplevel
 
-        self.assertEqual(_find_run_script_path(), Path(__file__).resolve())
+        with create_tempdir() as tempdir:
+            script = Path(tempdir) / "run.py"
+            script.write_text("")
+            with mock.patch.dict(sys.modules, {"__main__": mock.Mock(__file__=str(script))}):
+                self.assertEqual(_find_run_script_path(), script.resolve())
+
+    def test_returns_none_without_a_script_file(self):
+        from vunit.ui import _find_run_script_path  # pylint: disable=import-outside-toplevel
+
+        # python -c and interactive sessions: __main__ has no file or a pseudo file name
+        with mock.patch.dict(sys.modules, {"__main__": mock.Mock(spec=[])}):
+            self.assertIsNone(_find_run_script_path())
+        with mock.patch.dict(sys.modules, {"__main__": mock.Mock(__file__="<stdin>")}):
+            self.assertIsNone(_find_run_script_path())
 
 
 class TestBridgePackageSubstitution(unittest.TestCase):

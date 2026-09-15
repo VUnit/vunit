@@ -55,12 +55,12 @@ class PythonBridge(NamedTuple):
     vhdl_files: List[Path]
 
 
-def setup(project, output_path: str, simulator_class, run_script_path: Path) -> PythonBridge:
+def setup(project, output_path: str, simulator_class, run_script_path: Optional[Path]) -> PythonBridge:
     """
     Prepare the Python bridge for a project. Called by add_python().
 
-    :param run_script_path: The run script. Its directory is put on sys.path
-                            by the runtime, like when it is started by python.
+    :param run_script_path: The run script or None. The runtime puts its directory, or the current
+                            directory without a run script, first on sys.path, like python does.
     :returns: The bridge. Its vhdl_files are to be added to vunit_lib.
     """
     simulator_name = None if simulator_class is None else simulator_class.name
@@ -75,7 +75,7 @@ def setup(project, output_path: str, simulator_class, run_script_path: Path) -> 
     is_fli = simulator_name in FLI_SIMULATORS
     root = Path(output_path) / "python_bridge"
     library_file = prepare_library(root, Path(simulator_class.find_prefix()) if is_fli else None)
-    run_script_dir = str(Path(run_script_path).resolve().parent)
+    run_script_dir = str(Path.cwd() if run_script_path is None else Path(run_script_path).resolve().parent)
     _write_if_changed(library_file.parent / CONFIG_FILE_NAME, _config_text(run_script_dir))
 
     # The foreign attribute string of an entry point: the name of its wrapper in native/fli.c

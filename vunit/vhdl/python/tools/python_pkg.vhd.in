@@ -210,6 +210,10 @@ package body python_pkg is
     variable path_items : lines_t;
     variable script_name : line;
   begin
+    if script_path = "" then
+      exec("raise RuntimeError('import_run_script: VUnit was not started from a run script file')", session);
+      return;
+    end if;
     p_check_run_script_guard(script_path, session);
     if module_name = "" then
       -- Extract the last item in the full path

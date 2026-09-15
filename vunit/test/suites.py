@@ -275,9 +275,10 @@ class TestRun(object):
             "output path": output_path.replace("\\", "/") + "/",
             "active python runner": True,
             "tb path": config.tb_path.replace("\\", "/") + "/",
-            "run script path": str(run_script_path).replace("\\", "/"),
             "seed": seed,
         }
+        if run_script_path is not None:
+            runner_cfg["run script path"] = str(run_script_path).replace("\\", "/")
 
         # @TODO Warn if runner cfg already set?
         config.generics["runner_cfg"] = encode_dict(runner_cfg)
