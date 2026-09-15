@@ -2,11 +2,8 @@
 
 Guidance for AI coding agents working on the VUnit repository.
 
-To *use* VUnit rather than develop it, read the documentation written for agents instead:
-
-- [llms.txt](https://vunit.github.io/llms.txt): index of the documentation as plain text
-- [llms-full.txt](https://vunit.github.io/llms-full.txt): all documentation, including the VHDL package headers
-- [api/vunit_lib.json](https://vunit.github.io/api/vunit_lib.json) and [api/python.json](https://vunit.github.io/api/python.json): machine-readable VHDL and Python APIs
+To *use* VUnit rather than develop it, read the [documentation](https://vunit.github.io) and the machine-readable
+[VHDL API](https://vunit.github.io/api/vunit_lib.json) and [Python API](https://vunit.github.io/api/python.json).
 
 ## Repository layout
 
