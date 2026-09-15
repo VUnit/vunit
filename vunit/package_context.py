@@ -36,8 +36,9 @@ class PackageContext:
     vhdl_standard: VHDLStandard
     #: The VUnit output path. Files created by the package are to be placed under this path.
     output_path: Path
-    #: The path of the run script creating the VUnit object.
-    run_script_path: Path
+    #: The path of the run script creating the VUnit object or None if Python was not started with a
+    #: script file.
+    run_script_path: Optional[Path]
     #: The class of the selected simulator interface or None if no simulator was found.
     simulator_class: Any
     _vunit_obj: Any
