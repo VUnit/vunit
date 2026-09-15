@@ -24,6 +24,13 @@ jobs:
       with:
         python-version: '3.13'
 
+    # GHDL generates the machine-readable VHDL API reference (tools/build_api_reference.py)
+    - name: '⚙️ Setup GHDL'
+      uses: ghdl/setup-ghdl@main
+      with:
+        version: v6.0.0
+        backend: mcode
+
     - name: Install dependencies
       run: |
         pip install -U pip --progress-bar off
