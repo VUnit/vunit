@@ -2,7 +2,8 @@
 
 Guidance for AI coding agents working on the VUnit repository.
 
-To *use* VUnit rather than develop it, read the [documentation](https://vunit.github.io) and the machine-readable
+To *use* VUnit rather than develop it, read the [documentation](https://vunit.github.io), all of it as plain text in
+[llms-full.txt](https://vunit.github.io/llms-full.txt), and the machine-readable
 [VHDL API](https://vunit.github.io/api/vunit_lib.json) and [Python API](https://vunit.github.io/api/python.json).
 
 ## Repository layout
