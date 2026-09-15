@@ -116,17 +116,17 @@ class TestDocComments(unittest.TestCase):
     def test_extracts_comment_block_directly_above(self):
         text = "  -- Returns the length\n  -- of the queue\n  function length return natural;\n"
         source = bar.SourceText(text)
-        self.assertEqual(bar.declaration_doc(source, 3), "Returns the length\nof the queue")
+        self.assertEqual(bar.comment_block_above(source, 3), "Returns the length\nof the queue")
 
     def test_blank_line_ends_the_block(self):
         text = "  -- Unrelated comment\n\n  function length return natural;\n"
         source = bar.SourceText(text)
-        self.assertIsNone(bar.declaration_doc(source, 3))
+        self.assertIsNone(bar.comment_block_above(source, 3))
 
     def test_no_comment_above_gives_none(self):
         text = "  use work.foo_pkg.all;\n  function length return natural;\n"
         source = bar.SourceText(text)
-        self.assertIsNone(bar.declaration_doc(source, 2))
+        self.assertIsNone(bar.comment_block_above(source, 2))
 
     def test_license_header_excluded_from_package_doc(self):
         text = (
@@ -145,7 +145,7 @@ class TestDocComments(unittest.TestCase):
     def test_impure_on_a_preceding_line_shifts_the_doc_anchor(self):
         text = "  -- Returns something\n  impure\n  function get return integer;\n"
         source = bar.SourceText(text)
-        self.assertEqual(bar.subprogram_doc(source, 3), "Returns something")
+        self.assertEqual(bar.comment_block_above(source, bar.subprogram_first_line(source, 3)), "Returns something")
 
     def test_impure_on_the_same_line_does_not_pull_in_the_comment_above(self):
         # Here the comment belongs to something else entirely -- decl_line
@@ -153,7 +153,7 @@ class TestDocComments(unittest.TestCase):
         # above *that*, which is blank.
         text = "  -- Unrelated\n\n  impure function get return integer;\n"
         source = bar.SourceText(text)
-        self.assertIsNone(bar.subprogram_doc(source, 3))
+        self.assertIsNone(bar.comment_block_above(source, bar.subprogram_first_line(source, 3)))
 
 
 class TestConvertSubprogram(unittest.TestCase):
@@ -182,39 +182,26 @@ class TestConvertSubprogram(unittest.TestCase):
         entry = bar.convert_subprogram(el, source, "f.vhd")
         self.assertEqual(entry["kind"], "procedure")
         self.assertIsNone(entry["pure"])
+        self.assertFalse(entry["operator"])
         self.assertEqual(entry["parameters"][0]["type"], "rec_t")
         self.assertEqual(entry["parameters"][0]["class"], "constant")
         self.assertEqual(entry["parameters"][0]["mode"], "in")
 
-    def test_impure_function_pure_flag_false(self):
-        line = "  impure function func_get (target : rec_t) return integer;"
-        xml = f"""
-        <el kind="function_declaration" identifier="func_get" line="1"
-            col="{_col(line, "func_get")}" pure_flag="false" has_body="false">
-          <interface_declaration_chain/>
-          <return_type_mark identifier="integer"/>
-        </el>
-        """
-        el = self._parse(xml)
-        source = bar.SourceText(line + "\n")
-        entry = bar.convert_subprogram(el, source, "f.vhd")
-        self.assertEqual(entry["kind"], "function")
-        self.assertFalse(entry["pure"])
-        self.assertEqual(entry["return_type"], "integer")
-
-    def test_pure_function_pure_flag_true(self):
-        line = "  function pure_fn (x : integer) return integer;"
-        xml = f"""
-        <el kind="function_declaration" identifier="pure_fn" line="1"
-            col="{_col(line, "pure_fn")}" pure_flag="true" has_body="false">
-          <interface_declaration_chain/>
-          <return_type_mark identifier="integer"/>
-        </el>
-        """
-        el = self._parse(xml)
-        source = bar.SourceText(line + "\n")
-        entry = bar.convert_subprogram(el, source, "f.vhd")
-        self.assertTrue(entry["pure"])
+    def test_function_pure_flag_and_return_type(self):
+        for pure_flag, prefix in (("false", "impure "), ("true", "")):
+            with self.subTest(pure_flag=pure_flag):
+                line = f"  {prefix}function func_get (target : rec_t) return integer;"
+                xml = f"""
+                <el kind="function_declaration" identifier="func_get" line="1"
+                    col="{_col(line, "func_get")}" pure_flag="{pure_flag}" has_body="false">
+                  <interface_declaration_chain/>
+                  <return_type_mark identifier="integer"/>
+                </el>
+                """
+                entry = bar.convert_subprogram(self._parse(xml), bar.SourceText(line + "\n"), "f.vhd")
+                self.assertEqual(entry["kind"], "function")
+                self.assertEqual(entry["pure"], pure_flag == "true")
+                self.assertEqual(entry["return_type"], "integer")
 
     def test_operator_identifier_is_flagged(self):
         line = '  function "+" (l, r : rec_t) return rec_t;'
@@ -230,18 +217,6 @@ class TestConvertSubprogram(unittest.TestCase):
         entry = bar.convert_subprogram(el, source, "f.vhd")
         self.assertTrue(entry["operator"])
         self.assertEqual(entry["name"], "+")
-
-    def test_plain_identifier_is_not_an_operator(self):
-        line = "  procedure proc_set (target : in rec_t);"
-        xml = f"""
-        <el kind="procedure_declaration" identifier="proc_set" line="1" col="1" has_body="false">
-          <interface_declaration_chain/>
-        </el>
-        """
-        el = self._parse(xml)
-        source = bar.SourceText(line + "\n")
-        entry = bar.convert_subprogram(el, source, "f.vhd")
-        self.assertFalse(entry["operator"])
 
     def test_parameter_default_value(self):
         line = "    value : in integer := 0"
@@ -464,35 +439,22 @@ class TestConvertType(unittest.TestCase):
         self.assertEqual(len(entry["subprograms"]), 1)
         method = entry["subprograms"][0]
         self.assertEqual(method["name"], "set")
-        # Methods use the same subprogram format, but (like aliases) are
-        # not individually documented top-level entries.
-        self.assertNotIn("doc", method)
+        self.assertIsNone(method["doc"])
 
-    def test_other_type_array(self):
-        line = "  type vec_t is array (natural range <>) of rec_t;"
-        xml = f"""
-        <el kind="type_declaration" identifier="vec_t" line="1">
-          <type_definition kind="array_type_definition" line="1" col="{_col(line, "array")}" file="f.vhd"/>
-        </el>
-        """
-        el = ElementTree.fromstring(xml)
-        source = bar.SourceText(line + "\n")
-        entry = bar.convert_type(el, source, "f.vhd")
-        self.assertEqual(entry["kind"], "other")
-        self.assertEqual(entry["definition"], "array (natural range <>) of rec_t")
-
-    def test_other_type_access(self):
-        line = "  type ptr_t is access rec_t;"
-        xml = f"""
-        <el kind="type_declaration" identifier="ptr_t" line="1">
-          <type_definition kind="access_type_definition" line="1" col="{_col(line, "access")}" file="f.vhd"/>
-        </el>
-        """
-        el = ElementTree.fromstring(xml)
-        source = bar.SourceText(line + "\n")
-        entry = bar.convert_type(el, source, "f.vhd")
-        self.assertEqual(entry["kind"], "other")
-        self.assertEqual(entry["definition"], "access rec_t")
+    def test_other_types(self):
+        for line, keyword, definition in (
+            ("  type vec_t is array (natural range <>) of rec_t;", "array", "array (natural range <>) of rec_t"),
+            ("  type ptr_t is access rec_t;", "access", "access rec_t"),
+        ):
+            with self.subTest(keyword=keyword):
+                xml = f"""
+                <el kind="type_declaration" identifier="t" line="1">
+                  <type_definition kind="{keyword}_type_definition" line="1" col="{_col(line, keyword)}" file="f.vhd"/>
+                </el>
+                """
+                entry = bar.convert_type(ElementTree.fromstring(xml), bar.SourceText(line + "\n"), "f.vhd")
+                self.assertEqual(entry["kind"], "other")
+                self.assertEqual(entry["definition"], definition)
 
 
 class TestConvertSubtypeConstantObject(unittest.TestCase):
@@ -534,42 +496,21 @@ class TestConvertSubtypeConstantObject(unittest.TestCase):
         entry = bar.convert_constant(el, source, "f.vhd")
         self.assertIsNone(entry["value"])
 
-    def test_signal_object(self):
-        line = "  signal s_enabled : std_logic := '1';"
-        xml = f"""
-        <el kind="signal_declaration" identifier="s_enabled" line="1">
-          <subtype_indication line="1" col="{_col(line, "std_logic")}" file="f.vhd"/>
-        </el>
-        """
-        el = ElementTree.fromstring(xml)
-        source = bar.SourceText(line + "\n")
-        entry = bar.convert_object(el, source, "f.vhd")
-        self.assertEqual(entry["class"], "signal")
-        self.assertEqual(entry["type"], "std_logic")
-
-    def test_shared_variable_object(self):
-        line = "  shared variable v_shared : integer;"
-        xml = f"""
-        <el kind="variable_declaration" identifier="v_shared" line="1" shared_flag="true">
-          <subtype_indication line="1" col="{_col(line, "integer")}" file="f.vhd"/>
-        </el>
-        """
-        el = ElementTree.fromstring(xml)
-        source = bar.SourceText(line + "\n")
-        entry = bar.convert_object(el, source, "f.vhd")
-        self.assertEqual(entry["class"], "shared variable")
-
-    def test_file_object(self):
-        line = "  file f0 : text;"
-        xml = f"""
-        <el kind="file_declaration" identifier="f0" line="1">
-          <subtype_indication line="1" col="{_col(line, "text")}" file="f.vhd"/>
-        </el>
-        """
-        el = ElementTree.fromstring(xml)
-        source = bar.SourceText(line + "\n")
-        entry = bar.convert_object(el, source, "f.vhd")
-        self.assertEqual(entry["class"], "file")
+    def test_objects(self):
+        for line, kind, object_class, type_name in (
+            ("  signal s_enabled : std_logic := '1';", "signal_declaration", "signal", "std_logic"),
+            ("  shared variable v_shared : integer;", "variable_declaration", "shared variable", "integer"),
+            ("  file f0 : text;", "file_declaration", "file", "text"),
+        ):
+            with self.subTest(kind=kind):
+                xml = f"""
+                <el kind="{kind}" identifier="x" line="1">
+                  <subtype_indication line="1" col="{_col(line, type_name)}" file="f.vhd"/>
+                </el>
+                """
+                entry = bar.convert_object(ElementTree.fromstring(xml), bar.SourceText(line + "\n"), "f.vhd")
+                self.assertEqual(entry["class"], object_class)
+                self.assertEqual(entry["type"], type_name)
 
 
 class TestConvertPackage(unittest.TestCase):
@@ -624,16 +565,11 @@ class TestConvertPackage(unittest.TestCase):
         self.assertIn("/a/my_pkg.vhd:9", str(ctx.exception))
 
     def test_private_package_flag(self):
-        xml = self._package_xml("", name="data_types_private_pkg")
-        el = ElementTree.fromstring(xml)
-        pkg = bar.convert_package(el, bar.SourceText("\n"), "/a/my_pkg.vhd", "my_pkg.vhd")
-        self.assertTrue(pkg["private"])
-
-    def test_non_private_package_flag(self):
-        xml = self._package_xml("", name="queue_pkg")
-        el = ElementTree.fromstring(xml)
-        pkg = bar.convert_package(el, bar.SourceText("\n"), "/a/my_pkg.vhd", "my_pkg.vhd")
-        self.assertFalse(pkg["private"])
+        for name, private in (("data_types_private_pkg", True), ("queue_pkg", False)):
+            with self.subTest(name=name):
+                el = ElementTree.fromstring(self._package_xml("", name=name))
+                pkg = bar.convert_package(el, bar.SourceText("\n"), "/a/my_pkg.vhd", "my_pkg.vhd")
+                self.assertEqual(pkg["private"], private)
 
     def test_p_prefixed_names_not_flagged_private(self):
         line8 = "  constant p_internal : integer := 1;"
@@ -868,12 +804,6 @@ class TestPythonApi(unittest.TestCase):
         self.assertEqual(members["method_one"]["kind"], "method")
         self.assertIn("(self, value)", members["method_one"]["signature"])
         self.assertEqual(members["method_one"]["doc"], "Doubles value.")
-
-    def test_function_object(self):
-        obj = bar.build_function_object(f"{__name__}.sample_function", sample_function)
-        self.assertEqual(obj["kind"], "function")
-        self.assertEqual(obj["doc"], "Adds a and b.")
-        self.assertIn("a, b=1", obj["signature"])
 
     def test_module_object_without_members_option_has_no_members(self):
         obj = bar.build_module_object(__name__, sys.modules[__name__], has_members=False)

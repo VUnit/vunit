@@ -89,14 +89,11 @@ def _placement(docname):
     """
     if docname in EXCLUDED:
         return None
-    other_index = None
-    for section_index, (title, prefixes) in enumerate(SECTIONS):
+    for section_index, (_, prefixes) in enumerate(SECTIONS):
         for prefix_index, prefix in enumerate(prefixes):
             if _matches(docname, prefix):
                 return section_index, prefix_index
-        if title == OTHER_SECTION:
-            other_index = section_index
-    return other_index, 0
+    return [title for title, _ in SECTIONS].index(OTHER_SECTION), 0
 
 
 def section_of(docname):
@@ -114,10 +111,7 @@ def read_pages(text_dir):
     text_dir = Path(text_dir)
     pages = []
     for path in text_dir.rglob("*.txt"):
-        relative = path.relative_to(text_dir)
-        if any(part.startswith(".") for part in relative.parts):
-            continue
-        docname = relative.with_suffix("").as_posix()
+        docname = path.relative_to(text_dir).with_suffix("").as_posix()
         if _placement(docname) is None:
             continue
         text = path.read_text(encoding="utf-8")
