@@ -19,7 +19,7 @@ import hashlib
 
 from .native_library import compile_library
 
-SRC_PATH = Path(__file__).parent.parent.resolve() / "vhdl" / "python" / "src"
+SRC_PATH = Path(__file__).parent.resolve() / "native" / "vhpi"
 
 
 def setup_vhpi_application(output_path, simulator_class):

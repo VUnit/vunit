@@ -607,8 +607,8 @@ Other simulators
 -----------------
 
 Riviera-PRO/Active-HDL (VHPI) implement ``python_ffi_pkg`` with a VHPI
-application, built from the C sources in :vunit_file:`vunit/vhdl/python/src
-<vunit/vhdl/python/src>` with their ``ccomp`` driver. :meth:`add_python()
+application, built from the C sources in :vunit_file:`vunit/python_bridge/native/vhpi
+<vunit/python_bridge/native/vhpi>` with their ``ccomp`` driver. :meth:`add_python()
 <vunit.ui.VUnit.add_python>` builds the application under the output path
 (``<output path>/<simulator>/libraries``) the first time it is called and
 rebuilds it when the sources, the Python running VUnit or the simulator
