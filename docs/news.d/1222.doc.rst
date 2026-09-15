@@ -1,2 +1,3 @@
-The website now publishes a machine-readable reference of the VHDL and Python APIs for AI agents
-(``api/vunit_lib.json`` and ``api/python.json``). ``AGENTS.md`` and ``context7.json`` were added to the repository.
+The website now publishes, for AI agents, all documentation as plain text in ``llms-full.txt`` and a machine-readable
+reference of the VHDL and Python APIs (``api/vunit_lib.json`` and ``api/python.json``). ``AGENTS.md`` and
+``context7.json`` were added to the repository.
