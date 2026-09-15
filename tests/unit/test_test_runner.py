@@ -26,7 +26,7 @@ class TestTestRunner(unittest.TestCase):
     @with_tempdir
     def test_runs_testcases_in_order(self, tempdir):
         report = TestReport()
-        runner = TestRunner(report, tempdir)
+        runner = TestRunner(report, tempdir, Path("run.py"))
 
         order = []
         test_case1 = self.create_test("test1", True, order=order)
@@ -55,7 +55,7 @@ class TestTestRunner(unittest.TestCase):
     @with_tempdir
     def test_fail_fast(self, tempdir):
         report = TestReport()
-        runner = TestRunner(report, tempdir, fail_fast=True)
+        runner = TestRunner(report, tempdir, Path("run.py"), fail_fast=True)
 
         order = []
         test_case1 = self.create_test("test1", True, order=order)
@@ -84,7 +84,7 @@ class TestTestRunner(unittest.TestCase):
     @with_tempdir
     def test_handles_python_exeception(self, tempdir):
         report = TestReport()
-        runner = TestRunner(report, tempdir)
+        runner = TestRunner(report, tempdir, Path("run.py"))
 
         test_case = self.create_test("test", True)
         test_list = TestList()
@@ -103,7 +103,7 @@ class TestTestRunner(unittest.TestCase):
     @with_tempdir
     def test_collects_output(self, tempdir):
         report = TestReport()
-        runner = TestRunner(report, tempdir)
+        runner = TestRunner(report, tempdir, Path("run.py"))
 
         test_case = self.create_test("test", True)
         test_list = TestList()
@@ -129,7 +129,7 @@ class TestTestRunner(unittest.TestCase):
     @with_tempdir
     def test_can_read_output(self, tempdir):
         report = TestReport()
-        runner = TestRunner(report, tempdir)
+        runner = TestRunner(report, tempdir, Path("run.py"))
 
         test_case = self.create_test("test", True)
         test_list = TestList()
@@ -159,7 +159,7 @@ class TestTestRunner(unittest.TestCase):
     def test_get_output_path_on_linux(self):
         output_path = "output_path"
         report = TestReport()
-        runner = TestRunner(report, output_path)
+        runner = TestRunner(report, output_path, Path("run.py"))
 
         with mock.patch("sys.platform", new="linux"):
             with mock.patch("os.environ", new={}):
@@ -190,7 +190,7 @@ class TestTestRunner(unittest.TestCase):
     def test_get_output_path_on_windows(self):
         output_path = "output_path"
         report = TestReport()
-        runner = TestRunner(report, output_path)
+        runner = TestRunner(report, output_path, Path("run.py"))
 
         with mock.patch("sys.platform", new="win32"):
             with mock.patch("os.environ", new={}):
@@ -247,7 +247,7 @@ class TestCaseMock(object):
         self.called = False
         self.run_side_effect = run_side_effect
 
-    def run(self, output_path, read_output):
+    def run(self, output_path, read_output, run_script_path):
         """
         Mock run method that just records the arguments
         """
@@ -255,7 +255,7 @@ class TestCaseMock(object):
         self.called = True
         self.output_path = output_path
         self.read_output = read_output
-        return self.run_side_effect(output_path=output_path, read_output=read_output)
+        return self.run_side_effect(output_path=output_path, read_output=read_output, run_script_path=run_script_path)
 
     def get_seed(self):
         return "0123456789abcdef"

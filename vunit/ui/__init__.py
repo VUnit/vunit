@@ -49,6 +49,17 @@ from .library import Library, LibraryList
 from .results import Results
 
 
+def _find_run_script_path() -> Optional[Path]:
+    """
+    Return the path of the run script, the file Python was started with, or None if Python was
+    not started with a script file, for example with python -c or in an interactive session.
+    """
+    main_file = getattr(sys.modules.get("__main__"), "__file__", None)
+    if main_file is None or not Path(main_file).is_file():
+        return None
+    return Path(main_file).resolve()
+
+
 class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-public-methods
     """
     The public interface of VUnit
@@ -140,6 +151,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self._args = args
         self._configure_logging(args.log_level)
         self._output_path = str(Path(args.output_path).resolve())
+        self._run_script_path = _find_run_script_path()
 
         if args.no_color:
             self._printer = NO_COLOR_PRINTER
@@ -1232,6 +1244,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         runner = TestRunner(
             report,
             str(Path(self._output_path) / TEST_OUTPUT_PATH),
+            self._run_script_path,
             verbosity=verbosity,
             num_threads=self._args.num_threads,
             fail_fast=self._args.fail_fast,
@@ -1293,6 +1306,25 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         Add array util
         """
         self._builtins.add("array_util")
+
+    def add_python(self):
+        """
+        Add the Python package, see :ref:`python_bridge`.
+
+        Lets VHDL testbenches execute Python code and call Python functions through
+        ``context vunit_lib.python_context``. Requires :meth:`add_vhdl_builtins` to have been
+        called, VHDL-2008 or later, and a simulator with a supported foreign language
+        interface (NVC, GHDL and Questa/ModelSim use the VUnit Python bridge;
+        Riviera-PRO/Active-HDL use a VHPI application).
+
+        :example:
+
+        .. code-block:: python
+
+           prj.add_vhdl_builtins()
+           prj.add_python()
+        """
+        self._builtins.add("python")
 
     def add_random(self):
         """

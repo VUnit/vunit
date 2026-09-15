@@ -166,6 +166,14 @@ jobs:
       run: tox -e py${{ matrix.task }} -- --color=yes
 
 #
+# Prebuilt Windows DLLs of the VHDL Python bridge, included in releases
+#
+
+  python-bridge-dlls:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    uses: ./.github/workflows/python_bridge_dlls.yml
+
+#
 # Deploy to PyPI
 #
 
@@ -177,6 +185,7 @@ jobs:
       - ghdl
       - nvc
       - win
+      - python-bridge-dlls
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     name: '🚀 Deploy'
     steps:
@@ -185,6 +194,12 @@ jobs:
       uses: actions/checkout@v4
       with:
         submodules: recursive
+
+    - name: '📥 Download Python bridge DLLs'
+      uses: actions/download-artifact@v4
+      with:
+        name: python-bridge-dlls
+        path: vunit/python_bridge/bin
 
     - name: '🐍 Setup Python'
       uses: actions/setup-python@v6

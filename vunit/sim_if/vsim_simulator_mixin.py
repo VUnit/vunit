@@ -12,6 +12,7 @@ and RivieraPRO
 import sys
 import os
 from pathlib import Path
+from typing import List
 from ..ostools import write_file, Process
 from ..test.suites import get_result_file_name
 from ..persistent_tcl_shell import PersistentTclShell
@@ -28,8 +29,15 @@ class VsimSimulatorMixin(object):
         sim_cfg_file_name = str(Path(sim_cfg_file_name).resolve())
         self._sim_cfg_file_name = sim_cfg_file_name
 
+        # Flags of the vsim processes VUnit starts itself, as opposed to the vsim commands
+        # of the generated TCL. The list is shared with the persistent shell below and
+        # filled in by add_simulator_specific(), since what goes into it depends on the
+        # project, which is not known when the interface is created.
+        self._vsim_process_flags: List[str] = []
+
         prefix = self._prefix  # Avoid circular dependency inhibiting process destruction
         env = self.get_env()
+        process_flags = self._vsim_process_flags
 
         def create_process(ident):
             return Process(
@@ -40,7 +48,8 @@ class VsimSimulatorMixin(object):
                     str(Path(sim_cfg_file_name).parent / f"transcript{ident}"),
                     "-do",
                     str((Path(__file__).parent / "tcl_read_eval_loop.tcl").resolve()),
-                ],
+                ]
+                + process_flags,
                 cwd=str(Path(sim_cfg_file_name).parent),
                 env=env,
             )
@@ -327,7 +336,7 @@ proc vunit_run {} {
                 str(Path(batch_file_name).parent / "transcript"),
                 "-do",
                 f'source "{fix_path(batch_file_name)!s}"',
-            ]
+            ] + self._vsim_process_flags
 
             if extra_args:
                 args += extra_args

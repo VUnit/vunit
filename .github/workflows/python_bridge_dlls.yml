@@ -1,0 +1,63 @@
+name: 'python bridge dlls'
+
+# Builds the prebuilt Windows DLLs of the VHDL Python bridge with MSVC, one per
+# CPython version. Called by python_bridge.yml and by push.yml for releases.
+
+on:
+  workflow_call:
+
+jobs:
+
+  build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        py: ['3.10', '3.11', '3.12', '3.13', '3.14']
+    name: '🟦 MSVC · bridge DLL · Python ${{ matrix.py }}'
+    steps:
+
+    - name: '🧰 Checkout'
+      uses: actions/checkout@v4
+
+    - name: '🐍 Setup Python'
+      uses: actions/setup-python@v6
+      with:
+        python-version: ${{ matrix.py }}
+        architecture: x64
+
+    - name: '⚙️ Setup MSVC'
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: x64
+
+    - name: '🔨 Build DLL'
+      run: python tools/build_python_bridge.py --output-dir dlls
+
+    - name: '📤 Upload DLL'
+      uses: actions/upload-artifact@v4
+      with:
+        name: python-bridge-dll-${{ matrix.py }}
+        path: dlls/*.dll
+        if-no-files-found: error
+
+  collect:
+    needs: build
+    runs-on: ubuntu-latest
+    name: '📦 Collect bridge DLLs'
+    steps:
+
+    - name: '📥 Download DLLs'
+      uses: actions/download-artifact@v4
+      with:
+        pattern: python-bridge-dll-*
+        merge-multiple: true
+        path: dlls
+
+    - name: '🔍 Check DLLs'
+      run: test "$(ls dlls/*.dll | wc -l)" = 5
+
+    - name: '📤 Upload DLLs'
+      uses: actions/upload-artifact@v4
+      with:
+        name: python-bridge-dlls
+        path: dlls/*.dll

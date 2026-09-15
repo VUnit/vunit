@@ -1,0 +1,1086 @@
+-- This package provides a dictionary types and operations
+--
+-- This Source Code Form is subject to the terms of the Mozilla Public
+-- License, v. 2.0. If a copy of the MPL was not distributed with this file,
+-- You can obtain one at http://mozilla.org/MPL/2.0/.
+--
+-- Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
+
+use work.python_ffi_pkg.all;
+use work.path.all;
+use work.run_pkg.all;
+use work.runner_pkg.all;
+use work.integer_vector_ptr_pkg.all;
+use work.string_ops.all;
+
+use std.textio.all;
+
+------------------------------------------------------------------------------
+-- This file is generated from tools/python_pkg.vhd.in by
+-- vunit/vhdl/python/tools/generate_python_pkg.py. Do not edit.
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+use work.integer_array_pkg.all;
+use work.logger_pkg.all;
+------------------------------------------------------------------------------
+
+package python_pkg is
+  procedure import_module_from_file(
+    module_path, as_module_name : string; session : python_session_t := default_session
+  );
+  procedure import_run_script(module_name : string := ""; session : python_session_t := default_session);
+
+  function to_py_list_str(vec : integer_vector) return string;
+  impure function to_py_list_str(vec : integer_vector_ptr_t) return string;
+  function to_py_list_str(vec : real_vector) return string;
+
+  function "+"(l, r : string) return string;
+
+  impure function eval_integer_vector_ptr(
+    expr : string; session : python_session_t := default_session
+  ) return integer_vector_ptr_t;
+  alias eval is eval_integer_vector_ptr[string, python_session_t return integer_vector_ptr_t];
+
+  type arg_t is record
+    name : string;
+    value : string;
+  end record;
+  constant p_positional_arg : string := ".";
+  constant p_ignore_arg : string := "-";
+  constant p_group_arg : string := "*";
+  constant null_arg : arg_t := (name => p_ignore_arg, value => "");
+
+  function arg(value : integer) return arg_t;
+  function kwarg(kw : string; value : integer) return arg_t;
+  function arg(value : string) return arg_t;
+  function kwarg(kw : string; value : string) return arg_t;
+  function arg(value : integer_vector) return arg_t;
+  function kwarg(kw : string; value : integer_vector) return arg_t;
+  function arg(value : real) return arg_t;
+  function kwarg(kw : string; value : real) return arg_t;
+  function arg(value : boolean) return arg_t;
+  function kwarg(kw : string; value : boolean) return arg_t;
+
+  -- real_vector and integer_vector_ptr_t values become Python lists, a
+  -- std_ulogic value becomes True or False, and an unsigned or signed value of
+  -- any width becomes a Python integer written as a hexadecimal literal, which
+  -- is therefore not limited to the range of a VHDL integer.
+  --
+  -- An aggregate or a literal needs a qualified expression to select the
+  -- overload, for example arg(real_vector'(1.0, 2.0)). A std_ulogic_vector is
+  -- passed as a string, arg(to_string(slv)), or as a number,
+  -- arg_unsigned(unsigned(slv)). The unsigned and signed values have names of
+  -- their own since an overload would make a string literal argument,
+  -- arg("Hello"), ambiguous.
+  --
+  -- H and L are read as 1 and 0. Any other metavalue is an error.
+  --
+  -- An integer_array_t value is transferred to Python by the Python bridge,
+  -- which is only available for NVC, GHDL and Questa, and is referred to by
+  -- the expression, which means that it can be used in several calls.
+  function arg(value : real_vector) return arg_t;
+  function kwarg(kw : string; value : real_vector) return arg_t;
+  impure function arg(value : integer_vector_ptr_t) return arg_t;
+  impure function kwarg(kw : string; value : integer_vector_ptr_t) return arg_t;
+  impure function arg(value : std_ulogic) return arg_t;
+  impure function kwarg(kw : string; value : std_ulogic) return arg_t;
+  impure function arg_unsigned(value : unsigned) return arg_t;
+  impure function kwarg_unsigned(kw : string; value : unsigned) return arg_t;
+  impure function arg_signed(value : signed) return arg_t;
+  impure function kwarg_signed(kw : string; value : signed) return arg_t;
+  impure function arg(value : integer_array_t) return arg_t;
+  impure function kwarg(kw : string; value : integer_array_t) return arg_t;
+
+  -- The Python expression calling identifier with the given arguments, for
+  -- example to embed a call in a larger exec or eval string:
+  --
+  --   exec("gcd = " & to_call_str("gcd", arg(35), arg(77)));
+  impure function to_call_str(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg
+  ) return string;
+
+  impure function call_integer_w_arg(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
+    session : python_session_t := default_session
+  ) return integer;
+  alias call is call_integer_w_arg[
+    string, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, python_session_t return integer];
+
+  procedure call(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
+    session : python_session_t := default_session
+  );
+
+  impure function call_integer_vector(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
+    session : python_session_t := default_session
+  ) return integer_vector;
+  alias call is call_integer_vector[
+    string, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, python_session_t
+    return integer_vector];
+
+  impure function call_real(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
+    session : python_session_t := default_session
+  ) return real;
+  alias call is call_real[
+    string, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, python_session_t return real];
+
+  -----------------------------------------------------------------------------
+  -- Argument groups
+  -----------------------------------------------------------------------------
+  -- Arguments combined with & become a single argument, so that a call can
+  -- pass more than the 10 arguments it takes and can build its arguments in
+  -- steps:
+  --
+  --   call("f", arg(x), kwarg("a", 1) & kwarg("b", 2));
+  --
+  -- calls f(x, **dict(a=1, b=2)). A group of positional arguments becomes
+  -- *(1, 2,) and a group with both kinds *(1,), **dict(a=1). Python keeps its
+  -- own rules: a repeated keyword within a group is a syntax error and so is a
+  -- group followed by a positional argument of the call. Appending a
+  -- positional argument to a group that already has keyword arguments is an
+  -- error for the same reason.
+  --
+  -- null_arg is the identity of the operation, which is what makes a group
+  -- possible to build one argument at a time, ending with null_arg, and what
+  -- lets a helper that contributes an optional argument return null_arg when
+  -- it has none. An empty group is a valid call with no arguments rather than
+  -- an error.
+  impure function "&"(l, r : arg_t) return arg_t;
+
+  -----------------------------------------------------------------------------
+  -- Operations implemented by the Python bridge (NVC, GHDL and Questa)
+  -----------------------------------------------------------------------------
+  -- The operations below are implemented by the VUnit Python bridge and are
+  -- therefore only available for NVC, GHDL and Questa; the other simulators
+  -- report a failure when they are used. Like the other operations, every one
+  -- of them takes the session it is performed in as its last parameter,
+  -- defaulting to the default session.
+
+  -----------------------------------------------------------------------------
+  -- Results of eval: boolean, std_ulogic, vectors and arrays
+  -----------------------------------------------------------------------------
+  -- std_ulogic_vector and integer_array_t results are only available under
+  -- their explicit names, not as eval overloads, which keeps
+  -- check_equal(eval("17"), 17) and length(eval("[1, 2]")) unambiguous.
+  -- signed and unsigned results are only available in the procedure form
+  -- since a function cannot know the width of the result.
+  impure function eval_boolean(
+    expr : string; session : python_session_t := default_session
+  ) return boolean;
+  alias eval is eval_boolean[string, python_session_t return boolean];
+
+  impure function eval_std_ulogic(
+    expr : string; session : python_session_t := default_session
+  ) return std_ulogic;
+  alias eval is eval_std_ulogic[string, python_session_t return std_ulogic];
+
+  impure function eval_std_ulogic_vector(
+    expr : string; session : python_session_t := default_session
+  ) return std_ulogic_vector;
+
+  impure function eval_integer_array(
+    expr : string; session : python_session_t := default_session
+  ) return integer_array_t;
+
+  procedure eval_std_ulogic_vector(
+    expr : string; result : out std_ulogic_vector; session : python_session_t := default_session
+  );
+  procedure eval_signed(
+    expr : string; result : out signed; session : python_session_t := default_session
+  );
+  procedure eval_unsigned(
+    expr : string; result : out unsigned; session : python_session_t := default_session
+  );
+
+  -----------------------------------------------------------------------------
+  -- Results of call: string, boolean, std_ulogic, vectors and arrays
+  -----------------------------------------------------------------------------
+  impure function call_real_vector(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
+    session : python_session_t := default_session
+  ) return real_vector;
+  alias call is call_real_vector[
+    string, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, python_session_t return real_vector];
+
+  impure function call_string(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
+    session : python_session_t := default_session
+  ) return string;
+  alias call is call_string[
+    string, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, python_session_t return string];
+
+  impure function call_integer_vector_ptr(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
+    session : python_session_t := default_session
+  ) return integer_vector_ptr_t;
+  alias call is call_integer_vector_ptr[
+    string, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, python_session_t return integer_vector_ptr_t];
+
+  impure function call_boolean(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
+    session : python_session_t := default_session
+  ) return boolean;
+  alias call is call_boolean[
+    string, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, python_session_t return boolean];
+
+  impure function call_std_ulogic(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
+    session : python_session_t := default_session
+  ) return std_ulogic;
+  alias call is call_std_ulogic[
+    string, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, python_session_t return std_ulogic];
+
+  impure function call_std_ulogic_vector(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
+    session : python_session_t := default_session
+  ) return std_ulogic_vector;
+
+  impure function call_integer_array(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
+    session : python_session_t := default_session
+  ) return integer_array_t;
+  alias call is call_integer_array[
+    string, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, arg_t, python_session_t return integer_array_t];
+
+  procedure call_std_ulogic_vector(
+    identifier : string; result : out std_ulogic_vector;
+    arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
+    session : python_session_t := default_session
+  );
+  procedure call_signed(
+    identifier : string; result : out signed;
+    arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
+    session : python_session_t := default_session
+  );
+  procedure call_unsigned(
+    identifier : string; result : out unsigned;
+    arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
+    session : python_session_t := default_session
+  );
+
+  -----------------------------------------------------------------------------
+  -- Execution of Python files
+  -----------------------------------------------------------------------------
+  -- Execute a Python file. A relative file name is relative to the directory
+  -- of the testbench file, tb_path, and an absolute file name is used as it
+  -- is given. The file is executed with __file__ set and its own directory on
+  -- sys.path so that it can import its siblings.
+  procedure exec_file(file_name : string; session : python_session_t := default_session);
+end package;
+
+package body python_pkg is
+  -- @formatter:off
+  procedure import_module_from_file(
+    module_path, as_module_name : string; session : python_session_t := default_session
+  ) is
+    constant spec_name : string := "__" & as_module_name & "_spec";
+    constant code : string :=
+    "from importlib.util import spec_from_file_location, module_from_spec" & LF &
+    "from pathlib import Path" & LF &
+    "import sys" & LF &
+    spec_name & " = spec_from_file_location('" & as_module_name & "', str(Path('" & module_path & "')))" & LF &
+    as_module_name & " = module_from_spec(" & spec_name & ")" & LF &
+    "sys.modules['" & as_module_name & "'] = " & as_module_name & LF &
+     spec_name & ".loader.exec_module(" & as_module_name & ")";
+  begin
+    exec(code, session);
+  end;
+  -- @formatter:on
+
+  -- Importing a run script runs its module level code, so one without an
+  -- if __name__ == "__main__" guard would start VUnit again
+  procedure p_check_run_script_guard(script_path : string; session : python_session_t) is
+  begin
+    exec(
+      "from pathlib import Path" & LF &
+      "if '__main__' not in Path('" & script_path & "').read_text():" & LF &
+      "    raise RuntimeError('The run script " & script_path & " has no if __name__ == ""__main__"" guard, " &
+      "importing it would run VUnit again')",
+      session);
+  end;
+
+  procedure import_run_script(module_name : string := ""; session : python_session_t := default_session) is
+    constant script_path : string := run_script_path(get_cfg(runner_state));
+    variable path_items : lines_t;
+    variable script_name : line;
+  begin
+    if script_path = "" then
+      exec("raise RuntimeError('import_run_script: VUnit was not started from a run script file')", session);
+      return;
+    end if;
+    p_check_run_script_guard(script_path, session);
+    if module_name = "" then
+      -- Extract the last item in the full path
+      path_items := split(script_path, "/");
+      for idx in path_items'range loop
+        if idx = path_items'right then
+          script_name := path_items(idx);
+        else
+          deallocate(path_items(idx));
+        end if;
+      end loop;
+      deallocate(path_items);
+
+      -- Set module name to script name minus its extension
+      path_items := split(script_name.all, ".");
+      deallocate(script_name);
+      for idx in path_items'range loop
+        if idx = path_items'left then
+          import_module_from_file(script_path, path_items(idx).all, session);
+        end if;
+        deallocate(path_items(idx));
+      end loop;
+      deallocate(path_items);
+    else
+      import_module_from_file(script_path, module_name, session);
+    end if;
+  end;
+
+  function to_py_list_str(vec : integer_vector) return string is
+    variable l : line;
+  begin
+    swrite(l, "[");
+    for idx in vec'range loop
+      swrite(l, to_string(vec(idx)));
+      if idx /= vec'right then
+        swrite(l, ",");
+      end if;
+    end loop;
+    swrite(l, "]");
+
+    return l.all;
+  end;
+
+  impure function to_py_list_str(vec : integer_vector_ptr_t) return string is
+    variable l : line;
+  begin
+    swrite(l, "[");
+    for idx in 0 to length(vec) - 1 loop
+      swrite(l, to_string(get(vec, idx)));
+      if idx /= length(vec) - 1 then
+        swrite(l, ",");
+      end if;
+    end loop;
+    swrite(l, "]");
+
+    return l.all;
+  end;
+
+  function to_py_list_str(vec : real_vector) return string is
+    variable l : line;
+  begin
+    swrite(l, "[");
+    for idx in vec'range loop
+      -- Use %.16e to ensure that the string representation of the real number is precise enough to avoid loss of
+      -- information when double-precision is used.
+      swrite(l, to_string(vec(idx), "%.16e"));
+      if idx /= vec'right then
+        swrite(l, ",");
+      end if;
+    end loop;
+    swrite(l, "]");
+
+    return l.all;
+  end;
+
+  function "+"(l, r : string) return string is
+  begin
+    return l & LF & r;
+  end;
+
+  impure function eval_integer_vector_ptr(
+    expr : string; session : python_session_t := default_session
+  ) return integer_vector_ptr_t is
+    constant result_integer_vector : integer_vector := eval(expr, session);
+    constant len : natural := result_integer_vector'length;
+    constant result_integer_vector_normalized : integer_vector(0 to len - 1) := result_integer_vector;
+    constant result : integer_vector_ptr_t := new_integer_vector_ptr(len);
+  begin
+    for idx in 0 to len - 1 loop
+      set(result, idx, result_integer_vector_normalized(idx));
+    end loop;
+
+    return result;
+  end;
+
+  function arg(value : integer) return arg_t is
+  begin
+    return (p_positional_arg, to_string(value));
+  end;
+
+  function kwarg(kw : string; value : integer) return arg_t is
+  begin
+    return (kw, to_string(value));
+  end;
+
+  function arg(value : string) return arg_t is
+  begin
+    return (p_positional_arg, '"' & value & '"');
+  end;
+
+  function kwarg(kw : string; value : string) return arg_t is
+  begin
+    return (kw, '"' & value & '"');
+  end;
+
+  function arg(value : integer_vector) return arg_t is
+  begin
+    return (p_positional_arg, to_py_list_str(value));
+  end;
+
+  function kwarg(kw : string; value : integer_vector) return arg_t is
+  begin
+    return (kw, to_py_list_str(value));
+  end;
+
+  function arg(value : real) return arg_t is
+  begin
+    return (p_positional_arg, to_string(value, "%.16e"));
+  end;
+
+  function kwarg(kw : string; value : real) return arg_t is
+  begin
+    return (kw, to_string(value, "%.16e"));
+  end;
+
+  function arg(value : boolean) return arg_t is
+  begin
+    if value then
+      return (p_positional_arg, "True");
+    else
+      return (p_positional_arg, "False");
+    end if;
+  end;
+
+  function kwarg(kw : string; value : boolean) return arg_t is
+  begin
+    if value then
+      return (kw, "True");
+    else
+      return (kw, "False");
+    end if;
+  end;
+
+  -- The Python source text of a message, escaped for a double quoted Python
+  -- string. A quote, a backslash and a line break are the characters that
+  -- cannot be written as they are.
+  function p_quoted(message : string) return string is
+    variable result : line;
+  begin
+    swrite(result, """");
+    for idx in message'range loop
+      case message(idx) is
+        when '"' | '\' => swrite(result, "\" & message(idx));
+        when LF => swrite(result, "\n");
+        when CR => swrite(result, "\r");
+        when others => swrite(result, string'(1 => message(idx)));
+      end case;
+    end loop;
+    swrite(result, """");
+
+    return result.all;
+  end;
+
+  -- Report a value that could not be converted and give it a Python source
+  -- text raising the same message, so that the call the argument is used in
+  -- fails the same way rather than being made without the argument.
+  impure function p_failed_value(message : string) return string is
+  begin
+    failure(python_logger, message);
+    return "__vunit__.error(" & p_quoted(message) & ")";
+  end;
+
+  -- The Python source text of an argument value. The overloads whose
+  -- conversion can fail take the name of the operation, used to report a value
+  -- that cannot be converted.
+  function p_arg_value(value : real_vector) return string is
+  begin
+    return to_py_list_str(value);
+  end;
+
+  impure function p_arg_value(value : integer_vector_ptr_t) return string is
+  begin
+    return to_py_list_str(value);
+  end;
+
+  impure function p_arg_value(value : std_ulogic; operation : string) return string is
+  begin
+    if to_x01(value) = '1' then
+      return "True";
+    elsif to_x01(value) = '0' then
+      return "False";
+    end if;
+    return p_failed_value(
+      operation & " cannot convert " & std_ulogic'image(value) & "; expected '0', '1', 'L' or 'H'"
+    );
+  end;
+
+  -- The Python hexadecimal literal of the magnitude given by the bits, for
+  -- example 0x1F or -0x80. A null range gives 0x0.
+  function p_to_hex_literal(bits : std_ulogic_vector; negative : boolean) return string is
+    constant hex_digits : string(1 to 16) := "0123456789ABCDEF";
+    constant padding : natural := (4 - bits'length mod 4) mod 4;
+    variable padded : std_ulogic_vector(bits'length + padding - 1 downto 0) := (others => '0');
+    variable result : line;
+    variable digit : natural;
+    variable leading : boolean := true;
+  begin
+    padded(bits'length - 1 downto 0) := bits;
+    swrite(result, "0x");
+    for nibble in padded'length / 4 - 1 downto 0 loop
+      digit := 0;
+      for idx in 3 downto 0 loop
+        digit := 2 * digit;
+        if padded(4 * nibble + idx) = '1' then
+          digit := digit + 1;
+        end if;
+      end loop;
+      if digit /= 0 then
+        leading := false;
+      end if;
+      if not leading then
+        swrite(result, string'(1 => hex_digits(digit + 1)));
+      end if;
+    end loop;
+    if leading then
+      swrite(result, "0");
+    end if;
+
+    if negative then
+      return "-" & result.all;
+    end if;
+    return result.all;
+  end;
+
+  -- The error reported for a vector value that cannot be converted
+  function p_metavalue_error(value : std_ulogic_vector; operation : string) return string is
+  begin
+    return operation & " cannot convert """ & to_string(value) & """; the value has metavalues";
+  end;
+
+  impure function p_arg_value(value : unsigned; operation : string) return string is
+  begin
+    if is_x(std_ulogic_vector(value)) then
+      return p_failed_value(p_metavalue_error(std_ulogic_vector(value), operation));
+    end if;
+    return p_to_hex_literal(to_x01(std_ulogic_vector(value)), false);
+  end;
+
+  impure function p_arg_value(value : signed; operation : string) return string is
+    variable folded : signed(value'length - 1 downto 0);
+    variable magnitude : signed(value'length downto 0);
+  begin
+    if is_x(std_ulogic_vector(value)) then
+      return p_failed_value(p_metavalue_error(std_ulogic_vector(value), operation));
+    end if;
+    if value'length = 0 then
+      return "0x0";
+    end if;
+
+    folded := signed(to_x01(std_ulogic_vector(value)));
+    if folded(folded'left) = '0' then
+      return p_to_hex_literal(std_ulogic_vector(folded), false);
+    end if;
+    -- Resizing before negating keeps the magnitude of signed'low representable
+    magnitude := -resize(folded, value'length + 1);
+    return p_to_hex_literal(std_ulogic_vector(magnitude), true);
+  end;
+
+  impure function p_arg_value(value : integer_array_t; operation : string) return string is
+    constant staged_id : integer := p_stage_array(value, operation);
+  begin
+    if staged_id < 1 then
+      -- p_stage_array reported the error of the transfer
+      return "__vunit__.error(" & p_quoted(operation & " failed") & ")";
+    end if;
+    return "__vunit__.staged(" & integer'image(staged_id) & ")";
+  end;
+
+  function arg(value : real_vector) return arg_t is
+  begin
+    return (p_positional_arg, p_arg_value(value));
+  end;
+
+  function kwarg(kw : string; value : real_vector) return arg_t is
+  begin
+    return (kw, p_arg_value(value));
+  end;
+
+  impure function arg(value : integer_vector_ptr_t) return arg_t is
+  begin
+    return (p_positional_arg, p_arg_value(value));
+  end;
+
+  impure function kwarg(kw : string; value : integer_vector_ptr_t) return arg_t is
+  begin
+    return (kw, p_arg_value(value));
+  end;
+
+  impure function arg(value : std_ulogic) return arg_t is
+  begin
+    return (p_positional_arg, p_arg_value(value, "arg"));
+  end;
+
+  impure function kwarg(kw : string; value : std_ulogic) return arg_t is
+  begin
+    return (kw, p_arg_value(value, "kwarg"));
+  end;
+
+  impure function arg_unsigned(value : unsigned) return arg_t is
+  begin
+    return (p_positional_arg, p_arg_value(value, "arg_unsigned"));
+  end;
+
+  impure function kwarg_unsigned(kw : string; value : unsigned) return arg_t is
+  begin
+    return (kw, p_arg_value(value, "kwarg_unsigned"));
+  end;
+
+  impure function arg_signed(value : signed) return arg_t is
+  begin
+    return (p_positional_arg, p_arg_value(value, "arg_signed"));
+  end;
+
+  impure function kwarg_signed(kw : string; value : signed) return arg_t is
+  begin
+    return (kw, p_arg_value(value, "kwarg_signed"));
+  end;
+
+  impure function arg(value : integer_array_t) return arg_t is
+  begin
+    return (p_positional_arg, p_arg_value(value, "arg"));
+  end;
+
+  impure function kwarg(kw : string; value : integer_array_t) return arg_t is
+  begin
+    return (kw, p_arg_value(value, "kwarg"));
+  end;
+
+  -----------------------------------------------------------------------------
+  -- Argument groups
+  -----------------------------------------------------------------------------
+  -- A group is one argument whose Python source text is spliced into the call
+  -- like a positional argument: *(1, 2,) for positional arguments,
+  -- **dict(a=1, b=2) for keyword arguments and *(1,), **dict(a=1) for both.
+  -- Its name is the group marker followed by the length of the positional
+  -- part, which is what tells the two parts apart when more arguments are
+  -- appended to the group.
+  constant p_positional_group : string := "*(";
+  constant p_keyword_group : string := "**dict(";
+
+  function p_is_group(value : arg_t) return boolean is
+    alias name : string(1 to value.name'length) is value.name;
+  begin
+    if name'length <= p_group_arg'length then
+      return false;
+    end if;
+    return name(1 to p_group_arg'length) = p_group_arg;
+  end;
+
+  -- The length of the positional part of a group, 0 when it has none
+  function p_group_split(value : arg_t) return natural is
+    alias name : string(1 to value.name'length) is value.name;
+  begin
+    return natural'value(name(p_group_arg'length + 1 to name'length));
+  end;
+
+  -- The positional arguments of an operand as they are written within *(...).
+  -- Every argument is followed by a comma, which is what makes *(1,) a tuple.
+  function p_positional_items(value : arg_t) return string is
+    alias text : string(1 to value.value'length) is value.value;
+  begin
+    if value.name = p_positional_arg then
+      return text & ",";
+    elsif p_is_group(value) then
+      if p_group_split(value) = 0 then
+        return "";
+      end if;
+      -- Drop the *( prefix and the ) of the positional part
+      return text(p_positional_group'length + 1 to p_group_split(value) - 1);
+    end if;
+    return "";
+  end;
+
+  -- The keyword arguments of an operand as they are written within **dict(...)
+  function p_keyword_items(value : arg_t) return string is
+    alias text : string(1 to value.value'length) is value.value;
+  begin
+    if value.name = p_ignore_arg or value.name = p_positional_arg then
+      return "";
+    elsif not p_is_group(value) then
+      return value.name & "=" & value.value;
+    elsif p_group_split(value) = text'length then
+      return "";
+    elsif p_group_split(value) = 0 then
+      -- Keyword arguments only: drop the **dict( prefix and the trailing )
+      return text(p_keyword_group'length + 1 to text'length - 1);
+    end if;
+    -- Both kinds: the keyword part follows the positional part and ", "
+    return text(p_group_split(value) + 2 + p_keyword_group'length + 1 to text'length - 1);
+  end;
+
+  -- The arguments of both operands, separated
+  function p_join(l, r, separator : string) return string is
+  begin
+    if l = "" then
+      return r;
+    elsif r = "" then
+      return l;
+    end if;
+    return l & separator & r;
+  end;
+
+  -- *(...) or **dict(...) of the arguments, nothing when there are none
+  function p_group_text(prefix, items : string) return string is
+  begin
+    if items = "" then
+      return "";
+    end if;
+    return prefix & items & ")";
+  end;
+
+  -- The group holding the given positional and keyword arguments
+  function p_group(positional_items, keyword_items : string) return arg_t is
+    constant positional : string := p_group_text(p_positional_group, positional_items);
+    constant keywords : string := p_group_text(p_keyword_group, keyword_items);
+  begin
+    if positional = "" then
+      return (p_group_arg & integer'image(0), keywords);
+    elsif keywords = "" then
+      return (p_group_arg & integer'image(positional'length), positional);
+    end if;
+    return (p_group_arg & integer'image(positional'length), positional & ", " & keywords);
+  end;
+
+  impure function "&"(l, r : arg_t) return arg_t is
+    constant l_positional : string := p_positional_items(l);
+    constant l_keywords : string := p_keyword_items(l);
+    constant r_positional : string := p_positional_items(r);
+    constant r_keywords : string := p_keyword_items(r);
+  begin
+    if l.name = p_ignore_arg then
+      return r;
+    elsif r.name = p_ignore_arg then
+      return l;
+    elsif l_keywords /= "" and r_positional /= "" then
+      -- Python's own rule
+      failure(python_logger, "positional argument after keyword arguments");
+      return null_arg;
+    end if;
+
+    return p_group(p_join(l_positional, r_positional, " "), p_join(l_keywords, r_keywords, ", "));
+  end;
+
+  impure function to_call_str(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg
+  ) return string is
+    variable result : line;
+    variable first : boolean := true;
+
+    procedure append(value : arg_t) is
+    begin
+      if value.name = p_ignore_arg then
+        return;
+      end if;
+      if not first then
+        swrite(result, ", ");
+      end if;
+      first := false;
+      if value.name = p_positional_arg or p_is_group(value) then
+        -- A group is spliced into the call like a positional argument
+        swrite(result, value.value);
+      else
+        swrite(result, value.name & "=" & value.value);
+      end if;
+    end;
+  begin
+    swrite(result, identifier & "(");
+    append(arg1);
+    append(arg2);
+    append(arg3);
+    append(arg4);
+    append(arg5);
+    append(arg6);
+    append(arg7);
+    append(arg8);
+    append(arg9);
+    append(arg10);
+    swrite(result, ")");
+
+    return result.all;
+  end;
+
+  impure function call_integer_w_arg(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
+    session : python_session_t := default_session
+  ) return integer is
+  begin
+    return eval(to_call_str(identifier, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10), session);
+  end;
+
+  procedure call(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
+    session : python_session_t := default_session
+  ) is
+  begin
+    exec(to_call_str(identifier, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10), session);
+  end;
+
+  impure function call_integer_vector(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
+    session : python_session_t := default_session
+  ) return integer_vector is
+  begin
+    return eval(to_call_str(identifier, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10), session);
+  end;
+
+  impure function call_real(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
+    session : python_session_t := default_session
+  ) return real is
+  begin
+    return eval(to_call_str(identifier, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10), session);
+  end;
+
+  -----------------------------------------------------------------------------
+  -- Operations implemented by the Python bridge (NVC, GHDL and Questa)
+  -----------------------------------------------------------------------------
+  -- Python represents std_ulogic values by these characters
+  constant p_std_ulogic_characters : string(1 to 9) := "UX01ZWLH-";
+
+  function p_to_std_ulogic(value : character) return std_ulogic is
+  begin
+    for idx in p_std_ulogic_characters'range loop
+      if p_std_ulogic_characters(idx) = value then
+        return std_ulogic'val(idx - 1);
+      end if;
+    end loop;
+    -- The bridge only returns the characters above
+    return 'X';
+  end;
+
+  -- The elements of the characters, the first character becoming the leftmost element
+  function p_to_std_ulogic_vector(value : string) return std_ulogic_vector is
+    alias normalized : string(1 to value'length) is value;
+    variable result : std_ulogic_vector(value'length - 1 downto 0);
+  begin
+    for idx in normalized'range loop
+      result(value'length - idx) := p_to_std_ulogic(normalized(idx));
+    end loop;
+    return result;
+  end;
+
+  -----------------------------------------------------------------------------
+  -- exec
+  -----------------------------------------------------------------------------
+  -- True when the file name is absolute: /a/b, \\server\share\a, C:\a or C:/a
+  function p_is_absolute(file_name : string) return boolean is
+    alias name : string(1 to file_name'length) is file_name;
+  begin
+    if name'length = 0 then
+      return false;
+    elsif name(1) = '/' or name(1) = '\' then
+      return true;
+    elsif name'length >= 2 then
+      -- A Windows drive
+      return name(2) = ':';
+    end if;
+    return false;
+  end;
+
+  -- The file name of exec_file, a relative one taken from the directory of the
+  -- testbench file like the file names of the other VUnit subprograms
+  impure function p_file_path(file_name : string) return string is
+  begin
+    if p_is_absolute(file_name) then
+      return file_name;
+    end if;
+    return join(tb_path(get_cfg(runner_state)), file_name);
+  end;
+
+  procedure exec_file(file_name : string; session : python_session_t := default_session) is
+    variable ok : boolean;
+  begin
+    ok := p_exec_file(p_file_path(file_name), session);
+  end;
+
+  -----------------------------------------------------------------------------
+  -- eval
+  -----------------------------------------------------------------------------
+  impure function eval_boolean(
+    expr : string; session : python_session_t := default_session
+  ) return boolean is
+  begin
+    if p_eval(expr, p_kind_boolean, -1, p_eval_operation(expr, session), session) then
+      return p_result_integer /= 0;
+    end if;
+    return false;
+  end;
+
+  impure function eval_std_ulogic(
+    expr : string; session : python_session_t := default_session
+  ) return std_ulogic is
+  begin
+    if p_eval(expr, p_kind_std_ulogic, -1, p_eval_operation(expr, session), session) then
+      return p_to_std_ulogic(p_result_string(1));
+    end if;
+    return 'U';
+  end;
+
+  impure function eval_std_ulogic_vector(
+    expr : string; session : python_session_t := default_session
+  ) return std_ulogic_vector is
+  begin
+    if p_eval(expr, p_kind_std_ulogic_vector, -1, p_eval_operation(expr, session), session) then
+      return p_to_std_ulogic_vector(p_result_string);
+    end if;
+    return "";
+  end;
+
+  impure function eval_integer_array(
+    expr : string; session : python_session_t := default_session
+  ) return integer_array_t is
+  begin
+    if p_eval(expr, p_kind_integer_array, -1, p_eval_operation(expr, session), session) then
+      return p_result_integer_array;
+    end if;
+    return null_integer_array;
+  end;
+
+  procedure eval_std_ulogic_vector(
+    expr : string; result : out std_ulogic_vector; session : python_session_t := default_session
+  ) is
+  begin
+    if p_eval(expr, p_kind_std_ulogic_vector, result'length, p_eval_operation(expr, session), session) then
+      result := p_to_std_ulogic_vector(p_result_string);
+    end if;
+  end;
+
+  procedure eval_signed(
+    expr : string; result : out signed; session : python_session_t := default_session
+  ) is
+  begin
+    if p_eval(expr, p_kind_signed, result'length, p_eval_operation(expr, session), session) then
+      result := signed(p_to_std_ulogic_vector(p_result_string));
+    end if;
+  end;
+
+  procedure eval_unsigned(
+    expr : string; result : out unsigned; session : python_session_t := default_session
+  ) is
+  begin
+    if p_eval(expr, p_kind_unsigned, result'length, p_eval_operation(expr, session), session) then
+      result := unsigned(p_to_std_ulogic_vector(p_result_string));
+    end if;
+  end;
+
+  -----------------------------------------------------------------------------
+  -- call
+  -----------------------------------------------------------------------------
+  impure function call_real_vector(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
+    session : python_session_t := default_session
+  ) return real_vector is
+  begin
+    return eval_real_vector(
+      to_call_str(identifier, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10), session
+    );
+  end;
+
+  impure function call_string(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
+    session : python_session_t := default_session
+  ) return string is
+  begin
+    return eval_string(
+      to_call_str(identifier, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10), session
+    );
+  end;
+
+  impure function call_integer_vector_ptr(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
+    session : python_session_t := default_session
+  ) return integer_vector_ptr_t is
+  begin
+    return eval_integer_vector_ptr(
+      to_call_str(identifier, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10), session
+    );
+  end;
+
+  impure function call_boolean(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
+    session : python_session_t := default_session
+  ) return boolean is
+  begin
+    return eval_boolean(
+      to_call_str(identifier, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10), session
+    );
+  end;
+
+  impure function call_std_ulogic(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
+    session : python_session_t := default_session
+  ) return std_ulogic is
+  begin
+    return eval_std_ulogic(
+      to_call_str(identifier, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10), session
+    );
+  end;
+
+  impure function call_std_ulogic_vector(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
+    session : python_session_t := default_session
+  ) return std_ulogic_vector is
+  begin
+    return eval_std_ulogic_vector(
+      to_call_str(identifier, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10), session
+    );
+  end;
+
+  impure function call_integer_array(
+    identifier : string; arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
+    session : python_session_t := default_session
+  ) return integer_array_t is
+  begin
+    return eval_integer_array(
+      to_call_str(identifier, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10), session
+    );
+  end;
+
+  procedure call_std_ulogic_vector(
+    identifier : string; result : out std_ulogic_vector;
+    arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
+    session : python_session_t := default_session
+  ) is
+  begin
+    eval_std_ulogic_vector(
+      to_call_str(identifier, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10), result, session
+    );
+  end;
+
+  procedure call_signed(
+    identifier : string; result : out signed;
+    arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
+    session : python_session_t := default_session
+  ) is
+  begin
+    eval_signed(
+      to_call_str(identifier, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10), result, session
+    );
+  end;
+
+  procedure call_unsigned(
+    identifier : string; result : out unsigned;
+    arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 : arg_t := null_arg;
+    session : python_session_t := default_session
+  ) is
+  begin
+    eval_unsigned(
+      to_call_str(identifier, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10), result, session
+    );
+  end;
+end package body;
