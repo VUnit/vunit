@@ -16,7 +16,6 @@ import importlib.resources
 import importlib.util
 import re
 import operator
-import sys
 from dataclasses import dataclass
 from typing import TypeVar, Any, Tuple
 
@@ -527,14 +526,10 @@ in your VUnit Git repository? You have to do this first if installing using setu
         """
         Build the VHPI application of the Python package under the output path when needed.
         """
-        try:
-            setup(
-                self._vunit_obj._output_path,  # pylint: disable=protected-access
-                self._simulator_class,
-            )
-        except RuntimeError as exc:
-            LOGGER.error("%s", exc)
-            sys.exit(1)
+        setup(
+            self._vunit_obj._output_path,  # pylint: disable=protected-access
+            self._simulator_class,
+        )
 
     def _add_python_bridge(self):
         """
@@ -543,18 +538,13 @@ in your VUnit Git repository? You have to do this first if installing using setu
         """
         # pylint: disable=import-outside-toplevel
         from vunit.python_bridge.bridge import setup
-        from vunit.python_bridge.native_library import PythonBridgeError
 
-        try:
-            bridge = setup(
-                self._vunit_obj._project,  # pylint: disable=protected-access
-                self._vunit_obj._output_path,  # pylint: disable=protected-access
-                self._simulator_class,
-                self._vunit_obj._run_script_path,  # pylint: disable=protected-access
-            )
-        except PythonBridgeError as exc:
-            LOGGER.error("%s", exc)
-            sys.exit(1)
+        bridge = setup(
+            self._vunit_obj._project,  # pylint: disable=protected-access
+            self._vunit_obj._output_path,  # pylint: disable=protected-access
+            self._simulator_class,
+            self._vunit_obj._run_script_path,  # pylint: disable=protected-access
+        )
         for file_name in bridge.vhdl_files:
             self._vunit_lib.add_source_file(file_name)
 

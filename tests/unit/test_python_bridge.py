@@ -202,13 +202,9 @@ class TestAddPython(unittest.TestCase):
         simulator = self._simulator_with_flis("rivierapro", {"VHPI"})
         builtins = self._builtins(simulator=simulator)
         builtins.add_vhdl_builtins()
-        with (
-            mock.patch("vunit.builtins.setup_vhpi_application", side_effect=RuntimeError("no compiler")),
-            mock.patch("vunit.builtins.LOGGER") as logger,
-        ):
-            with self.assertRaises(SystemExit):
+        with mock.patch("vunit.builtins.setup_vhpi_application", side_effect=RuntimeError("no compiler")):
+            with self.assertRaisesRegex(RuntimeError, "no compiler"):
                 builtins.add("python")
-        logger.error.assert_called_once_with("%s", mock.ANY)
 
     def _check_bridge_files_added(self, simulator):
         """
