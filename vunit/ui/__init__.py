@@ -28,6 +28,7 @@ from .. import ostools
 from ..vunit_cli import VUnitCLI
 from ..sim_if.factory import SIMULATOR_FACTORY
 from ..sim_if import SimulatorInterface
+from ..sim_if.hooks import clear_hooks as clear_simulator_hooks
 from ..color_printer import COLOR_PRINTER, NO_COLOR_PRINTER
 
 from ..project import Project
@@ -47,6 +48,17 @@ from .common import LOGGER, TEST_OUTPUT_PATH, select_vhdl_standard, check_not_em
 from .source import SourceFile, SourceFileList
 from .library import Library, LibraryList
 from .results import Results
+
+
+def _find_run_script_path() -> Optional[Path]:
+    """
+    Return the path of the run script, the file Python was started with, or None if Python was
+    not started with a script file, for example with python -c or in an interactive session.
+    """
+    main_file = getattr(sys.modules.get("__main__"), "__file__", None)
+    if main_file is None or not Path(main_file).is_file():
+        return None
+    return Path(main_file).resolve()
 
 
 class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-public-methods
@@ -140,6 +152,10 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self._args = args
         self._configure_logging(args.log_level)
         self._output_path = str(Path(args.output_path).resolve())
+        self._run_script_path = _find_run_script_path()
+
+        # Simulator hooks are registered by the packages of this project
+        clear_simulator_hooks()
 
         if args.no_color:
             self._printer = NO_COLOR_PRINTER
@@ -1232,6 +1248,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         runner = TestRunner(
             report,
             str(Path(self._output_path) / TEST_OUTPUT_PATH),
+            self._run_script_path,
             verbosity=verbosity,
             num_threads=self._args.num_threads,
             fail_fast=self._args.fail_fast,
@@ -1277,10 +1294,53 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         """
         self._builtins.add_vhdl_builtins(external=external, use_external_log=use_external_log)
 
-    def add_package(self, package_name: str) -> None:
-        """Add VUnit package."""
+    def add_package(self, package_name: str, allow_setup: bool = False) -> None:
+        """
+        Add a VUnit package, that is an installed Python package providing HDL code and
+        described by a ``vunit_pkg.toml`` file in its root directory.
 
-        self._builtins.add_package(package_name)
+        The ``vunit_pkg.toml`` file has a single ``[package]`` table supporting these keys:
+
+        * ``library``: The name of the library created for the sources of the package. Mandatory
+          if the package has sources.
+        * ``sources``: A list of tables with an ``include`` key listing the paths, relative to the
+          package root, of the sources to add.
+        * ``requires-vunit``: The VUnit versions supported by the package, for example ``">=5.0.0"``.
+        * ``requires-vhdl``: The VHDL standards supported by the package, for example ``">=2008"``.
+        * ``setup``: A ``"module:function"`` string pointing out a setup function called with a
+          :class:`.PackageContext` once the sources of the package have been added. The setup
+          function is what a package uses to do work that cannot be expressed with static sources,
+          for example building a native library or registering simulator hooks. Running it must
+          be allowed with ``allow_setup=True``, otherwise adding the package is an error.
+
+        See :ref:`packages` for more details.
+
+        :param package_name: The name of the Python package. Dashes and dots are, just like for
+                             PyPI package names, equivalent to underscores.
+        :param allow_setup: Allow the setup function of the package to run. Defaults to ``False``,
+                            which makes a package declaring a setup function an error such that no
+                            Python code of a package runs unless the run script asks for it.
+
+        :example:
+
+        .. code-block:: python
+
+            VU.add_package("vunit-json-for-vhdl", allow_setup=True)
+
+        .. code-block:: toml
+           :caption: vunit_pkg.toml
+
+            [package]
+            requires-vunit = ">=5.0.0"
+            requires-vhdl = ">=2008"
+            library = "json4vhdl_lib"
+            setup = "json4vhdl.vunit_setup:setup"
+
+            [[package.sources]]
+            include = ["src/*.vhd"]
+        """
+
+        self._builtins.add_package(package_name, allow_setup=allow_setup)
 
     def add_com(self):
         """

@@ -17,6 +17,7 @@ from ..ostools import Process, file_exists
 from ..vhdl_standard import VHDL
 from . import SimulatorInterface, ListOfStringOption, StringOption
 from .vsim_simulator_mixin import VsimSimulatorMixin, fix_path
+from . import hooks
 
 LOGGER = logging.getLogger(__name__)
 
@@ -368,7 +369,7 @@ proc vunit_load {{}} {{
         if self._gui:
             vsim_extra_args = config.sim_options.get("rivierapro.vsim_flags.gui", vsim_extra_args)
 
-        return " ".join(vsim_extra_args)
+        return " ".join(vsim_extra_args + hooks.get_flags(self, "run_flags"))
 
     @staticmethod
     def _create_run_function():

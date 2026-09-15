@@ -10,6 +10,7 @@
 Acceptance test of the VUnit public interface class
 """
 
+import sys
 import unittest
 from string import Template
 from pathlib import Path
@@ -20,7 +21,7 @@ import re
 from re import MULTILINE
 from shutil import rmtree
 from unittest import mock
-from tests.common import set_env, with_tempdir, create_vhdl_test_bench_file
+from tests.common import set_env, with_tempdir, create_tempdir, create_vhdl_test_bench_file
 from vunit.ui import VUnit
 from vunit.source_file import VHDL_EXTENSIONS, VERILOG_EXTENSIONS
 from vunit.ostools import renew_path
@@ -1602,3 +1603,27 @@ def names(lst):
     Return a list of the .name attribute of the objects in the list
     """
     return [obj.name for obj in lst]
+
+
+class TestFindRunScriptPath(unittest.TestCase):
+    """
+    The run script is the file Python was started with, not the caller of VUnit
+    """
+
+    def test_returns_the_file_python_was_started_with(self):
+        from vunit.ui import _find_run_script_path  # pylint: disable=import-outside-toplevel
+
+        with create_tempdir() as tempdir:
+            script = Path(tempdir) / "run.py"
+            script.write_text("")
+            with mock.patch.dict(sys.modules, {"__main__": mock.Mock(__file__=str(script))}):
+                self.assertEqual(_find_run_script_path(), script.resolve())
+
+    def test_returns_none_without_a_script_file(self):
+        from vunit.ui import _find_run_script_path  # pylint: disable=import-outside-toplevel
+
+        # python -c and interactive sessions: __main__ has no file or a pseudo file name
+        with mock.patch.dict(sys.modules, {"__main__": mock.Mock(spec=[])}):
+            self.assertIsNone(_find_run_script_path())
+        with mock.patch.dict(sys.modules, {"__main__": mock.Mock(__file__="<stdin>")}):
+            self.assertIsNone(_find_run_script_path())

@@ -197,7 +197,7 @@ def configure_tb_seed(ui):
 
 def configure_tb_vunit_pkg(vu):
     sys.path.append(str(root.parent / "vunit_pkg"))
-    vu.add_package("foo")
+    vu.add_package("foo", allow_setup=True)
 
 
 configure_tb_with_generic_config()

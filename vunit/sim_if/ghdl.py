@@ -23,6 +23,7 @@ from . import SimulatorInterface, ListOfStringOption, StringOption, BooleanOptio
 from . import check_executable
 from ..vhdl_standard import VHDL
 from ._viewermixin import ViewerMixin
+from . import hooks
 
 LOGGER = logging.getLogger(__name__)
 
@@ -120,6 +121,18 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
         self._coverage_test_dirs = set()  # For gcov
         self._coverage_files = set()  # For --coverage
         self._version = self.determine_version(self.find_prefix())
+
+    @property
+    def backend(self):
+        """
+        The code generator backend of the GHDL used: "mcode", "llvm", "llvm-jit" or "gcc".
+
+        A simulator hook of a VUnit package is given this interface and can let its result
+        depend on the backend, which decides how a native library is bound to the design:
+        the ahead-of-time linking backends, "llvm" and "gcc", link it at elaboration while
+        the others load it at run time.
+        """
+        return self._backend
 
     def has_valid_exit_code(self):  # pylint: disable=arguments-differ
         """
@@ -320,6 +333,7 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
         if self._has_output_flag():
             cmd += ["-o", bin_path]
         cmd += config.sim_options.get("ghdl.elab_flags", [])
+        cmd += hooks.get_flags(self, "elab_flags")
         if config.sim_options.get("enable_coverage", False):
             if self._backend == "gcc":
                 # Enable coverage in linker
@@ -334,6 +348,7 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
             cmd += [config.entity_name, config.architecture_name]
 
         sim = config.sim_options.get("ghdl.sim_flags", [])
+        sim += hooks.get_flags(self, "run_flags")
         for name, value in config.generics.items():
             sim += [f"-g{name!s}={value!s}"]
         sim += [f"--assert-level={config.vhdl_assert_stop_level!s}"]
@@ -403,7 +418,7 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
                 self._coverage_files.add(str(Path(script_path) / f"{test_suite_name!s}.json"))
 
         try:
-            proc = Process(cmd, env=gcov_env)
+            proc = Process(cmd, env=hooks.get_run_env(self, gcov_env))
             proc.consume_output()
         except Process.NonZeroExitCode:
             status = False

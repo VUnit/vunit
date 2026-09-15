@@ -35,6 +35,11 @@ Test
 
 .. autoclass:: vunit.ui.test.Test()
 
+PackageContext
+--------------
+
+.. autoclass:: vunit.package_context.PackageContext()
+
 Results
 -------
 

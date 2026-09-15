@@ -22,6 +22,7 @@ from . import SimulatorInterface, ListOfStringOption, StringOption
 from . import run_command, check_executable
 from ._viewermixin import ViewerMixin
 from ..vhdl_standard import VHDL
+from . import hooks
 
 LOGGER = logging.getLogger(__name__)
 
@@ -276,6 +277,7 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
         cmd += ["-e"]
 
         cmd += config.sim_options.get("nvc.elab_flags", [])
+        cmd += hooks.get_flags(self, "elab_flags")
 
         if config.sim_options.get("enable_coverage", False):
             coverage_file_path = str(Path(output_path) / "coverage.ncdb")
@@ -306,6 +308,7 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
                     config.vhdl_assert_stop_level
                 )
             cmd += config_sim_options
+            cmd += hooks.get_flags(self, "run_flags")
             cmd += [f"--exit-severity={config.vhdl_assert_stop_level}"]
 
             if not self._ieee_warnings_global and config.sim_options.get("disable_ieee_warnings", False):
@@ -322,7 +325,7 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
         status = True
 
         try:
-            proc = Process(cmd)
+            proc = Process(cmd, env=hooks.get_run_env(self))
             proc.consume_output()
         except Process.NonZeroExitCode:
             status = False

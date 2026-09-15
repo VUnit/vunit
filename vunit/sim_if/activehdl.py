@@ -19,6 +19,7 @@ from ..ostools import Process, write_file, file_exists, renew_path
 from ..test.suites import get_result_file_name
 from . import SimulatorInterface, ListOfStringOption, StringOption
 from .vsim_simulator_mixin import get_is_test_suite_done_tcl, fix_path
+from . import hooks
 
 LOGGER = logging.getLogger(__name__)
 
@@ -221,7 +222,7 @@ class ActiveHDLInterface(SimulatorInterface):
         if self._gui:
             vsim_extra_args = config.sim_options.get("activehdl.vsim_flags.gui", vsim_extra_args)
 
-        return " ".join(vsim_extra_args)
+        return " ".join(vsim_extra_args + hooks.get_flags(self, "run_flags"))
 
     def _create_load_function(self, config, output_path):
         """

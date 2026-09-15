@@ -287,6 +287,19 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         )
 
     @mock.patch.object(GHDLInterface, "determine_version", return_value=5.0)
+    def test_prefix_is_a_read_only_property(self, determine_version):
+        simif = GHDLInterface(prefix="prefix", output_path="")
+        self.assertEqual(simif.prefix, "prefix")
+        self.assertRaises(AttributeError, setattr, simif, "prefix", "other")
+
+    @mock.patch.object(GHDLInterface, "determine_version", return_value=5.0)
+    def test_backend_is_a_read_only_property(self, determine_version):
+        for backend in ("mcode", "llvm", "llvm-jit", "gcc"):
+            simif = GHDLInterface(prefix="prefix", output_path="", backend=backend)
+            self.assertEqual(simif.backend, backend)
+            self.assertRaises(AttributeError, setattr, simif, "backend", "other")
+
+    @mock.patch.object(GHDLInterface, "determine_version", return_value=5.0)
     def test_compile_project_verilog_error(self, determine_version):
         simif = GHDLInterface(prefix="prefix", output_path="")
         write_file("file.v", "")

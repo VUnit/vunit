@@ -17,7 +17,7 @@ import importlib.util
 import re
 import operator
 from dataclasses import dataclass
-from typing import TypeVar, Any, Tuple
+from typing import TypeVar, Any, Optional, Tuple
 
 try:
     # Python 3.11+
@@ -28,12 +28,16 @@ except ModuleNotFoundError:
 from vunit.vhdl_standard import VHDL, VHDLStandard
 from vunit.ui.common import get_checked_file_names_from_globs
 from vunit.about import version, VUnitVersion
+from vunit.package_context import PackageContext
 
 
 LOGGER = logging.getLogger(__name__)
 
 VHDL_PATH = (Path(__file__).parent / "vhdl").resolve()
 VERILOG_PATH = (Path(__file__).parent / "verilog").resolve()
+
+# The setup function of a package is given on the format module:function
+RE_SETUP = re.compile(r"^[A-Za-z_]\w*(\.[A-Za-z_]\w*)*:[A-Za-z_]\w*$")
 
 
 @dataclass(frozen=True)
@@ -177,7 +181,13 @@ class Builtins(object):
         errors.extend(
             self._check_valid_keys(
                 package,
-                valid={"requires-vunit": str, "requires-vhdl": str, "library": str, "sources": list},
+                valid={
+                    "requires-vunit": str,
+                    "requires-vhdl": str,
+                    "library": str,
+                    "sources": list,
+                    "setup": str,
+                },
                 path="package",
             )
         )
@@ -198,6 +208,14 @@ class Builtins(object):
                                     message="Path must be a string.",
                                 )
                             )
+
+        if isinstance(package.get("setup"), str) and not RE_SETUP.match(package["setup"]):
+            errors.append(
+                ValidationError(
+                    path="package.setup",
+                    message="'setup' must be on the format 'module:function'.",
+                )
+            )
 
         self._log_validation_errors(errors)
 
@@ -232,8 +250,8 @@ class Builtins(object):
 
         raise RuntimeError(f"Failed to find location of package {package_name}.")
 
-    def add_package(self, package_name: str) -> None:
-        """Add VUnit package."""
+    def add_package(self, package_name: str, allow_setup: bool = False) -> None:
+        """Add VUnit package, running its setup function if allowed."""
         # The following future improvements are planned:
         # - Support for user specified library name
         # - Support for shared libraries across multiple packages
@@ -255,32 +273,9 @@ class Builtins(object):
                 f"{package['requires-vunit']} but current version is {vunit_version}."
             )
 
-        package_vhdl_standard = package.get("requires-vhdl", "")
-        if not self._meets_required_version(VHDLStandard, str(self._vhdl_standard), package_vhdl_standard):
-            use_vhdl_standard = None
-            for vhdl_standard in VHDL.STANDARDS:
-                if self._meets_required_version(VHDLStandard, str(vhdl_standard), package_vhdl_standard):
-                    use_vhdl_standard = str(vhdl_standard)
-                    break
+        use_vhdl_standard = self._find_vhdl_standard(package_name, package)
 
-            if not use_vhdl_standard:
-                raise RuntimeError(
-                    f"Package {package_name} requires VHDL standard "
-                    f"{package['requires-vhdl']}. Failed to find a compatible standard."
-                )
-
-            LOGGER.warning(
-                "Package %s requires VHDL standard %s but current standard is %s. "
-                "Proceeding with mixed-language compilation using VHDL standard %s for the package.",
-                package_name,
-                package["requires-vhdl"],
-                self._vhdl_standard,
-                use_vhdl_standard,
-            )
-
-        else:
-            use_vhdl_standard = None
-
+        library = None
         sources = package.get("sources", [])
         if sources:
             library_name = package.get("library")
@@ -295,6 +290,88 @@ class Builtins(object):
             for source in sources:
                 for include in source["include"]:
                     library.add_source_files(package_root / include, vhdl_standard=use_vhdl_standard)
+
+        setup = package.get("setup")
+        if setup:
+            if not allow_setup:
+                raise RuntimeError(
+                    f"Package {package_name} requires running Python code when it is added ({setup}). "
+                    "Pass allow_setup=True to add_package to allow it."
+                )
+
+            self._call_setup(
+                package_name,
+                setup,
+                PackageContext(
+                    package_root,
+                    library,
+                    VHDL.standard(use_vhdl_standard) if use_vhdl_standard else self._vhdl_standard,
+                    Path(self._vunit_obj._output_path),  # pylint: disable=protected-access
+                    self._vunit_obj._run_script_path,  # pylint: disable=protected-access
+                    self._simulator_class,
+                    self._vunit_obj,
+                ),
+            )
+
+    def _find_vhdl_standard(self, package_name: str, package: dict) -> Optional[str]:
+        """
+        Find the VHDL standard to compile the sources of a package with.
+
+        The standard of the project is used when the package supports it, otherwise the first
+        standard the package supports, and None stands for the standard of the project.
+        """
+        package_vhdl_standard = package.get("requires-vhdl", "")
+        if self._meets_required_version(VHDLStandard, str(self._vhdl_standard), package_vhdl_standard):
+            return None
+
+        use_vhdl_standard = next(
+            (
+                str(standard)
+                for standard in VHDL.STANDARDS
+                if self._meets_required_version(VHDLStandard, str(standard), package_vhdl_standard)
+            ),
+            None,
+        )
+
+        if not use_vhdl_standard:
+            raise RuntimeError(
+                f"Package {package_name} requires VHDL standard "
+                f"{package['requires-vhdl']}. Failed to find a compatible standard."
+            )
+
+        LOGGER.warning(
+            "Package %s requires VHDL standard %s but current standard is %s. "
+            "Proceeding with mixed-language compilation using VHDL standard %s for the package.",
+            package_name,
+            package["requires-vhdl"],
+            self._vhdl_standard,
+            use_vhdl_standard,
+        )
+
+        return use_vhdl_standard
+
+    @staticmethod
+    def _call_setup(package_name: str, setup: str, context: PackageContext) -> None:
+        """Call the setup function of a package with its context."""
+        module_name, function_name = setup.split(":")
+
+        try:
+            module = importlib.import_module(module_name)
+        except ImportError as exc:
+            raise RuntimeError(
+                f"Failed to import module {module_name} of the setup function for package {package_name}."
+            ) from exc
+
+        function = getattr(module, function_name, None)
+        if not callable(function):
+            raise RuntimeError(
+                f"Could not find setup function {function_name} in module {module_name} for package {package_name}."
+            )
+
+        try:
+            function(context)
+        except Exception as exc:  # pylint: disable=broad-except
+            raise RuntimeError(f"Setup function {setup} for package {package_name} failed: {exc}") from exc
 
     def _add_files(self, pattern=None, allow_empty=True):
         """
