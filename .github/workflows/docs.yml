@@ -24,12 +24,11 @@ jobs:
       with:
         python-version: '3.13'
 
-    # GHDL generates the machine-readable VHDL API reference (tools/build_api_reference.py)
-    - name: '⚙️ Setup GHDL'
-      uses: ghdl/setup-ghdl@main
-      with:
-        version: v6.0.0
-        backend: mcode
+    # vhdl-dump-ast generates the machine-readable VHDL API reference (tools/build_api_reference.py)
+    - name: '⚙️ Setup vhdl-dump-ast'
+      run: |
+        cargo install vhdl-dump-ast --version 0.1.0 --locked
+        echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
 
     - name: Install dependencies
       run: |

@@ -23,7 +23,7 @@ To *use* VUnit rather than develop it, read the [documentation](https://vunit.gi
 - **Verification components:** `tox -e py313-vcomponents-<simulator>`.
 - **Documentation:** `tox -e py313-docs`.
   - The build needs the git tags for the release notes.
-  - It needs GHDL for the API reference. Set `VUNIT_DOCS_SKIP_API=1` to build without it.
+  - It needs `vhdl-dump-ast` for the API reference (`cargo install vhdl-dump-ast --version 0.1.0 --locked`). Set `VUNIT_DOCS_SKIP_API=1` to build without it.
 - **All tox environments:** `tox -l`.
 
 ## Rules
