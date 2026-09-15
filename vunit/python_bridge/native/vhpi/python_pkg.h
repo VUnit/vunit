@@ -1,4 +1,4 @@
-// This package provides a dictionary types and operations
+// Riviera-PRO/Active-HDL (VHPI) implementation of python_pkg: shared declarations
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
