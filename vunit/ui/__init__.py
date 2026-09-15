@@ -12,7 +12,6 @@ Public VUnit User Interface (UI)
 
 import csv
 import sys
-import inspect
 import traceback
 import logging
 import json
@@ -51,27 +50,15 @@ from .library import Library, LibraryList
 from .results import Results
 
 
-def _find_run_script_path() -> Path:
+def _find_run_script_path() -> Optional[Path]:
     """
-    Return the path of the run script, that is the file of the first call stack
-    frame which is not part of the vunit package.
+    Return the path of the run script, the file Python was started with, or None if Python was
+    not started with a script file, for example with python -c or in an interactive session.
     """
-    vunit_package_dir = Path(__file__).resolve().parent.parent
-    for frame_info in inspect.stack(0):
-        candidate = Path(frame_info.filename)
-        if not candidate.is_file():
-            continue
-
-        candidate = candidate.resolve()
-        try:
-            candidate.relative_to(vunit_package_dir)
-        except ValueError:
-            return candidate
-
-    if Path(sys.argv[0]).is_file():
-        return Path(sys.argv[0]).resolve()
-
-    return Path.cwd()
+    main_file = getattr(sys.modules.get("__main__"), "__file__", None)
+    if main_file is None or not Path(main_file).is_file():
+        return None
+    return Path(main_file).resolve()
 
 
 class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-public-methods
