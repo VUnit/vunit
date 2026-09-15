@@ -138,7 +138,7 @@ commands=
     fmt:         {envpython} -m black ./ --exclude .eggs|.git|.hg|.mypy_cache|.nox|.tox|.venv|_build|buck-out|build|dist' {posargs}
     unit:        {envpython} -m pytest -v -ra tests/unit {posargs}
     lint:        {envpython} -m pytest -v -ra tests/lint {posargs}
-    docs:        {envpython} -m pytest -ra tests/unit/test_api_reference.py {posargs}
+    docs:        {envpython} -m pytest -ra tests/unit/test_api_reference.py
     docs:        {envpython} tools/build_docs.py {envtmpdir}/docsbuild {posargs}
     docs:        {envpython} tools/build_api_reference.py {envtmpdir}/docsbuild
     acceptance:  {envpython} -m pytest -v -ra tests/acceptance {posargs}
