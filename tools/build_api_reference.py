@@ -17,10 +17,10 @@ writes nothing, exits 0). This is the supported way to build the rest of
 the documentation without GHDL installed.
 """
 
-import importlib
 import inspect
 import json
 import os
+import pkgutil
 import re
 import shutil
 import subprocess
@@ -202,10 +202,6 @@ class SourceText:
             acc += len(line) + 1
         self._line_offsets = offsets
 
-    def line_text(self, line):
-        """The 1-based line's raw text, without its terminator."""
-        return self.lines[line - 1]
-
     @staticmethod
     def _col_to_index(line_text, col):
         """0-based character index in line_text for a 1-based GHDL column (tab stops of 8)."""
@@ -221,7 +217,7 @@ class SourceText:
 
     def offset(self, line, col):
         """Absolute 0-based character offset in self.text for a 1-based (line, col)."""
-        return self._line_offsets[line - 1] + self._col_to_index(self.line_text(line), col)
+        return self._line_offsets[line - 1] + self._col_to_index(self.lines[line - 1], col)
 
     def slice_from(self, line, col, file_path, decl_line, allow_assign):
         """
@@ -282,7 +278,7 @@ class SourceText:
 _LICENSE_MARKER = "This Source Code Form"
 
 
-def _comment_block_above(source, first_line):
+def comment_block_above(source, first_line):
     """
     The contiguous block of "--" lines directly above first_line, stripped
     of "--" and one following space, joined with "\\n". None if there is no
@@ -291,7 +287,7 @@ def _comment_block_above(source, first_line):
     collected = []
     line_no = first_line - 1
     while 1 <= line_no <= len(source.lines):
-        stripped = source.line_text(line_no).strip()
+        stripped = source.lines[line_no - 1].strip()
         if stripped.startswith("--"):
             collected.append(stripped)
             line_no -= 1
@@ -317,24 +313,14 @@ def subprogram_first_line(source, decl_line):
     "pure" or "impure", in which case that line is the true first line.
     """
     prev = decl_line - 1
-    if prev >= 1 and source.line_text(prev).strip() in ("pure", "impure"):
+    if prev >= 1 and source.lines[prev - 1].strip() in ("pure", "impure"):
         return prev
     return decl_line
 
 
-def subprogram_doc(source, decl_line):
-    """The doc comment for a subprogram declared at decl_line, or None."""
-    return _comment_block_above(source, subprogram_first_line(source, decl_line))
-
-
-def declaration_doc(source, decl_line):
-    """The doc comment for any other declaration at decl_line, or None."""
-    return _comment_block_above(source, decl_line)
-
-
 def package_doc(source, decl_line):
     """The package's own doc comment, or None (also None for the MPL license header)."""
-    doc = _comment_block_above(source, decl_line)
+    doc = comment_block_above(source, decl_line)
     if doc is not None and _LICENSE_MARKER in doc:
         return None
     return doc
@@ -436,11 +422,10 @@ def convert_parameter(element, source, file_path, decl_line):
     }
 
 
-def convert_subprogram(element, source, file_path, is_top_level=True):
+def convert_subprogram(element, source, file_path):
     """
     Convert one function_declaration/procedure_declaration XML element to a
-    subprogram dict. is_top_level is False for a protected type's methods,
-    which are not individually documented.
+    subprogram dict.
     """
     kind_raw = element.get("kind")
     kind = "function" if kind_raw == "function_declaration" else "procedure"
@@ -461,7 +446,7 @@ def convert_subprogram(element, source, file_path, is_top_level=True):
 
     pure = None if kind == "procedure" else (element.get("pure_flag") == "true")
 
-    entry = {
+    return {
         "kind": kind,
         "name": identifier,
         "operator": _IDENTIFIER_RE.match(identifier) is None,
@@ -469,13 +454,11 @@ def convert_subprogram(element, source, file_path, is_top_level=True):
         "line": decl_line,
         "parameters": parameters,
         "return_type": return_type,
+        "doc": comment_block_above(source, subprogram_first_line(source, decl_line)),
     }
-    if is_top_level:
-        entry["doc"] = subprogram_doc(source, decl_line)
-    return entry
 
 
-def convert_alias(element):
+def convert_alias(element, *_):
     """Convert one non_object_alias_declaration/object_alias_declaration XML element to an alias dict."""
     decl_line = int(element.get("line"))
     name_el = element.find("name")
@@ -513,7 +496,7 @@ def convert_constant(element, source, file_path):
     return {
         "name": element.get("identifier"),
         "line": decl_line,
-        "doc": declaration_doc(source, decl_line),
+        "doc": comment_block_above(source, decl_line),
         "type": const_type,
         "value": value,
     }
@@ -527,7 +510,7 @@ def convert_subtype(element, source, file_path):
     return {
         "name": element.get("identifier"),
         "line": decl_line,
-        "doc": declaration_doc(source, decl_line),
+        "doc": comment_block_above(source, decl_line),
         "definition": definition,
     }
 
@@ -541,7 +524,7 @@ def convert_object(element, source, file_path):
         "name": element.get("identifier"),
         "class": _OBJECT_CLASS[element.get("kind")],
         "line": decl_line,
-        "doc": declaration_doc(source, decl_line),
+        "doc": comment_block_above(source, decl_line),
         "type": obj_type,
     }
 
@@ -576,14 +559,14 @@ def _convert_protected_type(type_def, source, file_path, common):
     if chain is not None:
         for member_el in chain.findall("el"):
             if member_el.get("kind") in ("function_declaration", "procedure_declaration"):
-                subprograms.append(convert_subprogram(member_el, source, file_path, is_top_level=False))
+                subprograms.append(convert_subprogram(member_el, source, file_path))
     return {**common, "kind": "protected", "subprograms": subprograms}
 
 
 def convert_type(element, source, file_path):
     """Convert one type_declaration XML element to a type dict."""
     decl_line = int(element.get("line"))
-    common = {"name": element.get("identifier"), "line": decl_line, "doc": declaration_doc(source, decl_line)}
+    common = {"name": element.get("identifier"), "line": decl_line, "doc": comment_block_above(source, decl_line)}
     type_def = element.find("type_definition")
     def_kind = type_def.get("kind") if type_def is not None else None
 
@@ -609,8 +592,8 @@ _KIND_HANDLERS = {
     # Both share the same shape (a "name", and an optional
     # "alias_signature" for subprograms only) so both go through the same
     # converter into "aliases".
-    "non_object_alias_declaration": ("aliases", lambda element, source, file_path: convert_alias(element)),
-    "object_alias_declaration": ("aliases", lambda element, source, file_path: convert_alias(element)),
+    "non_object_alias_declaration": ("aliases", convert_alias),
+    "object_alias_declaration": ("aliases", convert_alias),
     "constant_declaration": ("constants", convert_constant),
     "subtype_declaration": ("subtypes", convert_subtype),
     "type_declaration": ("types", convert_type),
@@ -618,8 +601,6 @@ _KIND_HANDLERS = {
     "variable_declaration": ("objects", convert_object),
     "file_declaration": ("objects", convert_object),
 }
-
-_IGNORED_KINDS = {"anonymous_type_declaration"}
 
 
 def convert_package(package_el, source, file_path, repo_relative_path):
@@ -651,7 +632,7 @@ def convert_package(package_el, source, file_path, repo_relative_path):
         if element.get("file") != file_str:
             continue
         kind = element.get("kind")
-        if kind in _IGNORED_KINDS:
+        if kind == "anonymous_type_declaration":
             continue
         handler = _KIND_HANDLERS.get(kind)
         if handler is None:
@@ -685,17 +666,6 @@ def check_completeness(json_package_names, expected_package_names):
 # ---------------------------------------------------------------------------
 
 
-def _extract_one_package(root, file_path, package_name, vunit_lib_dir, osvvm_dir):
-    """Run --file-to-xml on one package file and convert it, or None if not found in the XML."""
-    xml_root = parse_xml_root(run_file_to_xml(file_path, vunit_lib_dir, osvvm_dir))
-    package_el = find_package_element(xml_root, file_path, package_name)
-    if package_el is None:
-        return None
-    source = SourceText(file_path.read_text(encoding="utf-8"))
-    repo_relative_path = file_path.relative_to(root).as_posix()
-    return convert_package(package_el, source, file_path, repo_relative_path)
-
-
 def build_vhdl_api(root, vunit_version):
     """Compile vunit_lib with GHDL and extract the full VHDL symbol table."""
     package_files = find_package_files(root)
@@ -707,11 +677,11 @@ def build_vhdl_api(root, vunit_version):
         libraries_dir = compile_vunit_libraries(compile_out)
         packages = []
         for file_path, package_name in package_files:
-            package = _extract_one_package(
-                root, file_path, package_name, libraries_dir / "vunit_lib", libraries_dir / "osvvm"
-            )
-            if package is not None:
-                packages.append(package)
+            xml = run_file_to_xml(file_path, libraries_dir / "vunit_lib", libraries_dir / "osvvm")
+            package_el = find_package_element(parse_xml_root(xml), file_path, package_name)
+            if package_el is not None:
+                source = SourceText(file_path.read_text(encoding="utf-8"))
+                packages.append(convert_package(package_el, source, file_path, file_path.relative_to(root).as_posix()))
 
     check_completeness((pkg["name"] for pkg in packages), (name for _, name in package_files))
     packages.sort(key=lambda pkg: pkg["name"])
@@ -729,7 +699,7 @@ def build_vhdl_api(root, vunit_version):
 # Python API
 # ---------------------------------------------------------------------------
 
-_DIRECTIVE_RE = re.compile(r"^\.\.\s+(autoclass|autofunction|automodule)::\s*(\S+)", re.MULTILINE)
+_DIRECTIVE_RE = re.compile(r"^\.\.\s+(auto\w+)::\s*(\S+)", re.MULTILINE)
 
 
 def _has_members_option(text, after_pos):
@@ -760,21 +730,11 @@ def find_python_targets(root):
 
 
 def import_dotted(dotted):
-    """Import "a.b.C" as module "a.b" + getattr "C" (or the longest importable prefix)."""
-    parts = dotted.split(".")
-    for i in range(len(parts), 0, -1):
-        module_name = ".".join(parts[:i])
-        try:
-            obj = importlib.import_module(module_name)
-        except ImportError:
-            continue
-        try:
-            for attr in parts[i:]:
-                obj = getattr(obj, attr)
-        except AttributeError as exc:
-            raise ApiReferenceError(f"Could not import Python autodoc target '{dotted}': {exc}") from exc
-        return obj
-    raise ApiReferenceError(f"Could not import Python autodoc target '{dotted}'")
+    """Import the object with the dotted name of an autodoc target, e.g. "a.b.C"."""
+    try:
+        return pkgutil.resolve_name(dotted)
+    except (ImportError, AttributeError) as exc:
+        raise ApiReferenceError(f"Could not import Python autodoc target '{dotted}': {exc}") from exc
 
 
 def _class_members(cls):
@@ -814,16 +774,6 @@ def build_class_object(dotted, cls):
     }
 
 
-def build_function_object(dotted, func):
-    """The Python API object for an autofunction target."""
-    return {
-        "name": dotted,
-        "kind": "function",
-        "doc": inspect.getdoc(func),
-        "signature": str(inspect.signature(func)),
-    }
-
-
 def build_module_object(dotted, module, has_members):
     """The Python API object for an automodule target."""
     members = []
@@ -855,10 +805,10 @@ def build_python_api(root, vunit_version):
         obj = import_dotted(dotted)
         if directive == "autoclass":
             objects.append(build_class_object(dotted, obj))
-        elif directive == "autofunction":
-            objects.append(build_function_object(dotted, obj))
-        else:
+        elif directive == "automodule":
             objects.append(build_module_object(dotted, obj, has_members))
+        else:
+            raise ApiReferenceError(f"Unsupported autodoc directive '{directive}' for '{dotted}' in docs/")
 
     objects.sort(key=lambda item: item["name"])
     return {"schema_version": 1, "vunit_version": vunit_version, "objects": objects}
