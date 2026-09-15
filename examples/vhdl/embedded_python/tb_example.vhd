@@ -510,17 +510,15 @@ begin
         );
 
       elsif run("Test globbing for files") then
-        -- glob finds all files matching a pattern, in this case all CSV in the directory tree rooted
-        -- in the testbench directory
+        -- glob finds all files matching a pattern, in this case all Python files in the directory tree
+        -- rooted in the testbench directory
         exec("from glob import glob");
-        exec("stimuli_files = glob('" & join(tb_path(runner_cfg), "**", "*.csv") & "', recursive=True)");
+        exec("python_files = glob('" & join(tb_path(runner_cfg), "**", "*.py") & "', recursive=True)");
 
-        for idx in 0 to eval("len(stimuli_files)") - 1 loop
+        for idx in 0 to eval("len(python_files)") - 1 loop
           -- Be aware that you may receive backslashes that should be replaced with forward slashes to be
           -- VHDL compatible
-          input_stimuli := load_csv(replace(eval("stimuli_files[" & to_string(idx) & "]"), "\", "/"));
-
-          -- Test with stimuli file...
+          info(replace(eval("python_files[" & to_string(idx) & "]"), "\", "/"));
         end loop;
 
       -------------------------------------------------------------------------------------
@@ -534,8 +532,6 @@ begin
         if debug_mode then
           exec("import PySimpleGUI as psg"); -- Install PySimpleGUI with pip install pysimplegui
           input_stimuli := load_csv(replace(eval("psg.popup_get_file('Select input stimuli file')"), "\", "/"));
-        else
-          input_stimuli := load_csv(join(tb_path(runner_cfg), "data", "default", "input_stimuli.csv"));
         end if;
 
       elsif run("Test querying for randomization seed") then
