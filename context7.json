@@ -1,0 +1,15 @@
+{
+  "$schema": "https://context7.com/schema/context7.json",
+  "projectTitle": "VUnit",
+  "description": "Unit testing framework for VHDL and SystemVerilog: a Python test runner (run.py) and VHDL libraries for checks, logging, message passing, data types and verification components.",
+  "folders": ["docs", "examples"],
+  "excludeFolders": ["docs/blog", "docs/release_notes", "docs/news.d"],
+  "excludeFiles": [],
+  "rules": [
+    "A run script creates the project with VUnit.from_argv(), calls add_vhdl_builtins(), adds libraries and source files, and ends with main().",
+    "A VHDL testbench has a runner_cfg generic and runs its test cases, each selected with run(\"<name>\"), between test_runner_setup and test_runner_cleanup.",
+    "Complete VHDL API signatures: https://vunit.github.io/api/vunit_lib.json",
+    "Complete Python API signatures: https://vunit.github.io/api/python.json",
+    "Complete rendered documentation including the VHDL package headers: https://vunit.github.io/llms-full.txt"
+  ]
+}
