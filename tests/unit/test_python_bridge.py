@@ -716,26 +716,113 @@ class TestWindowsDllSelection(unittest.TestCase):
             second = self._prepare(tempdir, b"version-two")
             self.assertNotEqual(first.parent, second.parent)
 
-    def test_missing_dll_for_running_version_raises_actionable_error(self):
-        root = None
+    def test_missing_dll_for_running_version_builds_with_gcc(self):
         with create_tempdir() as tempdir:
             binary_path = tempdir / "bin"
             binary_path.mkdir()
             root = tempdir / "root"
             with (
                 mock.patch("vunit.python_bridge.native_library.BINARY_PATH", binary_path),
-                mock.patch("sys.version_info", (3, 12)),
                 mock.patch("vunit.python_bridge.native_library.sysconfig.get_platform", return_value="win-amd64"),
-                mock.patch("subprocess.run") as run_mock,
+                mock.patch.object(native_library, "_build_windows_library", return_value=Path("built.dll")) as build,
             ):
-                with self.assertRaisesRegex(RuntimeError, "No prebuilt Python bridge DLL"):
-                    native_library._prepare_windows_library(root)  # pylint: disable=protected-access
-            run_mock.assert_not_called()
+                self.assertEqual(
+                    native_library._prepare_windows_library(root), Path("built.dll")  # pylint: disable=protected-access
+                )
+            build.assert_called_once_with(root)
 
     def test_non_win_amd64_platform_raises(self):
         with mock.patch("vunit.python_bridge.native_library.sysconfig.get_platform", return_value="mingw"):
             with self.assertRaisesRegex(RuntimeError, "64-bit"):
                 native_library._prepare_windows_library(Path("root"))  # pylint: disable=protected-access
+
+
+class TestWindowsGccBuild(unittest.TestCase):
+    """
+    Compiler lookup and gcc builds on Windows, testable on any platform with the lookups patched.
+    """
+
+    @staticmethod
+    def _touch(path):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(b"")
+        return path
+
+    def test_windows_gcc_prefers_cc_then_bundled_then_path(self):
+        with create_tempdir() as tempdir:
+            prefix = tempdir / "questa" / "win64"
+            with mock.patch.dict(os.environ, {"CC": "my-gcc -m64"}):
+                self.assertEqual(native_library.windows_gcc(prefix), ["my-gcc", "-m64"])
+            with (
+                mock.patch.dict(os.environ, {"CC": ""}),
+                mock.patch("shutil.which", return_value="C:/mingw/bin/gcc.exe"),
+            ):
+                self.assertEqual(native_library.windows_gcc(prefix), ["C:/mingw/bin/gcc.exe"])
+                self.assertEqual(native_library.windows_gcc(None), ["C:/mingw/bin/gcc.exe"])
+                questa_gcc = self._touch(tempdir / "questa" / "gcc-7.4.0-mingw64vc16" / "bin" / "gcc.exe")
+                self.assertEqual(native_library.windows_gcc(prefix), [str(questa_gcc)])
+                riviera_prefix = tempdir / "riviera" / "bin"
+                riviera_gcc = self._touch(tempdir / "riviera" / "mingw" / "bin" / "gcc.exe")
+                self.assertEqual(native_library.windows_gcc(riviera_prefix), [str(riviera_gcc)])
+            with mock.patch.dict(os.environ, {"CC": ""}), mock.patch("shutil.which", return_value=None):
+                self.assertIsNone(native_library.windows_gcc(tempdir / "none" / "bin"))
+
+    def test_build_without_gcc_raises_actionable_error(self):
+        with mock.patch.object(native_library, "windows_gcc", return_value=None):
+            with self.assertRaisesRegex(native_library.PythonBridgeError, "MinGW-w64.*PATH.*CC"):
+                native_library._build_windows_library(
+                    Path("root"), Path("questa/win64")
+                )  # pylint: disable=protected-access
+
+    def _build_cmd(self, tempdir, simulator_prefix):
+        with (
+            mock.patch.object(native_library, "windows_gcc", return_value=["gcc"]),
+            mock.patch.object(native_library, "python_dev_paths", return_value=("C:/Py/include", Path("C:/Py/libs"))),
+            mock.patch.object(native_library, "_fli_include_dir", return_value="C:/questa/include"),
+            mock.patch.object(native_library, "compile_library", side_effect=lambda cmd, tmp, target: target) as build,
+        ):
+            target = native_library._build_windows_library(
+                tempdir, simulator_prefix
+            )  # pylint: disable=protected-access
+        return target, build.call_args[0][0]
+
+    def test_fli_build_adds_front_end_and_mtipli(self):
+        with create_tempdir() as tempdir:
+            target, cmd = self._build_cmd(tempdir, tempdir / "questa" / "win64")
+        self.assertEqual(target.name, "vunit_python_bridge_fli.dll")
+        self.assertIn("-lmtipli", cmd)
+        self.assertIn("-IC:/questa/include", cmd)
+        self.assertIn(str(native_library.NATIVE_PATH / "fli.c"), cmd)
+        self.assertIn(f"-lpython{sys.version_info[0]}{sys.version_info[1]}", cmd)
+
+    def test_vhpidirect_build_has_no_fli_parts(self):
+        with create_tempdir() as tempdir:
+            target, cmd = self._build_cmd(tempdir, None)
+        self.assertEqual(target.name, "vunit_python_bridge.dll")
+        self.assertNotIn("-lmtipli", cmd)
+        self.assertNotIn(str(native_library.NATIVE_PATH / "fli.c"), cmd)
+        self.assertIn("-IC:/Py/include", cmd)
+
+    def test_python_dev_paths_use_the_base_installation(self):
+        # A virtual environment has neither include nor libs next to its python.exe
+        with create_tempdir() as tempdir:
+            include = self._touch(tempdir / "base" / "Include" / "Python.h").parent
+            with (
+                mock.patch("sys.platform", "win32"),
+                mock.patch("sys.base_prefix", str(tempdir / "base")),
+                mock.patch("sys.executable", str(tempdir / "venv" / "Scripts" / "python.exe")),
+                mock.patch.object(native_library.sysconfig, "get_paths", return_value={"include": str(include)}),
+            ):
+                self.assertEqual(native_library.python_dev_paths(), (str(include), tempdir / "base" / "libs"))
+
+    def test_add_python_dll_to_path_appends_once(self):
+        with (
+            mock.patch.object(native_library, "windows_python_dll", return_value=os.path.join("pydir", "python3.dll")),
+            mock.patch.dict(os.environ, {"PATH": "first"}),
+        ):
+            native_library.add_python_dll_to_path()
+            native_library.add_python_dll_to_path()
+            self.assertEqual(os.environ["PATH"], os.pathsep.join(["first", "pydir"]))
 
 
 class TestSimulatorHooks(unittest.TestCase):
@@ -945,6 +1032,21 @@ class TestForeignApplicationBuild(unittest.TestCase):
             with mock.patch.object(foreign_application, "_build_vhpi", side_effect=fake_build) as build:
                 foreign_application.setup_vhpi_application(output_path, other)
             self.assertEqual(build.call_count, 1)
+
+    def test_ccomp_gets_one_unquoted_argument_per_path(self):
+        with (
+            mock.patch("sys.platform", "linux"),
+            mock.patch.object(foreign_application, "python_dev_paths", return_value=("/py/include", Path("/py/lib"))),
+            mock.patch.object(foreign_application, "compile_library") as build,
+        ):
+            foreign_application._build_vhpi(  # pylint: disable=protected-access
+                Path("/out dir/python.dll"), [Path("/src/a.c"), Path("/src/b.c")], Path("/riviera/bin")
+            )
+        args = build.call_args[0][0]
+        self.assertEqual(args[args.index("-o") + 1], str(Path("/out dir/python.dll")))
+        self.assertIn("/py/include", args)
+        self.assertEqual(args[-2:], [str(Path("/src/a.c")), str(Path("/src/b.c"))])
+        self.assertFalse(any('"' in arg for arg in args))
 
     def test_failed_build_leaves_no_fingerprint(self):
         with create_tempdir() as tempdir:

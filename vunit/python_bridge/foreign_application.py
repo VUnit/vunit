@@ -14,10 +14,11 @@ rebuilt when its sources, the Python running VUnit or the simulator change.
 """
 
 from pathlib import Path
+import os
 import sys
 import hashlib
 
-from .native_library import compile_library
+from .native_library import add_python_dll_to_path, compile_library, python_dev_paths, windows_gcc
 
 SRC_PATH = Path(__file__).parent.resolve() / "native" / "vhpi"
 
@@ -58,11 +59,19 @@ def _build_vhpi(target, sources, simulator_prefix):
     """
     Compile the VHPI application with the ccomp compiler driver of Riviera-PRO/Active-HDL.
     """
-    python_include = Path(sys.executable).parent.resolve() / "include"
-    python_libs = Path(sys.executable).parent.resolve() / "libs"
+    python_include, python_libs = python_dev_paths()
     ccomp = simulator_prefix / ("ccomp.exe" if sys.platform == "win32" else "ccomp")
-    args = [str(ccomp), "-vhpi", "-dbg", "-verbose", "-o", f'"{target}"']
+    env = None
+    if sys.platform == "win32":
+        add_python_dll_to_path()
+        # Riviera-PRO bundles a MinGW gcc under <installation>/mingw, other installations may not.
+        # ponytail: untested (no Aldec license), assumes ccomp finds gcc on PATH when none is bundled
+        gcc = windows_gcc(simulator_prefix)
+        if gcc is not None:
+            env = dict(os.environ, PATH=os.pathsep.join([str(Path(gcc[0]).parent), os.environ.get("PATH", "")]))
+    # One argument per item: subprocess quotes them, quotes added here would reach ccomp literally
+    args = [str(ccomp), "-vhpi", "-dbg", "-verbose", "-o", str(target)]
     args += ["-l", f"python{sys.version_info[0]}{sys.version_info[1]}", "-l", "python3", "-l", "_tkinter"]
-    args += ["-I", f'"{python_include}"', "-I", f'"{SRC_PATH}"', "-L", f'"{python_libs}"']
-    args += [" ".join(f'"{path}"' for path in sources)]
-    compile_library(args, target, target)
+    args += ["-I", str(python_include), "-I", str(SRC_PATH), "-L", str(python_libs)]
+    args += [str(path) for path in sources]
+    compile_library(args, target, target, env)

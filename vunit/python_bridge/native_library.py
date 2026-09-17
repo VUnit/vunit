@@ -6,7 +6,8 @@
 
 
 """
-The native bridge library: compiled and cached on Linux, prebuilt DLLs on Windows.
+The native bridge library: compiled and cached on Linux, prebuilt DLLs on Windows, compiled
+with gcc on Windows for Questa/ModelSim and when a DLL is missing.
 
 This module only depends on the standard library so that tools/build_python_bridge.py
 can load it without VUnit's dependencies.
@@ -21,7 +22,7 @@ import subprocess
 import sys
 import sysconfig
 from pathlib import Path
-from typing import List, Optional
+from typing import Dict, List, Optional, Tuple
 
 PACKAGE_PATH = Path(__file__).parent.resolve()
 # C sources of the bridge library
@@ -61,8 +62,9 @@ def prepare_library(root: Path, simulator_prefix: Optional[Path] = None) -> Path
                              None selects the VHPIDIRECT variant used by NVC and GHDL.
     """
     if sys.platform == "win32":
+        add_python_dll_to_path()
         if simulator_prefix is not None:
-            return _build_windows_fli_library(root, simulator_prefix)
+            return _build_windows_library(root, simulator_prefix)
         return _prepare_windows_library(root)
     return _prepare_posix_library(root, simulator_prefix)
 
@@ -95,7 +97,8 @@ def windows_python_dll() -> str:
 
 def _prepare_windows_library(root: Path) -> Path:
     """
-    Select the prebuilt DLL for the running Python. Never compiles.
+    Select the prebuilt DLL for the running Python, or build the library with gcc when the
+    installation has none (e.g. a VUnit package built without the DLLs).
     """
     if sysconfig.get_platform() != "win-amd64":
         raise PythonBridgeError(
@@ -108,11 +111,7 @@ def _prepare_windows_library(root: Path) -> Path:
     name = windows_dll_name()
     source = BINARY_PATH / name
     if not source.is_file():
-        raise PythonBridgeError(
-            f"No prebuilt Python bridge DLL for Python {sys.version_info[0]}.{sys.version_info[1]} "
-            f"({source!s} is missing). Released VUnit packages include the DLLs for the supported Python "
-            "versions. A development checkout can build them with tools/build_python_bridge.py (requires MSVC)."
-        )
+        return _build_windows_library(root)
     data = source.read_bytes()
     directory = root / f"cp{sys.version_info[0]}{sys.version_info[1]}-win_amd64-{hashlib.sha256(data).hexdigest()[:12]}"
     target = directory / "vunit_python_bridge.dll"
@@ -288,13 +287,13 @@ def _prepare_posix_library(root: Path, simulator_prefix: Optional[Path] = None) 
     return compile_library(cmd, tmp, library_file)
 
 
-def compile_library(cmd: List[str], tmp: Path, library_file: Path) -> Path:
+def compile_library(cmd: List[str], tmp: Path, library_file: Path, env: Optional[Dict[str, str]] = None) -> Path:
     """
     Run a compiler command building tmp and move the result to library_file, failing with the
     compiler output.
     """
     try:
-        proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
+        proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False, env=env)
     except OSError as exc:
         raise PythonBridgeError(f"Failed to run the C compiler {cmd[0]!r}: {exc}") from exc
     if proc.returncode != 0:
@@ -310,52 +309,95 @@ def compile_library(cmd: List[str], tmp: Path, library_file: Path) -> Path:
     return library_file
 
 
-def _questa_mingw_gcc(simulator_prefix: Path) -> str:
+def windows_gcc(simulator_prefix: Optional[Path] = None) -> Optional[List[str]]:
     """
-    The MinGW gcc bundled with Questa/ModelSim, used for FLI applications on Windows.
+    The C compiler command for builds on Windows, or None: CC, else the MinGW gcc bundled with
+    the simulator (Questa/ModelSim: gcc-*-mingw64*, Riviera-PRO: mingw), else gcc on PATH.
+    Not every installation bundles a gcc, e.g. Questa on Windows often does not.
     """
-    matches = sorted(simulator_prefix.parent.glob("gcc*mingw64*"))
-    for match in matches:
-        gcc = match / "bin" / "gcc.exe"
-        if gcc.is_file():
-            return str(gcc.resolve())
-    raise PythonBridgeError(
-        "VHDL Python support on Windows needs the MinGW GCC bundled with Questa/ModelSim to build "
-        f"the Python bridge library, but it was not found in {simulator_prefix.parent!s}"
+    if os.environ.get("CC"):
+        return shlex.split(os.environ["CC"])
+    if simulator_prefix is not None:
+        install = Path(simulator_prefix).resolve().parent
+        bundled = sorted(install.glob("gcc*mingw64*/bin/gcc.exe")) + sorted(install.glob("mingw*/bin/gcc.exe"))
+        if bundled:
+            return [str(bundled[0])]
+    gcc = shutil.which("gcc")
+    return [gcc] if gcc else None
+
+
+def python_dev_paths() -> Tuple[str, Path]:
+    """
+    The directory of Python.h and of the Python library to link against, for the Python running
+    VUnit. Both belong to the base installation, also when VUnit runs in a virtual environment,
+    which has neither.
+    """
+    include = next(
+        path
+        for path in _include_dirs([sysconfig.get_paths()["include"], str(Path(sys.base_prefix) / "include")])
+        if (Path(path) / "Python.h").is_file()
     )
+    if sys.platform == "win32":
+        return include, Path(sys.base_prefix) / "libs"
+    return include, Path(sysconfig.get_config_var("LIBDIR") or Path(sys.base_prefix) / "lib")
 
 
-def _build_windows_fli_library(root: Path, simulator_prefix: Path) -> Path:
+def add_python_dll_to_path() -> None:
     """
-    Build the FLI variant on Windows with the MinGW gcc bundled with Questa/ModelSim, against the
-    headers and the import library of the Python running VUnit. The prebuilt DLLs cannot be used:
-    they are MSVC builds without the FLI front end, which has to be linked against the simulator's
-    own libmtipli. Reuses a cached build like the POSIX one.
-
-    Untested: this environment has no Windows installation of Questa.
+    Libraries built with gcc on Windows import the Python DLL directly (the prebuilt DLLs load it
+    themselves), so the simulator processes VUnit starts must find it through PATH.
     """
-    simulator_prefix = Path(simulator_prefix).resolve()
-    include = _fli_include_dir(simulator_prefix)
-    gcc = _questa_mingw_gcc(simulator_prefix)
-    python_home = Path(sys.executable).parent.resolve()
-    python_include = _include_dirs([str(python_home / "include")])[0]
-    python_libs = python_home / "libs"
+    # ponytail: changes PATH of the whole VUnit process, only for its children to find pythonXY.dll
+    directory = str(Path(windows_python_dll()).parent)
+    paths = os.environ.get("PATH", "").split(os.pathsep)
+    if directory not in paths:
+        os.environ["PATH"] = os.pathsep.join([item for item in paths if item] + [directory])
 
-    key_items = [_source_fingerprint(), sys.version, str(python_home), str(simulator_prefix), gcc]
+
+def _build_windows_library(root: Path, simulator_prefix: Optional[Path] = None) -> Path:
+    """
+    Build the library on Windows with gcc (see windows_gcc) against the headers and the import
+    library of the Python running VUnit, reusing a cached build like the POSIX one.
+
+    With simulator_prefix, the FLI variant for Questa/ModelSim: the prebuilt DLLs cannot be used
+    for it, since they are MSVC builds without the FLI front end, which has to be linked against
+    the simulator's own libmtipli. Without, the VHPIDIRECT variant for NVC and GHDL, built only
+    when there is no prebuilt DLL.
+
+    Untested: this environment has no Windows installation.
+    """
+    fli = simulator_prefix is not None
+    compiler = windows_gcc(simulator_prefix)
+    if compiler is None:
+        bundled = ""
+        if simulator_prefix is not None:
+            bundled = f"the simulator installation ({Path(simulator_prefix).resolve().parent!s}) bundles none and "
+        raise PythonBridgeError(
+            "VHDL Python support on Windows needs gcc (MinGW-w64) to build the Python bridge library, but "
+            f"{bundled}there is no gcc on PATH. Install MinGW-w64 and put its bin directory on PATH, "
+            "or set the CC environment variable."
+        )
+    python_include, python_libs = python_dev_paths()
+    include_dirs = [python_include] + ([_fli_include_dir(simulator_prefix)] if simulator_prefix is not None else [])
+
+    name = "vunit_python_bridge_fli.dll" if fli else "vunit_python_bridge.dll"
+    key_items = [_source_fingerprint(), sys.version, sys.base_prefix, str(simulator_prefix), " ".join(compiler)]
     key = hashlib.sha256("\n".join(key_items).encode("utf-8")).hexdigest()[:16]
-    directory = root / f"cp{sys.version_info[0]}{sys.version_info[1]}-win_amd64-fli-{key}"
-    library_file = directory / "vunit_python_bridge_fli.dll"
+    directory = root / f"cp{sys.version_info[0]}{sys.version_info[1]}-win_amd64-{'fli' if fli else 'gcc'}-{key}"
+    library_file = directory / name
     if library_file.is_file():
         return library_file
 
     directory.mkdir(parents=True, exist_ok=True)
-    tmp = directory / f"vunit_python_bridge_fli.dll.{os.getpid()}.tmp"
+    tmp = directory / f"{name}.{os.getpid()}.tmp"
     cmd = (
-        [gcc, "-shared", "-m64", "-O2", "-D__USE_MINGW_ANSI_STDIO=1", "-freg-struct-return"]
-        + [f"-I{include}", f"-I{python_include}"]
-        + [str(path) for path in bridge_sources(fli=True)]
+        compiler
+        + ["-shared", "-m64", "-O2", "-D__USE_MINGW_ANSI_STDIO=1"]
+        + (["-freg-struct-return"] if fli else [])
+        + [f"-I{path}" for path in include_dirs]
+        + [str(path) for path in bridge_sources(fli=fli)]
         + ["-o", str(tmp)]
         + [f"-L{python_libs!s}", f"-lpython{sys.version_info[0]}{sys.version_info[1]}"]
-        + [f"-L{simulator_prefix!s}", "-lmtipli"]
+        + ([f"-L{Path(simulator_prefix).resolve()!s}", "-lmtipli"] if simulator_prefix is not None else [])
     )
     return compile_library(cmd, tmp, library_file)
