@@ -121,7 +121,12 @@ jobs:
       matrix:
         py: ['3.10', '3.12', '3.14']
         sim: [nvc, ghdl]
-    name: '🟦 Windows · Python ${{ matrix.py }} · ${{ matrix.sim }}'
+        bridge: [dll]
+        # No prebuilt DLLs: the library is built with the MinGW gcc of the runner image, the
+        # build Questa/ModelSim always uses on Windows, which has no runner
+        include:
+          - {py: '3.13', sim: nvc, bridge: gcc}
+    name: '🟦 Windows · Python ${{ matrix.py }} · ${{ matrix.sim }} · ${{ matrix.bridge }}'
     env:
       VUNIT_SIMULATOR: ${{ matrix.sim }}
     steps:
@@ -132,10 +137,15 @@ jobs:
         submodules: recursive
 
     - name: '📥 Download bridge DLLs'
+      if: matrix.bridge == 'dll'
       uses: actions/download-artifact@v4
       with:
         name: python-bridge-dlls
         path: vunit/python_bridge/bin
+
+    - name: '⚙️ Put MinGW gcc on PATH'
+      if: matrix.bridge == 'gcc'
+      run: echo "C:/mingw64/bin" >> "$GITHUB_PATH"
 
     - name: '🐍 Setup Python'
       uses: actions/setup-python@v6
@@ -165,11 +175,22 @@ jobs:
         echo "$RUNNER_TEMP/venv with space/Scripts" >> "$GITHUB_PATH"
         "$RUNNER_TEMP/venv with space/Scripts/pip" install -e . --progress-bar off
 
-    # No compiler on PATH: the prebuilt DLLs must be used
+    # The simulator is accepted as x64, and a 32-bit executable of Windows itself is detected
+    - name: '🔍 64-bit check'
+      run: |
+        python -c "import shutil; from vunit.python_bridge.native_library import pe_machine; \
+          assert pe_machine(shutil.which('${{ matrix.sim }}')) == 0x8664; \
+          assert pe_machine(r'C:\Windows\SysWOW64\cmd.exe') == 0x14C"
+
+    # dll: no MSVC on PATH, the prebuilt DLLs must be used. gcc: the library must be built with gcc.
     - name: '🚧 Feature tests'
       run: |
         ! command -v cl
+        if [ '${{ matrix.bridge }}' = gcc ]; then command -v gcc; fi
         python vunit/vhdl/python/run.py -p 4 -o "$RUNNER_TEMP/out dir"
+        if [ '${{ matrix.bridge }}' = gcc ]; then
+          find "$RUNNER_TEMP/out dir" -path '*-win_amd64-gcc-*' -name vunit_python_bridge.dll | grep .
+        fi
 
     - name: '🚧 Example'
       run: python examples/vhdl/embedded_python/run.py -p 4 --without-attributes .optional_deps --without-attributes .expected_failure
