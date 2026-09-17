@@ -20,6 +20,7 @@ from .native_library import (
     PACKAGE_PATH,
     PythonBridgeError,
     check_python_build,
+    check_windows_64bit_simulator,
     prepare_library,
     windows_python_dll,
 )
@@ -71,6 +72,7 @@ def setup(project, output_path: str, simulator_class, run_script_path: Optional[
         )
 
     check_python_build()
+    check_windows_64bit_simulator(simulator_class)
 
     is_fli = simulator_name in FLI_SIMULATORS
     root = Path(output_path) / "python_bridge"

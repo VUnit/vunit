@@ -18,7 +18,13 @@ import os
 import sys
 import hashlib
 
-from .native_library import add_python_dll_to_path, compile_library, python_dev_paths, windows_gcc
+from .native_library import (
+    add_python_dll_to_path,
+    check_windows_64bit_simulator,
+    compile_library,
+    python_dev_paths,
+    windows_gcc,
+)
 
 SRC_PATH = Path(__file__).parent.resolve() / "native" / "vhpi"
 
@@ -28,6 +34,7 @@ def setup_vhpi_application(output_path, simulator_class):
     Build the VHPI application for Riviera-PRO/Active-HDL under the output path, unless the one
     already there was built from the same sources for the same Python and simulator.
     """
+    check_windows_64bit_simulator(simulator_class)
     target = Path(output_path) / simulator_class.name / "libraries" / "python.dll"
     sources = [SRC_PATH / "python_pkg_vhpi.c", SRC_PATH / "python_pkg.c"]
     simulator_prefix = Path(simulator_class.find_prefix()).resolve()

@@ -825,6 +825,75 @@ class TestWindowsGccBuild(unittest.TestCase):
             self.assertEqual(os.environ["PATH"], os.pathsep.join(["first", "pydir"]))
 
 
+class TestWindows64Bit(unittest.TestCase):
+    """
+    Python and the simulator must be 64-bit x86 on Windows. Testable on any platform with the
+    platform patched and fake executables carrying only a DOS and PE header.
+    """
+
+    class _Simulator(_FakeSimulator):
+        executable = "ghdl"
+
+    @staticmethod
+    def _write_executable(path, machine):
+        header = bytearray(0x100)
+        header[0:2] = b"MZ"
+        header[0x3C:0x40] = (0x80).to_bytes(4, "little")
+        header[0x80:0x84] = b"PE\0\0"
+        header[0x84:0x86] = machine.to_bytes(2, "little")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(bytes(header))
+
+    def _check(self, simulator):
+        with (
+            mock.patch("sys.platform", "win32"),
+            mock.patch.object(native_library.sysconfig, "get_platform", return_value="win-amd64"),
+        ):
+            native_library.check_windows_64bit_simulator(simulator)
+
+    def test_pe_machine(self):
+        with create_tempdir() as tempdir:
+            self._write_executable(tempdir / "x64.exe", 0x8664)
+            (tempdir / "text.exe").write_bytes(b"not an executable")
+            self.assertEqual(native_library.pe_machine(tempdir / "x64.exe"), 0x8664)
+            self.assertIsNone(native_library.pe_machine(tempdir / "text.exe"))
+            self.assertIsNone(native_library.pe_machine(tempdir / "missing.exe"))
+
+    def test_accepts_x64_and_unreadable_simulators(self):
+        with create_tempdir() as tempdir:
+            self._write_executable(tempdir / "x64" / "ghdl.exe", 0x8664)
+            self._check(self._Simulator("ghdl", prefix=str(tempdir / "x64")))
+            self._check(self._Simulator("ghdl", prefix=str(tempdir / "missing")))
+            self._check(self._Simulator("ghdl", prefix=None))
+
+    def test_rejects_32_bit_and_arm64_simulators(self):
+        with create_tempdir() as tempdir:
+            for machine, kind in ((0x014C, "32-bit x86"), (0xAA64, "ARM64")):
+                self._write_executable(tempdir / kind / "ghdl.exe", machine)
+                with self.assertRaisesRegex(native_library.PythonBridgeError, f"64-bit.*ghdl.exe is {kind}"):
+                    self._check(self._Simulator("ghdl", prefix=str(tempdir / kind)))
+
+    def test_vsim_is_checked_for_simulators_without_executable_attribute(self):
+        with create_tempdir() as tempdir:
+            self._write_executable(tempdir / "vsim.exe", 0x014C)
+            with self.assertRaisesRegex(native_library.PythonBridgeError, "vsim.exe is 32-bit x86"):
+                self._check(_FakeSimulator("modelsim", prefix=str(tempdir)))
+
+    def test_not_checked_outside_windows(self):
+        with create_tempdir() as tempdir:
+            self._write_executable(tempdir / "ghdl.exe", 0x014C)
+            with mock.patch("sys.platform", "linux"):
+                native_library.check_windows_64bit_simulator(self._Simulator("ghdl", prefix=str(tempdir)))
+
+    def test_rejects_32_bit_python(self):
+        with (
+            mock.patch("sys.platform", "win32"),
+            mock.patch.object(native_library.sysconfig, "get_platform", return_value="win32"),
+        ):
+            with self.assertRaisesRegex(native_library.PythonBridgeError, "64-bit .*CPython"):
+                native_library.check_windows_64bit_simulator(self._Simulator("ghdl"))
+
+
 class TestSimulatorHooks(unittest.TestCase):
     """
     nvc_run_flags / ghdl_elab_flags / ghdl_run_env / modelsim_vsim_flags

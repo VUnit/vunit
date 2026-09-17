@@ -95,16 +95,68 @@ def windows_python_dll() -> str:
     return buffer.value
 
 
-def _prepare_windows_library(root: Path) -> Path:
+def _check_windows_python() -> None:
     """
-    Select the prebuilt DLL for the running Python, or build the library with gcc when the
-    installation has none (e.g. a VUnit package built without the DLLs).
+    Reject a Python that is not a 64-bit x86 (win-amd64) build.
     """
     if sysconfig.get_platform() != "win-amd64":
         raise PythonBridgeError(
             "VHDL Python support on Windows requires a 64-bit (x86-64) python.org style CPython, "
             f"{sys.executable} is built for {sysconfig.get_platform()}"
         )
+
+
+# Machine field values of the PE (Windows executable) header
+_PE_MACHINE_X64 = 0x8664
+_PE_MACHINE_NAMES = {_PE_MACHINE_X64: "64-bit x86 (x64)", 0x014C: "32-bit x86", 0xAA64: "ARM64"}
+
+
+def pe_machine(path: Path) -> Optional[int]:
+    """
+    The machine type in the PE header of a Windows executable, or None if it has no readable one.
+    """
+    try:
+        with open(path, "rb") as fptr:
+            header = fptr.read(4096)
+    except OSError:
+        return None
+    offset = int.from_bytes(header[0x3C:0x40], "little")
+    if header[:2] != b"MZ" or header[offset : offset + 4] != b"PE\0\0":
+        return None
+    return int.from_bytes(header[offset + 4 : offset + 6], "little")
+
+
+def check_windows_64bit_simulator(simulator_class) -> None:
+    """
+    On Windows, reject a Python or simulator that is not 64-bit x86. The bridge library and the
+    Python DLL it embeds are loaded into the simulator process, so all three must match, and
+    only 64-bit Python is supported. A mismatch otherwise fails late with an obscure load error.
+    A simulator executable that cannot be read is not checked.
+    """
+    if sys.platform != "win32":
+        return
+    _check_windows_python()
+    prefix = simulator_class.find_prefix()
+    if prefix is None:
+        return
+    # NVC and GHDL name their executable, the Questa/ModelSim and Aldec interfaces use vsim
+    name = getattr(simulator_class, "executable", "vsim")
+    executable = Path(prefix) / (name if name.lower().endswith(".exe") else f"{name}.exe")
+    machine = pe_machine(executable)
+    if machine is not None and machine != _PE_MACHINE_X64:
+        kind = _PE_MACHINE_NAMES.get(machine, f"machine type 0x{machine:04x}")
+        raise PythonBridgeError(
+            f"VHDL Python support requires a 64-bit (x64) simulator, but {executable!s} is {kind}. "
+            "Use a 64-bit installation of the simulator."
+        )
+
+
+def _prepare_windows_library(root: Path) -> Path:
+    """
+    Select the prebuilt DLL for the running Python, or build the library with gcc when the
+    installation has none (e.g. a VUnit package built without the DLLs).
+    """
+    _check_windows_python()
     if hasattr(sys, "gettotalrefcount"):
         raise PythonBridgeError("VHDL Python support does not provide bridge DLLs for debug builds of CPython")
 
