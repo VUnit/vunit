@@ -252,7 +252,7 @@ class Builtins(object):
 
     def add_package(self, package_name: str, allow_setup: bool = False) -> None:
         """
-        Add a VUnit package: its sources and, if allowed, its setup function.
+        Add a VUnit package and, if allowed, run its setup function.
 
         :param package_name: The name of the installed Python package. Dashes, dots and underscores are
                              equivalent, just like for PyPI package names.
