@@ -141,9 +141,6 @@ jobs:
         shell: msys2 {0}
     steps:
 
-    # UCRT64 rather than MINGW64: MSYS2 no longer builds every package for MINGW64. jq, which
-    # ghdl/setup-ghdl installs, is missing there, which failed the GHDL setup of every Windows job.
-    # UCRT64 is the environment MSYS2 recommends and setup-ghdl supports.
     - name: '🟦 Setup MSYS2'
       uses: msys2/setup-msys2@v2
       with:
