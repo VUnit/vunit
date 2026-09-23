@@ -1296,24 +1296,9 @@ other preprocessors. Lowest value first. The order between preprocessors with th
 
     def add_package(self, package_name: str, allow_setup: bool = False) -> None:
         """
-        Add a VUnit package, that is an installed Python package providing HDL code and
-        described by a ``vunit_pkg.toml`` file in its root directory.
+        Add a VUnit package, that is an installed Python package providing HDL code.
 
-        The ``vunit_pkg.toml`` file has a single ``[package]`` table supporting these keys:
-
-        * ``library``: The name of the library created for the sources of the package. Mandatory
-          if the package has sources.
-        * ``sources``: A list of tables with an ``include`` key listing the paths, relative to the
-          package root, of the sources to add.
-        * ``requires-vunit``: The VUnit versions supported by the package, for example ``">=5.0.0"``.
-        * ``requires-vhdl``: The VHDL standards supported by the package, for example ``">=2008"``.
-        * ``setup``: A ``"module:function"`` string pointing out a setup function called with a
-          :class:`.PackageContext` once the sources of the package have been added. The setup
-          function is what a package uses to do work that cannot be expressed with static sources,
-          for example building a native library or registering simulator hooks. Running it must
-          be allowed with ``allow_setup=True``, otherwise adding the package is an error.
-
-        See :ref:`packages` for more details.
+        See :ref:`packages` for how a package is created.
 
         :param package_name: The name of the Python package. Dashes and dots are, just like for
                              PyPI package names, equivalent to underscores.
@@ -1325,19 +1310,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
 
         .. code-block:: python
 
-            VU.add_package("vunit-json-for-vhdl", allow_setup=True)
-
-        .. code-block:: toml
-           :caption: vunit_pkg.toml
-
-            [package]
-            requires-vunit = ">=5.0.0"
-            requires-vhdl = ">=2008"
-            library = "json4vhdl_lib"
-            setup = "json4vhdl.vunit_setup:setup"
-
-            [[package.sources]]
-            include = ["src/*.vhd"]
+            VU.add_package("vunit-json-for-vhdl")
         """
 
         self._builtins.add_package(package_name, allow_setup=allow_setup)
