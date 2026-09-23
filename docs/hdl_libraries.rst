@@ -90,7 +90,7 @@ A package is an installed Python package containing a ``vunit_pkg.toml`` file in
    library = "foo_lib"
 
    [[package.sources]]
-   include = ["src/*.vhd"]
+   include = ["hdl/src/*.vhd"]
 
 The sources are compiled into the library named by ``library``, which is created by VUnit and owned by
 the package.
@@ -112,7 +112,7 @@ adds a ``setup`` key naming a ``"module:function"`` setup function:
    setup = "foo.vunit_setup:setup"
 
    [[package.sources]]
-   include = ["src/*.vhd"]
+   include = ["hdl/src/*.vhd"]
 
 Running the function takes both the package declaring it and the project allowing it:
 
