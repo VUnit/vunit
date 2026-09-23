@@ -214,9 +214,10 @@ to be registered before that happens. A package registering them from its setup 
 the setup function runs when :meth:`add_package() <vunit.ui.VUnit.add_package>` is called on the VUnit
 object, which is before :meth:`main() <vunit.ui.VUnit.main>` creates the interface.
 
-The simulator interface a hook is called with also tells how the simulator was found.
-``simulator_interface.prefix`` is the path its executables were found in, the same the setup function
-saw as ``context.simulator_prefix``.
+A hook can also look up where and how the simulator was installed through the simulator interface it
+is called with.
+``simulator_interface.prefix`` is the directory of the simulator executables, the same path the setup
+function got as ``context.simulator_prefix``.
 ``GHDLInterface.backend`` is the code generator of the GHDL used, ``"mcode"``, ``"llvm"``,
 ``"llvm-jit"`` or ``"gcc"``, which decides how a native library is bound to the design:
 ``"llvm"`` and ``"gcc"`` link it at elaboration while the others load it at run time.
