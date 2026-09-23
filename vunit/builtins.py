@@ -251,7 +251,14 @@ class Builtins(object):
         raise RuntimeError(f"Failed to find location of package {package_name}.")
 
     def add_package(self, package_name: str, allow_setup: bool = False) -> None:
-        """Add VUnit package, running its setup function if allowed."""
+        """
+        Add a VUnit package: the sources listed in its ``vunit_pkg.toml`` and, if allowed, its setup function.
+
+        :param package_name: The name of the installed Python package. Dashes, dots and underscores are
+                             equivalent, just like for PyPI package names.
+        :param allow_setup: Run the setup function declared by the package. Adding a package declaring one
+                            without ``allow_setup=True`` is an error.
+        """
         # The following future improvements are planned:
         # - Support for user specified library name
         # - Support for shared libraries across multiple packages
