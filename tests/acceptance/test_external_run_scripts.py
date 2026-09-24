@@ -26,7 +26,7 @@ def simulator_supports_verilog():
     """
     Returns True if simulator supports Verilog
     """
-    return simulator_is("modelsim", "incisive")
+    return simulator_is("modelsim", "incisive", "nvc")
 
 
 # pylint: disable=too-many-public-methods
@@ -205,7 +205,7 @@ class TestExternalRunScripts(TestCase):
         self.check(ROOT / "examples/vhdl/array/run.py")
 
     @mark.xfail(
-        not simulator_is("ghdl"),
+        not simulator_is("ghdl", "nvc"),
         reason="Only simulators with PSL functionality",
     )
     def test_vhdl_array_axis_vcs_example_project(self):
