@@ -1,0 +1,25 @@
+
+Features
+~~~~~~~~
+
+- Added accessor functions to ``check_pkg`` for inspecting a ``check_result_t``:
+  ``is_pass``, ``get_checker``, ``get_msg``, ``get_log_level``, ``get_line_num`` and
+  ``get_file_name``. (:vunit_issue:`1221`)
+- Added ``run_script_path(runner_cfg)`` to ``run_pkg``, returning the path of the
+  VUnit run script that started the simulation. (:vunit_issue:`1221`)
+- A VUnit package can provide a setup function with the ``setup`` key of its ``vunit_pkg.toml`` file.
+  The function is called with a :class:`PackageContext <vunit.package_context.PackageContext>` once the
+  sources of the package have been added and allows a package to do work that cannot be expressed with
+  static sources, such as building a native library or adding generated sources.
+  Running the function takes both the package declaring it and the ``add_package`` call allowing it with
+  ``allow_setup=True``, such that a project adding a package of nothing but VHDL never runs code of the
+  package and the code it does allow to run is visible in the run script.
+  The context tells where the selected simulator was found with ``simulator_prefix`` and how the
+  installation there was built with ``simulator_backend``, the GHDL code generator for GHDL and ``None``
+  for a simulator with no such notion. (:vunit_issue:`1221`)
+- A VUnit package can register simulator hooks with ``register_simulator_hooks`` of the context given to
+  its setup function. A hook provides extra elaboration flags, extra simulation flags, extra flags for the
+  simulator process VUnit starts or the environment of the simulation for one simulator, which is what a
+  package whose HDL code depends on something built outside the simulator needs to have that found and
+  loaded.
+  A simulator interface gives a hook the prefix it was found in with its new ``prefix`` property. (:vunit_issue:`1221`)
