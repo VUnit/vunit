@@ -19,6 +19,7 @@ use work.axi_pkg.all;
 use work.axi_slave_pkg.all;
 use work.axi_statistics_pkg.all;
 use work.bus_master_pkg.bus_master_t;
+use work.com_pkg.name;
 use work.com_pkg.receive;
 use work.com_pkg.reply;
 use work.com_pkg.acknowledge;
@@ -149,6 +150,7 @@ package body axi_slave_private_pkg is
     ) is
     begin
       p_axi_slave := axi_slave;
+      p_rnd.InitSeed(name(axi_slave.p_actor));
       p_axi_slave_type := axi_slave_type;
       p_data_size := data'length/8;
       p_max_id := max_id;
