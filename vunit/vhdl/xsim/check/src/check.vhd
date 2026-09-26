@@ -34,31 +34,8 @@ package body check_pkg is
     constant msg          : string;
     constant ctx          : string)
     return string is
-    constant msg_i : string(1 to msg'length) := msg;
-
-    function replace_result_tag (msg, check_result : string) return string is
-    begin
-      if msg'length < check_result_tag'length then
-        return msg;
-      elsif msg(1 to check_result_tag'length) = check_result_tag then
-        return check_result & msg(check_result_tag'length + 1 to msg'right);
-      else
-        return msg;
-      end if;
-    end function replace_result_tag;
-
-    function append_context (msg, ctx : string) return string is
-    begin
-      if msg = "" then
-        return ctx;
-      elsif ctx = "" then
-        return msg;
-      else
-        return msg & " - " & ctx;
-      end if;
-    end function append_context;
   begin
-    return append_context(replace_result_tag(msg_i, check_result), ctx);
+    return p_std_msg(check_result, msg, ctx);
   end function std_msg;
 
 

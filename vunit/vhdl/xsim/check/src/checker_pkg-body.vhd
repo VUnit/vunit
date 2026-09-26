@@ -160,4 +160,36 @@ package body checker_pkg is
             ")");
   end function;
 
+  function p_std_msg (
+    constant check_result : string;
+    constant msg          : string;
+    constant ctx          : string)
+    return string is
+    constant msg_i : string(1 to msg'length) := msg;
+
+    function replace_result_tag (msg, check_result : string) return string is
+    begin
+      if msg'length < p_check_result_tag'length then
+        return msg;
+      elsif msg(1 to p_check_result_tag'length) = p_check_result_tag then
+        return check_result & msg(p_check_result_tag'length + 1 to msg'right);
+      else
+        return msg;
+      end if;
+    end function replace_result_tag;
+
+    function append_context (msg, ctx : string) return string is
+    begin
+      if msg = "" then
+        return ctx;
+      elsif ctx = "" then
+        return msg;
+      else
+        return msg & " - " & ctx;
+      end if;
+    end function append_context;
+  begin
+    return append_context(replace_result_tag(msg_i, check_result), ctx);
+  end function p_std_msg;
+
 end package body;

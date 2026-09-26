@@ -26,7 +26,7 @@ package check_pkg is
   impure function get_checker_stat return checker_stat_t;
   procedure reset_checker_stat;
 
-  constant check_result_tag : string    := "<+/->";
+  constant check_result_tag : string    := p_check_result_tag;
   function result (msg : string := "") return string;
 
   type edge_t is (rising_edge, falling_edge, both_edges);

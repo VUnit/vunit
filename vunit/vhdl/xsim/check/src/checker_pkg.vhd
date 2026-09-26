@@ -67,4 +67,14 @@ package checker_pkg is
   procedure get_checker_stat(checker       :     checker_t;
                              variable stat : out checker_stat_t);
 
+  -- Private: formats a failing check's message. Public in upstream VUnit's checker_pkg too,
+  -- where generated code such as hdl-registers' check packages calls it.
+  constant p_check_result_tag : string := "<+/->";
+
+  function p_std_msg (
+    constant check_result : string;
+    constant msg          : string;
+    constant ctx          : string)
+    return string;
+
 end package;
