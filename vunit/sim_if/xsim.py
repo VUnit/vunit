@@ -15,7 +15,6 @@ from os.path import join
 from pathlib import Path
 import shutil
 import threading
-from shutil import copyfile
 from ..ostools import Process
 from . import SimulatorInterface, StringOption, BooleanOption, ListOfStringOption
 from ..exceptions import CompileError
@@ -23,7 +22,7 @@ from ..exceptions import CompileError
 LOGGER = logging.getLogger(__name__)
 
 
-class XSimInterface(SimulatorInterface):
+class XSimInterface(SimulatorInterface):  # pylint: disable=too-many-instance-attributes
     """
     Interface for Vivado xsim simulator
     """
@@ -97,7 +96,9 @@ class XSimInterface(SimulatorInterface):
             return tool_name
         raise Exception(f"Cannot find {tool_name}")
 
-    def __init__(self, prefix, output_path, gui=False, vcd_path="", vcd_enable=False, xelab_limit=False):
+    def __init__(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+        self, prefix, output_path, gui=False, vcd_path="", vcd_enable=False, xelab_limit=False
+    ):
         super().__init__(output_path, gui)
         self._prefix = prefix
         self._libraries = {}
@@ -192,7 +193,9 @@ class XSimInterface(SimulatorInterface):
 
         return xsim_extra_args
 
-    def simulate(self, output_path, test_suite_name, config, elaborate_only):
+    def simulate(  # pylint: disable=too-many-branches,too-many-statements,too-many-locals
+        self, output_path, test_suite_name, config, elaborate_only
+    ):
         """
         Simulate with entity as top level using generics
         """
@@ -224,12 +227,12 @@ class XSimInterface(SimulatorInterface):
 
         enable_glbl = config.sim_options.get(self.name + ".enable_glbl", None)
 
-        if enable_glbl == True:
+        if enable_glbl:
             cmd += [f"{config.library_name}.test_verilog"]
         else:
             cmd += [f"{config.library_name}.{config.entity_name}"]
 
-        if enable_glbl == True:
+        if enable_glbl:
             cmd += [f"{config.library_name}.glbl"]
 
         timescale = config.sim_options.get(self.name + ".timescale", None)
@@ -283,11 +286,11 @@ class XSimInterface(SimulatorInterface):
 
                 vivado_cmd += self._xsim_extra_args(config)
 
-                with open(tcl_file, "w+") as xsim_startup_file:
+                with open(tcl_file, "w+", encoding="utf-8") as xsim_startup_file:
                     if os.path.exists(vcd_path):
                         os.remove(vcd_path)
 
-                    if self._gui == True:
+                    if self._gui:
                         if self._vcd_enable:
                             xsim_startup_file.write(f"open_vcd {vcd_path}\n")
                             xsim_startup_file.write("log_vcd *\n")

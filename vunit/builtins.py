@@ -29,8 +29,7 @@ from vunit.vhdl_standard import VHDL, VHDLStandard
 from vunit.ui.common import get_checked_file_names_from_globs
 from vunit.about import version, VUnitVersion
 from vunit.package_context import PackageContext
-from vunit.sim_if.common import simulator_check, simulator_is
-
+from vunit.sim_if.common import simulator_is
 
 LOGGER = logging.getLogger(__name__)
 
@@ -407,8 +406,8 @@ class Builtins(object):
                 continue
 
             if (self._simulator_class.name == "xsim") and (
-                    file_name.endswith("vunit_run_context.vhd") or
-                    file_name.endswith("vunit_context.vhd")):
+                file_name.endswith("vunit_run_context.vhd") or file_name.endswith("vunit_context.vhd")
+            ):
                 continue
 
             self._vunit_lib.add_source_file(file_name)
@@ -506,14 +505,12 @@ class Builtins(object):
         supports_vhdl_package_generics = self._simulator_class.supports_vhdl_package_generics()
 
         if not osvvm_is_installed():
-            raise RuntimeError(
-                """
+            raise RuntimeError("""
 Found no OSVVM VHDL files. Did you forget to run
 
 git submodule update --init --recursive
 
-in your VUnit Git repository? You have to do this first if installing using setup.py."""
-            )
+in your VUnit Git repository? You have to do this first if installing using setup.py.""")
 
         for file_name in glob(str(VHDL_PATH / "osvvm" / "*.vhd")):
             bname = Path(file_name).name

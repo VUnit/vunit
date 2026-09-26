@@ -7,6 +7,7 @@
 """
 Functionality to represent and operate on VHDL and Verilog source files
 """
+
 from pathlib import Path
 from typing import Union
 import logging
