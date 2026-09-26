@@ -20,7 +20,7 @@ jobs:
       fail-fast: false
       matrix:
         task: [
-          { tag: llvm,  pkg: llvm-9 },
+          { tag: llvm,  pkg: llvm-14 },
           { tag: mcode, pkg: mcode  },
         ]
     runs-on: ubuntu-latest
