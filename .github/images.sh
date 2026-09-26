@@ -1,18 +1,27 @@
 #!/bin/sh
+set -eu
 
-# Stop in case of error
-set -e
+: "${TAG:?TAG must be set}"
+: "${PKG:?PKG must be set}"
+
+# Download separately so a failed download stops the script.
+DOCKERFILE=$(curl -fsSL \
+  https://raw.githubusercontent.com/ghdl/docker/master/run_debian.dockerfile)
 
 docker build \
-  --build-arg IMAGE="python:3-slim-bullseye" \
-  --build-arg LLVM_VER=9 \
-  --build-arg GNAT_VER=9 \
+  --progress=plain \
+  --build-arg IMAGE="python:3.13-slim-bookworm" \
+  --build-arg LLVM_VER=14 \
+  --build-arg GNAT_VER=12 \
   --target vunit \
   -t "vunit/dev/${TAG}" \
-  - <<-EOF
-$(curl -fsSL https://raw.githubusercontent.com/ghdl/docker/master/run_debian.dockerfile)
+  - <<EOF
+${DOCKERFILE}
 
-FROM $TAG AS vunit
-COPY --from=ghdl/pkg:bullseye-$PKG / /
+FROM ${TAG} AS vunit
+
+COPY --from=ghdl/pkg:bookworm-${PKG} / /usr/local/
+
+RUN ghdl --version
 RUN pip install -U tox colorama coverage --progress-bar off
 EOF
