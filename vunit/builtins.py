@@ -30,7 +30,6 @@ from vunit.ui.common import get_checked_file_names_from_globs
 from vunit.about import version, VUnitVersion
 from vunit.package_context import PackageContext
 
-
 LOGGER = logging.getLogger(__name__)
 
 VHDL_PATH = (Path(__file__).parent / "vhdl").resolve()
@@ -197,6 +196,13 @@ class Builtins(object):
 
             for idx, source in enumerate(package["sources"]):
                 errors.extend(
+                    self._check_valid_keys(
+                        source,
+                        valid={"include": list, "library": str},
+                        path=f"package.sources[{idx}]",
+                    )
+                )
+                errors.extend(
                     self._check_mandatory_keys(source, mandatory={"include": list}, path=f"package.sources[{idx}]")
                 )
                 if "include" in source:
@@ -294,9 +300,21 @@ class Builtins(object):
             if library is None:
                 return
 
+            libraries = {library_name.lower(): library}
             for source in sources:
+                source_library_name = source.get("library", library_name)
+                source_library = libraries.get(source_library_name.lower())
+                if source_library is None:
+                    source_library = self._add_library_if_not_exist(
+                        source_library_name,
+                        f"Library {source_library_name} previously defined. Skipping addition of {package_name}.",
+                    )
+                    if source_library is None:
+                        return
+                    libraries[source_library_name.lower()] = source_library
+
                 for include in source["include"]:
-                    library.add_source_files(package_root / include, vhdl_standard=use_vhdl_standard)
+                    source_library.add_source_files(package_root / include, vhdl_standard=use_vhdl_standard)
 
         setup = package.get("setup")
         if setup:
@@ -487,14 +505,12 @@ class Builtins(object):
         supports_vhdl_package_generics = self._simulator_class.supports_vhdl_package_generics()
 
         if not osvvm_is_installed():
-            raise RuntimeError(
-                """
+            raise RuntimeError("""
 Found no OSVVM VHDL files. Did you forget to run
 
 git submodule update --init --recursive
 
-in your VUnit Git repository? You have to do this first if installing using setup.py."""
-            )
+in your VUnit Git repository? You have to do this first if installing using setup.py.""")
 
         for file_name in glob(str(VHDL_PATH / "osvvm" / "*.vhd")):
             bname = Path(file_name).name
