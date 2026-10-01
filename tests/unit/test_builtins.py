@@ -332,6 +332,71 @@ include=["hdl/src3/*.vhd"]
                 ]
             )
 
+    def test_source_library_overrides_package_library(self):
+        libraries = {"bar": mock.Mock(), "baz": mock.Mock()}
+
+        def add_library(name):
+            self.vu._project._libraries.append(name)
+            return libraries[name]
+
+        self.vu.add_library.side_effect = add_library
+        self.vu.add_library.reset_mock()
+
+        with create_tempdir() as tempdir, pkg_env(tempdir):
+            self._write_toml(
+                tempdir,
+                """\
+[package]
+library = "bar"
+[[package.sources]]
+include=["hdl/default/*.vhd"]
+[[package.sources]]
+library = "baz"
+include=["hdl/override1/*.vhd"]
+[[package.sources]]
+library = "baz"
+include=["hdl/override2/*.vhd"]
+""",
+            )
+
+            self.builtins.add_package("foo")
+
+        self.vu.add_library.assert_has_calls([mock.call("bar"), mock.call("baz")])
+        self.assertEqual(self.vu.add_library.call_count, 2)
+        libraries["bar"].add_source_files.assert_called_once_with(tempdir / "hdl/default/*.vhd", vhdl_standard=None)
+        libraries["baz"].add_source_files.assert_has_calls(
+            [
+                mock.call(tempdir / "hdl/override1/*.vhd", vhdl_standard=None),
+                mock.call(tempdir / "hdl/override2/*.vhd", vhdl_standard=None),
+            ]
+        )
+
+    def test_raises_if_source_library_is_not_a_string(self):
+        with (
+            create_tempdir() as tempdir,
+            pkg_env(tempdir),
+            self.assertRaisesRegex(RuntimeError, re.escape("Invalid vunit_pkg.toml: 1 error(s) found.")),
+            self.assertLogs("vunit.builtins", "ERROR") as mock_error,
+        ):
+            self._write_toml(
+                tempdir,
+                """\
+[package]
+library = "bar"
+[[package.sources]]
+library = 17
+include=["hdl/src1/*.vhd"]
+""",
+            )
+            try:
+                self.builtins.add_package("foo")
+            finally:
+                self._assertLogContent(
+                    mock_error,
+                    "ERROR",
+                    "package.sources[0].library: 'library' must be a string.",
+                )
+
     def test_raises_if_missing_library(self):
         with (
             create_tempdir() as tempdir,
