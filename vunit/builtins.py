@@ -159,6 +159,48 @@ class Builtins(object):
         return errors
 
     @staticmethod
+    def _check_compile_options(compile_options: list, path: str) -> list[ValidationError]:
+        """Check that compile options are pairs of a name and a list of strings."""
+        errors = []
+        for idx, option in enumerate(compile_options):
+            option_path = f"{path}[{idx}]"
+            if not isinstance(option, list) or len(option) != 2:
+                errors.append(
+                    ValidationError(
+                        path=option_path,
+                        message="Compile option must be an array containing a string and an array of strings.",
+                    )
+                )
+                continue
+
+            name, values = option
+            if not isinstance(name, str):
+                errors.append(
+                    ValidationError(
+                        path=f"{option_path}[0]",
+                        message="Compile option name must be a string.",
+                    )
+                )
+            if not isinstance(values, list):
+                errors.append(
+                    ValidationError(
+                        path=f"{option_path}[1]",
+                        message="Compile option value must be an array of strings.",
+                    )
+                )
+            else:
+                for value_idx, value in enumerate(values):
+                    if not isinstance(value, str):
+                        errors.append(
+                            ValidationError(
+                                path=f"{option_path}[1][{value_idx}]",
+                                message="Compile option value must be a string.",
+                            )
+                        )
+
+        return errors
+
+    @staticmethod
     def _log_validation_errors(errors: list[ValidationError]) -> None:
         """Log validation error path and message."""
         if errors:
@@ -186,10 +228,14 @@ class Builtins(object):
                     "library": str,
                     "sources": list,
                     "setup": str,
+                    "compile_option": list,
                 },
                 path="package",
             )
         )
+
+        if isinstance(package.get("compile_option"), list):
+            errors.extend(self._check_compile_options(package["compile_option"], "package.compile_option"))
 
         if "sources" in package:
             errors.extend(self._check_mandatory_keys(package, mandatory={"library": str}, path="package"))
@@ -198,10 +244,14 @@ class Builtins(object):
                 errors.extend(
                     self._check_valid_keys(
                         source,
-                        valid={"include": list, "library": str},
+                        valid={"include": list, "library": str, "compile_option": list},
                         path=f"package.sources[{idx}]",
                     )
                 )
+                if isinstance(source.get("compile_option"), list):
+                    errors.extend(
+                        self._check_compile_options(source["compile_option"], f"package.sources[{idx}].compile_option")
+                    )
                 errors.extend(
                     self._check_mandatory_keys(source, mandatory={"include": list}, path=f"package.sources[{idx}]")
                 )
@@ -291,6 +341,7 @@ class Builtins(object):
         library = None
         sources = package.get("sources", [])
         if sources:
+            package_compile_options = dict(package.get("compile_option", []))
             library_name = package.get("library")
             library = self._add_library_if_not_exist(
                 library_name,
@@ -313,8 +364,14 @@ class Builtins(object):
                         return
                     libraries[source_library_name.lower()] = source_library
 
+                compile_options = package_compile_options.copy()
+                compile_options.update(source.get("compile_option", []))
                 for include in source["include"]:
-                    source_library.add_source_files(package_root / include, vhdl_standard=use_vhdl_standard)
+                    source_files = source_library.add_source_files(
+                        package_root / include, vhdl_standard=use_vhdl_standard
+                    )
+                    for name, value in compile_options.items():
+                        source_files.set_compile_option(name, value)
 
         setup = package.get("setup")
         if setup:
