@@ -142,6 +142,87 @@ class TestBuiltins(unittest.TestCase):
             )
             self.builtins.add_package("foo")
 
+    def test_applies_package_compile_options_and_source_overrides(self):
+        with create_tempdir() as tempdir, pkg_env(tempdir):
+            default_source_files = mock.Mock()
+            overridden_source_files = mock.Mock()
+            self.library_mock.add_source_files.side_effect = [default_source_files, overridden_source_files]
+            self._write_toml(
+                tempdir,
+                """\
+[package]
+library = "bar"
+compile_option = [["package.option", ["--package-flag"]], ["shared.option", ["--default"]]]
+[[package.sources]]
+include = ["hdl/default/*.vhd"]
+[[package.sources]]
+include = ["hdl/override/*.vhd"]
+compile_option = [["shared.option", ["--override"]]]
+""",
+            )
+
+            self.builtins.add_package("foo")
+
+        default_source_files.set_compile_option.assert_has_calls(
+            [
+                mock.call("package.option", ["--package-flag"]),
+                mock.call("shared.option", ["--default"]),
+            ]
+        )
+        overridden_source_files.set_compile_option.assert_has_calls(
+            [
+                mock.call("package.option", ["--package-flag"]),
+                mock.call("shared.option", ["--override"]),
+            ]
+        )
+
+    def test_rejects_invalid_compile_option_shapes_at_package_and_source_levels(self):
+        invalid_options = [
+            ('[["name"]]', "[0]", "Compile option must be an array containing a string and an array of strings."),
+            ("[[17, []]]", "[0][0]", "Compile option name must be a string."),
+            ('[["name", "value"]]', "[0][1]", "Compile option value must be an array of strings."),
+            (
+                '[["name", ["value", 17]]]',
+                "[0][1][1]",
+                "Compile option value must be a string.",
+            ),
+        ]
+
+        for location in ("package", "package.sources[0]"):
+            for options, error_suffix, error_message in invalid_options:
+                with self.subTest(location=location, options=options):
+                    if location == "package":
+                        manifest = f"""\
+[package]
+compile_option = {options}
+"""
+                    else:
+                        manifest = f"""\
+[package]
+library = "bar"
+[[package.sources]]
+include = ["hdl/src/*.vhd"]
+compile_option = {options}
+"""
+
+                    with (
+                        create_tempdir() as tempdir,
+                        pkg_env(tempdir),
+                        self.assertRaisesRegex(
+                            RuntimeError,
+                            re.escape("Invalid vunit_pkg.toml: 1 error(s) found."),
+                        ),
+                        self.assertLogs("vunit.builtins", "ERROR") as mock_error,
+                    ):
+                        self._write_toml(tempdir, manifest)
+                        self.builtins.add_package("foo")
+
+                    self._assertLogContent(
+                        mock_error,
+                        "ERROR",
+                        f"{location}.compile_option{error_suffix}: {error_message}",
+                    )
+
     def test_raises_if_incompatible_vunit_version(self):
         with (
             create_tempdir() as tempdir,
