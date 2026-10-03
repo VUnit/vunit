@@ -43,7 +43,7 @@ class PackageContext:
     simulator_class: Any
     _vunit_obj: Any
 
-    #: Register hooks extending what a simulator does for a test, see :ref:`packages`.
+    #: Register hooks extending what a simulator does for a test, see :ref:`vunit_packages`.
     register_simulator_hooks = staticmethod(register_hooks)
 
     @property

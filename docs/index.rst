@@ -48,6 +48,7 @@ often"* approach through automation. :ref:`Read more <about>`
    cli
    py/ui
    hdl_libraries
+   vunit_packages
    examples
 
 .. toctree::
