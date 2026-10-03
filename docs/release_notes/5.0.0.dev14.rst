@@ -1,0 +1,6 @@
+
+Features
+~~~~~~~~
+
+- VUnit packages can now assign source entries to multiple libraries and define package-wide as well as per-source
+  compile options in ``vunit_pkg.toml``. (:vunit_issue:`1228`)
