@@ -1298,7 +1298,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         """
         Add a VUnit package, that is an installed Python package providing HDL code.
 
-        See :ref:`packages` for how a package is created.
+        See :ref:`vunit_packages` for how a package is created.
 
         :param package_name: The name of the Python package. Dashes and dots are, just like for
                              PyPI package names, equivalent to underscores.
@@ -1349,8 +1349,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         """
         Removed json4vhdl add-on.
         """
-        raise RuntimeError(
-            """\
+        raise RuntimeError("""\
 add_json4vhdl() has been removed. JSON-for-VHDL support is now provided through a separate package.
 
 Install it with:
@@ -1358,8 +1357,7 @@ Install it with:
 pip install vunit-json-for-vhdl
 
 Then replace the add_json4vhdl() call with add_package("vunit-json-for-vhdl").
-"""
-        )
+""")
 
     def update_test_pattern(
         self,
