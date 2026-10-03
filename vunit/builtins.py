@@ -306,7 +306,7 @@ class Builtins(object):
 
         raise RuntimeError(f"Failed to find location of package {package_name}.")
 
-    def add_package(self, package_name: str, allow_setup: bool = False) -> None:
+    def add_package(self, package_name: str, allow_setup: bool = False) -> None:  # pylint: disable=too-many-locals
         """
         Add a VUnit package and, if allowed, run its setup function.
 
