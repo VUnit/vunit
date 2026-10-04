@@ -15,6 +15,7 @@ use ieee.numeric_bit.all;
 use ieee.numeric_std.all;
 
 use work.dict_pkg.all;
+use work.data_types_private_pkg.all;
 use work.queue_pkg.all;
 use work.integer_vector_ptr_pkg.all;
 use work.string_ptr_pkg.all;
@@ -29,6 +30,31 @@ architecture a of tb_dict is
 begin
 
   main : process
+    procedure check_enumeration(dict : dict_t; expected : natural) is
+      variable seen : natural := 0;
+    begin
+      check_equal(num_keys(dict), expected);
+      for i in 0 to num_keys(dict)-1 loop
+        assert has_key(dict, get_key(dict, i));
+        for j in 0 to i-1 loop
+          assert get_key(dict, j) /= get_key(dict, i) report "duplicate key";
+        end loop;
+        if get_key(dict, i) = "s" then
+          check(get_value_type(dict, "s") = vhdl_string); seen := seen + 1;
+        elsif get_key(dict, i) = "b" then
+          check(get_value_type(dict, "b") = vhdl_boolean); seen := seen + 1;
+        elsif get_key(dict, i) = "r" then
+          check(get_value_type(dict, "r") = vhdl_real); seen := seen + 1;
+        elsif get_key(dict, i) = "t" then
+          check(get_value_type(dict, "t") = vhdl_time); seen := seen + 1;
+        elsif get_key(dict, i) = "i" then
+          check(get_value_type(dict, "i") = vhdl_integer); seen := seen + 1;
+        else
+          check(get_value_type(dict, get_key(dict, i)) = vhdl_integer);
+        end if;
+      end loop;
+      check_equal(seen, 4 + boolean'pos(has_key(dict, "i")));
+    end;
     variable dict : dict_t;
     variable dict_value : dict_t;
     variable integer_vector_ptr : integer_vector_ptr_t;
@@ -253,6 +279,26 @@ begin
       check(queue = null_queue);
       queue := get_queue_t_ref(dict, "key");
       check_equal(pop_integer(queue), 17);
+
+    elsif run("test enumerate keys with types") then
+      dict := new_dict;
+      set_string(dict, "s", "value");
+      set_integer(dict, "i", 1);
+      set_boolean(dict, "b", true);
+      set_real(dict, "r", 1.5);
+      set_time(dict, "t", 1 ns);
+      check_enumeration(dict, 5);
+      remove(dict, "i");
+      check_enumeration(dict, 4);
+      check_false(has_key(dict, "i"));
+      for i in 1 to 200 loop
+        set_integer(dict, "k" & integer'image(i), i);
+      end loop;
+      check_enumeration(dict, 4 + 200);
+      for i in 1 to 200 loop
+        remove(dict, "k" & integer'image(i));
+      end loop;
+      check_enumeration(dict, 4);
 
     elsif run("Test push and pop dict_t") then
       queue := new_queue;

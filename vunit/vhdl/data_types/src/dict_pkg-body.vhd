@@ -280,6 +280,35 @@ package body dict_pkg is
     return get_value_ptr(dict, key_hash, key) /= null_string_ptr;
   end;
 
+  impure function get_key (
+    dict  : dict_t;
+    index : natural
+  ) return string is
+    variable offset : natural := index;
+    variable bucket_length : natural;
+    variable bucket_keys : integer_vector_ptr_t;
+  begin
+    assert index < num_keys(dict) report "key index " & to_string(index) & " out of range";
+    for bucket_idx in 0 to length(dict.p_bucket_lengths)-1 loop
+      bucket_length := get(dict.p_bucket_lengths, bucket_idx);
+      if offset < bucket_length then
+        bucket_keys := to_integer_vector_ptr(get(dict.p_bucket_keys, bucket_idx));
+        return to_string(to_string_ptr(get(bucket_keys, offset)));
+      end if;
+      offset := offset - bucket_length;
+    end loop;
+    return "";
+  end;
+
+  impure function get_value_type (
+    dict : dict_t;
+    key  : string
+  ) return data_type_t is
+  begin
+    assert has_key(dict, key) report "missing key '" & key & "'";
+    return get_value_type(dict, hash(key), key);
+  end;
+
   procedure remove (
     dict : dict_t;
     key  : string
