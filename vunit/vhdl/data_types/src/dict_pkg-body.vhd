@@ -11,26 +11,36 @@ package body dict_pkg is
   constant meta_length : natural := meta_num_keys+1;
   constant new_bucket_size : natural := 1;
 
+  -- The pool recycles pointers that can be longer than requested but dict_t uses length as bucket count and size
+  impure function new_exact_ptr (
+    length : natural
+  ) return integer_vector_ptr_t is
+    variable ptr : integer_vector_ptr_t := new_integer_vector_ptr(int_pool, length);
+  begin
+    resize(ptr, length);
+    return ptr;
+  end;
+
   impure function new_dict
   return dict_t is
     variable dict : dict_t;
     variable tmp : integer_vector_ptr_t;
     constant num_buckets : natural := 1;
   begin
-    dict := (p_meta => new_integer_vector_ptr(int_pool, meta_length),
-             p_bucket_lengths => new_integer_vector_ptr(int_pool, num_buckets),
-             p_bucket_keys => new_integer_vector_ptr(int_pool, num_buckets),
-             p_bucket_values => new_integer_vector_ptr(int_pool, num_buckets),
-             p_bucket_value_types => new_integer_vector_ptr(int_pool, num_buckets));
+    dict := (p_meta => new_exact_ptr(meta_length),
+             p_bucket_lengths => new_exact_ptr(num_buckets),
+             p_bucket_keys => new_exact_ptr(num_buckets),
+             p_bucket_values => new_exact_ptr(num_buckets),
+             p_bucket_value_types => new_exact_ptr(num_buckets));
     set(dict.p_meta, meta_num_keys, 0);
     for i in 0 to length(dict.p_bucket_lengths)-1 loop
       -- Zero items in bucket
       set(dict.p_bucket_lengths, i, 0);
-      tmp := new_integer_vector_ptr(int_pool, new_bucket_size);
+      tmp := new_exact_ptr(new_bucket_size);
       set(dict.p_bucket_keys, i, to_integer(tmp));
-      tmp := new_integer_vector_ptr(int_pool, new_bucket_size);
+      tmp := new_exact_ptr(new_bucket_size);
       set(dict.p_bucket_values, i, to_integer(tmp));
-      tmp := new_integer_vector_ptr(int_pool, new_bucket_size);
+      tmp := new_exact_ptr(new_bucket_size);
       set(dict.p_bucket_value_types, i, to_integer(tmp));
     end loop;
     return dict;
@@ -227,9 +237,9 @@ package body dict_pkg is
 
     -- Create new buckets
     for i in old_num_buckets to num_buckets-1 loop
-      set(dict.p_bucket_keys, i, to_integer(new_integer_vector_ptr(int_pool, new_bucket_size)));
-      set(dict.p_bucket_values, i, to_integer(new_integer_vector_ptr(int_pool, new_bucket_size)));
-      set(dict.p_bucket_value_types, i, to_integer(new_integer_vector_ptr(int_pool, new_bucket_size)));
+      set(dict.p_bucket_keys, i, to_integer(new_exact_ptr(new_bucket_size)));
+      set(dict.p_bucket_values, i, to_integer(new_exact_ptr(new_bucket_size)));
+      set(dict.p_bucket_value_types, i, to_integer(new_exact_ptr(new_bucket_size)));
       set(dict.p_bucket_lengths, i, 0);
     end loop;
 
