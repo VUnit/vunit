@@ -1,0 +1,2 @@
+AXI slave verification components now use instance-specific random seeds,
+preventing multiple slaves from producing identical stall patterns.
