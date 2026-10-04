@@ -300,6 +300,20 @@ begin
       end loop;
       check_enumeration(dict, 4);
 
+    elsif run("test new dict after deallocate of a grown dict") then
+      dict := new_dict;
+      for i in 1 to 200 loop
+        set_integer(dict, "k" & integer'image(i), i);
+      end loop;
+      deallocate(dict);
+      dict := new_dict;
+      check_equal(num_keys(dict), 0);
+      for i in 1 to 200 loop
+        set_integer(dict, "k" & integer'image(i), i);
+      end loop;
+      check_equal(num_keys(dict), 200);
+      check_equal(get_integer(dict, "k17"), 17);
+
     elsif run("Test push and pop dict_t") then
       queue := new_queue;
       dict := new_dict;
