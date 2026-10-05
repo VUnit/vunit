@@ -97,6 +97,7 @@ begin
     variable inactive_bus_policy : inactive_bus_policy_t;
     variable axi_stream_signal : axi_stream_signal_t;
     variable stall_config : integer_vector_ptr_t;
+    variable delay : delay_length;
 
     impure function get_inactive_axi_stream_policy(master : axi_stream_master_t) return inactive_axi_stream_policy_t is
       impure function to_inactive_axi_stream_policy(vec : integer_vector_ptr_t) return inactive_axi_stream_policy_t is
@@ -138,6 +139,11 @@ begin
     impure function get_stall_config(master : axi_stream_master_t) return stall_config_t is
     begin
       return p_to_stall_config(to_integer_vector_ptr(get(master.p_config, p_stall_config_idx)));
+    end;
+
+    impure function get_reset_policy(master : axi_stream_master_t) return axi_stream_reset_policy_t is
+    begin
+      return axi_stream_reset_policy_t'val(get(master.p_config, p_reset_policy_idx));
     end;
 
     procedure drive_inactive(
@@ -192,6 +198,28 @@ begin
       drive_policy(l_tuser, inactive_axi_stream_policy(work.axi_stream_pkg.tuser));
     end procedure;
 
+    procedure flush_pending_transactions(queue : queue_t) is
+      constant total_length : natural := length(queue);
+      variable consumed_length : natural := 0;
+      variable before_pop_length : natural;
+      variable msg : msg_t;
+      variable msg_type : msg_type_t;
+    begin
+      while consumed_length < total_length loop
+        before_pop_length := length(queue);
+        msg := pop(queue);
+        consumed_length := consumed_length + (before_pop_length - length(queue));
+
+        -- Messages to keep are pushed back into the queue.
+        msg_type := message_type(msg);
+        if msg_type = stream_push_msg or msg_type = push_axi_stream_msg or msg_type = wait_for_time_msg then
+          null;
+        else
+          push(message_queue, msg);
+        end if;
+      end loop;
+    end;
+
   begin
     rnd.InitSeed(rnd'instance_name);
     loop
@@ -199,20 +227,28 @@ begin
       if areset_n = '0' then
         tvalid <= '0';
         wait until areset_n = '1' and rising_edge(aclk);
+        if get_reset_policy(master) = abort_all_transactions then
+          flush_pending_transactions(message_queue);
+        end if;
       else
         if is_empty(message_queue) then
           -- Wait for messages to arrive on the queue, posted by the process above
-          wait until (not is_empty(message_queue) or areset_n = '0') and rising_edge(aclk);
+          wait until areset_n = '0' or (not is_empty(message_queue) and rising_edge(aclk));
         end if;
 
-        while not is_empty(message_queue) loop
+        while not is_empty(message_queue) and areset_n = '1' loop
           msg := pop(message_queue);
           msg_type := message_type(msg);
 
           if msg_type = wait_for_time_msg then
-            handle_sync_message(net, msg_type, msg);
-            -- Re-align with the clock when a wait for time message was handled, because this breaks edge alignment.
-            wait until rising_edge(aclk);
+            handle_message(msg_type);
+            delay := pop_time(msg);
+            wait until areset_n = '0' for delay;
+
+            if areset_n /= '0' then
+              -- Re-align with the clock when a wait for time message was handled, because this breaks edge alignment.
+              wait until rising_edge(aclk);
+            end if;
 
           elsif msg_type = notify_request_msg then
             -- Ignore this message, but expect it
@@ -238,7 +274,7 @@ begin
               tdest <= (others => '0');
               tuser <= (others => '0');
             end if;
-            wait until ((tvalid and tready) = '1' or areset_n = '0') and rising_edge(aclk);
+            wait until areset_n = '0' or ((tvalid and tready) = '1' and rising_edge(aclk));
             tvalid <= '0';
 
           elsif msg_type = set_inactive_axi_stream_policy_msg then
@@ -271,7 +307,9 @@ begin
           delete(msg);
         end loop;
 
-        notify(bus_process_done);
+        if is_empty(message_queue) then
+          notify(bus_process_done);
+        end if;
       end if;
     end loop;
   end process;
