@@ -473,7 +473,7 @@ evaluates to ``true``, ``1``, or ``H``. The extra verbosity is also present when
 
 .. code-block:: vhdl
 
-    check(false, result("for my data.");
+    check(false, result("for my data."));
 
 will result in
 
@@ -485,7 +485,7 @@ while
 
 .. code-block:: vhdl
 
-    check_true(false, result("for my data.");
+    check_true(false, result("for my data."));
 
 will result in
 
