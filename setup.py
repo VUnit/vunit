@@ -41,6 +41,8 @@ DATA_FILES += find_all_files("vunit", endings=[".tcl"])
 DATA_FILES += find_all_files(str(Path("vunit") / "vhdl"))
 DATA_FILES += find_all_files(str(Path("vunit") / "verilog"), endings=[".v", ".sv", ".svh"])
 DATA_FILES = [os.path.relpath(file_name, "vunit") for file_name in DATA_FILES]
+# PEP 561 marker so downstream projects can pick up vunit's type hints.
+DATA_FILES.append("py.typed")
 
 setup(
     version=version(),
