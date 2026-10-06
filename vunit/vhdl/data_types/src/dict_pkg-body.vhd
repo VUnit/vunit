@@ -298,7 +298,7 @@ package body dict_pkg is
     variable bucket_length : natural;
     variable bucket_keys : integer_vector_ptr_t;
   begin
-    assert index < num_keys(dict) report "key index " & to_string(index) & " out of range";
+    assert index < num_keys(dict) report "key index " & integer'image(index) & " out of range";
     for bucket_idx in 0 to length(dict.p_bucket_lengths)-1 loop
       bucket_length := get(dict.p_bucket_lengths, bucket_idx);
       if offset < bucket_length then
