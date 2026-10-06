@@ -716,6 +716,40 @@ Listed 2 files""".splitlines()
             },
         )
 
+    @with_tempdir
+    def test_export_json_same_sim(self, tempdir):
+        tdir = Path(tempdir)
+        json_file = str(tdir / "export.json")
+
+        ui = self._create_ui("--export-json", json_file)
+        lib = ui.add_library("lib")
+
+        file_name = str(tdir / "tb_same_sim.vhd")
+        create_vhdl_test_bench_file(
+            "tb_same_sim",
+            file_name,
+            tests=["Test one", "Test two"],
+            same_sim=True,
+            test_attributes={"Test one": [".attr0"]},
+        )
+        lib.add_source_file(file_name)
+        lib.test_bench("tb_same_sim").set_attribute(".attr1", "val1")
+
+        self._run_main(ui)
+
+        with Path(json_file).open("r") as fptr:
+            data = json.load(fptr)
+
+        self.assertEqual(set(data.keys()), set(["export_format_version", "files", "tests"]))
+
+        self.assertEqual(
+            {item["name"]: item["attributes"] for item in data["tests"]},
+            {
+                "lib.tb_same_sim.Test one": {".attr0": None, ".attr1": "val1"},
+                "lib.tb_same_sim.Test two": {".attr1": "val1"},
+            },
+        )
+
     def test_library_attributes(self):
         ui = self._create_ui()
         lib1 = ui.add_library("lib1")
