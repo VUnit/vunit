@@ -50,6 +50,19 @@ package dict_pkg is
     dict : dict_t
   ) return natural;
 
+  -- Key at position index, 0 <= index < num_keys(dict). The order is unspecified but stable
+  -- as long as the dict is not modified. Fails if index is out of range.
+  impure function get_key (
+    dict  : dict_t;
+    index : natural
+  ) return string;
+
+  -- The data type of the value stored for key. Fails if key doesn't exist.
+  impure function get_value_type (
+    dict : dict_t;
+    key  : string
+  ) return data_type_t;
+
   procedure remove (
     dict : dict_t;
     key  : string
