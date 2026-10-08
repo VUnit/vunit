@@ -48,6 +48,11 @@ package com_types_pkg is
                         duplicate_actor_name_error,
                         new_actor_from_root_id_error);
 
+  type parity_t is (
+    PARITY_NONE,
+    PARITY_ODD,
+    PARITY_EVEN);
+
   subtype com_error_t is com_status_t range timeout to new_actor_from_root_id_error;
 
   -- All fields of the actor type are private
@@ -406,6 +411,9 @@ package com_types_pkg is
 
   -- Private
   impure function is_valid(code : integer) return boolean;
+
+  function int_to_parity(value : integer) return parity_t;
+
 end package;
 
 package body com_types_pkg is
@@ -888,5 +896,19 @@ package body com_types_pkg is
   begin
     return (p_id_number => value);
   end;
+
+  function int_to_parity(value: integer) return parity_t is
+  begin
+      case value is
+        when 0 =>
+          return PARITY_NONE;
+        when 1 =>
+          return PARITY_ODD;
+        when 2 =>
+          return PARITY_EVEN;
+        when others =>
+          return PARITY_NONE;
+      end case;
+  end function int_to_parity;
 
 end package body com_types_pkg;

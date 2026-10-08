@@ -27,4 +27,14 @@ SRC_PATH = Path(__file__).parent / "src"
 VU.add_library("uart_lib").add_source_files(SRC_PATH / "*.vhd")
 VU.add_library("tb_uart_lib").add_source_files(SRC_PATH / "test" / "*.vhd")
 
+for tb in VU.library("tb_uart_lib").get_test_benches():
+    for parity in [0, 1, 2]:
+        generics = dict(
+            parity=parity
+        )
+        tb.add_config(
+            name=",".join("{}={}".format(k, v) for (k, v) in generics.items()),
+            generics=generics,
+        )
+
 VU.main()
