@@ -8,16 +8,45 @@
 Test the RivieraPro interface
 """
 
-
 import unittest
 from pathlib import Path
 import os
 from shutil import rmtree
 from unittest import mock
-from vunit.sim_if.rivierapro import RivieraProInterface
+from vunit.sim_if.rivierapro import RivieraProInterface, RivieraProVersion
 from vunit.project import Project
 from vunit.ostools import renew_path, write_file
 from vunit.vhdl_standard import VHDL
+
+
+class TestRivieraProVersion(unittest.TestCase):
+    def test_versions_are_ordered_by_year_and_release_month(self):
+        self.assertLess(RivieraProVersion("2022.10"), RivieraProVersion("2023.4"))
+        self.assertLess(RivieraProVersion("2023.4"), RivieraProVersion("2023.10.123"))
+        self.assertEqual(RivieraProVersion("2023.04.123"), RivieraProVersion("2023.4"))
+        self.assertEqual(str(RivieraProVersion("2023.04")), "2023.4")
+
+    def test_from_output_extracts_rivierapro_version(self):
+        output = "Aldec Riviera-PRO version 2023.04.123"
+        self.assertEqual(RivieraProVersion.from_output(output), RivieraProVersion("2023.4"))
+
+    def test_unrecognized_version_warns_and_is_unknown(self):
+        with self.assertWarnsRegex(RuntimeWarning, "version is unknown"):
+            version = RivieraProVersion.from_output("unrecognized simulator output")
+
+        self.assertFalse(version.is_valid)
+        self.assertEqual(str(version), "unknown")
+        with self.assertRaisesRegex(ValueError, "Cannot order unknown Riviera-PRO versions"):
+            version < RivieraProVersion("2023.4")
+
+    @mock.patch("vunit.sim_if.rivierapro.Process")
+    def test_determine_version_returns_unknown_on_unrecognized_output(self, process):
+        process.return_value.consume_output.side_effect = lambda callback: callback("unrecognized Riviera-PRO output")
+
+        with self.assertWarnsRegex(RuntimeWarning, "version is unknown"):
+            version = RivieraProInterface.determine_version("prefix")
+
+        self.assertFalse(version.is_valid)
 
 
 class TestRivieraProInterface(unittest.TestCase):
@@ -28,7 +57,8 @@ class TestRivieraProInterface(unittest.TestCase):
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     @mock.patch("vunit.sim_if.rivierapro.Process", autospec=True)
     @mock.patch("vunit.sim_if.rivierapro.RivieraProInterface.find_prefix", return_value="prefix")
-    def test_compile_project_vhdl_2019(self, _find_prefix, process, check_output):
+    @mock.patch.object(RivieraProInterface, "_get_version", return_value=RivieraProVersion("2023.4"))
+    def test_compile_project_vhdl_2019(self, _get_version, _find_prefix, process, check_output):
         simif = RivieraProInterface(prefix="prefix", output_path=self.output_path)
         project = Project()
         project.add_library("lib", "lib_path")

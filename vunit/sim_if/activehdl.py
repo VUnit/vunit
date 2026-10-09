@@ -14,6 +14,7 @@ import os
 import re
 import logging
 import sys
+import warnings
 from ..exceptions import CompileError
 from ..ostools import Process, write_file, file_exists, renew_path
 from ..test.suites import get_result_file_name
@@ -55,6 +56,14 @@ class ActiveHDLInterface(SimulatorInterface):
         return cls.find_toolchain(["vsim", "avhdl"])
 
     @classmethod
+    def determine_version(cls, prefix):
+        """Determine the ActiveHDL version."""
+        proc = Process([str(Path(prefix) / "vcom"), "-version"], env=cls.get_env())
+        consumer = VersionConsumer()
+        proc.consume_output(consumer)
+        return consumer.version
+
+    @classmethod
     def supports_vhdl_call_paths(cls):
         """
         Returns True when this simulator supports VHDL-2019 call paths
@@ -69,8 +78,8 @@ class ActiveHDLInterface(SimulatorInterface):
         proc = Process([str(Path(cls.find_prefix()) / "vcom"), "-version"], env=cls.get_env())
         consumer = VersionConsumer()
         proc.consume_output(consumer)
-        if consumer.version is not None:
-            return consumer.version >= Version(10, 1)
+        if consumer.version.is_valid:
+            return consumer.version >= ActiveHDLVersion("10.1")
 
         return False
 
@@ -546,45 +555,6 @@ proc vunit_help {} {
         return self._run_batch_file(str(batch_file_name), gui=False, cwd=str(Path(self._library_cfg).parent))
 
 
-@total_ordering
-class Version(object):
-    """
-    Simulator version
-    """
-
-    def __init__(self, major=0, minor=0, minor_letter=""):
-        self.major = major
-        self.minor = minor
-        self.minor_letter = minor_letter
-
-    def _compare(self, other, greater_than, less_than, equal_to):
-        """
-        Compares this object with another
-        """
-        if self.major > other.major:
-            result = greater_than
-        elif self.major < other.major:
-            result = less_than
-        elif self.minor > other.minor:
-            result = greater_than
-        elif self.minor < other.minor:
-            result = less_than
-        elif self.minor_letter > other.minor_letter:
-            result = greater_than
-        elif self.minor_letter < other.minor_letter:
-            result = less_than
-        else:
-            result = equal_to
-
-        return result
-
-    def __lt__(self, other):
-        return self._compare(other, greater_than=False, less_than=True, equal_to=False)
-
-    def __eq__(self, other):
-        return self._compare(other, greater_than=False, less_than=False, equal_to=True)
-
-
 class VersionConsumer(object):
     """
     Consume version information
@@ -593,13 +563,65 @@ class VersionConsumer(object):
     def __init__(self):
         self.version = None
 
-    _version_re = re.compile(r"(?P<major>\d+)\.(?P<minor>\d+)(?P<minor_letter>[a-zA-Z]?)\.\d+\.\d+")
-
     def __call__(self, line):
-        match = self._version_re.search(line)
-        if match is not None:
-            major = int(match.group("major"))
-            minor = int(match.group("minor"))
-            minor_letter = match.group("minor_letter")
-            self.version = Version(major, minor, minor_letter)
+        self.version = ActiveHDLVersion.from_output(line)
+
         return True
+
+
+@total_ordering
+class ActiveHDLVersion:
+    """ActiveHDL version number, possibly unknown."""
+
+    _VERSION_RE = re.compile(r"(?P<major>\d+)\.(?P<minor>\d+)" r"(?P<minor_letter>[a-zA-Z]?)(?:\.\d+\.\d+)?")
+
+    def __init__(self, version_string):
+        self.version_string = version_string
+        self._version = None
+
+        match = self._VERSION_RE.fullmatch(version_string)
+        if not match:
+            warnings.warn(
+                f"Cannot parse ActiveHDL version: {version_string!r}; " "version is unknown",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+            return
+
+        self._version = (int(match.group("major")), int(match.group("minor")), match.group("minor_letter"))
+
+    @classmethod
+    def from_output(cls, output):
+        """Extract the first version from tool output.
+
+        If none is found, return an unknown version and issue a warning.
+        """
+        match = cls._VERSION_RE.search(output)
+        return cls(match.group(0) if match else output)
+
+    @property
+    def is_valid(self):
+        return self._version is not None
+
+    def __eq__(self, other):
+        if not isinstance(other, ActiveHDLVersion):
+            return NotImplemented
+        if not self.is_valid or not other.is_valid:
+            raise ValueError("Cannot compare unknown ActiveHDL versions")
+        return self._version == other._version
+
+    def __lt__(self, other):
+        if not isinstance(other, ActiveHDLVersion):
+            return NotImplemented
+        if not self.is_valid or not other.is_valid:
+            raise ValueError("Cannot order unknown ActiveHDL versions")
+        return self._version < other._version
+
+    def __str__(self):
+        if not self.is_valid:
+            return "unknown"
+        major, minor, minor_letter = self._version
+        return f"{major}.{minor}{minor_letter}"
+
+    def __repr__(self):
+        return f"ActiveHDLVersion({self.version_string!r})"

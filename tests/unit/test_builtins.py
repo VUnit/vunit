@@ -17,9 +17,14 @@ from unittest import mock
 from vunit import VUnit
 from vunit.builtins import Builtins, BuiltinsAdder
 from vunit.about import version
+from vunit.sim_if.activehdl import ActiveHDLVersion
+from vunit.sim_if.ghdl import GHDLVersion
+from vunit.sim_if.modelsim import ModelSimVersion
+from vunit.sim_if.rivierapro import RivieraProVersion
 from vunit.vhdl_standard import VHDL, VHDLStandard
 from vunit.project import Project
 from vunit.sim_if import hooks
+from vunit.sim_if.nvc import NVCVersion
 from tests.common import create_tempdir
 from contextlib import contextmanager
 from importlib.machinery import ModuleSpec
@@ -240,6 +245,169 @@ requires-vunit="==1000.0.0"
 """,
             )
             self.builtins.add_package("foo")
+
+    def test_marker_expression_comparison_operators(self):
+        for expression, expected in (
+            (f'vunit < "{version()}"', False),
+            (f'vunit <= "{version()}"', True),
+            (f'vunit == "{version()}"', True),
+            (f'vunit != "{version()}"', False),
+            (f'vunit >= "{version()}"', True),
+            (f'vunit > "{version()}"', False),
+        ):
+            with self.subTest(expression=expression):
+                self.assertEqual(self.builtins._evaluate_marker_expression(expression), expected)
+
+    def test_marker_expression_logical_precedence_and_parentheses(self):
+        self.assertTrue(self.builtins._evaluate_marker_expression('vhdl == "2002" or vunit == "0" and vhdl == "2019"'))
+        self.assertFalse(
+            self.builtins._evaluate_marker_expression('(vhdl == "2002" or vunit == "0") and vhdl == "2019"')
+        )
+        self.assertTrue(
+            self.builtins._evaluate_marker_expression(" ( vhdl   ==   '2002' )  and vunit >= \"5.0.0.dev14\" ")
+        )
+
+    def test_marker_expression_simulator_marker(self):
+        simulator_class = mock.Mock()
+        simulator_class.name = "questa"
+        builtins = Builtins(self.vu, VHDL.STD_2008, simulator_class)
+        self.assertTrue(builtins._evaluate_marker_expression('simulator == "questa"'))
+        self.assertTrue(builtins._evaluate_marker_expression('simulator != "xsim"'))
+        self.assertTrue(self.builtins._evaluate_marker_expression('simulator != "xsim"'))
+        self.assertFalse(self.builtins._evaluate_marker_expression('simulator == "xsim"'))
+
+    def test_marker_expression_nvc_version_marker(self):
+        simulator_class = mock.Mock()
+        simulator_class.name = "nvc"
+        simulator_class.find_prefix.return_value = "nvc_prefix"
+        simulator_class.determine_version.return_value = NVCVersion("1.16.2")
+        builtins = Builtins(self.vu, VHDL.STD_2008, simulator_class)
+
+        self.assertTrue(builtins._evaluate_marker_expression('nvc_version >= "1.16"'))
+        self.assertTrue(builtins._evaluate_marker_expression('nvc_version == "1.16.2"'))
+        self.assertFalse(builtins._evaluate_marker_expression('nvc_version < "1.16"'))
+        simulator_class.determine_version.assert_called_with("nvc_prefix")
+
+    def test_nvc_version_marker_is_unavailable_without_nvc(self):
+        self.assertFalse(self.builtins._evaluate_marker_expression('nvc_version == "1.16"'))
+        self.assertTrue(self.builtins._evaluate_marker_expression('nvc_version != "1.16"'))
+
+    def test_nvc_version_marker_in_short_circuited_expression_without_nvc(self):
+        simulator_class = mock.Mock()
+        simulator_class.name = "questa"
+        builtins = Builtins(self.vu, VHDL.STD_2008, simulator_class)
+
+        self.assertFalse(builtins._evaluate_marker_expression('simulator == "nvc" and nvc_version < "1.20"'))
+        self.assertTrue(builtins._evaluate_marker_expression('simulator != "nvc" or nvc_version >= "1.20"'))
+
+    def test_simulator_version_markers(self):
+        marker_versions = (
+            ("activehdl", "activehdl_version", "10.5a", "10.5"),
+            ("ghdl", "ghdl_version", "5.0.1", "5.0"),
+            ("modelsim", "modelsim_version", "2024.3", "2024.2"),
+            ("nvc", "nvc_version", "1.20", "1.19"),
+            ("rivierapro", "rivierapro_version", "2023.10", "2023.4"),
+        )
+        version_classes = {
+            "activehdl": ActiveHDLVersion,
+            "ghdl": GHDLVersion,
+            "modelsim": ModelSimVersion,
+            "nvc": NVCVersion,
+            "rivierapro": RivieraProVersion,
+        }
+
+        for simulator_name, marker, installed_version, older_version in marker_versions:
+            with self.subTest(marker=marker):
+                simulator_class = mock.Mock()
+                simulator_class.name = simulator_name
+                simulator_class.find_prefix.return_value = "simulator_prefix"
+                simulator_class.determine_version.return_value = version_classes[simulator_name](installed_version)
+                builtins = Builtins(self.vu, VHDL.STD_2008, simulator_class)
+
+                self.assertTrue(builtins._evaluate_marker_expression(f'{marker} >= "{older_version}"'))
+                simulator_class.determine_version.assert_called_with("simulator_prefix")
+
+    def test_simulator_version_marker_is_unavailable_on_other_simulator(self):
+        simulator_class = mock.Mock()
+        simulator_class.name = "ghdl"
+        builtins = Builtins(self.vu, VHDL.STD_2008, simulator_class)
+
+        self.assertFalse(builtins._evaluate_marker_expression('nvc_version == "1.20"'))
+        self.assertTrue(builtins._evaluate_marker_expression('nvc_version != "1.20"'))
+
+    def test_marker_expression_reports_invalid_syntax_and_values(self):
+        for expression, error in (
+            ("vhdl >=", "Invalid marker expression syntax"),
+            ('vhdl >= "2019" and', "Invalid marker expression syntax"),
+            ('(vhdl >= "2019"', "Invalid marker expression syntax"),
+            ('vhdl "2019"', "Invalid marker expression syntax"),
+            ('vhdl => "2019"', "Unsupported marker comparison operator: =>"),
+            ('unknown_marker == "foo"', "Unknown environment marker 'unknown_marker'"),
+            ('vhdl == "not-a-standard"', "Invalid value 'not-a-standard' for environment marker 'vhdl'"),
+        ):
+            with self.subTest(expression=expression), self.assertRaisesRegex(RuntimeError, error):
+                self.builtins._evaluate_marker_expression(expression)
+
+    def test_package_requires_expression(self):
+        with create_tempdir() as tempdir, pkg_env(tempdir):
+            self._write_toml(
+                tempdir,
+                """\
+[package]
+requires = 'vunit >= "5.0.0.dev14" and vhdl == "2002"'
+""",
+            )
+            self.builtins.add_package("foo")
+
+        with (
+            create_tempdir() as tempdir,
+            pkg_env(tempdir),
+            self.assertRaisesRegex(RuntimeError, "does not satisfy requires expression"),
+        ):
+            self._write_toml(tempdir, "[package]\nrequires = 'vhdl >= \"2019\"'\n")
+            self.builtins.add_package("foo")
+
+    def test_package_requires_combines_with_legacy_constraints(self):
+        builtins = Builtins(self.vu, VHDL.STD_2008, None)
+        manifests = (
+            '[package]\nrequires-vunit = ">=5.0.0.dev14"\nrequires = \'vunit >= "5.0.0.dev14"\'\n',
+            '[package]\nrequires-vhdl = ">=2008"\nrequires = \'vhdl >= "2008"\'\n',
+            '[package]\nrequires-vunit = ">=5.0.0.dev14"\nrequires-vhdl = ">=2008"\n'
+            'requires = \'vunit >= "5.0.0.dev14" and vhdl >= "2008"\'\n',
+        )
+        for manifest in manifests:
+            with self.subTest(manifest=manifest), create_tempdir() as tempdir, pkg_env(tempdir):
+                self._write_toml(tempdir, manifest)
+                builtins.add_package("foo")
+
+    def test_source_when_filters_source_sets(self):
+        with create_tempdir() as tempdir, pkg_env(tempdir):
+            self._write_toml(
+                tempdir,
+                """\
+[package]
+library = "bar"
+[[package.sources]]
+files = ["common.vhd"]
+[[package.sources]]
+library = "osvvm"
+files = ["matching.vhd"]
+when = 'vhdl == "2002"'
+[[package.sources]]
+library = "unused"
+files = ["excluded.vhd"]
+when = 'vhdl == "2019"'
+""",
+            )
+            self.builtins.add_package("foo")
+
+        self.library_mock.add_source_files.assert_has_calls(
+            [
+                mock.call(tempdir / "common.vhd", vhdl_standard=None),
+                mock.call(tempdir / "matching.vhd", vhdl_standard=None),
+            ]
+        )
+        self.assertNotIn("unused", self.vu._project._libraries)
 
     def test_warns_if_multi_vhdl_standard(self):
         with (

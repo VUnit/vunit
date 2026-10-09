@@ -15,6 +15,8 @@ import logging
 import subprocess
 import shlex
 import re
+import warnings
+from functools import total_ordering
 from sys import stdout  # To avoid output catched in non-verbose mode
 from ..exceptions import CompileError
 from ..ostools import Process, file_exists
@@ -90,10 +92,10 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
 
         self._vhdl_standard = None
         self._coverage_files = set()
-        (major, minor) = self.determine_version(prefix)
-        self._supports_jit = major > 1 or (major == 1 and minor >= 9)
-        self._ieee_warnings_global = major > 1 or (major == 1 and minor >= 16)
-        self._supports_coverage_merge = major > 1 or (major == 1 and minor >= 15)
+        version = self.determine_version(prefix)
+        self._supports_jit = version.is_valid and version >= NVCVersion("1.9")
+        self._ieee_warnings_global = version.is_valid and version >= NVCVersion("1.16")
+        self._supports_coverage_merge = version.is_valid and version >= NVCVersion("1.15")
 
         if self.use_color:
             environ["NVC_COLORS"] = "always"
@@ -120,12 +122,7 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
         """
         Determine the NVC version
         """
-        raw = cls._get_version_output(prefix)
-        match = re.match(r"nvc ([0-9]+)\.([0-9]+).*", raw)
-        if not match:
-            raise RuntimeError(f"Cannot determine NVC version: {raw}")
-
-        return (int(match.group(1)), int(match.group(2)))
+        return NVCVersion.from_output(cls._get_version_output(prefix))
 
     @classmethod
     def supports_vhpi(cls):
@@ -305,7 +302,7 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
                     " option vhdl_assert_stop_level, which is set to '%s'. See"
                     " https://vunit.github.io/py/opts.html#simulation-options for further details",
                     self.name,
-                    config.vhdl_assert_stop_level
+                    config.vhdl_assert_stop_level,
                 )
             cmd += config_sim_options
             cmd += hooks.get_flags(self, "run_flags")
@@ -358,9 +355,7 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
         """
 
         if not self._supports_coverage_merge:
-            LOGGER.error(
-                "Current nvc version does not support coverage database merge."
-            )
+            LOGGER.error("Current nvc version does not support coverage database merge.")
             return
 
         coverage_files = []
@@ -384,3 +379,54 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
         nvc_coverage_merge_process = Process(nvc_coverage_merge_cmd, env=self.get_env())
         nvc_coverage_merge_process.consume_output()
         print("Done merging coverage files")
+
+
+@total_ordering
+class NVCVersion:
+    """NVC version number."""
+
+    _VERSION_RE = re.compile(r"([0-9]+)\.([0-9]+)(?:\.([0-9]+))?")
+
+    def __init__(self, version_string):
+        self.version_string = version_string
+        self._version = None
+        match = self._VERSION_RE.fullmatch(version_string)
+        if not match:
+            warnings.warn(
+                f"Cannot parse NVC version: {version_string!r}; version is unknown",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+            return
+
+        self._version = (int(match.group(1)), int(match.group(2)), int(match.group(3) or 0))
+
+    @classmethod
+    def from_output(cls, output):
+        """Extract the NVC version from command output, or return an unknown version."""
+        match = cls._VERSION_RE.search(output)
+        return cls(match.group(0) if match else output)
+
+    @property
+    def is_valid(self):
+        return self._version is not None
+
+    def __eq__(self, other):
+        if isinstance(other, NVCVersion):
+            if not self.is_valid or not other.is_valid:
+                raise ValueError("Cannot compare unknown NVC versions")
+            return self._version == other._version  # pylint: disable=protected-access
+        return NotImplemented
+
+    def __lt__(self, other):
+        if isinstance(other, NVCVersion):
+            if not self.is_valid or not other.is_valid:
+                raise ValueError("Cannot order unknown NVC versions")
+            return self._version < other._version  # pylint: disable=protected-access
+        return NotImplemented
+
+    def __str__(self):
+        return ".".join(str(component) for component in self._version) if self.is_valid else "unknown"
+
+    def __repr__(self):
+        return f"NVCVersion({self.version_string!r})"

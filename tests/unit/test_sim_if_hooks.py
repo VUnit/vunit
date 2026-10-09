@@ -19,7 +19,7 @@ from vunit.sim_if import hooks
 from vunit.sim_if.activehdl import ActiveHDLInterface
 from vunit.sim_if.ghdl import GHDLInterface
 from vunit.sim_if.modelsim import ModelSimInterface
-from vunit.sim_if.nvc import NVCInterface
+from vunit.sim_if.nvc import NVCInterface, NVCVersion
 from vunit.sim_if.rivierapro import RivieraProInterface
 from vunit.sim_if.vsim_simulator_mixin import VsimSimulatorMixin
 from vunit.vhdl_standard import VHDL
@@ -180,7 +180,7 @@ class TestSimulatorHooksAreUsed(unittest.TestCase):
 
         self.assertEqual(process.call_args[1]["env"]["FOO"], "1")
 
-    @mock.patch.object(NVCInterface, "determine_version", return_value=(1, 16))
+    @mock.patch.object(NVCInterface, "determine_version", return_value=NVCVersion("1.16"))
     def test_nvc_uses_hooks(self, determine_version):
         hooks.register_hooks(
             "nvc",

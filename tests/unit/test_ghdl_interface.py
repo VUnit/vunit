@@ -14,12 +14,40 @@ import os
 from shutil import rmtree
 from unittest import mock
 from tests.unit.test_test_bench import Entity
-from vunit.sim_if.ghdl import GHDLInterface
+from vunit.sim_if.ghdl import GHDLInterface, GHDLVersion
 from vunit.project import Project
 from vunit.ostools import renew_path, write_file
 from vunit.exceptions import CompileError
 from vunit.configuration import Configuration
 from vunit.vhdl_standard import VHDL
+
+
+class TestGHDLVersion(unittest.TestCase):
+    def test_versions_are_ordered_by_major_minor_and_patch(self):
+        self.assertLess(GHDLVersion("0.33dev"), GHDLVersion("3.0.0-dev"))
+        self.assertLess(GHDLVersion("5.0"), GHDLVersion("5.0.1"))
+        self.assertEqual(GHDLVersion("5.0"), GHDLVersion("5.0.0"))
+        self.assertEqual(str(GHDLVersion("5.0")), "5.0.0")
+
+    def test_from_output_extracts_ghdl_version(self):
+        output = "GHDL 3.0.0-dev (2.0.0.r1369) [Dunoon edition]"
+        self.assertEqual(GHDLVersion.from_output(output), GHDLVersion("3.0.0-dev"))
+
+    def test_unrecognized_version_warns_and_is_unknown(self):
+        with self.assertWarnsRegex(RuntimeWarning, "version is unknown"):
+            version = GHDLVersion.from_output("unrecognized GHDL output")
+
+        self.assertFalse(version.is_valid)
+        self.assertEqual(str(version), "unknown")
+        with self.assertRaisesRegex(ValueError, "Cannot order unknown GHDL versions"):
+            version < GHDLVersion("5.0")
+
+    @mock.patch.object(GHDLInterface, "_get_version_output", return_value="unrecognized GHDL output")
+    def test_determine_version_returns_unknown_on_unrecognized_output(self, _get_version_output):
+        with self.assertWarnsRegex(RuntimeWarning, "version is unknown"):
+            version = GHDLInterface.determine_version("prefix")
+
+        self.assertFalse(version.is_valid)
 
 
 class TestGHDLInterface(unittest.TestCase):
@@ -138,7 +166,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         self.assertRaises(AssertionError, GHDLInterface.determine_backend, "prefix")
 
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")  # pylint: disable=no-self-use
-    @mock.patch.object(GHDLInterface, "determine_version", return_value=6.0)
+    @mock.patch.object(GHDLInterface, "determine_version", return_value=GHDLVersion("6.0"))
     def test_compile_project_2019(self, determine_version, check_output):
         simif = GHDLInterface(prefix="prefix", output_path="")
         write_file("file.vhd", "")

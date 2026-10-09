@@ -8,18 +8,49 @@
 Test the ModelSim interface
 """
 
-
 import unittest
 from pathlib import Path
 import os
 from shutil import rmtree
 from unittest import mock
 from tests.common import set_env
-from vunit.sim_if.modelsim import ModelSimInterface
+from vunit.sim_if.modelsim import ModelSimInterface, ModelSimVersion
 from vunit.project import Project
 from vunit.ostools import renew_path, write_file
 from vunit.test.bench import Configuration
 from vunit.vhdl_standard import VHDL
+
+
+class TestModelSimVersion(unittest.TestCase):
+    def test_versions_are_ordered_by_numeric_components(self):
+        self.assertLess(ModelSimVersion("10.7"), ModelSimVersion("10.10"))
+        self.assertLess(ModelSimVersion("2024.2"), ModelSimVersion("2024.3"))
+        self.assertEqual(ModelSimVersion("2024.3"), ModelSimVersion("2024.3.0"))
+        self.assertEqual(str(ModelSimVersion("2024.3")), "2024.3.0")
+
+    def test_from_output_extracts_modelsims_version(self):
+        output = "Model Technology ModelSim SE-64 vcom 2024.3"
+        self.assertEqual(ModelSimVersion.from_output(output), ModelSimVersion("2024.3"))
+
+    def test_from_output_extracts_questa_version(self):
+        output = "QuestaSim-64 vcom 2024.3 Compiler 2024.10 Oct 18 2024"
+        self.assertEqual(ModelSimVersion.from_output(output), ModelSimVersion("2024.3"))
+
+    def test_unrecognized_version_warns_and_is_unknown(self):
+        with self.assertWarnsRegex(RuntimeWarning, "version is unknown"):
+            version = ModelSimVersion.from_output("unrecognized simulator output")
+
+        self.assertFalse(version.is_valid)
+        self.assertEqual(str(version), "unknown")
+        with self.assertRaisesRegex(ValueError, "Cannot order unknown ModelSim versions"):
+            version < ModelSimVersion("2024.3")
+
+    @mock.patch("vunit.sim_if.modelsim.check_output", return_value="unrecognized simulator output")
+    def test_determine_version_returns_unknown_on_unrecognized_output(self, _check_output):
+        with self.assertWarnsRegex(RuntimeWarning, "version is unknown"):
+            version = ModelSimInterface.determine_version("prefix")
+
+        self.assertFalse(version.is_valid)
 
 
 class TestModelSimInterface(unittest.TestCase):
@@ -266,7 +297,7 @@ class TestModelSimInterface(unittest.TestCase):
 
     @mock.patch("vunit.sim_if.modelsim.check_output", autospec=True, return_value="")
     def test_copies_modelsim_ini_file_from_install(self, _check_output):
-        (modelsim_ini, installed_modelsim_ini, user_modelsim_ini) = self._get_inis()
+        modelsim_ini, installed_modelsim_ini, user_modelsim_ini = self._get_inis()
 
         with open(installed_modelsim_ini, "w") as fptr:
             fptr.write("[Library]\ninstalled=installed")
@@ -280,7 +311,7 @@ class TestModelSimInterface(unittest.TestCase):
 
     @mock.patch("vunit.sim_if.modelsim.check_output", autospec=True, return_value="")
     def test_copies_modelsim_ini_file_from_user(self, _check_output):
-        (modelsim_ini, installed_modelsim_ini, user_modelsim_ini) = self._get_inis()
+        modelsim_ini, installed_modelsim_ini, user_modelsim_ini = self._get_inis()
 
         with open(installed_modelsim_ini, "w") as fptr:
             fptr.write("[Library]\ninstalled=installed")
@@ -296,7 +327,7 @@ class TestModelSimInterface(unittest.TestCase):
 
     @mock.patch("vunit.sim_if.modelsim.check_output", autospec=True, return_value="")
     def test_overwrites_modelsim_ini_file_from_install(self, _check_output):
-        (modelsim_ini, installed_modelsim_ini, user_modelsim_ini) = self._get_inis()
+        modelsim_ini, installed_modelsim_ini, user_modelsim_ini = self._get_inis()
 
         with open(modelsim_ini, "w") as fptr:
             fptr.write("[Library]\nexisting=existing")
@@ -313,7 +344,7 @@ class TestModelSimInterface(unittest.TestCase):
 
     @mock.patch("vunit.sim_if.modelsim.check_output", autospec=True, return_value="")
     def test_overwrites_modelsim_ini_file_from_user(self, _check_output):
-        (modelsim_ini, installed_modelsim_ini, user_modelsim_ini) = self._get_inis()
+        modelsim_ini, installed_modelsim_ini, user_modelsim_ini = self._get_inis()
 
         with open(modelsim_ini, "w") as fptr:
             fptr.write("[Library]\nexisting=existing")
@@ -332,7 +363,7 @@ class TestModelSimInterface(unittest.TestCase):
 
     @mock.patch("vunit.sim_if.vsim_simulator_mixin.Process", autospec=True)
     def test_modelsim_ini_file_detection(self, vsim_simulator_mixin_process):
-        (modelsim_ini, _, user_modelsim_ini) = self._get_inis()
+        modelsim_ini, _, user_modelsim_ini = self._get_inis()
 
         with open(user_modelsim_ini, "w") as fptr:
             fptr.write("[Library]\nuser=user")
@@ -357,7 +388,7 @@ class TestModelSimInterface(unittest.TestCase):
 
     @mock.patch("vunit.sim_if.vsim_simulator_mixin.Process", autospec=True)
     def test_questa_ini_file_detection(self, vsim_simulator_mixin_process):
-        (questa_ini, installed_questa_ini, user_questa_ini) = self._get_inis("questa")
+        questa_ini, installed_questa_ini, user_questa_ini = self._get_inis("questa")
 
         with open(user_questa_ini, "w") as fptr:
             fptr.write("[Library]\nuser=user")
@@ -386,7 +417,7 @@ class TestModelSimInterface(unittest.TestCase):
         # We need to remove the INI file created in setUp since we testing a non-standard INI file name.
         (Path(self.prefix_path) / ".." / "modelsim.ini").unlink()
 
-        (questasim_ini, installed_questasim_ini, user_questasim_ini) = self._get_inis("questasim")
+        questasim_ini, installed_questasim_ini, user_questasim_ini = self._get_inis("questasim")
 
         with open(user_questasim_ini, "w") as fptr:
             fptr.write("[Library]\nuser=user")

@@ -30,6 +30,7 @@ and compilation defaults. For example:
    [package]
    requires-vunit = ">=5.0.0.dev14"
    requires-vhdl = ">=2008,<2019"
+    requires = 'simulator != "xsim" or vhdl >= "2019"'
    library = "foo_lib"
    compile_option = [["<option-name>", ["<value>"]]]
 
@@ -41,10 +42,20 @@ and compilation defaults. For example:
    library = "foo_compat"
    compile_option = [["<option-name>", ["<source-value>"]]]
 
-Each ``[[package.sources]]`` table defines a source entry. Its ``include``
-patterns are relative to the package root. In this example, files matching
-``hdl/src/*.vhd`` use the default library, ``foo_lib``, while files matching
-``hdl/compat/*.vhd`` use ``foo_compat``.
+Each ``[[package.sources]]`` table defines a source entry. Its ``files``
+patterns (or the backwards-compatible ``include`` key) are relative to the
+package root. In this example, files matching ``hdl/src/*.vhd`` use the
+default library, ``foo_lib``, while files matching ``hdl/compat/*.vhd`` use
+``foo_compat``.
+
+A source entry can be restricted to matching environments:
+
+.. code-block:: toml
+
+  [[package.sources]]
+  library = "foo_lib"
+  files = ["hdl/vhdl2019/*.vhd"]
+  when = 'vhdl >= "2019"'
 
 Replace the compile-option placeholders with names and values supported by
 the project. Each option is a two-element array containing the option name
@@ -67,14 +78,21 @@ The supported manifest fields are:
    * - ``requires-vhdl``
      - ``[package]``
      - Constraints on the VHDL standards supported by the package.
+   * - ``requires``
+     - ``[package]``
+     - Environment expression that must match before the package can be used.
    * - ``library``
      - ``[package]``
      - Default library for package sources. Required when ``sources`` is
        present. VUnit creates the library for the package.
    * - ``sources``
      - ``[[package.sources]]``
-     - Repeated source tables. Each table must contain ``include``, an array
-       of source patterns relative to the package root.
+     - Repeated source tables. Each table must contain ``files`` or
+       ``include``, an array of source patterns relative to the package root.
+   * - ``when``
+     - ``[[package.sources]]``
+     - Optional environment expression that controls whether this source
+       entry is included.
    * - ``library``
      - ``[[package.sources]]``
      - Optional library override for this source entry. VUnit creates the
@@ -97,6 +115,21 @@ If the project's VHDL standard does not satisfy ``requires-vhdl``, VUnit
 selects a compatible supported standard and issues a warning. If no such
 standard is available, adding the package fails. A VUnit version that does
 not satisfy ``requires-vunit`` always causes an error.
+
+The optional ``requires`` and ``when`` expressions support marker names
+``vunit``, ``vhdl``, ``simulator``, and the simulator version markers
+``activehdl_version``, ``ghdl_version``, ``modelsim_version``,
+``nvc_version``, and ``rivierapro_version``. Version markers are available
+only when their corresponding simulator is selected. Equality and inequality
+checks on an unavailable version marker are supported, but ordering checks
+are unavailable. With no simulator selected, equality and inequality checks
+on ``simulator`` are supported, but ordering checks are unavailable. Values
+are quoted strings, comparisons use
+``<=``, ``<``, ``!=``, ``==``, ``>=``, or ``>``, and ``and``, ``or``, and
+parentheses group comparisons. ``and`` has higher precedence than ``or``.
+The legacy ``requires-vunit`` and ``requires-vhdl`` constraints remain in
+force alongside ``requires``. A source entry without ``when`` is always
+included for a usable package.
 
 Manifest validation is strict: unknown fields and values of the wrong type
 are rejected.

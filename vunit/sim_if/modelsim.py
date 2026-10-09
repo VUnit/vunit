@@ -9,8 +9,11 @@ Interface towards Mentor Graphics/Siemens ModelSim/Questa simulator.
 """
 
 from pathlib import Path
+from functools import total_ordering
 import os
 import logging
+import re
+import warnings
 from threading import Lock, Event
 from time import sleep
 from configparser import RawConfigParser, ParsingError
@@ -152,6 +155,12 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
             return cls._find_any_ini_file(Path(path).parent) is not None
 
         return cls.find_toolchain(["vsim"], constraints=[has_ini])
+
+    @classmethod
+    def determine_version(cls, prefix):
+        """Determine the ModelSim/Questa version."""
+        output = check_output([str(Path(prefix) / "vcom"), "-version"], env=cls.get_env())
+        return ModelSimVersion.from_output(output)
 
     @classmethod
     def supports_vhdl_call_paths(cls):
@@ -440,9 +449,7 @@ proc vunit_optimize {{vopt_extra_args ""}} {"""
 
     return false
 }}
-""".format(
-            vopt_flags=" ".join(vopt_flags)
-        )
+""".format(vopt_flags=" ".join(vopt_flags))
 
         return tcl
 
@@ -950,3 +957,54 @@ def write_ini(cfg, file_name):
     """
     with Path(file_name).open("w", encoding="utf-8") as optr:
         cfg.write(optr)
+
+
+@total_ordering
+class ModelSimVersion:
+    """ModelSim/Questa version number."""
+
+    _VERSION_RE = re.compile(r"([0-9]+)\.([0-9]+)(?:\.([0-9]+))?")
+
+    def __init__(self, version_string):
+        self.version_string = version_string
+        self._version = None
+        match = self._VERSION_RE.fullmatch(version_string)
+        if not match:
+            warnings.warn(
+                f"Cannot parse ModelSim version: {version_string!r}; version is unknown",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+            return
+
+        self._version = (int(match.group(1)), int(match.group(2)), int(match.group(3) or 0))
+
+    @classmethod
+    def from_output(cls, output):
+        """Extract the ModelSim/Questa version from command output, or return an unknown version."""
+        match = cls._VERSION_RE.search(output)
+        return cls(match.group(0) if match else output)
+
+    @property
+    def is_valid(self):
+        return self._version is not None
+
+    def __eq__(self, other):
+        if isinstance(other, ModelSimVersion):
+            if not self.is_valid or not other.is_valid:
+                raise ValueError("Cannot compare unknown ModelSim versions")
+            return self._version == other._version  # pylint: disable=protected-access
+        return NotImplemented
+
+    def __lt__(self, other):
+        if isinstance(other, ModelSimVersion):
+            if not self.is_valid or not other.is_valid:
+                raise ValueError("Cannot order unknown ModelSim versions")
+            return self._version < other._version  # pylint: disable=protected-access
+        return NotImplemented
+
+    def __str__(self):
+        return ".".join(str(component) for component in self._version) if self.is_valid else "unknown"
+
+    def __repr__(self):
+        return f"ModelSimVersion({self.version_string!r})"

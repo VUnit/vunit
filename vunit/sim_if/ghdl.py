@@ -9,12 +9,14 @@ Interface for GHDL simulator
 """
 
 from pathlib import Path
+from functools import total_ordering
 from os import environ, makedirs, remove
 import logging
 import subprocess
 import shlex
 import re
 import shutil
+import warnings
 from json import dump
 from sys import stdout  # To avoid output catched in non-verbose mode
 from ..exceptions import CompileError
@@ -191,12 +193,7 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
         """
         Determine the GHDL version
         """
-        return float(
-            re.match(
-                r"GHDL ([0-9]*\.[0-9]*).*\(.*\) \[Dunoon edition\]",
-                cls._get_version_output(prefix),
-            ).group(1)
-        )
+        return GHDLVersion.from_output(cls._get_version_output(prefix))
 
     @classmethod
     def supports_vhdl_call_paths(cls):
@@ -217,8 +214,9 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
         """
         Returns True when the simulator supports VHPI
         """
-        return (cls.determine_backend(cls.find_prefix()) != "mcode") or (
-            cls.determine_version(cls.find_prefix()) > 0.36
+        version = cls.determine_version(cls.find_prefix())
+        return cls.determine_backend(cls.find_prefix()) != "mcode" or (
+            version.is_valid and version > GHDLVersion("0.36")
         )
 
     @classmethod
@@ -272,7 +270,8 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
         Convert standard to format of GHDL command line flag
         """
         if vhdl_standard == VHDL.STD_2019:
-            if self._version >= 6.0:
+            version = self._version
+            if version.is_valid and (version >= GHDLVersion("6.0")):
                 return "19"
             raise ValueError("VHDL-2019 requires GHDL >=6.0.0.")
 
@@ -518,3 +517,54 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
             self._merge_coverage_gcc(output_dir, args)
         else:
             self._merge_coverage_jit(output_dir, args)
+
+
+@total_ordering
+class GHDLVersion:
+    """GHDL version number."""
+
+    _VERSION_RE = re.compile(r"([0-9]+)\.([0-9]+)(?:\.([0-9]+))?(?:-?dev)?")
+
+    def __init__(self, version_string):
+        self.version_string = version_string
+        self._version = None
+        match = self._VERSION_RE.fullmatch(version_string)
+        if not match:
+            warnings.warn(
+                f"Cannot parse GHDL version: {version_string!r}; version is unknown",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+            return
+
+        self._version = (int(match.group(1)), int(match.group(2)), int(match.group(3) or 0))
+
+    @classmethod
+    def from_output(cls, output):
+        """Extract the GHDL version from command output, or return an unknown version."""
+        match = cls._VERSION_RE.search(output)
+        return cls(match.group(0) if match else output)
+
+    @property
+    def is_valid(self):
+        return self._version is not None
+
+    def __eq__(self, other):
+        if isinstance(other, GHDLVersion):
+            if not self.is_valid or not other.is_valid:
+                raise ValueError("Cannot compare unknown GHDL versions")
+            return self._version == other._version  # pylint: disable=protected-access
+        return NotImplemented
+
+    def __lt__(self, other):
+        if isinstance(other, GHDLVersion):
+            if not self.is_valid or not other.is_valid:
+                raise ValueError("Cannot order unknown GHDL versions")
+            return self._version < other._version  # pylint: disable=protected-access
+        return NotImplemented
+
+    def __str__(self):
+        return ".".join(str(component) for component in self._version) if self.is_valid else "unknown"
+
+    def __repr__(self):
+        return f"GHDLVersion({self.version_string!r})"
