@@ -6,7 +6,6 @@ from os.path import abspath
 from pathlib import Path
 from shutil import copyfile
 
-
 ROOT = Path(__file__).resolve().parent
 
 sys_path.insert(0, abspath("."))
@@ -52,7 +51,7 @@ source_suffix = {
 master_doc = "index"
 
 project = "VUnit"
-copyright = "2014-2024, Lars Asplund"
+copyright = "2014-2026, Lars Asplund"
 author = "LarsAsplund, kraigher and contributors"
 
 version = ""
