@@ -22,35 +22,55 @@ To use a package, add it in the project's run script:
    vu.main()
 
 The manifest specifies the package's source files, version requirements,
-and compilation defaults. For example:
+and compilation options. For example:
 
 .. code-block:: toml
    :caption: vunit_pkg.toml
 
    [package]
-   requires-vunit = ">=5.0.0.dev14"
-   requires-vhdl = ">=2008,<2019"
+   # The package requires VUnit 5.0.0.dev15 or later and VHDL 2008 or later.
+   requires = 'vunit >= "5.0.0.dev15" and vhdl >= "2008"'
+
+   # The default library for the package's sources.
    library = "foo_lib"
-   compile_option = [["<option-name>", ["<value>"]]]
+
+   # Default compile options for all sources in the package. These options are optional and can also be overridden for
+   # individual source entries.
+   compile_option = [
+    ["ghdl.a_flags", ["-fpsl"]],
+    ["nvc.a_flags", ["--psl"]]
+   ]
 
    [[package.sources]]
    include = ["hdl/src/*.vhd"]
 
    [[package.sources]]
    include = ["hdl/compat/*.vhd"]
+   # Overrides the default library foo_lib for this source entry.
    library = "foo_compat"
-   compile_option = [["<option-name>", ["<source-value>"]]]
 
-Each ``[[package.sources]]`` table defines a source entry. Its ``include``
-patterns are relative to the package root. In this example, files matching
-``hdl/src/*.vhd`` use the default library, ``foo_lib``, while files matching
-``hdl/compat/*.vhd`` use ``foo_compat``.
+   [[package.sources]]
+   include = ["hdl/ghdl_extras_pkg.vhd", "hdl/ghdl_extras_pkg-body.vhd"]
+   # Conditionally includes this source entry based on the environment.
+   when = 'vhdl >= "2019" and simulator == "ghdl" and ghdl_version >= "6.0.0"'
 
-Replace the compile-option placeholders with names and values supported by
-the project. Each option is a two-element array containing the option name
-and an array of string values. Package-level options apply to every source
-entry. A source-level option overrides the package-level option with the
-same name for that entry.
+
+The ``requires`` expression in the example allows the package to be used with
+VUnit 5.0.0.dev15 or later and VHDL 2008 or later. Each ``[[package.sources]]``
+table defines a source entry, and its ``include`` patterns are relative to the
+package root. The first entry adds files matching ``hdl/src/*.vhd`` to the
+default library, ``foo_lib``. The second adds ``hdl/compat/*.vhd`` to
+``foo_compat`` instead.
+
+The final source entry is added only when all parts of its ``when`` condition
+match: the selected VHDL standard is 2019 or later, the simulator is GHDL, and
+the GHDL version is 6.0.0 or later. Otherwise, that entry's source files are
+skipped.
+
+The package-level ``compile_option`` values shown apply to every source entry.
+Each option is a two-element array containing an option name and an array of
+string values. A source-level option, if specified, overrides the package-level
+option with the same name for that entry.
 
 The supported manifest fields are:
 
@@ -61,12 +81,9 @@ The supported manifest fields are:
    * - Field
      - Location
      - Meaning
-   * - ``requires-vunit``
+   * - ``requires``
      - ``[package]``
-     - VUnit version constraints that the project must satisfy.
-   * - ``requires-vhdl``
-     - ``[package]``
-     - Constraints on the VHDL standards supported by the package.
+     - Environment expression that must match before the package can be used.
    * - ``library``
      - ``[package]``
      - Default library for package sources. Required when ``sources`` is
@@ -75,6 +92,10 @@ The supported manifest fields are:
      - ``[[package.sources]]``
      - Repeated source tables. Each table must contain ``include``, an array
        of source patterns relative to the package root.
+   * - ``when``
+     - ``[[package.sources]]``
+     - Optional environment expression that controls whether this source
+       entry is included.
    * - ``library``
      - ``[[package.sources]]``
      - Optional library override for this source entry. VUnit creates the
@@ -87,16 +108,48 @@ The supported manifest fields are:
      - ``[package]``
      - Optional Python setup function, specified as ``"module:function"``.
        See :ref:`package_setup_function`.
+   * - ``requires-vunit``
+     - ``[package]``
+     - Deprecated. Use ``requires`` to specify a VUnit version constraint.
+   * - ``requires-vhdl``
+     - ``[package]``
+     - Deprecated. Use ``requires`` to specify a VHDL standard constraint.
 
-The ``requires-vunit`` and ``requires-vhdl`` fields accept comma-separated
-comparisons using ``<=``, ``<``, ``!=``, ``==``, ``>=``, or ``>``. All
-comparisons must be satisfied. For example, ``">=2008,<2019"`` allows
-VHDL 2008 but excludes VHDL 2019 and later standards.
+The ``requires`` and ``when`` expressions support the markers ``vunit``,
+``vhdl``, ``simulator``, and the simulator version markers
+``activehdl_version``, ``ghdl_version``, ``modelsim_version``,
+``nvc_version``, and ``rivierapro_version``. Values must be quoted strings.
+Comparisons use ``==``, ``!=``, ``<``, ``<=``, ``>``, or ``>=``. A simulator
+version marker has a value only when its corresponding simulator is selected.
+If a marker has no value, equality and inequality comparisons are supported
+(``==`` is false and ``!=`` is true); ordering comparisons are unavailable.
 
-If the project's VHDL standard does not satisfy ``requires-vhdl``, VUnit
-selects a compatible supported standard and issues a warning. If no such
-standard is available, adding the package fails. A VUnit version that does
-not satisfy ``requires-vunit`` always causes an error.
+Comparisons can be combined with ``and`` and ``or``, and parentheses can group
+them. ``and`` has higher precedence than ``or``; parentheses can override
+that precedence. These operators short-circuit: ``and`` skips its second
+comparison when the first is false, and ``or`` skips it when the first is
+true. For example, in ``simulator == "ghdl" and ghdl_version >= "6.0.0"``,
+the GHDL version is checked only if GHDL is selected. If another simulator is
+selected, the first comparison is false, so the version marker is not
+evaluated while it has no value.
+
+``requires`` determines whether the package can be used in the current
+environment. ``when`` determines whether a particular source entry is
+included. A source entry without ``when`` is included whenever the package
+can be used.
+
+The deprecated ``requires-vunit`` and ``requires-vhdl`` fields are still
+supported, but new manifests should use ``requires``.
+
+VUnit uses the project's VHDL standard when it satisfies ``requires``. If not,
+VUnit selects the closest supported VHDL standard that makes the full
+``requires`` expression match. A warning is issued when a different standard
+is selected, and the package is compiled with that standard. For example, if
+the project uses VHDL 2008 and the manifest has
+``requires = 'vhdl == "1993"'``, the package is compiled with VHDL 1993. If the
+project uses VHDL 2019 and the manifest has ``requires = 'vhdl <= "2008"'``,
+VUnit selects VHDL 2008, the closest supported standard that satisfies the
+requirement.
 
 Manifest validation is strict: unknown fields and values of the wrong type
 are rejected.

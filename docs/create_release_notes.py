@@ -8,6 +8,7 @@
 Create monolithic release notes file from several input files
 """
 
+import sys
 from pathlib import Path
 from subprocess import check_call, check_output, CalledProcessError
 from shutil import which
@@ -21,7 +22,7 @@ def create_release_notes():
     docsroot = Path(__file__).parent
     root = docsroot.parent
 
-    check_call(["towncrier", "build", "--keep"], cwd=root)
+    check_call([sys.executable, "-m", "towncrier", "build", "--keep"], cwd=root)
 
     # Get all releases defined by release note files
     releases = [
