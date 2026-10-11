@@ -9,7 +9,6 @@ Functions to add builtin VHDL code to a project for compilation
 """
 
 from pathlib import Path
-from glob import glob
 import logging
 import importlib
 import importlib.util
@@ -178,9 +177,9 @@ class Builtins(object):
 
         add("array_util")  # Removed in v5.0.0
         add("com")
-        add("verification_components", ["com", "osvvm"])
-        add("osvvm")
-        add("random", ["osvvm"])
+        add("verification_components", ["com", "vunit_osvvm"])
+        add("vunit_osvvm")
+        add("random", ["vunit_osvvm"])
 
     def add(self, name, args=None):
         self._builtins_adder.add(name, args)
@@ -476,7 +475,12 @@ class Builtins(object):
         # find_spec is safe since it does not execute the package __init__.py file
         spec = importlib.util.find_spec(package_name)
         if spec is None:
-            raise RuntimeError(f"Could not find package {package_name}.")
+            raise RuntimeError(f"""
+Could not find package '{package_name}'.
+Install it in the Python environment used to run this script:
+
+    python -m pip install {package_name}
+""")
 
         if spec.submodule_search_locations is not None and spec.origin is None:
             raise RuntimeError(f"Package {package_name} is a namespace package, which is currently not supported.")
@@ -781,63 +785,18 @@ class Builtins(object):
             return None
         return self._vunit_obj.add_library(library_name)
 
-    def _add_osvvm(self):
+    def _add_vunit_osvvm(self):
         """
-        Add osvvm library
+        Add vunit-osvvm package
         """
 
-        library = self._add_library_if_not_exist(
-            "osvvm", "Library 'OSVVM' previously defined. Skipping addition of builtin OSVVM (2023.04)."
-        )
-        if library is None:
-            return
+        if importlib.util.find_spec("vunit_osvvm") is None:
+            raise RuntimeError("""\
+The required 'vunit-osvvm' VUnit package is missing. Install it in the same Python environment
+as VUnit with 'python -m pip install vunit-osvvm'.
+""")
 
-        simulator_coverage_api = self._simulator_class.get_osvvm_coverage_api()
-        supports_vhdl_package_generics = self._simulator_class.supports_vhdl_package_generics()
-
-        if not osvvm_is_installed():
-            raise RuntimeError("""
-Found no OSVVM VHDL files. Did you forget to run
-
-git submodule update --init --recursive
-
-in your VUnit Git repository? You have to do this first if installing using setup.py.""")
-
-        for file_name in glob(str(VHDL_PATH / "osvvm" / "*.vhd")):
-            bname = Path(file_name).name
-
-            if (bname == "AlertLogPkg_body_BVUL.vhd") or ("2019" in bname):
-                continue
-
-            if ((simulator_coverage_api != "rivierapro") and (bname == "VendorCovApiPkg_Aldec.vhd")) or (
-                (simulator_coverage_api == "rivierapro") and (bname == "VendorCovApiPkg.vhd")
-            ):
-                continue
-
-            if not supports_vhdl_package_generics and (
-                bname
-                in [
-                    "ScoreboardGenericPkg.vhd",
-                    "ScoreboardPkg_int.vhd",
-                    "ScoreboardPkg_slv.vhd",
-                    "MemoryPkg.vhd",
-                    "MemoryGenericPkg.vhd",
-                ]
-            ):
-                continue
-
-            if supports_vhdl_package_generics and (
-                bname
-                in [
-                    "ScoreboardPkg_int_c.vhd",
-                    "ScoreboardPkg_slv_c.vhd",
-                    "MemoryPkg_c.vhd",
-                    "MemoryPkg_orig_c.vhd",
-                ]
-            ):
-                continue
-
-            library.add_source_files(file_name, preprocessors=[])
+        self._vunit_obj.add_package("vunit-osvvm")
 
     def _add_vhdl_logging(self, use_external_log):
         """
@@ -909,13 +868,6 @@ in your VUnit Git repository? You have to do this first if installing using setu
             "path",
         ):
             self._add_files(VHDL_PATH / path / "src" / "*.vhd")
-
-
-def osvvm_is_installed():
-    """
-    Checks if OSVVM is installed within the VUnit directory structure
-    """
-    return len(glob(str(VHDL_PATH / "osvvm" / "*.vhd"))) != 0
 
 
 def add_verilog_include_dir(include_dirs):

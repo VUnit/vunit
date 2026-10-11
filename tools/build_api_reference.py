@@ -42,13 +42,12 @@ _PACKAGE_RE = re.compile(r"^[ \t]*package\s+(?!body\b)(\w+)\s+is\b\s*(new\b)?", 
 
 
 def find_package_files(root):
-    """(path, package name) of every package declaration in vunit/vhdl/**/src, except OSVVM, sorted by name."""
+    """(path, package name) of every package declaration in vunit/vhdl/**/src, sorted by name."""
     vhdl_root = root / "vunit" / "vhdl"
     found = []
     for path in sorted(vhdl_root.glob("**/src/**/*.vhd")):
-        if "osvvm" not in path.relative_to(vhdl_root).parts:
-            text = path.read_text(encoding="utf-8")
-            found += [(path, match.group(1)) for match in _PACKAGE_RE.finditer(text) if match.group(2) is None]
+        text = path.read_text(encoding="utf-8")
+        found += [(path, match.group(1)) for match in _PACKAGE_RE.finditer(text) if match.group(2) is None]
     return sorted(found, key=lambda item: item[1])
 
 
@@ -119,7 +118,12 @@ def _comment(trivia):
 
 
 def _newlines(trivia):
-    return trivia["LineFeeds"] if "LineFeeds" in trivia else _comment(trivia).count("\n")
+    """Return the line-break count represented by a trivia entry."""
+    if "LineFeeds" in trivia:
+        return trivia["LineFeeds"]
+    if "CarriageReturnLineFeeds" in trivia:
+        return trivia["CarriageReturnLineFeeds"]
+    return _comment(trivia).count("\n")
 
 
 def _tokens(node):

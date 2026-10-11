@@ -90,18 +90,6 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         return consumer.version
 
     @classmethod
-    def get_osvvm_coverage_api(cls):
-        """
-        Returns simulator name when OSVVM coverage API is supported, None otherwise.
-        """
-        version = cls._get_version()
-        if version.is_valid:
-            if version >= RivieraProVersion("2016.10"):
-                return cls.name
-
-        return None
-
-    @classmethod
     def supports_vhdl_call_paths(cls):
         """
         Returns True when this simulator supports VHDL-2019 call paths

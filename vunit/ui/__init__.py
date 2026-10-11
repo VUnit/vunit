@@ -1343,9 +1343,17 @@ other preprocessors. Lowest value first. The order between preprocessors with th
 
     def add_osvvm(self):
         """
-        Add osvvm library
+        Removed osvvm library
         """
-        self._builtins.add("osvvm")
+        raise RuntimeError("""\
+add_osvvm() has been removed. OSVVM support is now provided through a separate package.
+
+Install it with:
+
+pip install vunit-osvvm
+
+Then replace the add_osvvm() call with add_package("vunit-osvvm").
+""")
 
     def add_json4vhdl(self):
         """
