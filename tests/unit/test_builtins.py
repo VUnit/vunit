@@ -86,14 +86,28 @@ class TestBuiltins(unittest.TestCase):
     def test_raises_if_package_not_found(self):
         with (
             mock.patch("vunit.builtins.importlib.util.find_spec", return_value=None),
-            self.assertRaisesRegex(RuntimeError, re.escape("Could not find package foo.")),
+            self.assertRaisesRegex(
+                RuntimeError,
+                re.escape(
+                    "Could not find package 'foo'.\n"
+                    "Install it in the Python environment used to run this script:\n\n"
+                    "    python -m pip install foo"
+                ),
+            ),
         ):
             self.builtins.add_package("foo")
 
     def test_normalizes_package_name(self):
         with (
             mock.patch("vunit.builtins.importlib.util.find_spec", return_value=None),
-            self.assertRaisesRegex(RuntimeError, re.escape("Could not find package a_b_c_d.")),
+            self.assertRaisesRegex(
+                RuntimeError,
+                re.escape(
+                    "Could not find package 'a_b_c_d'.\n"
+                    "Install it in the Python environment used to run this script:\n\n"
+                    "    python -m pip install a_b_c_d"
+                ),
+            ),
         ):
             self.builtins.add_package("a-b.c-d")
 
@@ -450,7 +464,7 @@ library = "bar"
 [[package.sources]]
 include = ["common.vhd"]
 [[package.sources]]
-library = "osvvm"
+library = "baz"
 include = ["matching.vhd"]
 when = 'vhdl == "2002"'
 [[package.sources]]

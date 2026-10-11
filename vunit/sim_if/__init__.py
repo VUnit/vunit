@@ -175,12 +175,6 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         return None
 
     @classmethod
-    def get_osvvm_coverage_api(cls):
-        """
-        Returns simulator name when OSVVM coverage API is supported, None otherwise.
-        """
-
-    @classmethod
     def supports_vhdl_package_generics(cls):
         """
         Returns True when this simulator supports VHDL package generics
@@ -375,6 +369,7 @@ def check_output(command, env=None):
     """
     Wrapper arround subprocess.check_output
     """
+
     def _decode(data: bytes) -> str:
         """Decode tool output robustly across platforms.
 
@@ -384,10 +379,12 @@ def check_output(command, env=None):
 
         # Deduplicate via dict.fromkeys to avoid trying utf-8 twice
         # when locale.getpreferredencoding() returns "UTF-8".
-        encodings_to_try = dict.fromkeys([
-            "utf-8",
-            locale.getpreferredencoding(False),
-        ])
+        encodings_to_try = dict.fromkeys(
+            [
+                "utf-8",
+                locale.getpreferredencoding(False),
+            ]
+        )
 
         for encoding in encodings_to_try:
             try:

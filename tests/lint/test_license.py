@@ -137,11 +137,6 @@ def find_licensed_files():
                 continue
             if str(ROOT / ".tox") in root:
                 continue
-            if is_prefix_of(
-                (VHDL_PATH / "osvvm").resolve(),
-                (Path(root) / file_name).resolve(),
-            ):
-                continue
             if file_name == "AlertLogPkg.vhd":
                 continue
             if Path(file_name).suffix in (".vhd", ".vhdl", ".py", ".v", ".sv"):

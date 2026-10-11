@@ -23,5 +23,5 @@ FROM ${TAG} AS vunit
 COPY --from=ghdl/pkg:bookworm-${PKG} / /usr/local/
 
 RUN ghdl --version
-RUN pip install -U tox colorama coverage --progress-bar off
+RUN pip install -U tox colorama vunit-osvvm coverage --progress-bar off
 EOF

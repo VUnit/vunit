@@ -204,7 +204,7 @@ class TestDocCommentsAndPackage(unittest.TestCase):
             _convert(_pkg("  component comp_x is\n  end component;"), path="/a/my_pkg.vhd")
         message = str(ctx.exception)
         self.assertIn("ComponentDeclaration", message)
-        self.assertIn("/a/my_pkg.vhd", message)
+        self.assertIn(str(Path("/a/my_pkg.vhd")), message)
 
     def test_missing_package_name_returns_none(self):
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -218,7 +218,7 @@ class TestPackageScope(unittest.TestCase):
     """find_package_files scans file text for "package X is" -- no vhdl-dump-ast needed."""
 
     @with_tempdir
-    def test_finds_declarations_excludes_body_instantiation_and_osvvm(self, tempdir):
+    def test_finds_declarations_excludes_body_instantiation(self, tempdir):
         write = lambda relpath, content: (tempdir / relpath).parent.mkdir(parents=True, exist_ok=True) or (
             tempdir / relpath
         ).write_text(content, encoding="utf-8")
@@ -229,7 +229,6 @@ class TestPackageScope(unittest.TestCase):
             "package foo_pkg is new work.foo_generic_pkg generic map (t => integer);\n"
             "package body foo_generic_pkg is\nend package body;\n",
         )
-        write("vunit/vhdl/osvvm/src/SomePkg.vhd", "package SomePkg is\nend package;\n")
         found = bar.find_package_files(tempdir)
         self.assertEqual(sorted(name for _, name in found), ["foo_generic_pkg", "queue_pkg"])
 
