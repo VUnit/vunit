@@ -11,6 +11,7 @@ and RivieraPRO
 
 import sys
 import os
+import weakref
 from pathlib import Path
 from ..ostools import write_file, Process
 from ..test.suites import get_result_file_name
@@ -30,10 +31,12 @@ class VsimSimulatorMixin(object):
         self._sim_cfg_file_name = sim_cfg_file_name
 
         prefix = self._prefix  # Avoid circular dependency inhibiting process destruction
-        env = hooks.get_run_env(self, self.get_env())
-        process_flags = hooks.get_flags(self, "process_flags")
+        # Likewise a weak reference. The hooks are asked when a process is created rather than
+        # here, since the VUnit object gives its hooks to the interface after creating it.
+        simulator_if = weakref.ref(self)
 
         def create_process(ident):
+            simulator = simulator_if()
             return Process(
                 [
                     str(Path(prefix) / "vsim"),
@@ -43,9 +46,9 @@ class VsimSimulatorMixin(object):
                     "-do",
                     str((Path(__file__).parent / "tcl_read_eval_loop.tcl").resolve()),
                 ]
-                + process_flags,
+                + hooks.get_flags(simulator, "process_flags"),
                 cwd=str(Path(sim_cfg_file_name).parent),
-                env=env,
+                env=hooks.get_run_env(simulator, simulator.get_env()),
             )
 
         if persistent:

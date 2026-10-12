@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
 
-from vunit.sim_if.hooks import register_hooks
+from vunit.sim_if.hooks import EnvHook, FlagsHook
 from vunit.vhdl_standard import VHDLStandard
 
 
@@ -43,8 +43,36 @@ class PackageContext:
     simulator_class: Any
     _vunit_obj: Any
 
-    #: Register hooks extending what a simulator does for a test, see :ref:`vunit_packages`.
-    register_simulator_hooks = staticmethod(register_hooks)
+    def register_simulator_hooks(
+        self,
+        simulator_name: str,
+        *,
+        elab_flags: Optional[FlagsHook] = None,
+        run_flags: Optional[FlagsHook] = None,
+        process_flags: Optional[FlagsHook] = None,
+        run_env: Optional[EnvHook] = None,
+    ) -> None:
+        """
+        Register hooks extending what a simulator does for a test, see :ref:`vunit_packages`. The
+        hooks apply to the tests of the VUnit object the package is added to.
+
+        :param simulator_name: The name of the simulator the hooks apply to, for example "ghdl".
+        :param elab_flags: A ``elab_flags(simulator_interface)`` function returning extra flags for
+                           the elaboration of a test.
+        :param run_flags: A ``run_flags(simulator_interface)`` function returning extra flags for the
+                          simulation of a test.
+        :param process_flags: A ``process_flags(simulator_interface)`` function returning extra flags
+                              for the simulator process VUnit starts.
+        :param run_env: A ``run_env(simulator_interface, env)`` function returning the environment
+                        of the simulation of a test, given the environment it would otherwise have.
+        """
+        self._vunit_obj._simulator_hooks.register(  # pylint: disable=protected-access
+            simulator_name,
+            elab_flags=elab_flags,
+            run_flags=run_flags,
+            process_flags=process_flags,
+            run_env=run_env,
+        )
 
     @property
     def simulator_name(self) -> Optional[str]:

@@ -28,7 +28,7 @@ from .. import ostools
 from ..vunit_cli import VUnitCLI
 from ..sim_if.factory import SIMULATOR_FACTORY
 from ..sim_if import SimulatorInterface
-from ..sim_if.hooks import clear_hooks as clear_simulator_hooks
+from ..sim_if.hooks import SimulatorHooks
 from ..color_printer import COLOR_PRINTER, NO_COLOR_PRINTER
 
 from ..project import Project
@@ -154,8 +154,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self._output_path = str(Path(args.output_path).resolve())
         self._run_script_path = _find_run_script_path()
 
-        # Simulator hooks are registered by the packages of this project
-        clear_simulator_hooks()
+        # The simulator hooks registered by the packages of this project
+        self._simulator_hooks = SimulatorHooks()
 
         if args.no_color:
             self._printer = NO_COLOR_PRINTER
@@ -861,7 +861,9 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         if not Path(self._simulator_output_path).exists():
             os.makedirs(self._simulator_output_path)
 
-        return self._simulator_class.from_args(args=self._args, output_path=self._simulator_output_path)
+        simulator_if = self._simulator_class.from_args(args=self._args, output_path=self._simulator_output_path)
+        simulator_if.simulator_hooks = self._simulator_hooks
+        return simulator_if
 
     def _get_test_history(self, simulator_if):
         """
