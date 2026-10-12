@@ -5,15 +5,16 @@
 # Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
 """
-Registry of simulator hooks.
+Simulator hooks.
 
 A hook is a callable provided by a VUnit package to extend what a simulator interface does
 for a test. The hooks are registered per simulator name and are called by the simulator
 interfaces with the interface instance such that a hook can base its result on how the
 simulator was configured.
 
-The registry is cleared when a new VUnit object is created, that is the hooks registered for
-a project do not leak into the next one.
+Every VUnit object has a registry of its own, holding the hooks registered by its packages,
+and gives it to the simulator interface it creates. The hooks of a project therefore neither
+leak into another VUnit object nor are lost when another VUnit object is created.
 """
 
 from os import environ
@@ -22,75 +23,109 @@ from typing import Callable, Dict, List, Optional, Tuple
 FlagsHook = Callable[..., List[str]]
 EnvHook = Callable[..., Dict[str, str]]
 
-# The hooks registered for a simulator name and a kind of hook
-_HOOKS: Dict[Tuple[str, str], List[Callable]] = {}
 
-
-def register_hooks(
-    simulator_name: str,
-    *,
-    elab_flags: Optional[FlagsHook] = None,
-    run_flags: Optional[FlagsHook] = None,
-    process_flags: Optional[FlagsHook] = None,
-    run_env: Optional[EnvHook] = None,
-) -> None:
+class SimulatorHooks:
     """
-    Register hooks for a simulator.
-
-    :param simulator_name: The name of the simulator the hooks apply to, for example "ghdl".
-    :param elab_flags: A ``elab_flags(simulator_interface)`` function returning extra flags for
-                       the elaboration of a test. Simulators without a separate elaboration step
-                       do not call this hook.
-    :param run_flags: A ``run_flags(simulator_interface)`` function returning extra flags for the
-                      simulation of a test.
-    :param process_flags: A ``process_flags(simulator_interface)`` function returning extra flags for
-                          the simulator process VUnit starts. Only simulators driving the simulation
-                          from a separate process, that is the vsim based ones, call this hook.
-    :param run_env: A ``run_env(simulator_interface, env)`` function returning the environment
-                    of the simulation of a test, given the environment it would otherwise have.
+    The hooks registered by the packages of a VUnit object.
     """
-    if not isinstance(simulator_name, str) or not simulator_name:
-        raise ValueError("Simulator name must be a non-empty string.")
 
-    new_hooks = {"elab_flags": elab_flags, "run_flags": run_flags, "process_flags": process_flags, "run_env": run_env}
-    for kind, hook in new_hooks.items():
-        if hook is not None and not callable(hook):
-            raise ValueError(f"{kind} hook for simulator {simulator_name} is not callable.")
+    def __init__(self):
+        # The hooks registered for a simulator name and a kind of hook
+        self._hooks: Dict[Tuple[str, str], List[Callable]] = {}
 
-    for kind, hook in new_hooks.items():
-        if hook is not None:
-            _HOOKS.setdefault((simulator_name, kind), []).append(hook)
+    def register(
+        self,
+        simulator_name: str,
+        *,
+        elab_flags: Optional[FlagsHook] = None,
+        run_flags: Optional[FlagsHook] = None,
+        process_flags: Optional[FlagsHook] = None,
+        run_env: Optional[EnvHook] = None,
+    ) -> None:
+        """
+        Register hooks for a simulator.
+
+        :param simulator_name: The name of the simulator the hooks apply to, for example "ghdl".
+        :param elab_flags: A ``elab_flags(simulator_interface)`` function returning extra flags for
+                           the elaboration of a test. Simulators without a separate elaboration step
+                           do not call this hook.
+        :param run_flags: A ``run_flags(simulator_interface)`` function returning extra flags for the
+                          simulation of a test.
+        :param process_flags: A ``process_flags(simulator_interface)`` function returning extra flags
+                              for the simulator process VUnit starts. Only simulators driving the
+                              simulation from a separate process, that is the vsim based ones, call
+                              this hook.
+        :param run_env: A ``run_env(simulator_interface, env)`` function returning the environment
+                        of the simulation of a test, given the environment it would otherwise have.
+        """
+        if not isinstance(simulator_name, str) or not simulator_name:
+            raise ValueError("Simulator name must be a non-empty string.")
+
+        new_hooks = {
+            "elab_flags": elab_flags,
+            "run_flags": run_flags,
+            "process_flags": process_flags,
+            "run_env": run_env,
+        }
+        for kind, hook in new_hooks.items():
+            if hook is not None and not callable(hook):
+                raise ValueError(f"{kind} hook for simulator {simulator_name} is not callable.")
+
+        for kind, hook in new_hooks.items():
+            if hook is not None:
+                self._hooks.setdefault((simulator_name, kind), []).append(hook)
+
+    def get_flags(self, simulator_interface, kind: str) -> List[str]:
+        """
+        Return the extra flags provided by the hooks of the simulator of a kind, that is
+        "elab_flags", "run_flags" or "process_flags".
+        """
+        return [
+            flag for hook in self._hooks.get((simulator_interface.name, kind), []) for flag in hook(simulator_interface)
+        ]
+
+    def get_run_env(self, simulator_interface, env: Optional[Dict[str, str]] = None) -> Optional[Dict[str, str]]:
+        """
+        Return the simulation environment transformed by the hooks of the simulator.
+
+        The environment is returned unchanged if there are no hooks. None means that the
+        simulation inherits the environment of VUnit, in which case a copy of that environment is
+        given to the hooks.
+        """
+        hooks = self._hooks.get((simulator_interface.name, "run_env"), [])
+        if not hooks:
+            return env
+
+        result = environ.copy() if env is None else env
+        for hook in hooks:
+            result = hook(simulator_interface, result)
+
+        return result
 
 
-def clear_hooks() -> None:
+# The hooks of a simulator interface not created by a VUnit object
+_NO_HOOKS = SimulatorHooks()
+
+
+def _hooks_of(simulator_interface) -> SimulatorHooks:
     """
-    Remove all registered hooks.
+    The hooks given to a simulator interface by the VUnit object that created it.
     """
-    _HOOKS.clear()
+    hooks = getattr(simulator_interface, "simulator_hooks", None)
+    return hooks if isinstance(hooks, SimulatorHooks) else _NO_HOOKS
 
 
 def get_flags(simulator_interface, kind: str) -> List[str]:
     """
-    Return the extra flags provided by the hooks of the simulator of a kind, that is
+    Return the extra flags provided by the hooks of the simulator interface of a kind, that is
     "elab_flags", "run_flags" or "process_flags".
     """
-    return [flag for hook in _HOOKS.get((simulator_interface.name, kind), []) for flag in hook(simulator_interface)]
+    return _hooks_of(simulator_interface).get_flags(simulator_interface, kind)
 
 
 def get_run_env(simulator_interface, env: Optional[Dict[str, str]] = None) -> Optional[Dict[str, str]]:
     """
-    Return the simulation environment transformed by the hooks of the simulator.
-
-    The environment is returned unchanged if there are no hooks. None means that the simulation
-    inherits the environment of VUnit, in which case a copy of that environment is given to the
-    hooks.
+    Return the simulation environment transformed by the hooks of the simulator interface, see
+    :meth:`SimulatorHooks.get_run_env`.
     """
-    hooks = _HOOKS.get((simulator_interface.name, "run_env"), [])
-    if not hooks:
-        return env
-
-    result = environ.copy() if env is None else env
-    for hook in hooks:
-        result = hook(simulator_interface, result)
-
-    return result
+    return _hooks_of(simulator_interface).get_run_env(simulator_interface, env)

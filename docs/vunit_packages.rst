@@ -188,7 +188,9 @@ and use these dependencies.
 Use ``context.register_simulator_hooks(simulator_name, ...)`` to register
 functions that supply these settings for a particular simulator. Hooks
 receive the simulator interface, so they can adapt their results to its
-configuration. They apply only to the project in which they are registered.
+configuration. They apply only to the project in which they are registered,
+that is to the tests of the VUnit object the package is added to. Creating
+another VUnit object neither removes them nor gives them to the new object.
 
 The following example builds a native library and registers hooks to load
 it with NVC or link it with GHDL:

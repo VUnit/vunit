@@ -20,6 +20,7 @@ from vunit.about import version
 from vunit.vhdl_standard import VHDL, VHDLStandard
 from vunit.project import Project
 from vunit.sim_if import hooks
+from vunit.sim_if.hooks import SimulatorHooks
 from tests.common import create_tempdir
 from contextlib import contextmanager
 from importlib.machinery import ModuleSpec
@@ -64,6 +65,7 @@ class TestBuiltins(unittest.TestCase):
 
         self.vu._output_path = "output_path"
         self.vu._run_script_path = Path("run.py")
+        self.vu._simulator_hooks = SimulatorHooks()
 
         self.builtins = Builtins(self.vu, VHDLStandard("2002"), None)
 
@@ -728,8 +730,6 @@ setup = "foo_setup:setup"
                 self.assertEqual(context.simulator_backend, backend)
 
     def test_setup_function_registers_simulator_hooks(self):
-        self.addCleanup(hooks.clear_hooks)
-
         with (
             create_tempdir() as tempdir,
             pkg_env(tempdir),
@@ -760,6 +760,7 @@ setup = "foo_setup:setup"
 
             simulator_interface = mock.Mock()
             simulator_interface.name = "ghdl"
+            simulator_interface.simulator_hooks = self.vu._simulator_hooks
             self.assertEqual(hooks.get_flags(simulator_interface, "elab_flags"), ["-Wl,-lfoo"])
             self.assertEqual(hooks.get_flags(simulator_interface, "run_flags"), ["--load=foo"])
             self.assertEqual(hooks.get_flags(simulator_interface, "process_flags"), ["-noautoldlibpath"])

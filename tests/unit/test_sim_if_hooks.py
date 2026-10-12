@@ -15,7 +15,8 @@ from unittest import mock
 
 from vunit import VUnit
 from vunit.project import Project
-from vunit.sim_if import hooks
+from vunit.sim_if import SimulatorInterface, hooks
+from vunit.sim_if.hooks import SimulatorHooks
 from vunit.sim_if.activehdl import ActiveHDLInterface
 from vunit.sim_if.ghdl import GHDLInterface
 from vunit.sim_if.modelsim import ModelSimInterface
@@ -51,14 +52,10 @@ class TestSimulatorHooks(unittest.TestCase):
     """
 
     def setUp(self):
-        hooks.clear_hooks()
+        self.hooks = SimulatorHooks()
 
-    def tearDown(self):
-        hooks.clear_hooks()
-
-    @staticmethod
-    def _simulator(name):
-        return SimpleNamespace(name=name)
+    def _simulator(self, name):
+        return SimpleNamespace(name=name, simulator_hooks=self.hooks)
 
     def test_no_hooks_by_default(self):
         simulator = self._simulator("ghdl")
@@ -69,7 +66,7 @@ class TestSimulatorHooks(unittest.TestCase):
 
     def test_calls_hooks_with_the_simulator_interface(self):
         simulator = self._simulator("ghdl")
-        hooks.register_hooks(
+        self.hooks.register(
             "ghdl",
             elab_flags=lambda interface: [f"-Wl,-l{interface.name}"],
             run_flags=lambda interface: ["--load"],
@@ -85,54 +82,89 @@ class TestSimulatorHooks(unittest.TestCase):
     def test_combines_hooks_in_registration_order(self):
         simulator = self._simulator("ghdl")
         for kind in FLAG_KINDS:
-            hooks.register_hooks("ghdl", **{kind: lambda interface: ["first"]})
-            hooks.register_hooks("ghdl", **{kind: lambda interface: ["second"]})
+            self.hooks.register("ghdl", **{kind: lambda interface: ["first"]})
+            self.hooks.register("ghdl", **{kind: lambda interface: ["second"]})
 
             self.assertEqual(hooks.get_flags(simulator, kind), ["first", "second"])
 
     def test_hooks_are_specific_to_a_simulator(self):
         for kind in FLAG_KINDS:
-            hooks.register_hooks("ghdl", **{kind: lambda interface: ["--load"]})
+            self.hooks.register("ghdl", **{kind: lambda interface: ["--load"]})
 
             self.assertEqual(hooks.get_flags(self._simulator("ghdl"), kind), ["--load"])
             self.assertEqual(hooks.get_flags(self._simulator("nvc"), kind), [])
 
     def test_copies_the_environment_when_there_is_none(self):
         simulator = self._simulator("ghdl")
-        hooks.register_hooks("ghdl", run_env=lambda interface, env: dict(env, FOO="1"))
+        self.hooks.register("ghdl", run_env=lambda interface, env: dict(env, FOO="1"))
 
         env = hooks.get_run_env(simulator)
         self.assertEqual(env["FOO"], "1")
         self.assertIn("PATH", env)
 
-    def test_clears_hooks(self):
-        simulator = self._simulator("ghdl")
-        hooks.register_hooks("ghdl", elab_flags=lambda interface: ["--load"])
-        hooks.clear_hooks()
-
-        self.assertEqual(hooks.get_flags(simulator, "elab_flags"), [])
-
     def test_raises_if_hook_is_not_callable(self):
         with self.assertRaisesRegex(ValueError, "run_flags hook for simulator ghdl is not callable."):
-            hooks.register_hooks("ghdl", run_flags="--load")
+            self.hooks.register("ghdl", run_flags="--load")
 
         with self.assertRaisesRegex(ValueError, "process_flags hook for simulator ghdl is not callable."):
-            hooks.register_hooks("ghdl", process_flags="-noautoldlibpath")
+            self.hooks.register("ghdl", process_flags="-noautoldlibpath")
 
     def test_raises_if_simulator_name_is_invalid(self):
         with self.assertRaisesRegex(ValueError, "Simulator name must be a non-empty string."):
-            hooks.register_hooks("", run_flags=lambda interface: [])
+            self.hooks.register("", run_flags=lambda interface: [])
 
-    def test_hooks_are_cleared_when_a_vunit_object_is_created(self):
-        hooks.register_hooks("ghdl", elab_flags=lambda interface: ["--load"])
+    def test_no_hooks_for_an_interface_not_created_by_a_vunit_object(self):
+        self.hooks.register("ghdl", elab_flags=lambda interface: ["--load"])
+        simulator = SimpleNamespace(name="ghdl")
 
-        with (
-            create_tempdir() as tempdir,
-            mock.patch("vunit.sim_if.factory.SIMULATOR_FACTORY.select_simulator", new=lambda: None),
-        ):
-            VUnit.from_argv(argv=["--output-path=%s" % tempdir])
+        self.assertEqual(hooks.get_flags(simulator, "elab_flags"), [])
+        self.assertEqual(hooks.get_run_env(simulator, {"FOO": "1"}), {"FOO": "1"})
 
-        self.assertEqual(hooks.get_flags(self._simulator("ghdl"), "elab_flags"), [])
+
+class _FakeSimulator(SimulatorInterface):
+    """
+    A simulator class creating a plain interface
+    """
+
+    name = "ghdl"
+
+    @classmethod
+    def from_args(cls, args, output_path):  # pylint: disable=unused-argument
+        return SimpleNamespace(name=cls.name)
+
+
+class TestSimulatorHooksOfVUnitObjects(unittest.TestCase):
+    """
+    Test that the hooks belong to the VUnit object of the packages registering them
+    """
+
+    @staticmethod
+    def _vunit(output_path):
+        with mock.patch("vunit.sim_if.factory.SIMULATOR_FACTORY.select_simulator", new=lambda: _FakeSimulator):
+            return VUnit.from_argv(argv=[f"--output-path={output_path!s}"])
+
+    def test_simulator_interface_gets_the_hooks_of_its_vunit_object(self):
+        with create_tempdir() as tempdir:
+            vu = self._vunit(tempdir)
+            vu._simulator_hooks.register(  # pylint: disable=protected-access
+                "ghdl", elab_flags=lambda interface: ["--load"]
+            )
+            simulator_if = vu._create_simulator_if()  # pylint: disable=protected-access
+
+        self.assertEqual(hooks.get_flags(simulator_if, "elab_flags"), ["--load"])
+
+    def test_hooks_are_kept_when_another_vunit_object_is_created(self):
+        with create_tempdir() as tempdir:
+            first = self._vunit(Path(tempdir) / "first")
+            first._simulator_hooks.register(  # pylint: disable=protected-access
+                "ghdl", elab_flags=lambda interface: ["--load"]
+            )
+            second = self._vunit(Path(tempdir) / "second")
+            first_if = first._create_simulator_if()  # pylint: disable=protected-access
+            second_if = second._create_simulator_if()  # pylint: disable=protected-access
+
+        self.assertEqual(hooks.get_flags(first_if, "elab_flags"), ["--load"])
+        self.assertEqual(hooks.get_flags(second_if, "elab_flags"), [])
 
 
 class TestSimulatorHooksAreUsed(unittest.TestCase):
@@ -141,10 +173,7 @@ class TestSimulatorHooksAreUsed(unittest.TestCase):
     """
 
     def setUp(self):
-        hooks.clear_hooks()
-
-    def tearDown(self):
-        hooks.clear_hooks()
+        self.hooks = SimulatorHooks()
 
     @staticmethod
     def _project():
@@ -154,7 +183,7 @@ class TestSimulatorHooksAreUsed(unittest.TestCase):
 
     @mock.patch.object(GHDLInterface, "determine_version", return_value=5.0)
     def test_ghdl_uses_hooks(self, determine_version):
-        hooks.register_hooks(
+        self.hooks.register(
             "ghdl",
             elab_flags=lambda interface: ["-Wl,-lfoo"],
             run_flags=lambda interface: ["--load=foo"],
@@ -162,6 +191,7 @@ class TestSimulatorHooksAreUsed(unittest.TestCase):
         )
 
         simif = GHDLInterface(prefix="prefix", output_path="")
+        simif.simulator_hooks = self.hooks
         simif._project = self._project()  # pylint: disable=protected-access
         simif._vhdl_standard = VHDL.standard("2008")  # pylint: disable=protected-access
 
@@ -182,7 +212,7 @@ class TestSimulatorHooksAreUsed(unittest.TestCase):
 
     @mock.patch.object(NVCInterface, "determine_version", return_value=(1, 16))
     def test_nvc_uses_hooks(self, determine_version):
-        hooks.register_hooks(
+        self.hooks.register(
             "nvc",
             elab_flags=lambda interface: ["--jit"],
             run_flags=lambda interface: ["--load=foo"],
@@ -190,6 +220,7 @@ class TestSimulatorHooksAreUsed(unittest.TestCase):
         )
 
         simif = NVCInterface(prefix="prefix", output_path="", num_threads=1)
+        simif.simulator_hooks = self.hooks
         simif._project = self._project()  # pylint: disable=protected-access
         simif._vhdl_standard = VHDL.standard("2008")  # pylint: disable=protected-access
 
@@ -207,26 +238,26 @@ class TestSimulatorHooksAreUsed(unittest.TestCase):
         self.assertEqual(process.call_args[1]["env"]["FOO"], "1")
 
     def test_modelsim_uses_hooks(self):
-        hooks.register_hooks(
+        self.hooks.register(
             "modelsim",
             elab_flags=lambda interface: ["-foo"],
             run_flags=lambda interface: ["-bar"],
         )
 
-        simif = SimpleNamespace(name=ModelSimInterface.name, _gui=False)
+        simif = SimpleNamespace(name=ModelSimInterface.name, _gui=False, simulator_hooks=self.hooks)
         self.assertEqual(ModelSimInterface._vopt_extra_args(simif, make_config()), "-foo")
         self.assertEqual(ModelSimInterface._vsim_extra_args(simif, make_config()), "-bar")
 
     def test_rivierapro_uses_hooks(self):
-        hooks.register_hooks("rivierapro", run_flags=lambda interface: ["-bar"])
+        self.hooks.register("rivierapro", run_flags=lambda interface: ["-bar"])
 
-        simif = SimpleNamespace(name=RivieraProInterface.name, _gui=False)
+        simif = SimpleNamespace(name=RivieraProInterface.name, _gui=False, simulator_hooks=self.hooks)
         self.assertEqual(RivieraProInterface._vsim_extra_args(simif, make_config()), "-bar")
 
     def test_activehdl_uses_hooks(self):
-        hooks.register_hooks("activehdl", run_flags=lambda interface: ["-bar"])
+        self.hooks.register("activehdl", run_flags=lambda interface: ["-bar"])
 
-        simif = SimpleNamespace(name=ActiveHDLInterface.name, _gui=False)
+        simif = SimpleNamespace(name=ActiveHDLInterface.name, _gui=False, simulator_hooks=self.hooks)
         self.assertEqual(ActiveHDLInterface._vsim_extra_args(simif, make_config()), "-bar")
 
 
@@ -252,10 +283,7 @@ class TestVsimProcessHooks(unittest.TestCase):
     """
 
     def setUp(self):
-        hooks.clear_hooks()
-
-    def tearDown(self):
-        hooks.clear_hooks()
+        self.hooks = SimulatorHooks()
 
     def test_no_process_hooks_by_default(self):
         with (
@@ -263,6 +291,7 @@ class TestVsimProcessHooks(unittest.TestCase):
             mock.patch("vunit.sim_if.vsim_simulator_mixin.Process", autospec=True) as process,
         ):
             simif = _VsimSimulator(str(Path(tempdir) / "modelsim.ini"), persistent=True)
+            simif.simulator_hooks = self.hooks
             simif._persistent_shell._create_process(1)  # pylint: disable=protected-access
             self.assertNotIn("-noautoldlibpath", process.call_args[0][0])
             self.assertEqual(process.call_args[1]["env"], {"BASE": "1"})
@@ -271,7 +300,7 @@ class TestVsimProcessHooks(unittest.TestCase):
             self.assertIsNone(process.call_args[1]["env"])
 
     def test_persistent_vsim_process_uses_hooks(self):
-        hooks.register_hooks(
+        self.hooks.register(
             "modelsim",
             process_flags=lambda interface: ["-noautoldlibpath"],
             run_env=lambda interface, env: dict(env, FOO="1"),
@@ -282,6 +311,7 @@ class TestVsimProcessHooks(unittest.TestCase):
             mock.patch("vunit.sim_if.vsim_simulator_mixin.Process", autospec=True) as process,
         ):
             simif = _VsimSimulator(str(Path(tempdir) / "modelsim.ini"), persistent=True)
+            simif.simulator_hooks = self.hooks
             simif._persistent_shell._create_process(1)  # pylint: disable=protected-access
 
         args = process.call_args[0][0]
@@ -289,7 +319,7 @@ class TestVsimProcessHooks(unittest.TestCase):
         self.assertEqual(process.call_args[1]["env"], {"BASE": "1", "FOO": "1"})
 
     def test_batch_vsim_process_uses_hooks(self):
-        hooks.register_hooks(
+        self.hooks.register(
             "modelsim",
             process_flags=lambda interface: ["-noautoldlibpath"],
             run_env=lambda interface, env: dict(env, FOO="1"),
@@ -300,6 +330,7 @@ class TestVsimProcessHooks(unittest.TestCase):
             mock.patch("vunit.sim_if.vsim_simulator_mixin.Process", autospec=True) as process,
         ):
             simif = _VsimSimulator(str(Path(tempdir) / "modelsim.ini"), persistent=False)
+            simif.simulator_hooks = self.hooks
             simif._run_batch_file(str(Path(tempdir) / "batch.do"))  # pylint: disable=protected-access
 
         args = process.call_args[0][0]
@@ -307,13 +338,14 @@ class TestVsimProcessHooks(unittest.TestCase):
         self.assertEqual(process.call_args[1]["env"]["FOO"], "1")
 
     def test_process_flags_are_specific_to_a_simulator(self):
-        hooks.register_hooks("rivierapro", process_flags=lambda interface: ["-noautoldlibpath"])
+        self.hooks.register("rivierapro", process_flags=lambda interface: ["-noautoldlibpath"])
 
         with (
             create_tempdir() as tempdir,
             mock.patch("vunit.sim_if.vsim_simulator_mixin.Process", autospec=True) as process,
         ):
             simif = _VsimSimulator(str(Path(tempdir) / "modelsim.ini"), persistent=False)
+            simif.simulator_hooks = self.hooks
             simif._run_batch_file(str(Path(tempdir) / "batch.do"))  # pylint: disable=protected-access
 
         self.assertNotIn("-noautoldlibpath", process.call_args[0][0])
