@@ -1,0 +1,6 @@
+Improved behavior of AXI stream verification components on AXI stream reset:
+- Any active transaction (`push`, `pop`, `check`, `wait_for_time`) is aborted asynchronously rather than synchronously.
+- Pending messages in the VC inbox that relates to transactions on the stream can be either
+  left unaffected or be cancelled. This is controlled by the `reset_policy` parameter when calling
+  the VC `new` function.
+- VC inbox messages related to VC configuration are never affected by the reset.

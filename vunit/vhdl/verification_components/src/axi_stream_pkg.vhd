@@ -39,14 +39,18 @@ package axi_stream_pkg is
   type inactive_axi_stream_policy_t is array (tdata to tuser) of inactive_bus_policy_t;
 
   -- The standard protocol checker requires tuser to be a known value when the reset is released
-  constant default_axi_stream_policy : inactive_axi_stream_policy_t := (tuser => '0', others => 'X');
+  constant default_inactive_axi_stream_policy : inactive_axi_stream_policy_t := (tuser => '0', others => 'X');
   constant all_0_policy : inactive_axi_stream_policy_t := (others => '0');
   constant all_1_policy : inactive_axi_stream_policy_t := (others => '1');
   constant all_x_policy : inactive_axi_stream_policy_t := (others => 'X');
   constant all_hold_policy : inactive_axi_stream_policy_t := (others => hold);
 
-  type axi_stream_component_type_t is (null_component, default_component, custom_component);
+  -- abort_all_transactions will abort any active transaction and any pending transaction in the VC
+  -- inbox. Note that only pending messages related to bus transactions are affected. Other messages,
+  -- such as those related to VC configurations, will not be deleted.
+  type axi_stream_reset_policy_t is (abort_all_transactions, abort_active_transaction);
 
+  type axi_stream_component_type_t is (null_component, default_component, custom_component);
 
   type axi_stream_protocol_checker_t is record
     p_type                      : axi_stream_component_type_t;
@@ -184,7 +188,8 @@ package axi_stream_pkg is
     actor            : actor_t                       := null_actor;
     monitor          : axi_stream_monitor_t          := null_axi_stream_monitor;
     protocol_checker : axi_stream_protocol_checker_t := null_axi_stream_protocol_checker;
-    inactive_policy : inactive_axi_stream_policy_t  := default_axi_stream_policy
+    inactive_policy : inactive_axi_stream_policy_t  := default_inactive_axi_stream_policy;
+    reset_policy : axi_stream_reset_policy_t := abort_all_transactions
   ) return axi_stream_master_t;
 
   impure function new_axi_stream_slave(
@@ -196,7 +201,8 @@ package axi_stream_pkg is
     logger           : logger_t                      := axi_stream_logger;
     actor            : actor_t                       := null_actor;
     monitor          : axi_stream_monitor_t          := null_axi_stream_monitor;
-    protocol_checker : axi_stream_protocol_checker_t := null_axi_stream_protocol_checker
+    protocol_checker : axi_stream_protocol_checker_t := null_axi_stream_protocol_checker;
+    reset_policy : axi_stream_reset_policy_t := abort_all_transactions
   ) return axi_stream_slave_t;
 
   impure function new_axi_stream_monitor(
@@ -400,6 +406,7 @@ package axi_stream_pkg is
   -- Private
   constant p_stall_config_idx : natural := 0;
   constant p_inactive_policy_idx : natural := 1;
+  constant p_reset_policy_idx : natural := 2;
   impure function p_to_stall_config(vec : integer_vector_ptr_t) return stall_config_t;
 
 end package;
@@ -529,7 +536,8 @@ package body axi_stream_pkg is
     actor            : actor_t                       := null_actor;
     monitor          : axi_stream_monitor_t          := null_axi_stream_monitor;
     protocol_checker : axi_stream_protocol_checker_t := null_axi_stream_protocol_checker;
-    inactive_policy : inactive_axi_stream_policy_t  := default_axi_stream_policy
+    inactive_policy : inactive_axi_stream_policy_t  := default_inactive_axi_stream_policy;
+    reset_policy : axi_stream_reset_policy_t := abort_all_transactions
   ) return axi_stream_master_t is
     variable p_actor            : actor_t;
     variable p_monitor          : axi_stream_monitor_t;
@@ -552,11 +560,12 @@ package body axi_stream_pkg is
       p_logger           => logger,
       p_monitor          => p_monitor,
       p_protocol_checker => p_protocol_checker,
-      p_config           => new_integer_vector_ptr(p_inactive_policy_idx + 1)
+      p_config           => new_integer_vector_ptr(p_reset_policy_idx + 1)
     );
 
     set(handle.p_config, p_stall_config_idx, to_integer(to_integer_vector_ptr(stall_config)));
     set(handle.p_config, p_inactive_policy_idx, to_integer(to_integer_vector_ptr(inactive_policy)));
+    set(handle.p_config, p_reset_policy_idx, axi_stream_reset_policy_t'pos(reset_policy));
 
     return handle;
   end;
@@ -570,7 +579,8 @@ package body axi_stream_pkg is
     logger           : logger_t                      := axi_stream_logger;
     actor            : actor_t                       := null_actor;
     monitor          : axi_stream_monitor_t          := null_axi_stream_monitor;
-    protocol_checker : axi_stream_protocol_checker_t := null_axi_stream_protocol_checker
+    protocol_checker : axi_stream_protocol_checker_t := null_axi_stream_protocol_checker;
+    reset_policy : axi_stream_reset_policy_t := abort_all_transactions
   ) return axi_stream_slave_t is
     variable p_actor            : actor_t;
     variable p_monitor          : axi_stream_monitor_t;
@@ -593,9 +603,10 @@ package body axi_stream_pkg is
       p_logger           => logger,
       p_monitor          => p_monitor,
       p_protocol_checker => p_protocol_checker,
-      p_config => new_integer_vector_ptr(p_stall_config_idx + 1));
+      p_config => new_integer_vector_ptr(p_reset_policy_idx + 1));
 
     set(handle.p_config, p_stall_config_idx, to_integer(to_integer_vector_ptr(stall_config)));
+    set(handle.p_config, p_reset_policy_idx, axi_stream_reset_policy_t'pos(reset_policy));
 
     return handle;
   end;
