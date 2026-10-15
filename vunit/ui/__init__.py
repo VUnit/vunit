@@ -1212,6 +1212,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
             continue_on_error=self._args.keep_compiling,
             printer=self._printer,
             target_files=target_files,
+            num_threads=self._args.num_threads,
         )
 
     def _get_testbench_files(self, simulator_if: Union[None, SimulatorInterface]):

@@ -248,7 +248,7 @@ def _create_argument_parser(description=None, for_documentation=False):
         type=nonnegative_int,
         default=1,
         help=(
-            "Number of tests to run in parallel. "
+            "Number of tests to run, and of files to compile, in parallel. "
             "Test output is not continuously written in verbose mode with p != 1. "
             "p = 0 uses all logical CPUs."
         ),

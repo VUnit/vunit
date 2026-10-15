@@ -445,6 +445,18 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
 
         return status
 
+    def compile_source_files(self, project, *args, num_threads=1, **kwargs):  # pylint: disable=arguments-differ
+        """
+        Compile one file at a time with coverage of the gcc backend, which writes the .gcno file
+        of every file to the working directory
+        """
+        if self._backend == "gcc" and any(
+            source_file.compile_options.get("enable_coverage", False)
+            for source_file in project.get_source_files_in_order()
+        ):
+            num_threads = 1
+        super().compile_source_files(project, *args, num_threads=num_threads, **kwargs)
+
     def _compile_source_file(self, source_file, printer):
         """
         Runs parent command for compilation, and moves any .gcno files to the compilation output
