@@ -22,6 +22,10 @@ from ..exceptions import CompileError
 from ..color_printer import NO_COLOR_PRINTER
 
 
+# The longest command of a batch, below the 32767 characters of a command line on Windows
+_MAX_BATCH_COMMAND_LENGTH = 32000
+
+
 class Option(object):
     """
     A compile or sim option
@@ -376,6 +380,7 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
             files = [source_file]
             if batch_command(source_file) is None:
                 return files
+            length = len(subprocess.list2cmdline(list(batch_command(source_file)) + [source_file.name]))
             for other in to_compile:
                 if (
                     other.library.name == source_file.library.name
@@ -383,6 +388,9 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
                     and all(compiled.get(dependency) or dependency in files for dependency in dependencies[other])
                     and not is_busy(other)
                 ):
+                    length += 1 + len(subprocess.list2cmdline([other.name]))
+                    if length > _MAX_BATCH_COMMAND_LENGTH:
+                        break
                     files.append(other)
             return files
 

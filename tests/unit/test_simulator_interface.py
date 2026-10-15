@@ -335,6 +335,15 @@ Compile passed
 """,
         )
 
+    def test_compile_source_files_in_batches_with_commands_of_limited_length(self):
+        # A command of a batch is "compile lib [] " followed by the file names
+        with mock.patch("vunit.sim_if._MAX_BATCH_COMMAND_LENGTH", len("compile lib [] file1.vhd file2.vhd")):
+            _, commands = self._compile_in_batches(
+                [("file1.vhd", "lib", None), ("file2.vhd", "lib", None), ("file3.vhd", "lib", None)],
+                dependencies=[(1, 0), (2, 1)],
+            )
+        self.assertEqual(commands, [["file1.vhd", "file2.vhd"], ["file3.vhd"]])
+
     def test_compile_source_files_in_a_batch_per_library_and_compile_options(self):
         _, commands = self._compile_in_batches(
             [("file1.vhd", "lib1", None), ("file2.vhd", "lib1", "-x"), ("file3.vhd", "lib2", None)]
