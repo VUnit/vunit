@@ -25,6 +25,32 @@ class TestRivieraProInterface(unittest.TestCase):
     Test the RivieraPro interface
     """
 
+    @mock.patch("vunit.sim_if.check_output", autospec=True)
+    @mock.patch("vunit.sim_if.rivierapro.Process", autospec=True)
+    @mock.patch("vunit.sim_if.rivierapro.RivieraProInterface.find_prefix", return_value="prefix")
+    def test_compile_project_in_a_batch_with_a_file_list(self, _find_prefix, process, check_output):
+        simif = RivieraProInterface(prefix="prefix", output_path=self.output_path)
+        project = Project()
+        project.add_library("lib", "lib_path")
+        for name in ["file.vhd", "sp ace.vhd", 'quo"te.vhd']:
+            write_file(name, "")
+            project.add_source_file(name, "lib", file_type="vhdl", vhdl_standard=VHDL.standard("2008"))
+        file_lists = []
+
+        def check_output_side_effect(command, env=None):  # pylint: disable=unused-argument
+            if command[-2] == "-f":
+                file_lists.append(Path(command[-1]).read_text())
+            return ""
+
+        check_output.side_effect = check_output_side_effect
+        simif.compile_project(project, batch=True)
+        # A name with a double quote cannot be quoted in a file list, so it is compiled on its own
+        names = [call.args[0][-1] for call in check_output.call_args_list if call.args[0][-2] != "-f"]
+        self.assertEqual(names, ['quo"te.vhd'])
+        self.assertEqual(len(file_lists), 1)
+        self.assertEqual(sorted(file_lists[0].splitlines()), ['"file.vhd"', '"sp ace.vhd"'])
+        self.assertEqual(list(Path(self.output_path).glob("batch_*.txt")), [])
+
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     @mock.patch("vunit.sim_if.rivierapro.Process", autospec=True)
     @mock.patch("vunit.sim_if.rivierapro.RivieraProInterface.find_prefix", return_value="prefix")

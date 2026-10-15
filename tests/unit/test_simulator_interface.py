@@ -275,8 +275,14 @@ Compile failed
         self.assertNotIn(file1, project.get_files_in_compile_order(incremental=True))
 
     def _compile_in_batches(
-        self, files, fail=(), num_threads=1, dependencies=(), supports_concurrent_compiles_into_library=False
-    ):
+        self,
+        files,
+        fail=(),
+        num_threads=1,
+        dependencies=(),
+        supports_concurrent_compiles_into_library=False,
+        batch_file_list_arguments=None,
+    ):  # pylint: disable=too-many-arguments,too-many-locals
         """
         Compile files, (name, library, option) tuples, in batches. dependencies are (file index, index
         of the file it depends on) pairs, and a command naming a file in fail fails. Return the
@@ -285,6 +291,7 @@ Compile failed
         simif = create_simulator_interface()
         simif.supports_batch_compile = True
         simif.supports_concurrent_compiles_into_library = supports_concurrent_compiles_into_library
+        simif.batch_file_list_arguments = batch_file_list_arguments
         simif.compile_source_file_command.side_effect = lambda source_file: [
             "compile",
             source_file.library.name,
@@ -307,9 +314,12 @@ Compile failed
         lock = threading.Lock()
 
         def check_output_side_effect(command, env=None):  # pylint: disable=unused-argument
+            names = command[3:]
+            if names and names[0].startswith("@"):
+                names = Path(names[0][1:]).read_text().splitlines()
             with lock:
-                commands.append(command[3:])
-            if set(command[3:]) & set(fail):
+                commands.append(names)
+            if set(names) & set(fail):
                 raise subprocess.CalledProcessError(returncode=-1, cmd=command, output="bad stuff")
             return ""
 
@@ -343,6 +353,16 @@ Compile passed
                 dependencies=[(1, 0), (2, 1)],
             )
         self.assertEqual(commands, [["file1.vhd", "file2.vhd"], ["file3.vhd"]])
+
+    def test_compile_source_files_in_a_batch_with_a_file_list(self):
+        with mock.patch("vunit.sim_if._MAX_BATCH_COMMAND_LENGTH", 1):
+            _, commands = self._compile_in_batches(
+                [("file1.vhd", "lib", None), ("file2.vhd", "lib", None), ("file3.vhd", "lib", None)],
+                batch_file_list_arguments=("@{}",),
+            )
+        self.assertEqual(sorted(commands[0]), ["file1.vhd", "file2.vhd", "file3.vhd"])
+        self.assertEqual(len(commands), 1)
+        self.assertEqual(list(Path(".").glob("batch_*.txt")), [])
 
     def test_compile_source_files_in_a_batch_per_library_and_compile_options(self):
         _, commands = self._compile_in_batches(

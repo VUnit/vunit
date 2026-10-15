@@ -29,6 +29,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
 
     name = "rivierapro"
     supports_batch_compile = True
+    batch_file_list_arguments = ("-f", "{}")
     supports_gui_flag = True
     package_users_depend_on_bodies = True
 
@@ -177,6 +178,21 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
             return "-2019"
 
         return f"-{vhdl_standard!s}"
+
+    def _batch_command(self, source_file):
+        """
+        A file name with a double quote cannot be written in the file list of a batch
+        """
+        if '"' in source_file.name:
+            return None
+        return super()._batch_command(source_file)
+
+    @staticmethod
+    def _batch_file_list_entry(file_name):
+        """
+        Quoted, which keeps spaces, and backslashes on Windows, as they are
+        """
+        return f'"{file_name}"'
 
     def compile_vhdl_file_command(self, source_file):
         """

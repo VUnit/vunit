@@ -39,6 +39,8 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
     # NVC locks the library while it updates it
     supports_concurrent_compiles_into_library = True
     supports_batch_compile = True
+    # One file name per line, taken as it is
+    batch_file_list_arguments = ("@{}",)
 
     compile_options = [
         ListOfStringOption("nvc.global_flags"),
@@ -232,6 +234,14 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
             cmd += [f"--map={library.name}:{library.directory}"]
 
         return cmd
+
+    def _batch_command(self, source_file):
+        """
+        A file name with a line break cannot be written in the file list of a batch
+        """
+        if "\n" in source_file.name:
+            return None
+        return super()._batch_command(source_file)
 
     def compile_vhdl_file_command(self, source_file):
         """

@@ -126,7 +126,9 @@ With ``--batch-compile``, the VHDL files of a library that are ready to be compi
 compile options, are compiled in one call to the compiler, rather than one call per file. This makes a clean compile
 several times faster, since most of the time of compiling a file goes into starting the compiler and updating the
 library. A batch that fails is compiled again one file at a time, to find the file that fails. ``--batch-compile`` is
-supported by GHDL, NVC and Riviera-PRO, and can be combined with ``--parallel-compile``.
+supported by GHDL, NVC and Riviera-PRO, and can be combined with ``--parallel-compile``. NVC and Riviera-PRO read the
+file names of a batch from a file. GHDL gets them in the command, so a batch ends before its command gets longer than
+32000 characters, below the limit of a command line on Windows.
 
 Opening a Test Case in Simulator GUI
 ====================================

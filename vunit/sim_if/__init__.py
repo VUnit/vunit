@@ -13,6 +13,7 @@ import os
 from os import environ, listdir, pathsep
 import locale
 import subprocess
+import tempfile
 from collections import Counter
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from pathlib import Path
@@ -70,6 +71,10 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
 
     # True if VHDL files of a library, with the same compile options, can be compiled in one call
     supports_batch_compile = False
+
+    # The arguments making the compiler read the file names of a batch from the file named {}, see
+    # _batch_file_list_entry. None passes them in the command, which limits the size of a batch.
+    batch_file_list_arguments: Optional[tuple] = None
 
     # True if a library can be compiled into while it is compiled into or read by another
     # compile. Most compilers update the index of a library without locking it, so concurrent
@@ -381,6 +386,7 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
             if batch_command(source_file) is None:
                 return files
             length = len(subprocess.list2cmdline(list(batch_command(source_file)) + [source_file.name]))
+            limit = _MAX_BATCH_COMMAND_LENGTH if self.batch_file_list_arguments is None else float("inf")
             for other in to_compile:
                 if (
                     other.library.name == source_file.library.name
@@ -389,7 +395,7 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
                     and not is_busy(other)
                 ):
                     length += 1 + len(subprocess.list2cmdline([other.name]))
-                    if length > _MAX_BATCH_COMMAND_LENGTH:
+                    if length > limit:
                         break
                     files.append(other)
             return files
@@ -505,7 +511,18 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         Compile source_files in one call. The output of a batch that fails is not written, since
         its files are compiled again one at a time.
         """
-        command = list(self._batch_command(source_files[0])) + [source_file.name for source_file in source_files]
+        command = list(self._batch_command(source_files[0]))
+        file_list = None
+        if self.batch_file_list_arguments is None:
+            command += [source_file.name for source_file in source_files]
+        else:
+            Path(self._output_path).mkdir(parents=True, exist_ok=True)
+            with tempfile.NamedTemporaryFile(
+                "w", dir=self._output_path, prefix="batch_", suffix=".txt", delete=False
+            ) as fptr:
+                fptr.writelines(self._batch_file_list_entry(source_file.name) + "\n" for source_file in source_files)
+                file_list = fptr.name
+            command += [argument.format(file_list) for argument in self.batch_file_list_arguments]
         try:
             output = check_output(command, env=self.get_env())
         except subprocess.CalledProcessError:
@@ -516,12 +533,23 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
             )
             return False
 
+        finally:
+            if file_list is not None:
+                os.remove(file_list)
+
         for source_file in source_files:
             write_header(source_file, printer)
             printer.write("passed", fg="gi")
             printer.write("\n")
         printer.write(output)
         return True
+
+    @staticmethod
+    def _batch_file_list_entry(file_name):
+        """
+        The line naming file_name in the file list of a batch, see batch_file_list_arguments
+        """
+        return file_name
 
     @staticmethod
     def get_env():
