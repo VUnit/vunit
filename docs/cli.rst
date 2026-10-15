@@ -117,10 +117,9 @@ previous results and recent code changes to achieve two main goals:
    has a history of failing, and no relevant code changes have been made, so it is assumed to fail again and is run first.
 2. Load balancing - When tests are executed in parallel using the ``-p`` option, VUnit distributes them across threads to minimize to total execution time.
 
-The ``-p`` option also compiles files in parallel. A file is compiled once the files it depends on are compiled. Files
-of different libraries are compiled at the same time, and files of the same library one at a time, since most
-simulators do not lock a library while they update it. NVC does, and compiles files of the same library at the same
-time too.
+The ``-p`` option also compiles files in parallel. A file is compiled once the files it depends on are compiled. Most
+simulators do not lock a library while they update it, so a file is not compiled while another file is compiled into
+its library, or into a library it reads. NVC locks its libraries and compiles any files at the same time.
 
 Opening a Test Case in Simulator GUI
 ====================================

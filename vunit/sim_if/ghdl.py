@@ -257,6 +257,21 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
         else:
             self._vhdl_standard = list(vhdl_standards)[0]
 
+        # A library clause fails on a library nothing has been compiled into, which files compiled
+        # in parallel may come before, so every library is created first
+        for library in project.get_libraries():
+            if not list(Path(library.directory).glob(f"{library.name}-obj*.cf")):
+                subprocess.check_call(
+                    [
+                        str(Path(self._prefix) / self.executable),
+                        "-i",
+                        f"--workdir={library.directory!s}",
+                        f"--work={library.name!s}",
+                        f"--std={self._std_str(self._vhdl_standard)!s}",
+                    ],
+                    env=self.get_env(),
+                )
+
     def compile_source_file_command(self, source_file):
         """
         Returns the command to compile a single source_file

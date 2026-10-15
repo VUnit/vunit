@@ -13,6 +13,7 @@ import os
 from os import environ, listdir, pathsep
 import locale
 import subprocess
+from collections import Counter
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from pathlib import Path
 from typing import List, Optional
@@ -63,8 +64,9 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
     # True if simulator supports ANSI colors in GUI mode
     supports_colors_in_gui = False
 
-    # True if files can be compiled into the same library at the same time. Most compilers
-    # update the index of a library without locking it, and concurrent updates lose units.
+    # True if a library can be compiled into while it is compiled into or read by another
+    # compile. Most compilers update the index of a library without locking it, so concurrent
+    # updates lose units and a compile reading it during an update fails.
     supports_concurrent_compiles_into_library = False
 
     # The path prefix the interface was built with, set by the interfaces having one
@@ -329,8 +331,9 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
     ):  # pylint: disable=too-many-arguments,too-many-locals
         """
         Compile source_files, num_threads at a time, and return the files that failed. A file is
-        compiled once its dependencies are, and into a library no other file is being compiled into
-        unless supports_concurrent_compiles_into_library. The dependents of a failed file are skipped.
+        compiled once its dependencies are. Unless supports_concurrent_compiles_into_library, it is
+        not compiled while its library is compiled into or read, or while a library it reads, that of
+        any of its dependencies, is compiled into. The dependents of a failed file are skipped.
         """
         max_library_name = max((len(source_file.library.name) for source_file in source_files), default=0)
         max_source_file_name = max((len(simplify_path(source_file.name)) for source_file in source_files), default=0)
@@ -351,10 +354,16 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
             source_file: dependency_graph.get_direct_dependencies(source_file) & set(source_files)
             for source_file in source_files
         }
+        # ponytail: a bare library clause, with nothing used from the library, is not a read
+        libraries_read = {
+            source_file: {dependency.library.name for dependency in dependency_graph.get_dependencies([source_file])}
+            for source_file in source_files
+        }
         compiled = {}  # Whether a finished file was compiled, rather than failed or skipped
         failures = []
         running = {}
-        busy_libraries = set()
+        libraries_written = Counter()
+        libraries_being_read = Counter()
 
         with ThreadPoolExecutor(max_workers=num_threads) as executor:
             while to_compile or running:
@@ -375,11 +384,16 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
                         continue
 
                     library = source_file.library.name
-                    if library in busy_libraries and not self.supports_concurrent_compiles_into_library:
+                    if not self.supports_concurrent_compiles_into_library and (
+                        libraries_written[library]
+                        or libraries_being_read[library]
+                        or any(libraries_written[read] for read in libraries_read[source_file])
+                    ):
                         continue
 
                     to_compile.remove(source_file)
-                    busy_libraries.add(library)
+                    libraries_written[library] += 1
+                    libraries_being_read.update(libraries_read[source_file])
                     # The output of a file is written once it is compiled, so that outputs do not mix
                     output = printer if num_threads == 1 else _BufferedPrinter()
                     running[executor.submit(compile_source_file, source_file, output)] = (source_file, output)
@@ -390,7 +404,8 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
                 done, _ = wait(running, return_when=FIRST_COMPLETED)
                 for future in done:
                     source_file, output = running.pop(future)
-                    busy_libraries.discard(source_file.library.name)
+                    libraries_written[source_file.library.name] -= 1
+                    libraries_being_read.subtract(libraries_read[source_file])
                     if output is not printer:
                         output.write_to(printer)
 

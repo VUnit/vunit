@@ -137,6 +137,19 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         check_output.return_value = version
         self.assertRaises(AssertionError, GHDLInterface.determine_backend, "prefix")
 
+    @mock.patch.object(GHDLInterface, "determine_version", return_value=5.0)
+    def test_setup_library_mapping_creates_libraries(self, determine_version):
+        simif = GHDLInterface(prefix="prefix", output_path="")
+        project = Project()
+        project.add_library("lib", "lib_path")
+        write_file(str(Path("existing_path") / "existing-obj08.cf"), "")
+        project.add_library("existing", "existing_path")
+        simif.setup_library_mapping(project)
+        self.create_library.assert_called_once_with(
+            [str(Path("prefix") / "ghdl"), "-i", "--workdir=lib_path", "--work=lib", "--std=08"],
+            env=simif.get_env(),
+        )
+
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")  # pylint: disable=no-self-use
     @mock.patch.object(GHDLInterface, "determine_version", return_value=6.0)
     def test_compile_project_2019(self, determine_version, check_output):
@@ -312,6 +325,9 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
     def setUp(self):
         self.output_path = str(Path(__file__).parent / "test_ghdl_interface_out")
         renew_path(self.output_path)
+        patcher = mock.patch("vunit.sim_if.ghdl.subprocess.check_call", autospec=True)
+        self.create_library = patcher.start()
+        self.addCleanup(patcher.stop)
         self.project = Project()
         self.cwd = os.getcwd()
         os.chdir(self.output_path)

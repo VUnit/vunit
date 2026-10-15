@@ -191,11 +191,14 @@ Compile failed
             self.assertRaises(CompileError, simif.compile_source_files, project)
         self.assertEqual(project.get_files_in_compile_order(incremental=True), [source_file])
 
-    def _compile_concurrently(self, libraries, supports_concurrent_compiles_into_library=False, fail=None):
+    def _compile_concurrently(
+        self, libraries, supports_concurrent_compiles_into_library=False, fail=None, dependencies=()
+    ):
         """
         Compile one file per library name in libraries with 4 threads, the compile commands
-        waiting for each other in pairs. Return the printer output and the compile commands
-        that ran at the same time as another.
+        waiting for each other in pairs. dependencies are (file index, index of the file it depends
+        on) pairs. Return the printer output and the compile commands that ran at the same time as
+        another.
         """
         simif = create_simulator_interface()
         simif.supports_concurrent_compiles_into_library = supports_concurrent_compiles_into_library
@@ -203,11 +206,14 @@ Compile failed
         project = Project()
         for library in sorted(set(libraries)):
             project.add_library(library, library + "_path")
+        source_files = []
         for idx, library in enumerate(libraries):
             write_file(f"file{idx}.vhd", "")
-            project.add_source_file(f"file{idx}.vhd", library, file_type="vhdl")
+            source_files.append(project.add_source_file(f"file{idx}.vhd", library, file_type="vhdl"))
+        for idx, depends_on in dependencies:
+            project.add_manual_dependency(source_files[idx], depends_on=source_files[depends_on])
 
-        barrier = threading.Barrier(2, timeout=1)
+        barrier = threading.Barrier(2, timeout=0.5)
         concurrent = set()
 
         def check_output_side_effect(command, env=None):  # pylint: disable=unused-argument
@@ -215,7 +221,7 @@ Compile failed
                 barrier.wait()
                 concurrent.add(command[0])
             except threading.BrokenBarrierError:
-                pass
+                barrier.reset()  # Ran alone, let the next compiles meet
             if command[0] == fail:
                 raise subprocess.CalledProcessError(returncode=-1, cmd=command, output="bad stuff")
             return command[0] + " output\n"
@@ -237,6 +243,15 @@ Compile failed
     def test_compile_source_files_of_a_library_concurrently_when_supported(self):
         _, concurrent = self._compile_concurrently(["lib", "lib"], supports_concurrent_compiles_into_library=True)
         self.assertEqual(concurrent, {"file0", "file1"})
+
+    def test_compile_source_files_not_while_a_library_they_read_is_compiled_into(self):
+        # Once file0 is compiled, file1 is compiled into lib1, which file2 reads
+        _, concurrent = self._compile_concurrently(["lib1", "lib1", "lib2"], dependencies=[(1, 0), (2, 0)])
+        self.assertEqual(concurrent, set())
+
+    def test_compile_source_files_reading_the_same_library_concurrently(self):
+        _, concurrent = self._compile_concurrently(["lib1", "lib2", "lib3"], dependencies=[(1, 0), (2, 0)])
+        self.assertEqual(concurrent, {"file1", "file2"})
 
     def test_compile_source_files_concurrently_writes_the_output_of_a_file_at_once(self):
         output, _ = self._compile_concurrently(["lib1", "lib2"], fail="file1")
