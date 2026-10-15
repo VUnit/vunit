@@ -1180,14 +1180,24 @@ endmodule
             ui = self._create_ui_real_sim("--files")
             self._run_main(ui, 0)
 
-    def _compile_threads(self, *args):
+    def _compile_arguments(self, *args):
         """
-        The number of threads the files of a ui created with args are compiled with
+        The keyword arguments the files of a ui created with args are compiled with
         """
         ui = self._create_ui(*args)
         simulator_if = mock.Mock(spec=SimulatorInterface)
         ui._compile(simulator_if)  # pylint: disable=protected-access
-        return simulator_if.compile_project.call_args.kwargs["num_threads"]
+        return simulator_if.compile_project.call_args.kwargs
+
+    def _compile_threads(self, *args):
+        """
+        The number of threads the files of a ui created with args are compiled with
+        """
+        return self._compile_arguments(*args)["num_threads"]
+
+    def test_compile_in_batches_with_batch_compile(self):
+        self.assertFalse(self._compile_arguments()["batch"])
+        self.assertTrue(self._compile_arguments("--batch-compile")["batch"])
 
     def test_compile_one_file_at_a_time_without_parallel_compile(self):
         self.assertEqual(self._compile_threads("-p", "4"), 1)

@@ -37,6 +37,7 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
     executable = environ.get("GHDL", "ghdl")
     supports_gui_flag = True
     supports_colors_in_gui = True
+    supports_batch_compile = True
 
     compile_options = [
         ListOfStringOption("ghdl.a_flags"),
@@ -471,6 +472,14 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
         ):
             num_threads = 1
         super().compile_source_files(project, *args, num_threads=num_threads, **kwargs)
+
+    def _batch_command(self, source_file):
+        """
+        Files compiled with coverage are compiled one at a time, see _compile_source_file
+        """
+        if source_file.compile_options.get("enable_coverage", False):
+            return None
+        return super()._batch_command(source_file)
 
     def _compile_source_file(self, source_file, printer):
         """

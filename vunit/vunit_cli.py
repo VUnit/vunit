@@ -144,6 +144,16 @@ def _create_argument_parser(description=None, for_documentation=False):
     )
 
     parser.add_argument(
+        "--batch-compile",
+        action="store_true",
+        default=False,
+        help=(
+            "Compile the VHDL files of a library that are ready to be compiled at the same time, "
+            "and have the same compile options, in one call. Supported by GHDL, NVC and Riviera-PRO"
+        ),
+    )
+
+    parser.add_argument(
         "--fail-fast",
         action="store_true",
         default=False,

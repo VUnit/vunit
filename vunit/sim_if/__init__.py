@@ -64,6 +64,9 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
     # True if simulator supports ANSI colors in GUI mode
     supports_colors_in_gui = False
 
+    # True if VHDL files of a library, with the same compile options, can be compiled in one call
+    supports_batch_compile = False
+
     # True if a library can be compiled into while it is compiled into or read by another
     # compile. Most compilers update the index of a library without locking it, so concurrent
     # updates lose units and a compile reading it during an update fails.
@@ -233,16 +236,19 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         continue_on_error=False,
         target_files=None,
         num_threads=1,
+        *,
+        batch=False,
     ):  # pylint: disable=too-many-arguments
         """
         Compile the project
         param: target_files: Given a list of SourceFiles only these and dependent files are compiled
         param: num_threads: The number of files compiled at the same time, 0 for all logical CPUs
+        param: batch: Compile files that are ready at the same time in one call, see compile_source_files
         """
         self.add_simulator_specific(project)
         self.setup_library_mapping(project)
         self.compile_source_files(
-            project, printer, continue_on_error, target_files=target_files, num_threads=num_threads
+            project, printer, continue_on_error, target_files=target_files, num_threads=num_threads, batch=batch
         )
 
     def simulate(self, output_path, test_suite_name, config, elaborate_only):
@@ -293,11 +299,16 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         continue_on_error=False,
         target_files=None,
         num_threads=1,
+        *,
+        batch=False,
     ):  # pylint: disable=too-many-arguments
         """
         Use compile_source_file_command to compile all source_files
         param: target_files: Given a list of SourceFiles only these and dependent files are compiled
         param: num_threads: The number of files compiled at the same time, 0 for all logical CPUs
+        param: batch: Compile the VHDL files of a library that are ready at the same time, and have the
+        same compile options, in one call if supports_batch_compile. A batch that fails is compiled
+        again one file at a time to find the file that fails.
         """
         dependency_graph = project.create_dependency_graph()
 
@@ -313,6 +324,7 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
             printer=printer,
             continue_on_error=continue_on_error,
             num_threads=num_threads or os.cpu_count() or 1,
+            batch=batch and self.supports_batch_compile,
         )
 
         if failures:
@@ -327,8 +339,8 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
             printer.write("Re-compile not needed\n")
 
     def _compile_in_dependency_order(
-        self, project, source_files, *, dependency_graph, printer, continue_on_error, num_threads
-    ):  # pylint: disable=too-many-arguments,too-many-locals
+        self, project, source_files, *, dependency_graph, printer, continue_on_error, num_threads, batch
+    ):  # pylint: disable=too-many-arguments,too-many-locals,too-many-statements
         """
         Compile source_files, num_threads at a time, and return the files that failed. A file is
         compiled once its dependencies are. Unless supports_concurrent_compiles_into_library, it is
@@ -344,10 +356,60 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
                 f"{simplify_path(source_file.name).ljust(max_source_file_name)!s} "
             )
 
-        def compile_source_file(source_file, output):
-            write_header(source_file, output)
+        def compile_files(files, output):
+            if len(files) > 1:
+                return self._compile_batch(files, output, write_header)
+            write_header(files[0], output)
             sys.stdout.flush()
-            return self._compile_source_file(source_file, output)
+            return self._compile_source_file(files[0], output)
+
+        batch_commands = {}
+
+        def batch_command(source_file):
+            """The command compiling source_file without its file name, None if it cannot be batched"""
+            if source_file not in batch_commands:
+                batch_commands[source_file] = self._batch_command(source_file) if batch else None
+            return batch_commands[source_file]
+
+        def batch_of(source_file):
+            """source_file and the files that are ready to be compiled with it in one call"""
+            files = [source_file]
+            if batch_command(source_file) is None:
+                return files
+            for other in to_compile:
+                if (
+                    other.library.name == source_file.library.name
+                    and batch_command(other) == batch_command(source_file)
+                    and all(compiled.get(dependency) or dependency in files for dependency in dependencies[other])
+                    and not is_busy(other)
+                ):
+                    files.append(other)
+            return files
+
+        def is_busy(source_file):
+            """Whether a running compile keeps source_file from being compiled now"""
+            library = source_file.library.name
+            return not self.supports_concurrent_compiles_into_library and bool(
+                libraries_written[library]
+                or libraries_being_read[library]
+                or any(libraries_written[read] for read in libraries_read[source_file])
+            )
+
+        def finish(files, passed):
+            if len(files) > 1 and not passed:
+                # Compiled again one at a time, in compile order, to find the file that fails
+                for source_file in files:
+                    batch_commands[source_file] = None
+                waiting = set(to_compile) | set(files)
+                to_compile[:] = [source_file for source_file in source_files if source_file in waiting]
+                return
+
+            for source_file in files:
+                compiled[source_file] = passed
+                if passed:
+                    project.update(source_file)
+                else:
+                    failures.append(source_file)
 
         to_compile = list(source_files)
         dependencies = {
@@ -372,7 +434,8 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
                     if len(running) == num_threads or (failures and not continue_on_error):
                         break
 
-                    if not dependencies[source_file] <= compiled.keys():
+                    # Taken by a batch, or waiting for its dependencies
+                    if source_file not in to_compile or not dependencies[source_file] <= compiled.keys():
                         continue
 
                     if not all(compiled[dependency] for dependency in dependencies[source_file]):
@@ -383,42 +446,74 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
                         printer.write("\n")
                         continue
 
-                    library = source_file.library.name
-                    if not self.supports_concurrent_compiles_into_library and (
-                        libraries_written[library]
-                        or libraries_being_read[library]
-                        or any(libraries_written[read] for read in libraries_read[source_file])
-                    ):
+                    if is_busy(source_file):
                         continue
 
                     to_compile.remove(source_file)
-                    libraries_written[library] += 1
-                    libraries_being_read.update(libraries_read[source_file])
+                    files = batch_of(source_file)
+                    for other in files[1:]:
+                        to_compile.remove(other)
+                    libraries_written[source_file.library.name] += 1
+                    for other in files:
+                        libraries_being_read.update(libraries_read[other])
                     # The output of a file is written once it is compiled, so that outputs do not mix
                     output = printer if num_threads == 1 else _BufferedPrinter()
-                    running[executor.submit(compile_source_file, source_file, output)] = (source_file, output)
+                    running[executor.submit(compile_files, files, output)] = (files, output)
 
                 if not running:
                     break
 
                 done, _ = wait(running, return_when=FIRST_COMPLETED)
                 for future in done:
-                    source_file, output = running.pop(future)
-                    libraries_written[source_file.library.name] -= 1
-                    libraries_being_read.subtract(libraries_read[source_file])
+                    files, output = running.pop(future)
+                    libraries_written[files[0].library.name] -= 1
+                    for source_file in files:
+                        libraries_being_read.subtract(libraries_read[source_file])
                     if output is not printer:
                         output.write_to(printer)
 
-                    compiled[source_file] = future.result()
-                    if compiled[source_file]:
-                        project.update(source_file)
-                    else:
-                        failures.append(source_file)
+                    finish(files, future.result())
 
         return failures
 
     def compile_source_file_command(self, source_file):  # pylint: disable=unused-argument
         raise NotImplementedError
+
+    def _batch_command(self, source_file):
+        """
+        The command compiling source_file without its file name, or None if source_file cannot be
+        compiled with other files. Files with the same command are compiled in one call.
+        """
+        if not source_file.is_vhdl:
+            return None
+        try:
+            command = self.compile_source_file_command(source_file)
+        except CompileError:
+            return None
+        return tuple(command[:-1]) if command[-1] == source_file.name else None
+
+    def _compile_batch(self, source_files, printer, write_header):
+        """
+        Compile source_files in one call. The output of a batch that fails is not written, since
+        its files are compiled again one at a time.
+        """
+        command = list(self._batch_command(source_files[0])) + [source_file.name for source_file in source_files]
+        try:
+            output = check_output(command, env=self.get_env())
+        except subprocess.CalledProcessError:
+            first = source_files[0]
+            printer.write(
+                f"Compiling {len(source_files)} files into {first.library.name} in one call failed, "
+                "compiling them one at a time\n"
+            )
+            return False
+
+        for source_file in source_files:
+            write_header(source_file, printer)
+            printer.write("passed", fg="gi")
+            printer.write("\n")
+        printer.write(output)
+        return True
 
     @staticmethod
     def get_env():

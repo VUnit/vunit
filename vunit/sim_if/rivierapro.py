@@ -28,6 +28,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
     """
 
     name = "rivierapro"
+    supports_batch_compile = True
     supports_gui_flag = True
     package_users_depend_on_bodies = True
 

@@ -122,6 +122,12 @@ files it depends on are compiled. Most simulators do not lock a library while th
 while another file is compiled into its library, or into a library it reads. NVC locks its libraries and compiles any
 files at the same time. Without ``--parallel-compile``, files are compiled one at a time.
 
+With ``--batch-compile``, the VHDL files of a library that are ready to be compiled at the same time, and have the same
+compile options, are compiled in one call to the compiler, rather than one call per file. This makes a clean compile
+several times faster, since most of the time of compiling a file goes into starting the compiler and updating the
+library. A batch that fails is compiled again one file at a time, to find the file that fails. ``--batch-compile`` is
+supported by GHDL, NVC and Riviera-PRO, and can be combined with ``--parallel-compile``.
+
 Opening a Test Case in Simulator GUI
 ====================================
 
