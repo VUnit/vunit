@@ -9,6 +9,7 @@ Test the RivieraPro interface
 """
 
 
+import sys
 import unittest
 from pathlib import Path
 import os
@@ -28,28 +29,42 @@ class TestRivieraProInterface(unittest.TestCase):
     @mock.patch("vunit.sim_if.check_output", autospec=True)
     @mock.patch("vunit.sim_if.rivierapro.Process", autospec=True)
     @mock.patch("vunit.sim_if.rivierapro.RivieraProInterface.find_prefix", return_value="prefix")
-    def test_compile_project_in_a_batch_with_a_file_list(self, _find_prefix, process, check_output):
+    def _compile_in_a_batch(self, names, _find_prefix, _process, check_output):
+        """
+        Compile the files names in a batch. Return the file lists and the names compiled on their own.
+        """
         simif = RivieraProInterface(prefix="prefix", output_path=self.output_path)
         project = Project()
         project.add_library("lib", "lib_path")
-        for name in ["file.vhd", "sp ace.vhd", 'quo"te.vhd']:
+        for name in names:
             write_file(name, "")
             project.add_source_file(name, "lib", file_type="vhdl", vhdl_standard=VHDL.standard("2008"))
         file_lists = []
+        names_on_their_own = []
 
         def check_output_side_effect(command, env=None):  # pylint: disable=unused-argument
             if command[-2] == "-f":
                 file_lists.append(Path(command[-1]).read_text())
+            else:
+                names_on_their_own.append(command[-1])
             return ""
 
         check_output.side_effect = check_output_side_effect
         simif.compile_project(project, batch=True)
-        # A name with a double quote cannot be quoted in a file list, so it is compiled on its own
-        names = [call.args[0][-1] for call in check_output.call_args_list if call.args[0][-2] != "-f"]
-        self.assertEqual(names, ['quo"te.vhd'])
+        self.assertEqual(list(Path(self.output_path).glob("batch_*.txt")), [])
+        return file_lists, names_on_their_own
+
+    def test_compile_project_in_a_batch_with_a_file_list(self):
+        file_lists, names_on_their_own = self._compile_in_a_batch(["file.vhd", "sp ace.vhd"])
         self.assertEqual(len(file_lists), 1)
         self.assertEqual(sorted(file_lists[0].splitlines()), ['"file.vhd"', '"sp ace.vhd"'])
-        self.assertEqual(list(Path(self.output_path).glob("batch_*.txt")), [])
+        self.assertEqual(names_on_their_own, [])
+
+    @unittest.skipIf(sys.platform == "win32", "A file name cannot contain a double quote on Windows")
+    def test_compile_project_in_a_batch_without_a_name_with_a_double_quote(self):
+        file_lists, names_on_their_own = self._compile_in_a_batch(["file1.vhd", "file2.vhd", 'quo"te.vhd'])
+        self.assertEqual(sorted(file_lists[0].splitlines()), ['"file1.vhd"', '"file2.vhd"'])
+        self.assertEqual(names_on_their_own, ['quo"te.vhd'])
 
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     @mock.patch("vunit.sim_if.rivierapro.Process", autospec=True)
