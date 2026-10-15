@@ -203,15 +203,9 @@ Compile failed
         simif = create_simulator_interface()
         simif.supports_concurrent_compiles_into_library = supports_concurrent_compiles_into_library
         simif.compile_source_file_command.side_effect = lambda source_file: [Path(source_file.name).stem]
-        project = Project()
-        for library in sorted(set(libraries)):
-            project.add_library(library, library + "_path")
-        source_files = []
-        for idx, library in enumerate(libraries):
-            write_file(f"file{idx}.vhd", "")
-            source_files.append(project.add_source_file(f"file{idx}.vhd", library, file_type="vhdl"))
-        for idx, depends_on in dependencies:
-            project.add_manual_dependency(source_files[idx], depends_on=source_files[depends_on])
+        project, _ = create_project(
+            [(f"file{idx}.vhd", library) for idx, library in enumerate(libraries)], dependencies
+        )
 
         barrier = threading.Barrier(2, timeout=0.5)
         concurrent = set()
@@ -262,16 +256,9 @@ Compile failed
     def test_compile_source_files_waits_for_dependencies(self):
         simif = create_simulator_interface()
         simif.compile_source_file_command.side_effect = lambda source_file: [Path(source_file.name).stem]
-        project = Project()
-        project.add_library("lib1", "lib1_path")
-        project.add_library("lib2", "lib2_path")
-        write_file("file1.vhd", "")
-        file1 = project.add_source_file("file1.vhd", "lib1", file_type="vhdl")
-        write_file("file2.vhd", "")
-        file2 = project.add_source_file("file2.vhd", "lib2", file_type="vhdl")
-        write_file("file3.vhd", "")
-        file3 = project.add_source_file("file3.vhd", "lib1", file_type="vhdl")
-        project.add_manual_dependency(file3, depends_on=file2)
+        project, (file1, file2, file3) = create_project(
+            [("file1.vhd", "lib1"), ("file2.vhd", "lib2"), ("file3.vhd", "lib1")], dependencies=[(2, 1)]
+        )
 
         def check_output_side_effect(command, env=None):  # pylint: disable=unused-argument
             if command == ["file2"]:
@@ -414,6 +401,23 @@ def create_simulator_interface():
     simif = SimulatorInterface(output_path="output_path", gui=False)
     simif.compile_source_file_command = mock.create_autospec(simif.compile_source_file_command)
     return simif
+
+
+def create_project(files, dependencies=()):
+    """
+    Create a project of VHDL files, (name, library) pairs. dependencies are (file index, index of
+    the file it depends on) pairs. Return the project and its source files.
+    """
+    project = Project()
+    source_files = []
+    for name, library in files:
+        if library not in [existing.name for existing in project.get_libraries()]:
+            project.add_library(library, library + "_path")
+        write_file(name, "")
+        source_files.append(project.add_source_file(name, library, file_type="vhdl"))
+    for idx, depends_on in dependencies:
+        project.add_manual_dependency(source_files[idx], depends_on=source_files[depends_on])
+    return project, source_files
 
 
 class MockPrinter(object):
