@@ -287,6 +287,34 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         )
 
     @mock.patch.object(GHDLInterface, "determine_version", return_value=5.0)
+    def test_sim_flags_are_not_shared_between_configurations(self, determine_version):
+        design_unit = Entity("tb_entity", file_name=str(Path("tempdir") / "file.vhd"))
+        design_unit.generic_names = ["runner_cfg", "a", "b"]
+
+        # A configuration added after setting ghdl.sim_flags is a shallow copy and shares the list of flags
+        default_config = Configuration("default", design_unit)
+        default_config.set_sim_option("ghdl.sim_flags", ["--ieee-asserts=disable"])
+        sets_b = default_config.copy()
+        sets_b.set_generic("b", 1)
+        sets_a = default_config.copy()
+        sets_a.set_generic("a", 1)
+
+        simif = GHDLInterface(prefix="prefix", output_path="")
+        simif._vhdl_standard = VHDL.standard("2008")  # pylint: disable=protected-access
+        simif._project = Project()  # pylint: disable=protected-access
+        simif._project.add_library("lib", "lib_path")  # pylint: disable=protected-access
+
+        def get_generic_flags(config):
+            cmd = simif._get_command(  # pylint: disable=protected-access
+                config, str(Path("output_path") / "ghdl"), False, False, "tb_entity", None
+            )
+            return [flag for flag in cmd if flag.startswith("-g")]
+
+        self.assertEqual(get_generic_flags(sets_b), ["-gb=1"])
+        self.assertEqual(get_generic_flags(sets_a), ["-ga=1"])
+        self.assertEqual(default_config.sim_options["ghdl.sim_flags"], ["--ieee-asserts=disable"])
+
+    @mock.patch.object(GHDLInterface, "determine_version", return_value=5.0)
     def test_prefix_is_a_read_only_property(self, determine_version):
         simif = GHDLInterface(prefix="prefix", output_path="")
         self.assertEqual(simif.prefix, "prefix")

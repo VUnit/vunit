@@ -347,7 +347,7 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
         else:
             cmd += [config.entity_name, config.architecture_name]
 
-        sim = config.sim_options.get("ghdl.sim_flags", [])
+        sim = list(config.sim_options.get("ghdl.sim_flags", []))
         sim += hooks.get_flags(self, "run_flags")
         for name, value in config.generics.items():
             sim += [f"-g{name!s}={value!s}"]
