@@ -235,14 +235,6 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
 
         return cmd
 
-    def _batch_command(self, source_file):
-        """
-        A file name with a line break cannot be written in the file list of a batch
-        """
-        if "\n" in source_file.name:
-            return None
-        return super()._batch_command(source_file)
-
     def compile_vhdl_file_command(self, source_file):
         """
         Returns the command to compile a VHDL file

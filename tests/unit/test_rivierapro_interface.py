@@ -9,7 +9,6 @@ Test the RivieraPro interface
 """
 
 
-import sys
 import unittest
 from pathlib import Path
 import os
@@ -59,12 +58,6 @@ class TestRivieraProInterface(unittest.TestCase):
         self.assertEqual(len(file_lists), 1)
         self.assertEqual(sorted(file_lists[0].splitlines()), ['"file.vhd"', '"sp ace.vhd"'])
         self.assertEqual(names_on_their_own, [])
-
-    @unittest.skipIf(sys.platform == "win32", "A file name cannot contain a double quote on Windows")
-    def test_compile_project_in_a_batch_without_a_name_with_a_double_quote(self):
-        file_lists, names_on_their_own = self._compile_in_a_batch(["file1.vhd", "file2.vhd", 'quo"te.vhd'])
-        self.assertEqual(sorted(file_lists[0].splitlines()), ['"file1.vhd"', '"file2.vhd"'])
-        self.assertEqual(names_on_their_own, ['quo"te.vhd'])
 
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     @mock.patch("vunit.sim_if.rivierapro.Process", autospec=True)

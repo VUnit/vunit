@@ -298,17 +298,10 @@ Compile failed
             str(source_file.compile_options.get("ghdl.a_flags", [])),
             source_file.name,
         ]
-        project = Project()
-        source_files = []
-        for name, library, option in files:
-            if library not in [lib.name for lib in project.get_libraries()]:
-                project.add_library(library, library + "_path")
-            write_file(name, "")
-            source_files.append(project.add_source_file(name, library, file_type="vhdl"))
+        project, source_files = create_project([(name, library) for name, library, _ in files], dependencies)
+        for source_file, (_, _, option) in zip(source_files, files):
             if option:
-                source_files[-1].set_compile_option("ghdl.a_flags", [option])
-        for idx, depends_on in dependencies:
-            project.add_manual_dependency(source_files[idx], depends_on=source_files[depends_on])
+                source_file.set_compile_option("ghdl.a_flags", [option])
 
         commands = []
         lock = threading.Lock()
