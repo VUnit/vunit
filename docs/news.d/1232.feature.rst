@@ -1,0 +1,4 @@
+Package manifests can now use a boolean ``requires`` expression for VUnit, VHDL, simulator, and simulator-version
+constraints, and a per-source ``when`` expression to conditionally include sources. Expressions support comparisons,
+``and``/``or``, and parentheses. The separate ``requires-vunit`` and ``requires-vhdl`` fields remain supported but are
+deprecated.
