@@ -108,6 +108,13 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         """
         return False
 
+    @classmethod
+    def supports_vhdl_reflection(cls):
+        """
+        Returns True when this simulator supports VHDL-2019 reflection (std.reflection)
+        """
+        return False
+
     @staticmethod
     def find_executable(executable):
         """

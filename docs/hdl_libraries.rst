@@ -61,6 +61,36 @@ and OSVVM.
 
 See :meth:`add_random() <vunit.ui.VUnit.add_random>`.
 
+Record Dictionaries
+-------------------
+
+``record_dict_pkg`` converts a value of any record type to a :ref:`dict_t <data_types_library>` with
+VHDL-2019 reflection, so no conversion function has to be written or generated for each record type. A
+``dict_t`` can be printed, compared, queued or passed to code that takes key-value data, such as the
+``dict_t`` arguments of the VUnit Python bridge.
+
+.. code-block:: vhdl
+
+    library vunit_lib;
+    use vunit_lib.record_dict_pkg.all;
+    use std.reflection.all;
+    ...
+    variable mirror : value_mirror;
+    variable dict : dict_t;
+    ...
+    mirror := packet'reflect;  -- mirrors are access types, so this must be a variable
+    dict := to_dict(mirror);
+    check_equal(get_integer(dict, "addr"), 5);
+
+Element names become lower case keys. ``integer``, ``real``, ``boolean``, ``bit``, ``std_ulogic``,
+``character``, ``time``, ``string``, ``std_ulogic_vector``, ``unsigned`` and ``signed`` elements keep their
+type, other enumerations are stored as the name of their value, and a nested record becomes a nested
+``dict_t``. Any other element type fails on ``record_dict_logger`` with the name of the element. The
+conversion is one-way, since reflection cannot create a record value.
+
+See :meth:`add_record_dict() <vunit.ui.VUnit.add_record_dict>`. It requires VHDL-2019 and a simulator with
+reflection, currently NVC.
+
 OSVVM
 -----
 

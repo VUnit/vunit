@@ -1335,6 +1335,14 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         """
         self._builtins.add("random")
 
+    def add_record_dict(self):
+        """
+        Add record_dict_pkg, which converts any record to a dict_t with VHDL-2019 reflection.
+
+        Requires VHDL-2019 and a simulator that supports reflection (NVC).
+        """
+        self._builtins.add("record_dict")
+
     def add_verification_components(self):
         """
         Add verification component library
