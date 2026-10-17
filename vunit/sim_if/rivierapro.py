@@ -30,6 +30,10 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
     """
 
     name = "rivierapro"
+    supports_batch_compile = True
+    batch_file_list_arguments = ("-f", "{}")
+    # Quoted, which keeps spaces, and backslashes on Windows, as they are
+    batch_file_list_line = '"{}"'
     supports_gui_flag = True
     package_users_depend_on_bodies = True
 
