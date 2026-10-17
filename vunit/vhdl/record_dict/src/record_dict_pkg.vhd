@@ -16,6 +16,7 @@ use std.reflection.all;
 use work.dict_pkg.all;
 use work.logger_pkg.all;
 use work.string_ops.lower;
+use work.string_ops.upper;
 
 package record_dict_pkg is
   constant record_dict_logger : logger_t := get_logger("vunit_lib:record_dict_pkg");
@@ -35,14 +36,42 @@ end package;
 package body record_dict_pkg is
   impure function mirror_to_dict(variable value : inout value_mirror) return dict_t;
 
+  -- Simulators differ in the case of simple_name. Riviera-PRO rejects chained mirror calls, so these
+  -- helpers go through a variable.
+  impure function get_type_name(variable value : inout value_mirror) return string is
+    variable subtype_mirror : subtype_mirror := value.get_subtype_mirror;
+  begin
+    return upper(subtype_mirror.simple_name);
+  end;
+
+  impure function get_pos(variable value : inout value_mirror) return integer is
+    variable enumeration : enumeration_value_mirror := value.to_enumeration;
+  begin
+    return enumeration.pos;
+  end;
+
+  -- Element offset positions from the left. NVC indexes from 'left upwards whatever the direction
+  impure function get_element(variable value : inout array_value_mirror; offset : natural) return value_mirror is
+    variable subtype_mirror : array_subtype_mirror := value.get_subtype_mirror;
+  begin
+`if TOOL_NAME = "nvc" then
+    return value.get(subtype_mirror.left + index(offset));
+`else
+    if subtype_mirror.ascending then
+      return value.get(subtype_mirror.left + index(offset));
+    end if;
+    return value.get(subtype_mirror.left - index(offset));
+`end if
+  end;
+
   impure function to_std_ulogic_vector(variable value : inout array_value_mirror) return std_ulogic_vector is
     variable subtype_mirror : array_subtype_mirror := value.get_subtype_mirror;
     variable element : value_mirror;
     variable result : std_ulogic_vector(0 to integer(subtype_mirror.length) - 1);
   begin
     for idx in result'range loop
-      element := value.get(subtype_mirror.left + index(idx));
-      result(idx) := std_ulogic'val(element.to_enumeration.pos);
+      element := get_element(value, idx);
+      result(idx) := std_ulogic'val(get_pos(element));
     end loop;
     return result;
   end;
@@ -53,28 +82,35 @@ package body record_dict_pkg is
     variable result : string(1 to integer(subtype_mirror.length));
   begin
     for idx in result'range loop
-      element := value.get(subtype_mirror.left + index(idx - 1));
-      result(idx) := character'val(element.to_enumeration.pos);
+      element := get_element(value, idx - 1);
+      result(idx) := character'val(get_pos(element));
     end loop;
     return result;
   end;
 
   procedure set(dict : dict_t; key : string; variable value : inout value_mirror) is
-    constant type_name : string := value.get_subtype_mirror.simple_name;
+    constant type_name : string := get_type_name(value);
+    variable integer_value : integer_value_mirror;
+    variable floating_value : floating_value_mirror;
+    variable physical_value : physical_value_mirror;
     variable enumeration : enumeration_value_mirror;
     variable array_value : array_value_mirror;
     variable nested : dict_t;
   begin
     case value.get_value_class is
       when class_integer =>
-        set_integer(dict, key, value.to_integer.value);
+        integer_value := value.to_integer;
+        set_integer(dict, key, integer_value.value);
 
       when class_floating =>
-        set_real(dict, key, value.to_floating.value);
+        floating_value := value.to_floating;
+        set_real(dict, key, floating_value.value);
 
       when class_physical =>
         if type_name = "TIME" then
-          set_time(dict, key, value.to_physical.value * 1 fs);
+          -- The value is in units of the resolution limit on Riviera-PRO, fs on NVC
+          physical_value := value.to_physical;
+          set_time(dict, key, physical_value.value * std.env.resolution_limit);
         else
           failure(record_dict_logger, key & ": physical type " & type_name & " is not supported.");
         end if;
@@ -124,7 +160,7 @@ package body record_dict_pkg is
     constant dict : dict_t := new_dict;
   begin
     if value.get_value_class /= class_record then
-      failure(record_dict_logger, "to_dict expects a record, got " & value.get_subtype_mirror.simple_name & ".");
+      failure(record_dict_logger, "to_dict expects a record, got " & get_type_name(value) & ".");
       return dict;
     end if;
 

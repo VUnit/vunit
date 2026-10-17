@@ -107,7 +107,7 @@ begin
         -- VHDL-2019 call paths add the location of the failure to the log item
         check_only_log(
           record_dict_logger, "values: array type INTEGER_VECTOR is not supported.", failure,
-          line_num => 107, file_name => "record_dict_pkg.vhd"
+          line_num => 143, file_name => "record_dict_pkg.vhd"
         );
         unmock(record_dict_logger);
 
@@ -116,7 +116,7 @@ begin
         dict := to_dict(int);
         check_only_log(
           record_dict_logger, "to_dict expects a record, got INTEGER.", failure,
-          line_num => 127, file_name => "record_dict_pkg.vhd"
+          line_num => 163, file_name => "record_dict_pkg.vhd"
         );
         unmock(record_dict_logger);
       end if;

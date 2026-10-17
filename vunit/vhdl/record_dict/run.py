@@ -14,5 +14,7 @@ UI.add_vhdl_builtins()
 UI.add_record_dict()
 
 UI.library("vunit_lib").add_source_files(ROOT / "test" / "*.vhd")
+# Riviera-PRO needs debug information for the log locations the tests check
+UI.set_compile_option("rivierapro.vcom_flags", ["-dbg"])
 
 UI.main()
