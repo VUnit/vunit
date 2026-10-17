@@ -20,14 +20,21 @@ use work.string_ops.lower;
 package record_dict_pkg is
   constant record_dict_logger : logger_t := get_logger("vunit_lib:record_dict_pkg");
 
-  -- Mirrors are access types, so the mirror of the record must be a variable:
+  -- Instantiate once per record type, then call with the record:
   --
-  --   mirror := my_record'reflect;
-  --   dict := to_dict(mirror);
-  impure function to_dict(variable value : inout value_mirror) return dict_t;
+  --   function to_dict is new to_dict generic map (record_t => packet_t);
+  --   ...
+  --   dict := to_dict(packet);
+  --
+  -- The generic type is needed since a mirror is an access type, which a parameter can only take as a
+  -- variable, so my_record'reflect can't be passed to a subprogram. The function reflects its own
+  -- parameter instead.
+  impure function to_dict generic (type record_t) parameter (value : record_t) return dict_t;
 end package;
 
 package body record_dict_pkg is
+  impure function mirror_to_dict(variable value : inout value_mirror) return dict_t;
+
   impure function to_std_ulogic_vector(variable value : inout array_value_mirror) return std_ulogic_vector is
     variable subtype_mirror : array_subtype_mirror := value.get_subtype_mirror;
     variable element : value_mirror;
@@ -101,8 +108,8 @@ package body record_dict_pkg is
         end if;
 
       when class_record =>
-        -- NVC rejects to_dict(value) as an actual of set_dict_t_ref
-        nested := to_dict(value);
+        -- NVC rejects mirror_to_dict(value) as an actual of set_dict_t_ref
+        nested := mirror_to_dict(value);
         set_dict_t_ref(dict, key, nested);
 
       when others =>
@@ -110,7 +117,7 @@ package body record_dict_pkg is
     end case;
   end;
 
-  impure function to_dict(variable value : inout value_mirror) return dict_t is
+  impure function mirror_to_dict(variable value : inout value_mirror) return dict_t is
     variable record_value : record_value_mirror;
     variable subtype_mirror : record_subtype_mirror;
     variable element : value_mirror;
@@ -128,5 +135,11 @@ package body record_dict_pkg is
       set(dict, lower(subtype_mirror.element_name(idx)), element);
     end loop;
     return dict;
+  end;
+
+  impure function to_dict generic (type record_t) parameter (value : record_t) return dict_t is
+    variable mirror : value_mirror := value'reflect;
+  begin
+    return mirror_to_dict(mirror);
   end;
 end package body;

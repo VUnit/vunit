@@ -69,18 +69,22 @@ VHDL-2019 reflection, so no conversion function has to be written or generated f
 ``dict_t`` can be printed, compared, queued or passed to code that takes key-value data, such as the
 ``dict_t`` arguments of the VUnit Python bridge.
 
+``to_dict`` is a generic function, instantiated once for each record type and then called with the record:
+
 .. code-block:: vhdl
 
     library vunit_lib;
     use vunit_lib.record_dict_pkg.all;
-    use std.reflection.all;
     ...
-    variable mirror : value_mirror;
-    variable dict : dict_t;
+    function to_dict is new to_dict generic map (record_t => packet_t);
     ...
-    mirror := packet'reflect;  -- mirrors are access types, so this must be a variable
-    dict := to_dict(mirror);
+    dict := to_dict(packet);
     check_equal(get_integer(dict, "addr"), 5);
+
+Instances for different record types can share the name ``to_dict``. The instantiation is needed since
+VHDL has no implicit instantiation of generic subprograms, and a function can't take ``packet'reflect``
+directly: a mirror is an access type, which a parameter can only take as a variable. ``to_dict``
+reflects its own parameter instead.
 
 Element names become lower case keys. ``integer``, ``real``, ``boolean``, ``bit``, ``std_ulogic``,
 ``character``, ``time``, ``string``, ``std_ulogic_vector``, ``unsigned`` and ``signed`` elements keep their
