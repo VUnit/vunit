@@ -1339,7 +1339,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         """
         Add record_dict_pkg, which converts any record to a dict_t with VHDL-2019 reflection.
 
-        Requires VHDL-2019 and a simulator that supports reflection (NVC).
+        Requires VHDL-2019 and a simulator that supports reflection (NVC or Riviera-PRO).
         """
         self._builtins.add("record_dict")
 

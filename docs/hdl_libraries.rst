@@ -93,7 +93,7 @@ type, other enumerations are stored as the name of their value, and a nested rec
 conversion is one-way, since reflection cannot create a record value.
 
 See :meth:`add_record_dict() <vunit.ui.VUnit.add_record_dict>`. It requires VHDL-2019 and a simulator with
-reflection, currently NVC.
+reflection, currently NVC and Riviera-PRO.
 
 OSVVM
 -----
