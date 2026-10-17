@@ -1,0 +1,3 @@
+Added ``record_dict_pkg``, which converts a value of any record type to a ``dict_t`` with VHDL-2019 reflection. It is
+opt-in through :meth:`add_record_dict() <vunit.ui.VUnit.add_record_dict>` and requires a simulator with VHDL-2019
+reflection, currently NVC.
