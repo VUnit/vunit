@@ -61,6 +61,40 @@ and OSVVM.
 
 See :meth:`add_random() <vunit.ui.VUnit.add_random>`.
 
+Record Dictionaries
+-------------------
+
+``record_dict_pkg`` converts a value of any record type to a :ref:`dict_t <data_types_library>` with
+VHDL-2019 reflection, so no conversion function has to be written or generated for each record type. A
+``dict_t`` can be printed, compared, queued or passed to code that takes key-value data, such as the
+``dict_t`` arguments of the VUnit Python bridge.
+
+``to_dict`` is a generic function, instantiated once for each record type and then called with the record:
+
+.. code-block:: vhdl
+
+    library vunit_lib;
+    use vunit_lib.record_dict_pkg.all;
+    ...
+    function to_dict is new to_dict generic map (record_t => packet_t);
+    ...
+    dict := to_dict(packet);
+    check_equal(get_integer(dict, "addr"), 5);
+
+Instances for different record types can share the name ``to_dict``. The instantiation is needed since
+VHDL has no implicit instantiation of generic subprograms, and a function can't take ``packet'reflect``
+directly: a mirror is an access type, which a parameter can only take as a variable. ``to_dict``
+reflects its own parameter instead.
+
+Element names become lower case keys. ``integer``, ``real``, ``boolean``, ``bit``, ``std_ulogic``,
+``character``, ``time``, ``string``, ``std_ulogic_vector``, ``unsigned`` and ``signed`` elements keep their
+type, other enumerations are stored as the name of their value, and a nested record becomes a nested
+``dict_t``. Any other element type fails on ``record_dict_logger`` with the name of the element. The
+conversion is one-way, since reflection cannot create a record value.
+
+See :meth:`add_record_dict() <vunit.ui.VUnit.add_record_dict>`. It requires VHDL-2019 and a simulator with
+reflection, currently NVC and Riviera-PRO.
+
 OSVVM
 -----
 

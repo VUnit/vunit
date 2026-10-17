@@ -109,6 +109,13 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         return True
 
     @classmethod
+    def supports_vhdl_reflection(cls):
+        """
+        Returns True when this simulator supports VHDL-2019 reflection (std.reflection)
+        """
+        return True
+
+    @classmethod
     def supports_vhdl_package_generics(cls):
         """
         Returns True when this simulator supports VHDL package generics

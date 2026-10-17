@@ -15,7 +15,7 @@ import re
 from pathlib import Path
 from unittest import mock
 from vunit import VUnit
-from vunit.builtins import Builtins, BuiltinsAdder
+from vunit.builtins import Builtins, BuiltinsAdder, VHDL_PATH
 from vunit.about import version
 from vunit.sim_if.activehdl import ActiveHDLVersion
 from vunit.sim_if.ghdl import GHDLVersion
@@ -82,6 +82,30 @@ class TestBuiltins(unittest.TestCase):
 
     def _write_toml(self, tempdir, text: str):
         (tempdir / "vunit_pkg.toml").write_text(text, encoding="utf-8")
+
+    def test_record_dict_requires_vhdl_2019(self):
+        simulator_class = mock.Mock()
+        simulator_class.supports_vhdl_reflection.return_value = True
+        builtins = Builtins(self.vu, VHDL.STD_2008, simulator_class)
+        with self.assertRaisesRegex(RuntimeError, re.escape("record_dict_pkg only supports VHDL-2019 and later")):
+            builtins.add("record_dict")
+
+    def test_record_dict_requires_reflection(self):
+        simulator_class = mock.Mock()
+        simulator_class.name = "ghdl"
+        simulator_class.supports_vhdl_reflection.return_value = False
+        builtins = Builtins(self.vu, VHDL.STD_2019, simulator_class)
+        with self.assertRaisesRegex(
+            RuntimeError, re.escape("record_dict_pkg requires VHDL-2019 reflection, which ghdl does not support")
+        ):
+            builtins.add("record_dict")
+
+    def test_record_dict_adds_its_sources(self):
+        simulator_class = mock.Mock()
+        simulator_class.supports_vhdl_reflection.return_value = True
+        builtins = Builtins(self.vu, VHDL.STD_2019, simulator_class)
+        builtins.add("record_dict")
+        self.library_mock.add_source_files.assert_called_with(VHDL_PATH / "record_dict" / "src" / "*.vhd")
 
     def test_raises_if_package_not_found(self):
         with (

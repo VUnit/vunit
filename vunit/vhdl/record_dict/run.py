@@ -1,0 +1,20 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
+
+from pathlib import Path
+from vunit import VUnit
+
+ROOT = Path(__file__).parent
+
+UI = VUnit.from_argv()
+UI.add_vhdl_builtins()
+UI.add_record_dict()
+
+UI.library("vunit_lib").add_source_files(ROOT / "test" / "*.vhd")
+# Riviera-PRO needs debug information for the log locations the tests check
+UI.set_compile_option("rivierapro.vcom_flags", ["-dbg"])
+
+UI.main()
