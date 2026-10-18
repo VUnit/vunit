@@ -9,6 +9,7 @@ Test the test scheduler
 """
 
 import unittest
+from pathlib import Path
 from unittest import mock
 from vunit.test.runner import TestScheduler
 
@@ -62,6 +63,16 @@ class TestTestScheduler(unittest.TestCase):
             else:
                 self.assertEqual(result[set_idx]["total_exec_time"], 0)
                 self.assertEqual(len(result[set_idx]["test_suites"]), 0)
+
+    def test_that_scanned_file_with_different_path_spelling_and_history_goes_to_set_3(self):
+        test_suite = self._create_test_suite("lib1.tb1.test1", ["lib1.tb1.test1"], "tests.vhd")
+        self._add_test_history(test_suite.name, test_suite.name, "passed", 1, 10)
+        latest_dependency_updates = {str(Path("tests.vhd").resolve()): 0}
+
+        scheduler = TestScheduler([test_suite], 1, latest_dependency_updates, self._test_history)
+        result = scheduler._create_test_suite_sets([test_suite])
+
+        self.assertEqual(result[3]["test_suites"], [{"test_suite": test_suite, "exec_time": 10}])
 
     def test_that_skipped_test_suites_go_to_set_2(self):
         latest_dependency_updates = dict(file1=0)

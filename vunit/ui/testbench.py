@@ -9,6 +9,7 @@ UI class TestBench
 """
 
 from fnmatch import fnmatch
+from pathlib import Path
 from .common import lower_generics
 from .test import Test
 
@@ -240,4 +241,21 @@ class TestBench(object):
            the ``NESTED_TEST_SUITE`` macro should be used instead of
            the ``TEST_SUITE`` macro.
         """
-        self._test_bench.scan_tests_from_file(file_name)
+        self._test_bench.scan_tests_from_file(self._get_project_file_name(file_name))
+
+    def _get_project_file_name(self, file_name):
+        """
+        Return the name under which the project knows file_name.
+
+        Test suites are associated with the file their tests are scanned from, and that
+        name is used to look up dependency information (e.g. for test prioritization).
+        The project knows a source file by its resolved path, or by the path of its
+        preprocessed copy if preprocessing is enabled. Map any spelling of the path
+        (relative, pathlib.Path, posix style on Windows, original instead of preprocessed
+        file) to that name. Files which are not part of the project are returned resolved.
+        """
+        path = Path(file_name).resolve()
+        for source_file in self._library._project.get_source_files_in_order():  # pylint: disable=protected-access
+            if Path(source_file.original_name).resolve() == path:
+                return source_file.name
+        return str(path)

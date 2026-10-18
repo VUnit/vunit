@@ -1,0 +1,3 @@
+Fixed a ``KeyError`` during test prioritization on subsequent runs when
+``scan_tests_from_file()`` was given a relative path, a ``pathlib.Path``, or a
+forward-slash path on Windows instead of the project's exact source filename.
