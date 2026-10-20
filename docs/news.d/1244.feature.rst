@@ -1,0 +1,3 @@
+Added ``to_dict`` in ``record_dict_pkg``, which converts any record to a ``dict_t``, and a generic ``push`` in
+``reflection_queue_pkg``, which pushes a value of any type onto a ``queue_t``. Both are one-way, since VHDL-2019
+reflection can read a value but not create one. They are opt-in through :meth:`add_reflection() <vunit.ui.VUnit.add_reflection>`.
