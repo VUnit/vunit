@@ -61,6 +61,72 @@ and OSVVM.
 
 See :meth:`add_random() <vunit.ui.VUnit.add_random>`.
 
+Reflection
+----------
+
+These packages use VHDL-2019 reflection to work on values of any type, so no code has to be written or
+generated for each type. Add them with :meth:`add_reflection() <vunit.ui.VUnit.add_reflection>`. They
+require VHDL-2019 and a simulator with reflection, currently NVC and Riviera-PRO.
+
+Equality Checks for Any Type
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``reflection_check_generic_pkg`` provides ``check_equal`` for any type, with the same parameters as the
+``check_equal`` of the :ref:`check library <check_library>`. It is instantiated once for each type, in an
+architecture or a package:
+
+.. code-block:: vhdl
+
+    package packet_checks is new vunit_lib.reflection_check_generic_pkg generic map (t => packet_t);
+    use packet_checks.all;
+    ...
+    check_equal(got_packet, expected_packet);
+    check_equal(my_checker, got_packet, expected_packet, "After reset");
+
+The check uses the predefined ``"="`` of the type. When it fails, the message names every element that
+differs on a row of its own, with its path through nested records and arrays:
+
+.. code-block:: none
+
+    0 ps - check - ERROR - Equality check failed (tb_packet.vhd:21)
+                             hdr.addr: got 6, expected 5
+                             data(0): got '1', expected '0'
+
+Instances for different types overload on the type. Don't instantiate it for a type that the check
+library already covers, such as ``integer`` or ``std_logic_vector``, since the calls become ambiguous.
+
+To share the instances between testbenches, instantiate them in the package that declares the types:
+
+.. code-block:: vhdl
+
+    package types_pkg is
+      type packet_t is record
+        ...
+      end record;
+
+      package packet_checks is new vunit_lib.reflection_check_generic_pkg generic map (t => packet_t);
+    end package;
+
+    -- In a testbench
+    use work.types_pkg.all;
+    use work.types_pkg.packet_checks.all;
+
+Don't instantiate it as a design unit of its own (``package packet_checks is new ...`` at library
+level). On Riviera-PRO 2026.04, ``check_equal`` through such an instance silently does nothing. It
+neither logs nor counts the check.
+
+The two procedures are also available on their own in ``reflection_check_pkg``, for example to
+instantiate them inside a process, where NVC doesn't accept a package instantiation:
+
+.. code-block:: vhdl
+
+    use vunit_lib.reflection_check_pkg.all;
+    ...
+    process
+      procedure check_equal is new check_equal generic map (t => packet_t);
+      procedure check_equal is new check_equal_with_checker generic map (t => packet_t);
+    begin
+
 OSVVM
 -----
 

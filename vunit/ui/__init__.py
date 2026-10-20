@@ -1335,6 +1335,15 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         """
         self._builtins.add("random")
 
+    def add_reflection(self):
+        """
+        Add the packages built on VHDL-2019 reflection, such as reflection_check_generic_pkg, which provides
+        check_equal for any type.
+
+        Requires VHDL-2019 and a simulator that supports reflection (NVC or Riviera-PRO).
+        """
+        self._builtins.add("reflection")
+
     def add_verification_components(self):
         """
         Add verification component library
