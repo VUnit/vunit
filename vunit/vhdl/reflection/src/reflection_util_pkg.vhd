@@ -6,6 +6,9 @@
 --
 -- Internal helpers shared by the packages built on VHDL-2019 reflection.
 
+library ieee;
+use ieee.std_logic_1164.all;
+
 use std.reflection.all;
 use std.textio.all;
 
@@ -16,9 +19,15 @@ package reflection_util_pkg is
   -- Simulators differ in the case of simple_name. Riviera-PRO rejects chained mirror calls, so these
   -- helpers go through a variable.
   impure function get_type_name(variable value : inout value_mirror) return string;
+  impure function get_pos(variable value : inout value_mirror) return integer;
 
   -- Element offset positions from the left
   impure function get_element(variable value : inout array_value_mirror; offset : natural) return value_mirror;
+
+  -- The elements of an array of std_ulogic or character, from the left, ranged 0 to 'length - 1 and
+  -- 1 to 'length
+  impure function to_std_ulogic_vector(variable value : inout array_value_mirror) return std_ulogic_vector;
+  impure function to_string(variable value : inout array_value_mirror) return string;
 
   -- Appends a row "  <path>: got <x>, expected <y>", starting with LF, to diff for every leaf where got
   -- and expected differ. Record elements add ".<name>" to the path and array elements "(<index>)".
@@ -36,6 +45,12 @@ package body reflection_util_pkg is
     return upper(subtype_mirror.simple_name);
   end;
 
+  impure function get_pos(variable value : inout value_mirror) return integer is
+    variable enumeration : enumeration_value_mirror := value.to_enumeration;
+  begin
+    return enumeration.pos;
+  end;
+
   -- NVC indexes from 'left upwards whatever the direction
   impure function get_element(variable value : inout array_value_mirror; offset : natural) return value_mirror is
     variable subtype_mirror : array_subtype_mirror := value.get_subtype_mirror;
@@ -48,6 +63,30 @@ package body reflection_util_pkg is
     end if;
     return value.get(subtype_mirror.left - index(offset));
 `end if
+  end;
+
+  impure function to_std_ulogic_vector(variable value : inout array_value_mirror) return std_ulogic_vector is
+    variable subtype_mirror : array_subtype_mirror := value.get_subtype_mirror;
+    variable element : value_mirror;
+    variable result : std_ulogic_vector(0 to integer(subtype_mirror.length) - 1);
+  begin
+    for idx in result'range loop
+      element := get_element(value, idx);
+      result(idx) := std_ulogic'val(get_pos(element));
+    end loop;
+    return result;
+  end;
+
+  impure function to_string(variable value : inout array_value_mirror) return string is
+    variable subtype_mirror : array_subtype_mirror := value.get_subtype_mirror;
+    variable element : value_mirror;
+    variable result : string(1 to integer(subtype_mirror.length));
+  begin
+    for idx in result'range loop
+      element := get_element(value, idx - 1);
+      result(idx) := character'val(get_pos(element));
+    end loop;
+    return result;
   end;
 
   -- The declared index of the element at offset
