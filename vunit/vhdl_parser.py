@@ -1063,8 +1063,10 @@ class VHDLReference(object):
         """
         Find entity, use, context and configuration references within the code
         """
+        # A use clause of a package instantiated in the same file, use my_pkg_inst.all, names no library
+        local_instances = {match.group("new_name").lower() for match in cls._package_instance_re.finditer(code)}
         return (
-            cls._find_uses(code)
+            [ref for ref in cls._find_uses(code) if ref.library.lower() not in local_instances]
             + cls._find_entity_references(code)
             + cls._find_configuration_references(code)
             + cls._find_package_instance_references(code)

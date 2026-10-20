@@ -161,6 +161,19 @@ end architecture;
         self.assertEqual(arch[0].entity, "foo")
         self.assertEqual(arch[0].identifier, "rtl")
 
+    def test_use_of_local_package_instance_is_not_a_reference(self):
+        design_file = VHDLDesignFile.parse(
+            """
+architecture a of ent is
+  package my_inst is new lib.gen_pkg generic map (t => integer);
+  use My_Inst.all;
+  use my_inst.foo;
+begin
+end architecture;
+"""
+        )
+        self.assertEqual(design_file.references, [VHDLReference("package", "lib", "gen_pkg", None)])
+
     def test_parsing_references(self):
         design_file = VHDLDesignFile.parse(
             """
