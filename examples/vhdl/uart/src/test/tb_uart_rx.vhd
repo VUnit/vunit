@@ -16,7 +16,8 @@ library uart_lib;
 
 entity tb_uart_rx is
   generic (
-    runner_cfg : string);
+    runner_cfg : string;
+    parity : natural);
 end entity;
 
 architecture tb of tb_uart_rx is
@@ -33,7 +34,9 @@ architecture tb of tb_uart_rx is
 
   signal num_overflows : integer := 0;
 
-  constant uart_bfm : uart_master_t := new_uart_master(initial_baud_rate => baud_rate);
+  constant uart_bfm : uart_master_t := new_uart_master(initial_baud_rate => baud_rate,
+                                                     initial_parity => int_to_parity(parity));
+
   constant uart_stream : stream_master_t := as_stream(uart_bfm);
 
   constant axi_stream_bfm : axi_stream_slave_t := new_axi_stream_slave(data_length => tdata'length);
@@ -87,7 +90,8 @@ begin
 
   dut : entity uart_lib.uart_rx
     generic map (
-      cycles_per_bit => cycles_per_bit)
+      cycles_per_bit => cycles_per_bit,
+      parity => parity)
     port map (
       clk => clk,
       rx => rx,
