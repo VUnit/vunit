@@ -99,6 +99,29 @@ type, other enumerations are stored as the name of their value, and a nested rec
 ``dict_t``. Any other element type fails on ``record_dict_logger`` with the name of the element. The
 conversion is one-way, since reflection cannot create a record value.
 
+Queues of Any Type
+~~~~~~~~~~~~~~~~~~
+
+``reflection_queue_pkg`` pushes values of any type onto a :ref:`queue_t <queue_pkg>` and pops them
+back unchanged. It is instantiated once for each type, in an architecture or a package:
+
+.. code-block:: vhdl
+
+    package packet_queue is new vunit_lib.reflection_queue_pkg generic map (t => packet_t);
+    use packet_queue.all;
+    ...
+    push(queue, packet);
+    packet := pop(queue);
+
+Values of other types and of the ``queue_pkg`` types can be mixed on the same queue, and are popped in
+the order they were pushed. Popping a value that was pushed by another instance fails on the
+``vunit_lib:reflection_queue_pkg`` logger.
+
+Since a value can't be rebuilt from its parts, ``push`` keeps a copy of the value in a store owned by
+the instance and pushes a handle to it, and ``pop`` takes the value out of the store again. The queue
+holds the handle rather than the data, so encoding or copying a queue doesn't copy the values, and a
+value that is never popped stays in the store.
+
 OSVVM
 -----
 
