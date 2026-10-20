@@ -1,0 +1,2 @@
+Added ``reflection_queue_pkg``, which pushes values of any type onto a ``queue_t`` and pops them back. It is opt-in
+through :meth:`add_reflection() <vunit.ui.VUnit.add_reflection>`.
