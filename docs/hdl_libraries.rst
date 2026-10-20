@@ -92,6 +92,10 @@ differs on a row of its own, with its path through nested records and arrays:
                              hdr.addr: got 6, expected 5
                              data(0): got '1', expected '0'
 
+It works for any type with ``"="``, not only records: enumerations, scalar and physical types of your
+own, arrays, and arrays of records. On NVC 1.23 an array of records crashes the simulator when the check
+fails, since NVC can't reflect the elements of such an array yet.
+
 Instances for different types overload on the type. Don't instantiate it for a type that the check
 library already covers, such as ``integer`` or ``std_logic_vector``, since the calls become ambiguous.
 

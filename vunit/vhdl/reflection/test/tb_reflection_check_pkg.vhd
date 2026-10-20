@@ -52,17 +52,33 @@ architecture a of tb_reflection_check_pkg is
     enabled : boolean;
   end record;
 
+  type headers_t is array (natural range <>) of header_t;
+
+  type level_t is range 0 to 7;
+
+  type distance_t is range 0 to 1000000
+    units
+      mm;
+      m = 1000 mm;
+    end units;
+
   package scalars_checks is new vunit_lib.reflection_check_generic_pkg generic map (t => scalars_t);
   package packet_checks is new vunit_lib.reflection_check_generic_pkg generic map (t => packet_t);
   package vectors_checks is new vunit_lib.reflection_check_generic_pkg generic map (t => vectors_t);
   -- Types that check_pkg covers, such as integer, would make check_equal ambiguous
   package state_checks is new vunit_lib.reflection_check_generic_pkg generic map (t => state_t);
   package states_checks is new vunit_lib.reflection_check_generic_pkg generic map (t => states_t);
+  package headers_checks is new vunit_lib.reflection_check_generic_pkg generic map (t => headers_t);
+  package level_checks is new vunit_lib.reflection_check_generic_pkg generic map (t => level_t);
+  package distance_checks is new vunit_lib.reflection_check_generic_pkg generic map (t => distance_t);
   use scalars_checks.all;
   use packet_checks.all;
   use vectors_checks.all;
   use state_checks.all;
   use states_checks.all;
+  use headers_checks.all;
+  use level_checks.all;
+  use distance_checks.all;
 begin
 
   main : process
@@ -163,6 +179,24 @@ begin
         check_equal(my_checker, config_t'(enabled => true), config_t'(enabled => true));
         check_logged("Equality check passed", file_line - 1, pass, get_logger(my_checker));
         unmock(get_logger(my_checker));
+
+      elsif run("Test an array of records") then
+`if TOOL_NAME = "nvc" then
+        -- NVC crashes when it reflects an element of an array of records
+        info("Skipped on NVC");
+`else
+        check_equal(headers_t'((5, idle), (6, busy)), headers_t'((5, idle), (7, idle)));
+        check_logged(
+          "Equality check failed" & row("(1).addr: got 6, expected 7") & row("(1).kind: got busy, expected idle"),
+          file_line - 3
+        );
+`end if
+
+      elsif run("Test scalar types of the user") then
+        check_equal(level_t'(3), level_t'(4));
+        check_logged("Equality check failed" & row("got 3, expected 4"), file_line - 1);
+        check_equal(distance_t'(2 m), distance_t'(30 mm));
+        check_logged("Equality check failed" & row("got 2000 mm, expected 30 mm"), file_line - 1);
       end if;
 
       unmock(check_logger);

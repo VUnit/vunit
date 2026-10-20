@@ -89,7 +89,8 @@ package body reflection_util_pkg is
           -- The value is in units of the resolution limit on Riviera-PRO, fs on NVC
           return time'image(physical_value.value * std.env.resolution_limit);
         end if;
-        return physical_value.image;
+        -- NVC gives the unit name in upper case, Riviera-PRO in lower case
+        return lower(physical_value.image);
       when others =>
         enumeration := value.to_enumeration;
         return lower(enumeration.image);
