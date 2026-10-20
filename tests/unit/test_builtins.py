@@ -83,29 +83,31 @@ class TestBuiltins(unittest.TestCase):
     def _write_toml(self, tempdir, text: str):
         (tempdir / "vunit_pkg.toml").write_text(text, encoding="utf-8")
 
-    def test_record_dict_requires_vhdl_2019(self):
+    def test_reflection_requires_vhdl_2019(self):
         simulator_class = mock.Mock()
         simulator_class.supports_vhdl_reflection.return_value = True
         builtins = Builtins(self.vu, VHDL.STD_2008, simulator_class)
-        with self.assertRaisesRegex(RuntimeError, re.escape("record_dict_pkg only supports VHDL-2019 and later")):
-            builtins.add("record_dict")
+        with self.assertRaisesRegex(
+            RuntimeError, re.escape("The reflection packages only support VHDL-2019 and later")
+        ):
+            builtins.add("reflection")
 
-    def test_record_dict_requires_reflection(self):
+    def test_reflection_requires_reflection(self):
         simulator_class = mock.Mock()
         simulator_class.name = "ghdl"
         simulator_class.supports_vhdl_reflection.return_value = False
         builtins = Builtins(self.vu, VHDL.STD_2019, simulator_class)
         with self.assertRaisesRegex(
-            RuntimeError, re.escape("record_dict_pkg requires VHDL-2019 reflection, which ghdl does not support")
+            RuntimeError, re.escape("The reflection packages require VHDL-2019 reflection, which ghdl does not support")
         ):
-            builtins.add("record_dict")
+            builtins.add("reflection")
 
-    def test_record_dict_adds_its_sources(self):
+    def test_reflection_adds_its_sources(self):
         simulator_class = mock.Mock()
         simulator_class.supports_vhdl_reflection.return_value = True
         builtins = Builtins(self.vu, VHDL.STD_2019, simulator_class)
-        builtins.add("record_dict")
-        self.library_mock.add_source_files.assert_called_with(VHDL_PATH / "record_dict" / "src" / "*.vhd")
+        builtins.add("reflection")
+        self.library_mock.add_source_files.assert_called_with(VHDL_PATH / "reflection" / "src" / "*.vhd")
 
     def test_raises_if_package_not_found(self):
         with (

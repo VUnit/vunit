@@ -61,8 +61,15 @@ and OSVVM.
 
 See :meth:`add_random() <vunit.ui.VUnit.add_random>`.
 
+Reflection
+----------
+
+These packages use VHDL-2019 reflection to work on values of any type, so no code has to be written or
+generated for each type. Add them with :meth:`add_reflection() <vunit.ui.VUnit.add_reflection>`. They
+require VHDL-2019 and a simulator with reflection, currently NVC and Riviera-PRO.
+
 Record Dictionaries
--------------------
+~~~~~~~~~~~~~~~~~~~
 
 ``record_dict_pkg`` converts a value of any record type to a :ref:`dict_t <data_types_library>` with
 VHDL-2019 reflection, so no conversion function has to be written or generated for each record type. A
@@ -91,9 +98,6 @@ Element names become lower case keys. ``integer``, ``real``, ``boolean``, ``bit`
 type, other enumerations are stored as the name of their value, and a nested record becomes a nested
 ``dict_t``. Any other element type fails on ``record_dict_logger`` with the name of the element. The
 conversion is one-way, since reflection cannot create a record value.
-
-See :meth:`add_record_dict() <vunit.ui.VUnit.add_record_dict>`. It requires VHDL-2019 and a simulator with
-reflection, currently NVC and Riviera-PRO.
 
 OSVVM
 -----

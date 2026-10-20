@@ -266,8 +266,8 @@ class TestExternalRunScripts(TestCase):
         self.check(VHDL_PATH / "random/run.py")
 
     @mark.skipif(not simulator_is("nvc", "rivierapro"), reason="Requires VHDL-2019 reflection")
-    def test_record_dict_vhdl_2019(self):
-        self.check(VHDL_PATH / "record_dict/run.py", vhdl_standard="2019")
+    def test_reflection_vhdl_2019(self):
+        self.check(VHDL_PATH / "reflection/run.py", vhdl_standard="2019")
 
     def test_check_vhdl_2008(self):
         self.check(VHDL_PATH / "check/run.py")

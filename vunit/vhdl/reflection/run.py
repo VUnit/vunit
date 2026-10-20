@@ -11,7 +11,7 @@ ROOT = Path(__file__).parent
 
 UI = VUnit.from_argv()
 UI.add_vhdl_builtins()
-UI.add_record_dict()
+UI.add_reflection()
 
 UI.library("vunit_lib").add_source_files(ROOT / "test" / "*.vhd")
 # Riviera-PRO needs debug information for the log locations the tests check

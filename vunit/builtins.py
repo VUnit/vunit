@@ -181,7 +181,7 @@ class Builtins(object):
         add("verification_components", ["com", "osvvm"])
         add("osvvm")
         add("random", ["osvvm"])
-        add("record_dict")
+        add("reflection")
 
     def add(self, name, args=None):
         self._builtins_adder.add(name, args)
@@ -754,19 +754,20 @@ class Builtins(object):
 
         self._vunit_lib.add_source_files(VHDL_PATH / "random" / "src" / "*.vhd")
 
-    def _add_record_dict(self):
+    def _add_reflection(self):
         """
-        Add record_dict_pkg
+        Add the reflection packages
         """
         if not self._vhdl_standard >= VHDL.STD_2019:
-            raise RuntimeError("record_dict_pkg only supports VHDL-2019 and later")
+            raise RuntimeError("The reflection packages only support VHDL-2019 and later")
 
         if not self._simulator_class.supports_vhdl_reflection():
             raise RuntimeError(
-                f"record_dict_pkg requires VHDL-2019 reflection, which {self._simulator_class.name} does not support"
+                "The reflection packages require VHDL-2019 reflection, "
+                f"which {self._simulator_class.name} does not support"
             )
 
-        self._vunit_lib.add_source_files(VHDL_PATH / "record_dict" / "src" / "*.vhd")
+        self._vunit_lib.add_source_files(VHDL_PATH / "reflection" / "src" / "*.vhd")
 
     def _add_com(self):
         """
