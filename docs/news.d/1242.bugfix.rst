@@ -1,0 +1,1 @@
+Fixed the "failed to find library" warning for a ``use`` clause of a package instantiated in the same file.

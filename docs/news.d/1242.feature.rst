@@ -1,0 +1,3 @@
+Added ``check_equal`` for values of any type, which names every differing element when the check fails. It is in
+``reflection_check_generic_pkg`` and ``reflection_check_pkg``, opt-in through :meth:`add_reflection() <vunit.ui.VUnit.add_reflection>`,
+and requires a simulator with VHDL-2019 reflection, currently NVC and Riviera-PRO.
