@@ -8,11 +8,32 @@
 Create monolithic release notes file from several input files
 """
 
+import re
 import sys
 from pathlib import Path
 from subprocess import check_call, check_output, CalledProcessError
 from shutil import which
 from datetime import datetime
+
+_RELEASE_VERSION_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)(?:\.dev(\d+))?$")
+
+
+def _release_version(path):
+    """Return a sortable key for a release note filename."""
+    match = _RELEASE_VERSION_RE.fullmatch(path.stem)
+    if match is None:
+        raise ValueError(f"Invalid release note filename: {path.name}")
+
+    major, minor, patch, development = match.groups()
+    is_final = development is None
+    return int(major), int(minor), int(patch), is_final, int(development or 0)
+
+
+def _release_note_files(docsroot):
+    """Return release note files in descending version order."""
+    return sorted(
+        (docsroot / "release_notes").glob("*.rst"), key=_release_version, reverse=True
+    )
 
 
 def create_release_notes():
@@ -27,7 +48,7 @@ def create_release_notes():
     # Get all releases defined by release note files
     releases = [
         Release(file_name, is_latest=idx == 0)
-        for idx, file_name in enumerate(sorted((docsroot / "release_notes").glob("*.rst"), reverse=True))
+        for idx, file_name in enumerate(_release_note_files(docsroot))
     ]
 
     content = (
