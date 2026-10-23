@@ -49,7 +49,7 @@ jobs:
       matrix:
         include:
           - { py: '3.13' , task: 313-lint }
-          - { py: '3.10'  , task: 310-unit }
+          - { py: '3.11'  , task: 311-unit }
           - { py: '3.13' , task: 313-unit }
     name: '🐧 Ubuntu · ${{ matrix.task }}'
     steps:
@@ -130,10 +130,10 @@ jobs:
       fail-fast: false
       matrix:
         task: [
-          310-acceptance-ghdl,
-          310-vcomponents-ghdl,
-          310-lint,
-          310-unit,
+          311-acceptance-ghdl,
+          311-vcomponents-ghdl,
+          311-lint,
+          311-unit,
         ]
     name: '🟦 Windows · nightly · ${{ matrix.task }}'
     defaults:
