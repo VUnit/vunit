@@ -54,6 +54,40 @@ class TestRivieraProInterface(unittest.TestCase):
     Test the RivieraPro interface
     """
 
+    @mock.patch("vunit.sim_if.check_output", autospec=True)
+    @mock.patch("vunit.sim_if.rivierapro.Process", autospec=True)
+    @mock.patch("vunit.sim_if.rivierapro.RivieraProInterface.find_prefix", return_value="prefix")
+    def _compile_in_a_batch(self, names, _find_prefix, _process, check_output):
+        """
+        Compile the files names in a batch. Return the file lists and the names compiled on their own.
+        """
+        simif = RivieraProInterface(prefix="prefix", output_path=self.output_path)
+        project = Project()
+        project.add_library("lib", "lib_path")
+        for name in names:
+            write_file(name, "")
+            project.add_source_file(name, "lib", file_type="vhdl", vhdl_standard=VHDL.standard("2008"))
+        file_lists = []
+        names_on_their_own = []
+
+        def check_output_side_effect(command, env=None):  # pylint: disable=unused-argument
+            if command[-2] == "-f":
+                file_lists.append(Path(command[-1]).read_text())
+            else:
+                names_on_their_own.append(command[-1])
+            return ""
+
+        check_output.side_effect = check_output_side_effect
+        simif.compile_project(project, batch=True)
+        self.assertEqual(list(Path(self.output_path).glob("batch_*.txt")), [])
+        return file_lists, names_on_their_own
+
+    def test_compile_project_in_a_batch_with_a_file_list(self):
+        file_lists, names_on_their_own = self._compile_in_a_batch(["file.vhd", "sp ace.vhd"])
+        self.assertEqual(len(file_lists), 1)
+        self.assertEqual(sorted(file_lists[0].splitlines()), ['"file.vhd"', '"sp ace.vhd"'])
+        self.assertEqual(names_on_their_own, [])
+
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     @mock.patch("vunit.sim_if.rivierapro.Process", autospec=True)
     @mock.patch("vunit.sim_if.rivierapro.RivieraProInterface.find_prefix", return_value="prefix")
