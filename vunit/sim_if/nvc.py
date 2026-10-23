@@ -38,6 +38,8 @@ class NVCInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-many
     executable = environ.get("NVC", "nvc")
     supports_gui_flag = True
     supports_colors_in_gui = True
+    # NVC locks the library while it updates it
+    supports_concurrent_compiles_into_library = True
 
     compile_options = [
         ListOfStringOption("nvc.global_flags"),
