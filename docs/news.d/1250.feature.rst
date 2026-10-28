@@ -1,3 +1,1 @@
-Packages can add support for custom simulators with the ``simulator`` key of ``vunit_pkg.toml``. To allow this,
-``VUnit`` now selects the simulator when it is first needed instead of when the object is created, and ``from_argv``
-parses the command line again at that point. See :ref:`package_simulator`.
+Simulator interfaces can be added by adding a package, see :ref:`package_simulator`.

@@ -105,8 +105,9 @@ class TestSimulatorPackage(TestCase):
             compile_options = [BooleanOption("other.x")]
             sim_options = []
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError) as ctx:
             self._factory.register_simulator(Bad)
+        self.assertIn("option 'other.x' must start with 'bad.'", str(ctx.exception))
         self.assertNotIn(Bad, self._factory.supported_simulators())
 
     def test_duplicate_name_is_rejected(self):
