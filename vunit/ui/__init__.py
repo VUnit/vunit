@@ -101,8 +101,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
           See :vunit_issue:`777`.
         """
         # Simulator packages added later may bring command line arguments of their own. Parse what is known
-        # now and parse strictly once the simulator is selected.
-        args, _ = _create_argument_parser(add_help=False).parse_known_args(argv)
+        # now (no prefix matching, it would take their options for built-in ones) and strictly once selected.
+        args, _ = _create_argument_parser(add_help=False, allow_abbrev=False).parse_known_args(argv)
         vunit_obj = cls.from_args(args, vhdl_standard=vhdl_standard)
         vunit_obj._argv = sys.argv[1:] if argv is None else list(argv)  # pylint: disable=protected-access
         return vunit_obj

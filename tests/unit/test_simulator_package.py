@@ -112,3 +112,8 @@ class TestSimulatorPackage(TestCase):
     def test_duplicate_name_is_rejected(self):
         with self.assertRaises(ValueError):
             self._factory.register_simulator(type("Dup", (SimulatorInterface,), {"name": "ghdl"}))
+
+    def test_prefix_of_builtin_option_is_not_matched_before_selection(self):
+        # "--debug" is a prefix of the built-in "--debugger" option
+        vu = self._vunit("--debug=1")
+        self.assertIsNotNone(vu)
