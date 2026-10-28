@@ -43,6 +43,8 @@ VHDL only
 
 *  `NVC`_: Works with versions >= 1.9.
 
+*  `JanusHDL`_: Works with versions >= 0.7.
+
 .. HINT::
   GHDL and NVC support using `GTKWave`_ to view waveforms.
 
@@ -52,6 +54,7 @@ VHDL only
 .. _nightly release: https://github.com/ghdl/ghdl/releases/tag/nightly
 .. _GTKWave: http://gtkwave.sourceforge.net/
 .. _NVC: https://www.nickg.me.uk/nvc/
+.. _JanusHDL: https://que.no/janushdl/
 
 VHDL or SystemVerilog
 ^^^^^^^^^^^^^^^^^^^^^

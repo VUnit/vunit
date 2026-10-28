@@ -12,6 +12,7 @@ import os
 from .activehdl import ActiveHDLInterface
 from .ghdl import GHDLInterface
 from .incisive import IncisiveInterface
+from .janushdl import JanusHDLInterface
 from .modelsim import ModelSimInterface
 from .nvc import NVCInterface
 from .rivierapro import RivieraProInterface
@@ -35,6 +36,7 @@ class SimulatorFactory(object):
             GHDLInterface,
             IncisiveInterface,
             NVCInterface,
+            JanusHDLInterface,
         ]
 
     def _extract_compile_options(self):

@@ -27,6 +27,11 @@ The following compilation options are known.
    Extra arguments passed to ModelSim ``vlog`` command when compiling Verilog files.
    Must be a list of strings.
 
+``janushdl.a_flags``
+   Extra arguments passed to ``jhdl`` when analyzing. JanusHDL analyzes all files
+   in one call, so the value must be the same for all files.
+   Must be a list of strings.
+
 ``nvc.a_flags``
    Extra arguments passed to ``nvc -a`` command during compilation.
    Must be a list of strings.
@@ -227,6 +232,10 @@ The following simulation options are known.
    user from sourcing a list of scripts directly. The following is the current work
    around to sourcing multiple user TCL-files:
    ``source <path/to/script.tcl>``
+
+``janushdl.sim_flags``
+   Extra arguments passed to ``jhdl`` when simulating.
+   Must be a list of strings.
 
 ``nvc.elab_flags``
    Extra elaboration flags passed to ``nvc -e``.
