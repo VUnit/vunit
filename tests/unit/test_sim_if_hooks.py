@@ -141,7 +141,9 @@ class TestSimulatorHooksOfVUnitObjects(unittest.TestCase):
     @staticmethod
     def _vunit(output_path):
         with mock.patch("vunit.sim_if.factory.SIMULATOR_FACTORY.select_simulator", new=lambda: _FakeSimulator):
-            return VUnit.from_argv(argv=[f"--output-path={output_path!s}"])
+            vunit_obj = VUnit.from_argv(argv=[f"--output-path={output_path!s}"])
+            vunit_obj._select_simulator()  # pylint: disable=protected-access
+            return vunit_obj
 
     def test_simulator_interface_gets_the_hooks_of_its_vunit_object(self):
         with create_tempdir() as tempdir:

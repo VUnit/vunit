@@ -1458,7 +1458,9 @@ endmodule
             "vunit.sim_if.factory.SIMULATOR_FACTORY.select_simulator",
             new=lambda: MockSimulator,
         ):
-            return self._create_ui_real_sim(*args)
+            ui = self._create_ui_real_sim(*args)
+            ui._select_simulator()  # pylint: disable=protected-access
+            return ui
 
     def _create_ui_real_sim(self, *args):
         """Create an instance of the VUnit public interface class"""

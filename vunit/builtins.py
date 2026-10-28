@@ -27,6 +27,7 @@ from vunit.vhdl_standard import VHDL, VHDLStandard
 from vunit.ui.common import get_checked_file_names_from_globs
 from vunit.about import version, VUnitVersion
 from vunit.package_context import PackageContext
+from vunit.sim_if.factory import SIMULATOR_FACTORY
 from vunit.sim_if.activehdl import ActiveHDLVersion
 from vunit.sim_if.ghdl import GHDLVersion
 from vunit.sim_if.modelsim import ModelSimVersion
@@ -303,30 +304,30 @@ class Builtins(object):
         }
         return mapping.get(python_type, (python_type.__name__, "a"))
 
-    def _check_valid_keys(
-        self, data: dict[str, Any], valid: dict[str, type], path: str = "TOML"
-    ) -> list[ValidationError]:
+    @staticmethod
+    def _check_valid_keys(data: dict[str, Any], valid: dict[str, type], path: str = "TOML") -> list[ValidationError]:
         """Check that TOML keys are valid, both name and type."""
         errors = []
         for key, value in data.items():
             if key not in valid:
-                toml_type, _ = self._to_toml_type(type(value))
+                toml_type, _ = Builtins._to_toml_type(type(value))
                 errors.append(ValidationError(path=f"{path}.{key}", message=f"Unexpected {toml_type} '{key}'."))
             elif not isinstance(value, valid[key]):
-                toml_type, article = self._to_toml_type(valid[key])
+                toml_type, article = Builtins._to_toml_type(valid[key])
                 errors.append(ValidationError(path=f"{path}.{key}", message=f"'{key}' must be {article} {toml_type}."))
 
         return errors
 
+    @staticmethod
     def _check_mandatory_keys(
-        self, data: dict[str, Any], mandatory: dict[str, type], path: str = "TOML"
+        data: dict[str, Any], mandatory: dict[str, type], path: str = "TOML"
     ) -> list[ValidationError]:
         """Check that mandatory TOML keys are present."""
         missing_keys = [key for key in mandatory.keys() if key not in data]
         errors = []
 
         for key in missing_keys:
-            toml_type, _ = self._to_toml_type(mandatory[key])
+            toml_type, _ = Builtins._to_toml_type(mandatory[key])
             errors.append(ValidationError(path=f"{path}", message=f"Missing mandatory {toml_type} '{key}'."))
 
         return errors
@@ -382,18 +383,19 @@ class Builtins(object):
 
             raise RuntimeError(f"Invalid vunit_pkg.toml: {len(errors)} error(s) found.")
 
-    def _validate_toml(self, data: dict) -> None:
+    @staticmethod
+    def _validate_toml(data: dict) -> None:
         """Validate that the TOML specification has the correct format."""
         errors = []
 
-        errors.extend(self._check_mandatory_keys(data, mandatory={"package": dict}, path="TOML"))
-        errors.extend(self._check_valid_keys(data, valid={"package": dict}, path="TOML"))
+        errors.extend(Builtins._check_mandatory_keys(data, mandatory={"package": dict}, path="TOML"))
+        errors.extend(Builtins._check_valid_keys(data, valid={"package": dict}, path="TOML"))
 
-        self._log_validation_errors(errors)
+        Builtins._log_validation_errors(errors)
 
         package = data["package"]
         errors.extend(
-            self._check_valid_keys(
+            Builtins._check_valid_keys(
                 package,
                 valid={
                     "requires-vunit": str,
@@ -402,6 +404,7 @@ class Builtins(object):
                     "library": str,
                     "sources": list,
                     "setup": str,
+                    "simulator": str,
                     "compile_option": list,
                 },
                 path="package",
@@ -409,15 +412,15 @@ class Builtins(object):
         )
 
         if isinstance(package.get("compile_option"), list):
-            errors.extend(self._check_compile_options(package["compile_option"], "package.compile_option"))
+            errors.extend(Builtins._check_compile_options(package["compile_option"], "package.compile_option"))
 
         # pylint: disable=too-many-nested-blocks
         if "sources" in package:
-            errors.extend(self._check_mandatory_keys(package, mandatory={"library": str}, path="package"))
+            errors.extend(Builtins._check_mandatory_keys(package, mandatory={"library": str}, path="package"))
 
             for idx, source in enumerate(package["sources"]):
                 errors.extend(
-                    self._check_valid_keys(
+                    Builtins._check_valid_keys(
                         source,
                         valid={"include": list, "library": str, "compile_option": list, "when": str},
                         path=f"package.sources[{idx}]",
@@ -425,7 +428,9 @@ class Builtins(object):
                 )
                 if isinstance(source.get("compile_option"), list):
                     errors.extend(
-                        self._check_compile_options(source["compile_option"], f"package.sources[{idx}].compile_option")
+                        Builtins._check_compile_options(
+                            source["compile_option"], f"package.sources[{idx}].compile_option"
+                        )
                     )
                 if "include" not in source:
                     errors.append(
@@ -452,7 +457,15 @@ class Builtins(object):
                 )
             )
 
-        self._log_validation_errors(errors)
+        if isinstance(package.get("simulator"), str) and not RE_SETUP.match(package["simulator"]):
+            errors.append(
+                ValidationError(
+                    path="package.simulator",
+                    message="'simulator' must be on the format 'module:class'.",
+                )
+            )
+
+        Builtins._log_validation_errors(errors)
 
     @staticmethod
     def _read_toml(root: Path, package_name: str) -> dict:
@@ -489,6 +502,52 @@ Install it in the Python environment used to run this script:
             return Path(spec.origin).parent
 
         raise RuntimeError(f"Failed to find location of package {package_name}.")
+
+    @staticmethod
+    def add_package_simulator(package_name: str, allow_setup: bool, selection_frozen: bool) -> bool:
+        """
+        Register the simulator interface class declared by a package, if any.
+
+        :returns: True if the package has anything left to add, that is it declares no simulator
+                  or also has sources or a setup function.
+        """
+        package_name = package_name.replace("-", "_").replace(".", "_")
+        data = Builtins._read_toml(Builtins._find_package(package_name), package_name)
+        Builtins._validate_toml(data)
+        package = data["package"]
+        spec = package.get("simulator")
+        if spec is None:
+            return True
+
+        if selection_frozen:
+            raise RuntimeError(
+                f"Package {package_name} provides a simulator ({spec}) but the simulator has already been selected. "
+                "Add simulator packages before any other call that depends on the simulator."
+            )
+        if not allow_setup:
+            raise RuntimeError(
+                f"Package {package_name} requires running Python code when it is added ({spec}). "
+                "Pass allow_setup=True to add_package to allow it."
+            )
+
+        module_name, class_name = spec.split(":")
+        try:
+            simulator_class = getattr(importlib.import_module(module_name), class_name, None)
+        except ImportError as exc:
+            raise RuntimeError(
+                f"Failed to import module {module_name} of the simulator of package {package_name}."
+            ) from exc
+        if simulator_class is None:
+            raise RuntimeError(
+                f"Could not find simulator class {class_name} in module {module_name} for package {package_name}."
+            )
+
+        try:
+            SIMULATOR_FACTORY.register_simulator(simulator_class)
+        except ValueError as exc:
+            raise RuntimeError(f"Package {package_name} failed to add its simulator: {exc}") from exc
+
+        return "sources" in package or "setup" in package
 
     def add_package(self, package_name: str, allow_setup: bool = False) -> None:  # pylint: disable=too-many-locals
         """
