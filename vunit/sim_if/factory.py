@@ -39,7 +39,6 @@ class SimulatorFactory(object):
     def register_simulator(self, simulator_class):
         """
         Add a simulator class (a SimulatorInterface subclass) to the supported simulators.
-        Used by packages declaring a simulator, see :ref:`vunit_packages`. Select it with VUNIT_SIMULATOR=<name>.
         """
         name = getattr(simulator_class, "name", None)
         if not name:
@@ -51,12 +50,21 @@ class SimulatorFactory(object):
         try:
             self._compile_options = self._extract_compile_options()
             self._sim_options = self._extract_sim_options()
-        except AssertionError:
+        except ValueError:
             self._extra_simulators.remove(simulator_class)
-            raise ValueError(
-                f"Simulator {name!r} has invalid options: each option needs name (prefixed {name + '.'!r}), "
-                "validate, and must be unique"
-            ) from None
+            raise
+
+    @staticmethod
+    def _check_option(sim_class, opt, existing):
+        """
+        Raise ValueError naming the option if it cannot be used by sim_class
+        """
+        if not hasattr(opt, "name") or not hasattr(opt, "validate"):
+            raise ValueError(f"Simulator {sim_class.name!r}: option {opt!r} must have a 'name' and a 'validate' method")
+        if not opt.name.startswith(sim_class.name + "."):
+            raise ValueError(f"Simulator {sim_class.name!r}: option {opt.name!r} must start with '{sim_class.name}.'")
+        if opt.name in existing:
+            raise ValueError(f"Simulator {sim_class.name!r}: option {opt.name!r} is already defined")
 
     def _extract_compile_options(self):
         """
@@ -65,10 +73,7 @@ class SimulatorFactory(object):
         result = dict((opt.name, opt) for opt in [BooleanOption("enable_coverage")])
         for sim_class in self.supported_simulators():
             for opt in sim_class.compile_options:
-                assert hasattr(opt, "name")
-                assert hasattr(opt, "validate")
-                assert opt.name.startswith(sim_class.name + ".")
-                assert opt.name not in result
+                self._check_option(sim_class, opt, result)
                 result[opt.name] = opt
         return result
 
@@ -89,10 +94,7 @@ class SimulatorFactory(object):
 
         for sim_class in self.supported_simulators():
             for opt in sim_class.sim_options:
-                assert hasattr(opt, "name")
-                assert hasattr(opt, "validate")
-                assert opt.name.startswith(sim_class.name + ".")
-                assert opt.name not in result
+                self._check_option(sim_class, opt, result)
                 result[opt.name] = opt
 
         return result

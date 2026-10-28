@@ -377,4 +377,4 @@ are parsed again when the simulator is selected, so errors in them and ``--help`
 latest when :meth:`main() <vunit.ui.VUnit.main>` is called. Arguments added by a simulator package are not
 available to run scripts passing their own namespace to :meth:`from_args() <vunit.ui.VUnit.from_args>`.
 
-The simulator interfaces of VUnit remain built in.
+The existing simulator interfaces of VUnit remain built in.
