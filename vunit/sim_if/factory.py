@@ -23,10 +23,9 @@ class SimulatorFactory(object):
     Create simulator instances
     """
 
-    @staticmethod
-    def supported_simulators():
+    def supported_simulators(self):
         """
-        Return a list of supported simulator classes
+        Return a list of supported simulator classes, built-in ones first
         """
         return [
             ModelSimInterface,
@@ -35,7 +34,29 @@ class SimulatorFactory(object):
             GHDLInterface,
             IncisiveInterface,
             NVCInterface,
-        ]
+        ] + self._extra_simulators
+
+    def register_simulator(self, simulator_class):
+        """
+        Add a simulator class (a SimulatorInterface subclass) to the supported simulators.
+        Used by packages declaring a simulator, see :ref:`vunit_packages`. Select it with VUNIT_SIMULATOR=<name>.
+        """
+        name = getattr(simulator_class, "name", None)
+        if not name:
+            raise ValueError(f"Simulator class {simulator_class!r} must define a non-empty 'name'")
+        if name in [sim.name for sim in self.supported_simulators()]:
+            raise ValueError(f"A simulator named {name!r} is already registered")
+
+        self._extra_simulators.append(simulator_class)
+        try:
+            self._compile_options = self._extract_compile_options()
+            self._sim_options = self._extract_sim_options()
+        except AssertionError:
+            self._extra_simulators.remove(simulator_class)
+            raise ValueError(
+                f"Simulator {name!r} has invalid options: each option needs name (prefixed {name + '.'!r}), "
+                "validate, and must be unique"
+            ) from None
 
     def _extract_compile_options(self):
         """
@@ -146,6 +167,7 @@ class SimulatorFactory(object):
             sim.add_arguments(parser)
 
     def __init__(self):
+        self._extra_simulators = []
         self._compile_options = self._extract_compile_options()
         self._sim_options = self._extract_sim_options()
 

@@ -63,12 +63,13 @@ class VUnitCLI(object):
         return self.parser.parse_args(args=argv)
 
 
-def _create_argument_parser(description=None, for_documentation=False):
+def _create_argument_parser(description=None, for_documentation=False, add_help=True):
     """
     Create the argument parser
 
     :param description: A custom short description of the command line tool
     :param for_documentation: When used for user guide documentation
+    :param add_help: Add the -h/--help option
     :returns: The created :mod:`argparse` parser object
     """
     if description is None:
@@ -79,7 +80,7 @@ def _create_argument_parser(description=None, for_documentation=False):
     else:
         default_output_path = str(Path(os.getcwd()).resolve() / "vunit_out")
 
-    parser = argparse.ArgumentParser(description=description)
+    parser = argparse.ArgumentParser(description=description, add_help=add_help)
 
     parser.add_argument("test_patterns", metavar="tests", nargs="*", default="*", help="Tests to run")
 

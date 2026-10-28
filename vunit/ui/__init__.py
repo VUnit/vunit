@@ -18,14 +18,14 @@ import json
 import os
 import ast
 import pickle
-from typing import Optional, Set, Union, Iterable
+from typing import Iterable, List, Optional, Set, Union
 from pathlib import Path
 from fnmatch import fnmatch
 from glob import glob
 
 from ..database import PickledDataBase, DataBase
 from .. import ostools
-from ..vunit_cli import VUnitCLI
+from ..vunit_cli import VUnitCLI, _create_argument_parser
 from ..sim_if.factory import SIMULATOR_FACTORY
 from ..sim_if import SimulatorInterface
 from ..sim_if.hooks import SimulatorHooks
@@ -100,8 +100,12 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
           functionality.
           See :vunit_issue:`777`.
         """
-        args = VUnitCLI().parse_args(argv=argv)
-        return cls.from_args(args, vhdl_standard=vhdl_standard)
+        # Simulator packages added later may bring command line arguments of their own. Parse what is known
+        # now and parse strictly once the simulator is selected.
+        args, _ = _create_argument_parser(add_help=False).parse_known_args(argv)
+        vunit_obj = cls.from_args(args, vhdl_standard=vhdl_standard)
+        vunit_obj._argv = sys.argv[1:] if argv is None else list(argv)  # pylint: disable=protected-access
+        return vunit_obj
 
     @classmethod
     def from_args(
@@ -150,6 +154,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         vhdl_standard: Optional[str] = None,
     ):
         self._args = args
+        self._argv: Optional[List[str]] = None  # Set by from_argv to parse again when the simulator is selected
+        self._simulator_selected = False
         self._configure_logging(args.log_level)
         self._output_path = str(Path(args.output_path).resolve())
         self._run_script_path = _find_run_script_path()
@@ -167,36 +173,68 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         self._preprocessors = []  # type: ignore
 
-        self._simulator_class = SIMULATOR_FACTORY.select_simulator()
-
-        # Use default simulator options if no simulator was present
-        if self._simulator_class is None:
-            simulator_class = SimulatorInterface
-            self._simulator_output_path = str(Path(self._output_path) / "none")
-        else:
-            simulator_class = self._simulator_class
-            self._simulator_output_path = str(Path(self._output_path) / simulator_class.name)
-
         self._create_output_path(args.clean)
 
         self._database_version = (11, sys.version)
         self._pickled_database_version = (self._database_version[0], pickle.HIGHEST_PROTOCOL)
 
         self._database = self._create_database()
-        self._project = Project(
-            database=self._database,
-            depend_on_package_body=simulator_class.package_users_depend_on_bodies,
-        )
-
         self._test_bench_list = TestBenchList(database=self._database)
-
-        self._builtins = Builtins(self, self._vhdl_standard, simulator_class)
 
         self._dependency_graph = None
         self._include_in_test_pattern: Optional[Iterable[Union[str, Path]]] = None
         self._exclude_from_test_pattern: Optional[Iterable[Union[str, Path]]] = None
         self._latest_dependency_updates = None
         self._test_history = None
+
+    def _select_simulator(self):
+        """
+        Select the simulator and create what depends on it, once. Called by the first use of the
+        simulator, such that packages providing simulators can be added until then.
+        """
+        if self._simulator_selected:
+            return
+        self._simulator_selected = True
+
+        if self._argv is not None:
+            self._args = VUnitCLI().parse_args(argv=self._argv)
+            self._test_filter = self._make_test_filter(self._args, self._args.test_patterns)
+
+        self._simulator_class_ = SIMULATOR_FACTORY.select_simulator()
+
+        # Use default simulator options if no simulator was present
+        if self._simulator_class_ is None:
+            simulator_class = SimulatorInterface
+            self._simulator_output_path_ = str(Path(self._output_path) / "none")
+        else:
+            simulator_class = self._simulator_class_
+            self._simulator_output_path_ = str(Path(self._output_path) / simulator_class.name)
+
+        self._project_ = Project(
+            database=self._database,
+            depend_on_package_body=simulator_class.package_users_depend_on_bodies,
+        )
+        self._builtins_ = Builtins(self, self._vhdl_standard, simulator_class)
+
+    @property
+    def _simulator_class(self):
+        self._select_simulator()
+        return self._simulator_class_
+
+    @property
+    def _simulator_output_path(self):
+        self._select_simulator()
+        return self._simulator_output_path_
+
+    @property
+    def _project(self):
+        self._select_simulator()
+        return self._project_
+
+    @property
+    def _builtins(self):
+        self._select_simulator()
+        return self._builtins_
 
     def _create_database(self):
         """
@@ -1315,7 +1353,8 @@ other preprocessors. Lowest value first. The order between preprocessors with th
             VU.add_package("vunit-json-for-vhdl")
         """
 
-        self._builtins.add_package(package_name, allow_setup=allow_setup)
+        if Builtins.add_package_simulator(package_name, allow_setup, self._simulator_selected):
+            self._builtins.add_package(package_name, allow_setup=allow_setup)
 
     def add_com(self):
         """

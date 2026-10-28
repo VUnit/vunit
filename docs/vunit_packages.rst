@@ -108,6 +108,10 @@ The supported manifest fields are:
      - ``[package]``
      - Optional Python setup function, specified as ``"module:function"``.
        See :ref:`package_setup_function`.
+   * - ``simulator``
+     - ``[package]``
+     - Optional simulator interface class, specified as ``"module:Class"``.
+       See :ref:`package_simulator`.
    * - ``requires-vunit``
      - ``[package]``
      - Deprecated. Use ``requires`` to specify a VUnit version constraint.
@@ -340,3 +344,37 @@ library, this hook adds a linker search path only for ``"llvm"`` and
        if simulator_interface.backend not in ("llvm", "gcc"):
            return []
        return [f"-Wl,-L{library.parent}"]
+
+.. _package_simulator:
+
+Simulator Packages
+==================
+
+A package can add support for a simulator that is not built into VUnit by declaring a
+:class:`SimulatorInterface <vunit.sim_if.SimulatorInterface>` subclass with the ``simulator`` key:
+
+.. code-block:: toml
+   :caption: vunit_pkg.toml
+
+   [package]
+   simulator = "foo_sim:FooInterface"
+
+The package is added like any other, but must be allowed to run Python code since the module is imported:
+
+.. code-block:: python
+
+   vu = VUnit.from_argv()
+   vu.add_package("foo-sim", allow_setup=True)
+   vu.add_package("other_package")
+   vu.main()
+
+The simulator can then be selected with ``VUNIT_SIMULATOR=foo``. Its ``add_arguments`` method adds command line
+arguments, and its ``sim_options`` and ``compile_options`` are accepted like those of the built-in simulators.
+
+VUnit selects the simulator the first time something depends on it, for example adding source files or another
+package. Simulator packages must be added before that, otherwise adding them is an error. Command line arguments
+are parsed again when the simulator is selected, so errors in them and ``--help`` are reported then, at the
+latest when :meth:`main() <vunit.ui.VUnit.main>` is called. Arguments added by a simulator package are not
+available to run scripts passing their own namespace to :meth:`from_args() <vunit.ui.VUnit.from_args>`.
+
+The simulator interfaces of VUnit remain built in.
