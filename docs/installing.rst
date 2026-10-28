@@ -43,8 +43,14 @@ VHDL only
 
 *  `NVC`_: Works with versions >= 1.9.
 
+*  `yavs`_: Experimental. Never selected automatically when another simulator is
+   found, set ``VUNIT_SIMULATOR=yavs`` to use it. Supports VHDL-2008 and
+   VHDL-2019 only.
+
 .. HINT::
   GHDL and NVC support using `GTKWave`_ to view waveforms.
+  With yavs, ``--gui`` opens the run in the ``yavs-gui`` debugger, which must be
+  installed next to ``yavs`` or on the ``PATH``.
 
 .. _Aldec Riviera-PRO: https://www.aldec.com/en/products/functional_verification/riviera-pro
 .. _Aldec Active-HDL: https://www.aldec.com/en/products/fpga_simulation/active-hdl
@@ -52,6 +58,7 @@ VHDL only
 .. _nightly release: https://github.com/ghdl/ghdl/releases/tag/nightly
 .. _GTKWave: http://gtkwave.sourceforge.net/
 .. _NVC: https://www.nickg.me.uk/nvc/
+.. _yavs: https://github.com/ru551n/yavs
 
 VHDL or SystemVerilog
 ^^^^^^^^^^^^^^^^^^^^^

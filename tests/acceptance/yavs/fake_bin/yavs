@@ -1,0 +1,222 @@
+#!/usr/bin/env python3
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
+
+"""
+Fake yavs implementing the VUnit side of the yavs CLI contract, for testing without the real simulator.
+
+It appends each argv as a JSON line to FAKE_YAVS_LOG when set. 'run' emulates the VUnit VHDL runner: it decodes
+the runner_cfg generic and writes the vunit_results file. A test case named in FAKE_YAVS_FAIL fails.
+
+'analyze' takes several files, analyzed in order, and locks the work library like yavs (plan rule 14): an exclusive
+flock on <library>/_YAVS_LIB for the whole call. It holds the library for FAKE_YAVS_ANALYZE_DELAY seconds to provoke
+overlap, and fails with exit 3 when it finds another analyze inside the same library, which only happens without the
+lock (FAKE_YAVS_NO_LOCK=1). A wait for the lock is logged as ["lock-wait", library].
+"""
+
+import fcntl
+import json
+import os
+import sys
+import time
+from pathlib import Path
+
+
+def log(entry):
+    """Append entry as a JSON line to FAKE_YAVS_LOG, if set."""
+    log_file = os.environ.get("FAKE_YAVS_LOG")
+    if log_file:
+        with open(log_file, "a", encoding="utf-8") as fptr:
+            fptr.write(json.dumps(entry) + "\n")
+
+
+def lock_library(path, exclusive):
+    """
+    Lock the library directory path with an flock on its _YAVS_LIB file, and return the open lock file. A read-only
+    library is locked shared through a read-only open, or not at all when the lock file cannot be opened.
+    """
+    lock_file = Path(path) / "_YAVS_LIB"
+    try:
+        lock_fd = os.open(lock_file, os.O_RDWR | os.O_CREAT, 0o644)
+    except OSError:
+        try:
+            lock_fd = os.open(lock_file, os.O_RDONLY)
+            exclusive = False
+        except OSError:
+            return None
+    mode = fcntl.LOCK_EX if exclusive else fcntl.LOCK_SH
+    try:
+        fcntl.flock(lock_fd, mode | fcntl.LOCK_NB)
+    except BlockingIOError:
+        log(["lock-wait", str(path)])
+        fcntl.flock(lock_fd, mode)
+    return lock_fd
+
+
+def split_escaped(text, sep):
+    """Split text at sep, where a doubled sep is a literal sep (VUnit dictionary encoding)."""
+    parts, current, idx = [], "", 0
+    while idx < len(text):
+        if text[idx] == sep and text[idx + 1 : idx + 2] == sep:
+            current += sep
+            idx += 2
+        elif text[idx] == sep:
+            parts.append(current)
+            current = ""
+            idx += 1
+        else:
+            current += text[idx]
+            idx += 1
+    return parts + [current]
+
+
+def decode_runner_cfg(value):
+    """Decode the runner_cfg dictionary."""
+    result = {}
+    for item in split_escaped(value, ","):
+        key, val = split_escaped(item, ":")
+        result[key.strip()] = val.strip()
+    return result
+
+
+def options(args):
+    """Split args into {name: [values]} for --name=value options and a list of positionals."""
+    opts, positional = {}, []
+    for arg in args:
+        if arg.startswith("--") and "=" in arg:
+            name, value = arg[2:].split("=", 1)
+            opts.setdefault(name, []).append(value)
+        elif arg.startswith("-g") and "=" in arg:
+            name, value = arg[2:].split("=", 1)
+            opts.setdefault("generic", []).append((name, value))
+        elif not arg.startswith("-"):
+            positional.append(arg)
+    return opts, positional
+
+
+def library_dirs(opts):
+    """Return the work library (name, path) checked against the contract."""
+    for mapping in opts.get("map", []) + opts.get("work", []):
+        name, path = mapping.split(":", 1)
+        if not name or not path:
+            sys.exit(f"yavs: bad library mapping {mapping!r}")
+    if len(opts.get("work", [])) != 1:
+        sys.exit("yavs: exactly one --work=NAME:PATH required")
+    if opts.get("std", ["2008"])[-1] not in ("2008", "2019"):
+        sys.exit(2)
+    return opts["work"][0].split(":", 1)
+
+
+def analyze(args):
+    """Analyze files, in order, into the work library, stopping at the first file that fails."""
+    opts, files = options(args)
+    path = library_dirs(opts)[1]
+    if not files:
+        print("error: no file to analyze")
+        return 2
+    os.makedirs(path, exist_ok=True)
+    lock = None if os.environ.get("FAKE_YAVS_NO_LOCK") else lock_library(path, exclusive=True)
+    busy = Path(path) / "_analyzing"
+    try:
+        # Without the lock, another analyze may be inside this library: what yavs must never allow
+        try:
+            os.close(os.open(busy, os.O_CREAT | os.O_EXCL))
+        except FileExistsError:
+            print(f"error: another analyze into {path} interleaved with this one")
+            return 3
+        try:
+            time.sleep(float(os.environ.get("FAKE_YAVS_ANALYZE_DELAY", "0")))
+            return analyze_files(files, Path(path))
+        finally:
+            os.remove(busy)
+    finally:
+        if lock is not None:
+            os.close(lock)
+
+
+def analyze_files(files, path):
+    """Record files in the manifest of the library path, written to a temporary file and renamed"""
+    manifest = path / "yavs-lib.json"
+    recorded = json.loads(manifest.read_text(encoding="utf-8")) if manifest.exists() else []
+    status = 0
+    for file_name in files:
+        if not Path(file_name).is_file():
+            print(f"error: cannot open {file_name}")
+            status = 1
+            break
+        recorded.append(str(Path(file_name).resolve()))
+        print(f"yavs: analyzed {file_name}")
+    temp = path / f"yavs-lib.json.{os.getpid()}"
+    temp.write_text(json.dumps(recorded), encoding="utf-8")
+    os.replace(temp, manifest)
+    return status
+
+
+def run(args, elaborate_only):
+    """Elaborate, and unless elaborate_only, emulate the VUnit runner of the top level."""
+    opts, positional = options(args)
+    path = library_dirs(opts)[1]
+    lock = lock_library(path, exclusive=False) if Path(path).is_dir() else None
+    if lock is not None:
+        os.close(lock)  # Held only while reading the manifest
+    if len(positional) != 1:
+        print(f"error: expected one top level, got {positional!r}")
+        return 2
+    if elaborate_only:
+        return 0
+
+    generics = dict(opts.get("generic", []))
+    if "runner_cfg" not in generics:
+        return 0
+    cfg = decode_runner_cfg(generics["runner_cfg"])
+    tests = split_escaped(cfg["enabled_test_cases"], ",") if cfg["enabled_test_cases"] else []
+    failing = os.environ.get("FAKE_YAVS_FAIL", "")
+    with open(Path(cfg["output path"]) / "vunit_results", "w", encoding="utf-8") as fptr:
+        for test in tests:
+            fptr.write(f"test_start:{test}\n")
+            fptr.flush()
+            print(f"0 ps - fake yavs - INFO - running {test}")
+            if test == failing:
+                print(f"0 ps - fake yavs - ERROR - {test} failed")
+                return 1
+        fptr.write("test_suite_done\n")
+    return 0
+
+
+def expand_response_files(argv):
+    """Replace each @FILE argument with the lines of FILE, one argument per line, taken verbatim."""
+    result = []
+    for arg in argv:
+        if arg.startswith("@"):
+            with open(arg[1:], encoding="utf-8", newline="") as fptr:
+                text = fptr.read()
+            lines = text.split("\n")
+            if lines[-1] == "":
+                lines.pop()
+            result += [line[:-1] if line.endswith("\r") else line for line in lines]
+        else:
+            result.append(arg)
+    return result
+
+
+def main(argv):
+    """Run the yavs command argv and return its exit code."""
+    argv = expand_response_files(argv)
+    log(argv)
+
+    if argv == ["--version"]:
+        print("yavs 0.0.0-fake (VUnit test double)")
+        return 0
+    if argv and argv[0] == "analyze":
+        return analyze(argv[1:])
+    if argv and argv[0] in ("run", "elab"):
+        return run(argv[1:], argv[0] == "elab")
+    print(f"yavs: unsupported command {argv!r}")
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

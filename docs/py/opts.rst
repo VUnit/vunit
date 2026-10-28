@@ -27,6 +27,14 @@ The following compilation options are known.
    Extra arguments passed to ModelSim ``vlog`` command when compiling Verilog files.
    Must be a list of strings.
 
+``yavs.a_flags``
+   Extra arguments passed to ``yavs analyze``, after ``yavs.global_flags``.
+   Must be a list of strings.
+
+``yavs.global_flags``
+   Extra arguments passed to every ``yavs analyze``, ``yavs elab`` and ``yavs run`` command.
+   Must be a list of strings.
+
 ``nvc.a_flags``
    Extra arguments passed to ``nvc -a`` command during compilation.
    Must be a list of strings.
@@ -258,3 +266,16 @@ The following simulation options are known.
    user from sourcing a list of scripts directly. The following is the current work
    around to sourcing multiple user TCL-files:
    ``source <path/to/script.tcl>``
+
+``yavs.elab_flags``
+   Extra elaboration flags passed to ``yavs run`` and ``yavs elab``.
+   Must be a list of strings.
+
+``yavs.global_flags``
+   Extra arguments passed to ``yavs run`` and ``yavs elab``.
+   Must be a list of strings.
+
+``yavs.sim_flags``
+   Extra simulation flags passed to ``yavs run``. ``--exit-severity`` is set from
+   ``vhdl_assert_stop_level`` and overrides any value given here.
+   Must be a list of strings.

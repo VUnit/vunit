@@ -118,7 +118,7 @@ The supported manifest fields are:
 The ``requires`` and ``when`` expressions support the markers ``vunit``,
 ``vhdl``, ``simulator``, and the simulator version markers
 ``activehdl_version``, ``ghdl_version``, ``modelsim_version``,
-``nvc_version``, and ``rivierapro_version``. Values must be quoted strings.
+``nvc_version``, ``rivierapro_version``, and ``yavs_version``. Values must be quoted strings.
 Comparisons use ``==``, ``!=``, ``<``, ``<=``, ``>``, or ``>=``. A simulator
 version marker has a value only when its corresponding simulator is selected.
 If a marker has no value, equality and inequality comparisons are supported

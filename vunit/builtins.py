@@ -32,6 +32,7 @@ from vunit.sim_if.ghdl import GHDLVersion
 from vunit.sim_if.modelsim import ModelSimVersion
 from vunit.sim_if.nvc import NVCVersion
 from vunit.sim_if.rivierapro import RivieraProVersion
+from vunit.sim_if.yavs import YavsVersion
 
 LOGGER = logging.getLogger(__name__)
 
@@ -54,6 +55,7 @@ SIMULATOR_VERSION_MARKERS = {
     "modelsim_version": ("modelsim", ModelSimVersion),
     "nvc_version": ("nvc", NVCVersion),
     "rivierapro_version": ("rivierapro", RivieraProVersion),
+    "yavs_version": ("yavs", YavsVersion),
 }
 
 
