@@ -1359,7 +1359,9 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         """
 
         Builtins.add_package_simulator(package_name, allow_setup, self._simulator_selected)
-        self._builtins.add_package(package_name, allow_setup=allow_setup)
+        # The simulator is selected by adding the HDL and setup of a package, not by a simulator-only package
+        if Builtins.has_hdl_or_setup(package_name):
+            self._builtins.add_package(package_name, allow_setup=allow_setup)
 
     def add_com(self):
         """
