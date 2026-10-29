@@ -57,7 +57,7 @@ def version():
     return VERSION
 
 
-VERSION = "5.0.0.dev16"
+VERSION = "5.0.0.dev17"
 
 
 @total_ordering
