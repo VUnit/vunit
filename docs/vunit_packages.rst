@@ -110,8 +110,9 @@ The supported manifest fields are:
        See :ref:`package_setup_function`.
    * - ``simulator``
      - ``[package]``
-     - Optional simulator interface class, specified as ``"module:Class"`` where
-       ``module`` is the importable module, for example ``"foo.sim:FooInterface"``.
+     - Optional simulator interface class, specified as
+       ``"package_name.module_name:class_name"``. The part before the colon is the full import path of
+       the module, starting with the package name, for example ``"foo_sim.interface:FooInterface"``.
        See :ref:`package_simulator`.
    * - ``requires-vunit``
      - ``[package]``
@@ -358,9 +359,9 @@ A package can add support for a simulator that is not built into VUnit by declar
    :caption: vunit_pkg.toml
 
    [package]
-   simulator = "foo_sim:FooInterface"
+   simulator = "foo_sim.interface:FooInterface"
 
-The package is added like any other, but must be allowed to run Python code since the module is imported:
+Here ``foo_sim`` is the package, ``foo_sim.interface`` the module in it, and ``FooInterface`` the class. The package is added like any other, but must be allowed to run Python code since the module is imported:
 
 .. code-block:: python
 
