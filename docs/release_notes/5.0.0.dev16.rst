@@ -1,0 +1,44 @@
+
+Breaking Changes
+~~~~~~~~~~~~~~~~
+
+- OSVVM is now a VUnit package rather than a submodule to the VUnit repository. It is installed with::
+
+      pip install vunit-osvvm
+
+  Existing calls to ``add_osvvm()`` shall be replaced with ``add_package("vunit-osvvm")``.
+
+  ``vunit-osvvm`` is maintained in a separate `repository <https://github.com/VUnit/vunit-osvvm>`_. (:vunit_issue:`1246`)
+
+
+Bug Fixes
+~~~~~~~~~
+
+- Fixed ``new_dict`` crashing after ``deallocate`` of a dict that had grown beyond one bucket, caused by recycled pointers being longer than requested. (:vunit_issue:`1229`)
+- The simulator hooks registered by the packages of a VUnit object are no longer lost when another VUnit object is created. (:vunit_issue:`1234`)
+
+
+Deprecations
+~~~~~~~~~~~~
+
+- VUnit no longer officially supports Python 3.10, as support across its surrounding ecosystem is beginning to decline
+  following the end of support by the Python organization. (:vunit_issue:`1247`)
+
+
+Documentation
+~~~~~~~~~~~~~
+
+- The website now publishes, for AI agents, all documentation and the declarations of all VHDL packages as plain text in
+  ``llms-full.txt``, and a machine-readable reference of the VHDL and Python APIs (``api/vunit_lib.json`` and
+  ``api/python.json``). ``AGENTS.md`` and ``context7.json`` were added to the repository. (:vunit_issue:`1222`)
+
+
+Features
+~~~~~~~~
+
+- Added ``get_key`` and ``get_value_type`` to ``dict_pkg`` for enumerating a ``dict_t`` and reading each value by type. (:vunit_issue:`1229`)
+- Package manifests can now use a boolean ``requires`` expression for VUnit, VHDL, simulator, and simulator-version
+  constraints, and a per-source ``when`` expression to conditionally include sources. Expressions support comparisons,
+  ``and``/``or``, and parentheses. The separate ``requires-vunit`` and ``requires-vhdl`` fields remain supported but are
+  deprecated. (:vunit_issue:`1232`)
+- Simulator interfaces can be added by adding a package, see :ref:`package_simulator`. (:vunit_issue:`1250`)

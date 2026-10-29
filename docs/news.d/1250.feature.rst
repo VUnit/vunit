@@ -1,1 +1,0 @@
-Simulator interfaces can be added by adding a package, see :ref:`package_simulator`.

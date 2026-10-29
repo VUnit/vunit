@@ -1,1 +1,0 @@
-The simulator hooks registered by the packages of a VUnit object are no longer lost when another VUnit object is created.

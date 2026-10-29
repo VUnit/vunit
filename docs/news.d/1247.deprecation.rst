@@ -1,2 +1,0 @@
-VUnit no longer officially supports Python 3.10, as support across its surrounding ecosystem is beginning to decline
-following the end of support by the Python organization.
