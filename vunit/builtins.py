@@ -27,7 +27,6 @@ from vunit.vhdl_standard import VHDL, VHDLStandard
 from vunit.ui.common import get_checked_file_names_from_globs
 from vunit.about import version, VUnitVersion
 from vunit.package_context import PackageContext
-from vunit.sim_if.factory import SIMULATOR_FACTORY
 from vunit.sim_if.activehdl import ActiveHDLVersion
 from vunit.sim_if.ghdl import GHDLVersion
 from vunit.sim_if.modelsim import ModelSimVersion
@@ -504,16 +503,16 @@ Install it in the Python environment used to run this script:
         raise RuntimeError(f"Failed to find location of package {package_name}.")
 
     @staticmethod
-    def _read_package(package_name: str) -> Tuple[str, dict]:
+    def read_package(package_name: str) -> Tuple[str, dict]:
         """Return the normalized name and the validated package table of a package."""
         package_name = package_name.replace("-", "_").replace(".", "_")
         data = Builtins._read_toml(Builtins._find_package(package_name), package_name)
         Builtins._validate_toml(data)
         return package_name, data["package"]
 
-    def add_package_content(
+    def add_package_content(  # pylint: disable=too-many-locals
         self, package_name: str, allow_setup: bool = False
-    ) -> None:  # pylint: disable=too-many-locals
+    ) -> None:
         """
         Add the sources of a VUnit package and, if allowed, run its setup function.
 
@@ -898,63 +897,6 @@ def add_verilog_include_dir(include_dirs):
     Add VUnit Verilog include directory
     """
     return [str(VERILOG_PATH / "include")] + include_dirs
-
-
-def add_package(vunit_obj, package_name: str, allow_setup: bool = False) -> None:
-    """
-    Add a VUnit package: the simulator it provides, if any, and its sources and setup function.
-    """
-    package_name, package = Builtins._read_package(package_name)  # pylint: disable=protected-access
-    _add_package_simulator(
-        package_name, package, allow_setup, vunit_obj._simulator_selected
-    )  # pylint: disable=protected-access
-    _add_package_content(vunit_obj, package_name, allow_setup, package)
-
-
-def _add_package_content(vunit_obj, package_name: str, allow_setup: bool, package: dict) -> None:
-    """
-    Add the sources and setup function of a package, if it has any. The simulator is selected by this since
-    both depend on it, but not by a package providing only a simulator.
-    """
-    if "sources" in package or "setup" in package:
-        vunit_obj._builtins.add_package_content(package_name, allow_setup)  # pylint: disable=protected-access
-
-
-def _add_package_simulator(package_name: str, package: dict, allow_setup: bool, selection_frozen: bool) -> None:
-    """
-    Register the simulator interface class declared by a package, if any.
-    """
-    spec = package.get("simulator")
-    if spec is None:
-        return
-
-    if selection_frozen:
-        raise RuntimeError(
-            f"Package {package_name} provides a simulator ({spec}) but the simulator has already been selected. "
-            "Add simulator packages before any other call that depends on the simulator."
-        )
-    if not allow_setup:
-        raise RuntimeError(
-            f"Package {package_name} requires running Python code when it is added ({spec}). "
-            "Pass allow_setup=True to add_package to allow it."
-        )
-
-    module_name, class_name = spec.split(":")
-    try:
-        simulator_class = getattr(importlib.import_module(module_name), class_name, None)
-    except ImportError as exc:
-        raise RuntimeError(
-            f"Failed to import module {module_name} of the simulator of package {package_name}."
-        ) from exc
-    if simulator_class is None:
-        raise RuntimeError(
-            f"Could not find simulator class {class_name} in module {module_name} for package {package_name}."
-        )
-
-    try:
-        SIMULATOR_FACTORY.register_simulator(simulator_class)
-    except ValueError as exc:
-        raise RuntimeError(f"Package {package_name} failed to add its simulator: {exc}") from exc
 
 
 class BuiltinsAdder(object):
