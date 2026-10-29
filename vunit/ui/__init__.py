@@ -166,6 +166,9 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         self._preprocessors = []  # type: ignore
 
+        # Needs the simulator only when something is added, which selects it
+        self._builtins = Builtins(self, self._vhdl_standard)
+
         self._database_version = (11, sys.version)
         self._pickled_database_version = (self._database_version[0], pickle.HIGHEST_PROTOCOL)
 
@@ -213,7 +216,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
             database=self._database,
             depend_on_package_body=simulator_class.package_users_depend_on_bodies,
         )
-        self._builtins_ = Builtins(self, self._vhdl_standard, simulator_class)
+        self._builtins.create_vunit_lib()
 
     def __getattr__(self, name):
         # State set up when the simulator is selected
@@ -237,11 +240,6 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
     def _project(self):
         self._select_simulator()
         return self._project_
-
-    @property
-    def _builtins(self):
-        self._select_simulator()
-        return self._builtins_
 
     def _create_database(self):
         """
