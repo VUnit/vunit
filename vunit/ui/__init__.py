@@ -36,7 +36,8 @@ from ..exceptions import CompileError
 from ..location_preprocessor import LocationPreprocessor
 from ..check_preprocessor import CheckPreprocessor
 from ..parsing.encodings import HDL_FILE_ENCODING
-from ..builtins import Builtins, add_package as add_vunit_package
+from ..builtins import Builtins
+from ..packages import add_package as add_vunit_package
 from ..vhdl_standard import VHDL, VHDLStandard
 from ..test.bench_list import TestBenchList
 from ..test.report import TestReport
@@ -179,6 +180,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         Select the simulator and create what depends on it, once. Called by the first use of the
         simulator, such that packages providing simulators can be added until then.
         """
+        # pylint: disable=attribute-defined-outside-init
         if self._simulator_selected:
             return
         self._simulator_selected = True
@@ -886,7 +888,9 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         if isinstance(self._args.test_patterns, list):
             test_patterns += self._args.test_patterns
 
-        self._test_filter = self._make_test_filter(self._args, test_patterns)
+        self._test_filter = self._make_test_filter(  # pylint: disable=attribute-defined-outside-init
+            self._args, test_patterns
+        )
 
     def _create_simulator_if(self):
         """

@@ -52,7 +52,7 @@ class TestSimulatorPackage(TestCase):
 
         # Registration changes the shared factory
         self._factory = SimulatorFactory()
-        for module in ("vunit.builtins", "vunit.ui", "vunit.vunit_cli", "vunit.configuration", "vunit.source_file"):
+        for module in ("vunit.packages", "vunit.ui", "vunit.vunit_cli", "vunit.configuration", "vunit.source_file"):
             patcher = mock.patch(f"{module}.SIMULATOR_FACTORY", self._factory)
             patcher.start()
             self.addCleanup(patcher.stop)
