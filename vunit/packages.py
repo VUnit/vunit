@@ -20,16 +20,7 @@ def add_package(vunit_obj, package_name: str, allow_setup: bool = False) -> None
     package_name, package = Builtins.read_package(package_name)
     selected = vunit_obj._simulator_selected  # pylint: disable=protected-access
     _add_package_simulator(package_name, package, allow_setup, selected)
-    _add_package_content(vunit_obj, package_name, allow_setup, package)
-
-
-def _add_package_content(vunit_obj, package_name: str, allow_setup: bool, package: dict) -> None:
-    """
-    Add the sources and setup function of a package, if it has any. The simulator is selected by this since
-    both depend on it, but not by a package providing only a simulator.
-    """
-    if "sources" in package or "setup" in package:
-        vunit_obj._builtins.add_package_content(package_name, allow_setup)  # pylint: disable=protected-access
+    vunit_obj._builtins.add_package_content(package_name, allow_setup)  # pylint: disable=protected-access
 
 
 def _add_package_simulator(package_name: str, package: dict, allow_setup: bool, selection_frozen: bool) -> None:

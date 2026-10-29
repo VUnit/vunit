@@ -160,16 +160,19 @@ class _MarkerExpressionParser:
         raise RuntimeError(f"Invalid marker expression syntax: {reason}{location} in {self._expression!r}.")
 
 
+_SELECTED = object()  # The simulator class is the one VUnit selects
+
+
 class Builtins(object):
     """
     Manage VUnit builtins and their dependencies
     """
 
-    def __init__(self, vunit_obj, vhdl_standard: VHDLStandard, simulator_class):
+    def __init__(self, vunit_obj, vhdl_standard: VHDLStandard, simulator_class=_SELECTED):
         self._vunit_obj = vunit_obj
-        self._vunit_lib = vunit_obj.add_library("vunit_lib")
+        self._vunit_lib_ = None
         self._vhdl_standard = vhdl_standard
-        self._simulator_class = simulator_class
+        self._simulator_class_ = simulator_class
         self._builtins_adder = BuiltinsAdder()
 
         def add(name, deps=tuple()):
@@ -180,6 +183,25 @@ class Builtins(object):
         add("verification_components", ["com", "vunit_osvvm"])
         add("vunit_osvvm")
         add("random", ["vunit_osvvm"])
+
+    @property
+    def _vunit_lib(self):
+        """The library of VUnit itself, created when first needed"""
+        # Created when first needed since that selects the simulator
+        if self._vunit_lib_ is None:
+            self._vunit_lib_ = self._vunit_obj.add_library("vunit_lib")
+        return self._vunit_lib_
+
+    def create_vunit_lib(self):
+        """Create the library of VUnit itself"""
+        return self._vunit_lib
+
+    @property
+    def _simulator_class(self):
+        """The simulator class given explicitly, else the selected one which is looked up when first needed"""
+        if self._simulator_class_ is not _SELECTED:
+            return self._simulator_class_
+        return self._vunit_obj._simulator_class  # pylint: disable=protected-access
 
     def add(self, name, args=None):
         self._builtins_adder.add(name, args)
@@ -230,13 +252,23 @@ class Builtins(object):
 
         return True
 
+    def _current_simulator_marker(self, marker: str, current_value: Optional[str]) -> Optional[str]:
+        """The value of a simulator marker, which selects the simulator, other markers are returned as is."""
+        if marker == "simulator":
+            return getattr(self._simulator_class, "name", None)
+        if marker in SIMULATOR_VERSION_MARKERS:
+            simulator_name, _ = SIMULATOR_VERSION_MARKERS[marker]
+            if getattr(self._simulator_class, "name", None) == simulator_name:
+                return str(self._simulator_class.determine_version(self._simulator_class.find_prefix()))
+        return current_value
+
     def _evaluate_marker_expression(self, expression: str, vhdl_standard: Optional[VHDLStandard] = None) -> bool:
         """Evaluate an expression against the explicitly supported environment markers."""
         syntax = _MarkerExpressionParser(expression).parse()
         marker_values = {
             "vunit": (version(), VUnitVersion),
             "vhdl": (str(vhdl_standard if vhdl_standard is not None else self._vhdl_standard), VHDLStandard),
-            "simulator": (getattr(self._simulator_class, "name", None), None),
+            "simulator": (None, None),  # Set when used, see evaluate
         }
         marker_values.update(
             {marker: (None, version_class) for marker, (_, version_class) in SIMULATOR_VERSION_MARKERS.items()}
@@ -249,12 +281,7 @@ class Builtins(object):
                 if marker not in marker_values:
                     raise RuntimeError(f"Unknown environment marker {marker!r}.")
                 current_value, version_class = marker_values[marker]
-                if marker in SIMULATOR_VERSION_MARKERS:
-                    simulator_name, _ = SIMULATOR_VERSION_MARKERS[marker]
-                    if getattr(self._simulator_class, "name", None) == simulator_name:
-                        current_value = str(
-                            self._simulator_class.determine_version(self._simulator_class.find_prefix())
-                        )
+                current_value = self._current_simulator_marker(marker, current_value)
                 if current_value is None:
                     if version_operator == "==":
                         return False
