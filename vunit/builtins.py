@@ -504,12 +504,9 @@ Install it in the Python environment used to run this script:
         raise RuntimeError(f"Failed to find location of package {package_name}.")
 
     @staticmethod
-    def add_package_simulator(package_name: str, allow_setup: bool, selection_frozen: bool) -> bool:
+    def add_package_simulator(package_name: str, allow_setup: bool, selection_frozen: bool) -> None:
         """
         Register the simulator interface class declared by a package, if any.
-
-        :returns: True if the package has anything left to add, that is it declares no simulator
-                  or also has sources or a setup function.
         """
         package_name = package_name.replace("-", "_").replace(".", "_")
         data = Builtins._read_toml(Builtins._find_package(package_name), package_name)
@@ -517,7 +514,7 @@ Install it in the Python environment used to run this script:
         package = data["package"]
         spec = package.get("simulator")
         if spec is None:
-            return True
+            return
 
         if selection_frozen:
             raise RuntimeError(
@@ -546,8 +543,6 @@ Install it in the Python environment used to run this script:
             SIMULATOR_FACTORY.register_simulator(simulator_class)
         except ValueError as exc:
             raise RuntimeError(f"Package {package_name} failed to add its simulator: {exc}") from exc
-
-        return "sources" in package or "setup" in package
 
     def add_package(self, package_name: str, allow_setup: bool = False) -> None:  # pylint: disable=too-many-locals
         """

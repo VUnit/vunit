@@ -156,30 +156,17 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self._args = args
         self._argv: Optional[List[str]] = None  # Set by from_argv to parse again when the simulator is selected
         self._simulator_selected = False
-        self._configure_logging(args.log_level)
-        self._output_path = str(Path(args.output_path).resolve())
         self._run_script_path = _find_run_script_path()
 
         # The simulator hooks registered by the packages of this project
         self._simulator_hooks = SimulatorHooks()
 
-        if args.no_color:
-            self._printer = NO_COLOR_PRINTER
-        else:
-            self._printer = COLOR_PRINTER
-
-        self._test_filter = self._make_test_filter(args, args.test_patterns)
         self._vhdl_standard: VHDLStandard = select_vhdl_standard(vhdl_standard)
 
         self._preprocessors = []  # type: ignore
 
-        self._create_output_path(args.clean)
-
         self._database_version = (11, sys.version)
         self._pickled_database_version = (self._database_version[0], pickle.HIGHEST_PROTOCOL)
-
-        self._database = self._create_database()
-        self._test_bench_list = TestBenchList(database=self._database)
 
         self._dependency_graph = None
         self._include_in_test_pattern: Optional[Iterable[Union[str, Path]]] = None
@@ -196,9 +183,19 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
             return
         self._simulator_selected = True
 
+        # Everything depending on the command line is set up here since simulator packages
+        # can add arguments until the simulator is selected
         if self._argv is not None:
             self._args = VUnitCLI().parse_args(argv=self._argv)
-            self._test_filter = self._make_test_filter(self._args, self._args.test_patterns)
+        args = self._args
+
+        self._configure_logging(args.log_level)
+        self._output_path = str(Path(args.output_path).resolve())
+        self._printer = NO_COLOR_PRINTER if args.no_color else COLOR_PRINTER
+        self._test_filter = self._make_test_filter(args, args.test_patterns)
+        self._create_output_path(args.clean)
+        self._database = self._create_database()
+        self._test_bench_list = TestBenchList(database=self._database)
 
         self._simulator_class_ = SIMULATOR_FACTORY.select_simulator()
 
@@ -215,6 +212,14 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
             depend_on_package_body=simulator_class.package_users_depend_on_bodies,
         )
         self._builtins_ = Builtins(self, self._vhdl_standard, simulator_class)
+
+    def __getattr__(self, name):
+        # State set up when the simulator is selected
+        if name in ("_output_path", "_printer", "_test_filter", "_database", "_test_bench_list"):
+            if not self.__dict__.get("_simulator_selected", True):
+                self._select_simulator()
+                return getattr(self, name)
+        raise AttributeError(f"{type(self).__name__!r} object has no attribute {name!r}")
 
     @property
     def _simulator_class(self):
@@ -1353,8 +1358,8 @@ other preprocessors. Lowest value first. The order between preprocessors with th
             VU.add_package("vunit-json-for-vhdl")
         """
 
-        if Builtins.add_package_simulator(package_name, allow_setup, self._simulator_selected):
-            self._builtins.add_package(package_name, allow_setup=allow_setup)
+        Builtins.add_package_simulator(package_name, allow_setup, self._simulator_selected)
+        self._builtins.add_package(package_name, allow_setup=allow_setup)
 
     def add_com(self):
         """
