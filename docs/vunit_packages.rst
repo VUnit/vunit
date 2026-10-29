@@ -367,14 +367,16 @@ Here ``foo_sim`` is the package, ``foo_sim.interface`` the module in it, and ``F
 
    vu = VUnit.from_argv()
    vu.add_package("foo-sim", allow_setup=True)
+   vu.add_vhdl_builtins()
    vu.add_package("other_package")
    vu.main()
 
 The simulator can then be selected with ``VUNIT_SIMULATOR=foo``. Its ``add_arguments`` method adds command line
 arguments, and its ``sim_options`` and ``compile_options`` are accepted like those of the built-in simulators.
 
-VUnit selects the simulator the first time something depends on it, for example adding source files or a package
-with sources or a setup function. Simulator packages must be added before that, otherwise adding them is an error.
+VUnit selects the simulator the first time something depends on it, for example
+:meth:`add_vhdl_builtins() <vunit.ui.VUnit.add_vhdl_builtins>`, adding source files, or adding a package with sources or
+a setup function. Simulator packages must be added before that, otherwise adding them is an error.
 Several simulator packages can be added, for example to choose between them with ``VUNIT_SIMULATOR``, as long as
 they contain only the simulator. A simulator package that also has sources or a setup function selects the
 simulator when added. Command line arguments
