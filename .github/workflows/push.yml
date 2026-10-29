@@ -194,7 +194,7 @@ jobs:
     - name: '🐍 Install dependencies'
       run: |
         pip install -U pip
-        pip install -U setuptools wheel twine
+        pip install -U build twine
 
     - name: '🚀 Build and deploy to PyPI'
       if: github.repository == 'VUnit/vunit'
@@ -203,5 +203,5 @@ jobs:
         TWINE_PASSWORD: ${{ secrets.VUNIT_HDL_PYPI_DEPLOY_TOKEN }}
       run: |
         ./tools/release.py validate
-        python setup.py sdist
+        python -m build --wheel
         twine upload dist/*
