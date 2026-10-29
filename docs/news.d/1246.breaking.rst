@@ -1,0 +1,8 @@
+
+OSVVM is now a VUnit package rather than a submodule to the VUnit repository. It is installed with::
+
+    pip install vunit-osvvm
+
+Existing calls to ``add_osvvm()`` shall be replaced with ``add_package("vunit-osvvm")``.
+
+``vunit-osvvm`` is maintained in a separate `repository <https://github.com/VUnit/vunit-osvvm>`_.
