@@ -27,10 +27,12 @@ from vunit.parsing.verilog.tokens import (
     COLON,
     COMMENT,
     END,
+    ENDINTERFACE,
     ENDMODULE,
     DOUBLE_COLON,
     HASH,
     IDENTIFIER,
+    INTERFACE,
     IMPORT,
     MODULE,
     MULTI_COMMENT,
@@ -289,7 +291,7 @@ def _parse_block_label(stream):
 
 class VerilogModule(object):
     """
-    A verilog module
+    A verilog module (or interface)
     """
 
     def __init__(self, name, parameters):
@@ -320,13 +322,13 @@ class VerilogModule(object):
         results = []
         parameters = []
         while idx < len(tokens):
-            if tokens[idx].kind == MODULE:
+            if tokens[idx].kind in (INTERFACE, MODULE):
                 if balance == 0:
                     name = tokens[idx + 1].value
                     parameters = []
                 balance += 1
 
-            elif tokens[idx].kind == ENDMODULE:
+            elif tokens[idx].kind in (ENDINTERFACE, ENDMODULE):
                 balance -= 1
                 if balance == 0:
                     results.append(cls(name, parameters))
