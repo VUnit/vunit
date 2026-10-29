@@ -118,3 +118,20 @@ class TestSimulatorPackage(TestCase):
         # "--debug" is a prefix of the built-in "--debugger" option
         vu = self._vunit("--debug=1")
         self.assertIsNotNone(vu)
+
+    def test_simulator_only_packages_do_not_select_the_simulator(self):
+        second = self._root / "fakesim2_pkg"
+        second.mkdir()
+        (second / "__init__.py").write_text(
+            PACKAGE.replace('"fakesim"', '"fakesim2"')
+            .replace("fakesim.", "fakesim2.")
+            .replace("--fakesim-opt", "--fakesim2-opt")
+            .replace("FakeSimulator", "Fake2")
+        )
+        (second / "vunit_pkg.toml").write_text('[package]\nsimulator = "fakesim2_pkg:Fake2"\n')
+        self.addCleanup(sys.modules.pop, "fakesim2_pkg", None)
+        with mock.patch.dict("os.environ", {"VUNIT_SIMULATOR": "fakesim2"}):
+            vu = self._vunit()
+            vu.add_package("fakesim_pkg", allow_setup=True)
+            vu.add_package("fakesim2_pkg", allow_setup=True)
+            self.assertEqual(vu.get_simulator_name(), "fakesim2")

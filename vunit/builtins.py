@@ -504,14 +504,28 @@ Install it in the Python environment used to run this script:
         raise RuntimeError(f"Failed to find location of package {package_name}.")
 
     @staticmethod
+    def _read_package(package_name: str) -> Tuple[str, dict]:
+        """Return the normalized name and the validated package table of a package."""
+        package_name = package_name.replace("-", "_").replace(".", "_")
+        data = Builtins._read_toml(Builtins._find_package(package_name), package_name)
+        Builtins._validate_toml(data)
+        return package_name, data["package"]
+
+    @staticmethod
+    def has_hdl_or_setup(package_name: str) -> bool:
+        """
+        Return True if the package has sources or a setup function to add. A package with only a simulator
+        does not, and adding it does not require the simulator to be selected.
+        """
+        _, package = Builtins._read_package(package_name)
+        return "sources" in package or "setup" in package
+
+    @staticmethod
     def add_package_simulator(package_name: str, allow_setup: bool, selection_frozen: bool) -> None:
         """
         Register the simulator interface class declared by a package, if any.
         """
-        package_name = package_name.replace("-", "_").replace(".", "_")
-        data = Builtins._read_toml(Builtins._find_package(package_name), package_name)
-        Builtins._validate_toml(data)
-        package = data["package"]
+        package_name, package = Builtins._read_package(package_name)
         spec = package.get("simulator")
         if spec is None:
             return
