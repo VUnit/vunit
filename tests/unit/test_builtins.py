@@ -95,7 +95,7 @@ class TestBuiltins(unittest.TestCase):
                 ),
             ),
         ):
-            self.builtins.add_package("foo")
+            self.builtins.add_package_content("foo")
 
     def test_normalizes_package_name(self):
         with (
@@ -109,7 +109,7 @@ class TestBuiltins(unittest.TestCase):
                 ),
             ),
         ):
-            self.builtins.add_package("a-b.c-d")
+            self.builtins.add_package_content("a-b.c-d")
 
     def test_raises_if_toml_not_in_package(self):
         with (
@@ -120,7 +120,7 @@ class TestBuiltins(unittest.TestCase):
             ),
         ):
             (tempdir / "not_vunit_pkg.toml").write_text("")
-            self.builtins.add_package("foo")
+            self.builtins.add_package_content("foo")
 
     def test_raises_if_invalid_toml_format(self):
         with (
@@ -134,7 +134,7 @@ class TestBuiltins(unittest.TestCase):
 [package
 """,
             )
-            self.builtins.add_package("foo")
+            self.builtins.add_package_content("foo")
 
     def test_raises_if_missing_package(self):
         with (
@@ -148,7 +148,7 @@ class TestBuiltins(unittest.TestCase):
 [pkg]
 """,
             )
-            self.builtins.add_package("foo")
+            self.builtins.add_package_content("foo")
 
     def test_accepts_empty_toml_package(self):
         with (
@@ -161,7 +161,7 @@ class TestBuiltins(unittest.TestCase):
 [package]
 """,
             )
-            self.builtins.add_package("foo")
+            self.builtins.add_package_content("foo")
 
     def test_applies_package_compile_options_and_source_overrides(self):
         with create_tempdir() as tempdir, pkg_env(tempdir):
@@ -182,7 +182,7 @@ compile_option = [["shared.option", ["--override"]]]
 """,
             )
 
-            self.builtins.add_package("foo")
+            self.builtins.add_package_content("foo")
 
         default_source_files.set_compile_option.assert_has_calls(
             [
@@ -236,7 +236,7 @@ compile_option = {options}
                         self.assertLogs("vunit.builtins", "ERROR") as mock_error,
                     ):
                         self._write_toml(tempdir, manifest)
-                        self.builtins.add_package("foo")
+                        self.builtins.add_package_content("foo")
 
                     self._assertLogContent(
                         mock_error,
@@ -260,7 +260,7 @@ compile_option = {options}
 requires-vunit="==1000.0.0"
 """,
             )
-            self.builtins.add_package("foo")
+            self.builtins.add_package_content("foo")
 
     def test_marker_expression_comparison_operators(self):
         for expression, expected in (
@@ -373,7 +373,7 @@ requires-vunit="==1000.0.0"
 requires = 'vunit >= "5.0.0.dev14" and vhdl == "2002"'
 """,
             )
-            self.builtins.add_package("foo")
+            self.builtins.add_package_content("foo")
 
         with (
             create_tempdir() as tempdir,
@@ -381,7 +381,7 @@ requires = 'vunit >= "5.0.0.dev14" and vhdl == "2002"'
             self.assertRaisesRegex(RuntimeError, "does not satisfy requires expression"),
         ):
             self._write_toml(tempdir, "[package]\nrequires = 'vunit == \"0\"'\n")
-            self.builtins.add_package("foo")
+            self.builtins.add_package_content("foo")
 
     def test_package_requires_selects_compatible_vhdl_standard(self):
         builtins = Builtins(self.vu, VHDLStandard("2008"), None)
@@ -400,7 +400,7 @@ requires = 'vhdl == "1993"'
 include = ["source.vhd"]
 """,
             )
-            builtins.add_package("foo")
+            builtins.add_package_content("foo")
 
         self.library_mock.add_source_files.assert_called_once_with(
             tempdir / "source.vhd", vhdl_standard=str(VHDL.STD_1993)
@@ -430,7 +430,7 @@ requires = 'vhdl <= "2008"'
 include = ["source.vhd"]
 """,
             )
-            builtins.add_package("foo")
+            builtins.add_package_content("foo")
 
         self.library_mock.add_source_files.assert_called_once_with(tempdir / "source.vhd", vhdl_standard="2008")
         self._assertLogContent(
@@ -452,7 +452,7 @@ include = ["source.vhd"]
         for manifest in manifests:
             with self.subTest(manifest=manifest), create_tempdir() as tempdir, pkg_env(tempdir):
                 self._write_toml(tempdir, manifest)
-                builtins.add_package("foo")
+                builtins.add_package_content("foo")
 
     def test_source_when_filters_source_sets(self):
         with create_tempdir() as tempdir, pkg_env(tempdir):
@@ -473,7 +473,7 @@ include = ["excluded.vhd"]
 when = 'vhdl == "2019"'
 """,
             )
-            self.builtins.add_package("foo")
+            self.builtins.add_package_content("foo")
 
         self.library_mock.add_source_files.assert_has_calls(
             [
@@ -496,7 +496,7 @@ when = 'vhdl == "2019"'
 requires-vhdl=">=2008"
 """,
             )
-            self.builtins.add_package("foo")
+            self.builtins.add_package_content("foo")
 
         self._assertLogContent(
             mock_warning,
@@ -521,7 +521,7 @@ requires-vhdl=">=2008"
 requires-vhdl="<2008,>2008"
 """,
             )
-            self.builtins.add_package("foo")
+            self.builtins.add_package_content("foo")
 
     def test_accepts_compatible_vhdl_standard(self):
         with (
@@ -535,7 +535,7 @@ requires-vhdl="<2008,>2008"
 requires-vhdl=">1993"
 """,
             )
-            self.builtins.add_package("foo")
+            self.builtins.add_package_content("foo")
 
     def test_raises_if_unsupported_version_specifier_operator(self):
         with (
@@ -553,7 +553,7 @@ requires-vhdl=">1993"
 requires-vhdl="===2008"
 """,
             )
-            self.builtins.add_package("foo")
+            self.builtins.add_package_content("foo")
 
     def test_raises_if_invalid_version_specifier_operator(self):
         with (
@@ -574,7 +574,7 @@ requires-vhdl="===2008"
 requires-vhdl="=!2008"
 """,
             )
-            self.builtins.add_package("foo")
+            self.builtins.add_package_content("foo")
 
     def test_raises_if_invalid_key(self):
         with (
@@ -593,7 +593,7 @@ requires-vhdl="=!2008"
 require-vhdl="<1993"
 """,
             )
-            self.builtins.add_package("foo")
+            self.builtins.add_package_content("foo")
 
         self._assertLogContent(
             mock_error,
@@ -618,7 +618,7 @@ require-vhdl="<1993"
 requires-vhdl=2002
 """,
             )
-            self.builtins.add_package("foo")
+            self.builtins.add_package_content("foo")
 
         self._assertLogContent(
             mock_error,
@@ -644,7 +644,7 @@ include=["hdl/src3/*.vhd"]
 """,
             )
 
-            self.builtins.add_package("foo")
+            self.builtins.add_package_content("foo")
 
             self.assertIn("bar", self.vu._project._libraries)
             self.library_mock.add_source_files.assert_has_calls(
@@ -682,7 +682,7 @@ include=["hdl/override2/*.vhd"]
 """,
             )
 
-            self.builtins.add_package("foo")
+            self.builtins.add_package_content("foo")
 
         self.vu.add_library.assert_has_calls([mock.call("bar"), mock.call("baz")])
         self.assertEqual(self.vu.add_library.call_count, 2)
@@ -712,7 +712,7 @@ include=["hdl/src1/*.vhd"]
 """,
             )
             try:
-                self.builtins.add_package("foo")
+                self.builtins.add_package_content("foo")
             finally:
                 self._assertLogContent(
                     mock_error,
@@ -734,7 +734,7 @@ include=["hdl/src1/*.vhd"]
 include=["hdl/src1/*.vhd"]
 """,
             )
-            self.builtins.add_package("foo")
+            self.builtins.add_package_content("foo")
 
     def test_warns_if_package_already_added(self):
         with (
@@ -752,9 +752,9 @@ library = "bar"
 include=["hdl/src1/*.vhd"]
 """,
             )
-            self.builtins.add_package("foo")
+            self.builtins.add_package_content("foo")
             self.library_mock.add_source_files.assert_called_once_with(tempdir / "hdl/src1/*.vhd", vhdl_standard=None)
-            self.builtins.add_package("foo")
+            self.builtins.add_package_content("foo")
 
             self._assertLogContent(
                 mock_warning,
@@ -798,7 +798,7 @@ include=["hdl/src1/*.vhd"]
             )
 
             try:
-                self.builtins.add_package("foo")
+                self.builtins.add_package_content("foo")
             finally:
                 import foo_setup  # pylint: disable=import-outside-toplevel
 
@@ -819,7 +819,7 @@ include=["hdl/src1/*.vhd"]
 """,
             )
 
-            self.builtins.add_package("foo", allow_setup=True)
+            self.builtins.add_package_content("foo", allow_setup=True)
 
             self.library_mock.add_source_files.assert_called_once_with(tempdir / "hdl/src1/*.vhd", vhdl_standard=None)
 
@@ -851,7 +851,7 @@ include=["hdl/src1/*.vhd"]
 """,
             )
 
-            self.builtins.add_package("foo", allow_setup=True)
+            self.builtins.add_package_content("foo", allow_setup=True)
 
             import foo_setup  # pylint: disable=import-outside-toplevel
 
@@ -901,7 +901,7 @@ setup = "foo_setup:setup"
 """,
             )
 
-            builtins.add_package("foo", allow_setup=True)
+            builtins.add_package_content("foo", allow_setup=True)
 
             import foo_setup  # pylint: disable=import-outside-toplevel
 
@@ -961,7 +961,7 @@ setup = "foo_setup:setup"
 """,
                 )
 
-                Builtins(self.vu, VHDLStandard("2008"), simulator_class).add_package("foo", allow_setup=True)
+                Builtins(self.vu, VHDLStandard("2008"), simulator_class).add_package_content("foo", allow_setup=True)
 
                 import foo_setup  # pylint: disable=import-outside-toplevel
 
@@ -996,7 +996,7 @@ setup = "foo_setup:setup"
 """,
             )
 
-            self.builtins.add_package("foo", allow_setup=True)
+            self.builtins.add_package_content("foo", allow_setup=True)
 
             simulator_interface = mock.Mock()
             simulator_interface.name = "ghdl"
@@ -1022,7 +1022,7 @@ setup = "{setup}"
 """,
                 )
                 try:
-                    self.builtins.add_package("foo")
+                    self.builtins.add_package_content("foo")
                 finally:
                     self._assertLogContent(
                         mock_error,
@@ -1045,7 +1045,7 @@ setup = 17
 """,
             )
             try:
-                self.builtins.add_package("foo")
+                self.builtins.add_package_content("foo")
             finally:
                 self._assertLogContent(mock_error, "ERROR", "package.setup: 'setup' must be a string.")
 
@@ -1065,7 +1065,7 @@ setup = 17
 setup = "missing_setup:setup"
 """,
             )
-            self.builtins.add_package("foo", allow_setup=True)
+            self.builtins.add_package_content("foo", allow_setup=True)
 
     def test_raises_if_setup_function_is_missing(self):
         with (
@@ -1084,7 +1084,7 @@ setup = "missing_setup:setup"
 setup = "foo_setup:not_a_function"
 """,
             )
-            self.builtins.add_package("foo", allow_setup=True)
+            self.builtins.add_package_content("foo", allow_setup=True)
 
     def test_raises_if_setup_function_fails(self):
         with (
@@ -1110,7 +1110,7 @@ def setup(context):
 setup = "foo_setup:setup"
 """,
             )
-            self.builtins.add_package("foo", allow_setup=True)
+            self.builtins.add_package_content("foo", allow_setup=True)
 
 
 class TestBuiltinsAdder(unittest.TestCase):

@@ -36,7 +36,7 @@ from ..exceptions import CompileError
 from ..location_preprocessor import LocationPreprocessor
 from ..check_preprocessor import CheckPreprocessor
 from ..parsing.encodings import HDL_FILE_ENCODING
-from ..builtins import Builtins
+from ..builtins import Builtins, add_package as add_vunit_package
 from ..vhdl_standard import VHDL, VHDLStandard
 from ..test.bench_list import TestBenchList
 from ..test.report import TestReport
@@ -1358,10 +1358,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
             VU.add_package("vunit-json-for-vhdl")
         """
 
-        Builtins.add_package_simulator(package_name, allow_setup, self._simulator_selected)
-        # The simulator is selected by adding the HDL and setup of a package, not by a simulator-only package
-        if Builtins.has_hdl_or_setup(package_name):
-            self._builtins.add_package(package_name, allow_setup=allow_setup)
+        add_vunit_package(self, package_name, allow_setup=allow_setup)
 
     def add_com(self):
         """
