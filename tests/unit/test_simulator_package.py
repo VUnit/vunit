@@ -135,3 +135,18 @@ class TestSimulatorPackage(TestCase):
             vu.add_package("fakesim_pkg", allow_setup=True)
             vu.add_package("fakesim2_pkg", allow_setup=True)
             self.assertEqual(vu.get_simulator_name(), "fakesim2")
+
+    def test_package_with_simulator_and_sources_selects_the_simulator(self):
+        pkg = self._root / "fakesim_pkg"
+        (pkg / "pkg.vhd").write_text("package p is end package;\n")
+        (pkg / "vunit_pkg.toml").write_text(
+            '[package]\nsimulator = "fakesim_pkg:FakeSimulator"\nlibrary = "lib"\n'
+            '[[package.sources]]\ninclude = ["pkg.vhd"]\nwhen = \'simulator == "fakesim"\'\n'
+        )
+        with mock.patch.dict("os.environ", {"VUNIT_SIMULATOR": "fakesim"}):
+            vu = self._vunit()
+            vu.add_package("fakesim_pkg", allow_setup=True)
+            # The sources were added with the new simulator selected, so a second simulator is too late
+            self.assertEqual(len(vu.library("lib").get_source_files()), 1)
+            with self.assertRaises(RuntimeError):
+                vu.add_package("fakesim_pkg", allow_setup=True)
