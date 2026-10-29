@@ -110,7 +110,8 @@ The supported manifest fields are:
        See :ref:`package_setup_function`.
    * - ``simulator``
      - ``[package]``
-     - Optional simulator interface class, specified as ``"module:Class"``.
+     - Optional simulator interface class, specified as ``"module:Class"`` where
+       ``module`` is the importable module, for example ``"foo.sim:FooInterface"``.
        See :ref:`package_simulator`.
    * - ``requires-vunit``
      - ``[package]``
@@ -371,8 +372,9 @@ The package is added like any other, but must be allowed to run Python code sinc
 The simulator can then be selected with ``VUNIT_SIMULATOR=foo``. Its ``add_arguments`` method adds command line
 arguments, and its ``sim_options`` and ``compile_options`` are accepted like those of the built-in simulators.
 
-VUnit selects the simulator the first time something depends on it, for example adding source files or another
-package. Simulator packages must be added before that, otherwise adding them is an error. Command line arguments
+VUnit selects the simulator the first time something depends on it, for example adding source files or a package,
+also the simulator package itself. A simulator package must therefore be the first thing added, otherwise adding it
+is an error. Command line arguments
 are parsed again when the simulator is selected, so errors in them and ``--help`` are reported then, at the
 latest when :meth:`main() <vunit.ui.VUnit.main>` is called. Arguments added by a simulator package are not
 available to run scripts passing their own namespace to :meth:`from_args() <vunit.ui.VUnit.from_args>`.
