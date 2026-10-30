@@ -13,6 +13,8 @@ import os
 from os import environ, listdir, pathsep
 import locale
 import subprocess
+from collections import Counter
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from pathlib import Path
 from typing import List, Optional
 from ..ostools import Process, simplify_path
@@ -61,6 +63,11 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
 
     # True if simulator supports ANSI colors in GUI mode
     supports_colors_in_gui = False
+
+    # True if a library can be compiled into while it is compiled into or read by another
+    # compile. Most compilers update the index of a library without locking it, so concurrent
+    # updates lose units and a compile reading it during an update fails.
+    supports_concurrent_compiles_into_library = False
 
     # The path prefix the interface was built with, set by the interfaces having one
     _prefix: Optional[str] = None
@@ -219,14 +226,18 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         printer=NO_COLOR_PRINTER,
         continue_on_error=False,
         target_files=None,
-    ):
+        num_threads=1,
+    ):  # pylint: disable=too-many-arguments
         """
         Compile the project
         param: target_files: Given a list of SourceFiles only these and dependent files are compiled
+        param: num_threads: The number of files compiled at the same time, 0 for all logical CPUs
         """
         self.add_simulator_specific(project)
         self.setup_library_mapping(project)
-        self.compile_source_files(project, printer, continue_on_error, target_files=target_files)
+        self.compile_source_files(
+            project, printer, continue_on_error, target_files=target_files, num_threads=num_threads
+        )
 
     def simulate(self, output_path, test_suite_name, config, elaborate_only):
         """
@@ -275,47 +286,28 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         printer=NO_COLOR_PRINTER,
         continue_on_error=False,
         target_files=None,
-    ):
+        num_threads=1,
+    ):  # pylint: disable=too-many-arguments
         """
         Use compile_source_file_command to compile all source_files
         param: target_files: Given a list of SourceFiles only these and dependent files are compiled
+        param: num_threads: The number of files compiled at the same time, 0 for all logical CPUs
         """
         dependency_graph = project.create_dependency_graph()
-        failures = []
 
         if target_files is None:
             source_files = project.get_files_in_compile_order(dependency_graph=dependency_graph)
         else:
             source_files = project.get_minimal_file_set_in_compile_order(target_files)
 
-        source_files_to_skip = set()
-
-        max_library_name = 0
-        max_source_file_name = 0
-        if source_files:
-            max_library_name = max(len(source_file.library.name) for source_file in source_files)
-            max_source_file_name = max(len(simplify_path(source_file.name)) for source_file in source_files)
-
-        for source_file in source_files:
-            printer.write(
-                f"Compiling into {(source_file.library.name + ':').ljust(max_library_name + 1)!s} "
-                f"{simplify_path(source_file.name).ljust(max_source_file_name)!s} "
-            )
-            sys.stdout.flush()
-
-            if source_file in source_files_to_skip:
-                printer.write("skipped", fg="rgi")
-                printer.write("\n")
-                continue
-
-            if self._compile_source_file(source_file, printer):
-                project.update(source_file)
-            else:
-                source_files_to_skip.update(dependency_graph.get_dependent([source_file]))
-                failures.append(source_file)
-
-                if not continue_on_error:
-                    break
+        failures = self._compile_in_dependency_order(
+            project,
+            source_files,
+            dependency_graph=dependency_graph,
+            printer=printer,
+            continue_on_error=continue_on_error,
+            num_threads=num_threads or os.cpu_count() or 1,
+        )
 
         if failures:
             printer.write("Compile failed\n", fg="ri")
@@ -328,6 +320,97 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         else:
             printer.write("Re-compile not needed\n")
 
+    def _compile_in_dependency_order(
+        self, project, source_files, *, dependency_graph, printer, continue_on_error, num_threads
+    ):  # pylint: disable=too-many-arguments,too-many-locals
+        """
+        Compile source_files, num_threads at a time, and return the files that failed. A file is
+        compiled once its dependencies are. Unless supports_concurrent_compiles_into_library, it is
+        not compiled while its library is compiled into or read, or while a library it reads, that of
+        any of its dependencies, is compiled into. The dependents of a failed file are skipped.
+        """
+        max_library_name = max((len(source_file.library.name) for source_file in source_files), default=0)
+        max_source_file_name = max((len(simplify_path(source_file.name)) for source_file in source_files), default=0)
+
+        def write_header(source_file, output):
+            output.write(
+                f"Compiling into {(source_file.library.name + ':').ljust(max_library_name + 1)!s} "
+                f"{simplify_path(source_file.name).ljust(max_source_file_name)!s} "
+            )
+
+        def compile_source_file(source_file, output):
+            write_header(source_file, output)
+            sys.stdout.flush()
+            return self._compile_source_file(source_file, output)
+
+        to_compile = list(source_files)
+        dependencies = {
+            source_file: dependency_graph.get_direct_dependencies(source_file) & set(source_files)
+            for source_file in source_files
+        }
+        # ponytail: a bare library clause, with nothing used from the library, is not a read
+        libraries_read = {
+            source_file: {dependency.library.name for dependency in dependency_graph.get_dependencies([source_file])}
+            for source_file in source_files
+        }
+        compiled = {}  # Whether a finished file was compiled, rather than failed or skipped
+        failures = []
+        running = {}
+        libraries_written = Counter()
+        libraries_being_read = Counter()
+
+        with ThreadPoolExecutor(max_workers=num_threads) as executor:
+            while to_compile or running:
+                # ponytail: scans every waiting file per completed one, fine for thousands of files
+                for source_file in list(to_compile):
+                    if len(running) == num_threads or (failures and not continue_on_error):
+                        break
+
+                    if not dependencies[source_file] <= compiled.keys():
+                        continue
+
+                    if not all(compiled[dependency] for dependency in dependencies[source_file]):
+                        to_compile.remove(source_file)
+                        compiled[source_file] = False
+                        write_header(source_file, printer)
+                        printer.write("skipped", fg="rgi")
+                        printer.write("\n")
+                        continue
+
+                    library = source_file.library.name
+                    if not self.supports_concurrent_compiles_into_library and (
+                        libraries_written[library]
+                        or libraries_being_read[library]
+                        or any(libraries_written[read] for read in libraries_read[source_file])
+                    ):
+                        continue
+
+                    to_compile.remove(source_file)
+                    libraries_written[library] += 1
+                    libraries_being_read.update(libraries_read[source_file])
+                    # The output of a file is written once it is compiled, so that outputs do not mix
+                    output = printer if num_threads == 1 else _BufferedPrinter()
+                    running[executor.submit(compile_source_file, source_file, output)] = (source_file, output)
+
+                if not running:
+                    break
+
+                done, _ = wait(running, return_when=FIRST_COMPLETED)
+                for future in done:
+                    source_file, output = running.pop(future)
+                    libraries_written[source_file.library.name] -= 1
+                    libraries_being_read.subtract(libraries_read[source_file])
+                    if output is not printer:
+                        output.write_to(printer)
+
+                    compiled[source_file] = future.result()
+                    if compiled[source_file]:
+                        project.update(source_file)
+                    else:
+                        failures.append(source_file)
+
+        return failures
+
     def compile_source_file_command(self, source_file):  # pylint: disable=unused-argument
         raise NotImplementedError
 
@@ -336,6 +419,22 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         """
         Allows inheriting classes to overload this to modify environment variables. Return None for default environment
         """
+
+
+class _BufferedPrinter(object):
+    """
+    Printer keeping what is written until it is written to another printer
+    """
+
+    def __init__(self):
+        self._writes = []
+
+    def write(self, text, output_file=None, fg=None, bg=None):
+        self._writes.append((text, output_file, fg, bg))
+
+    def write_to(self, printer):
+        for text, output_file, fg, bg in self._writes:
+            printer.write(text, output_file=output_file, fg=fg, bg=bg)
 
 
 def isfile(file_name):
