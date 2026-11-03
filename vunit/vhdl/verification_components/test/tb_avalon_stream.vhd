@@ -43,6 +43,8 @@ begin
     variable is_eop  : std_logic;
     variable sop_tmp : std_logic;
     variable eop_tmp : std_logic;
+    variable reference_queue : queue_t := new_queue;
+    variable reference : stream_reference_t;
   begin
     test_runner_setup(runner, runner_cfg);
     set_format(display_handler, verbose, true);
@@ -95,6 +97,35 @@ begin
         check_equal(tmp, std_logic_vector(to_unsigned(i, 8)), "pop stream data"&natural'image(i));
         check_equal(sop_tmp, is_sop, "pop stream sop");
         check_equal(eop_tmp, is_eop, "pop stream eop");
+      end loop;
+
+    elsif run("test non-blocking pop") then
+      for i in 0 to 7 loop
+        pop_avalon_stream(net, avalon_sink_stream, reference);
+        push(reference_queue, reference);
+      end loop;
+
+      for i in 0 to 7 loop
+        if i = 0 then
+          is_sop := '1';
+          is_eop := '0';
+        elsif i = 7 then
+          is_sop := '0';
+          is_eop := '1';
+        else
+          is_sop := '0';
+          is_eop := '0';
+        end if;
+        push_avalon_stream(net, avalon_source_stream, std_logic_vector(to_unsigned(i + 1, data_length(avalon_source_stream))), is_sop, is_eop);
+      end loop;
+
+      -- wait until all transfers are done before checking them
+      wait until rising_edge(clk) and valid = '1' and ready = '1' and eop = '1';
+
+      for i in 0 to 7 loop
+        reference := pop(reference_queue);
+        await_pop_stream_reply(net, reference, tmp);
+        check_equal(tmp, to_unsigned(i + 1, tmp'length), result("for await pop stream data"));
       end loop;
 
     end if;
