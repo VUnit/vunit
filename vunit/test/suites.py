@@ -133,6 +133,13 @@ class SameSimTestSuite(object):
         return {_full_name(self._name, test.name): test for test in self._tests}
 
     @property
+    def test_configuration(self):
+        """
+        Returns a dictionary mapping full test name to test configuration object
+        """
+        return {_full_name(self._name, test.name): self._configuration for test in self._tests}
+
+    @property
     def name(self):
         return self._name
 
