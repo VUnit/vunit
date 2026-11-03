@@ -14,7 +14,7 @@ most known product that uses the technology is `Docker <https://docker.com>`_.
    solutions for each user/company to choose the one that best fits their needs. From the hardware designer point-of-view,
    we 'just' need a box (no matter the exact underlying technology) that includes VUnit and a simulator.
 
-Contributors of project `GHDL <https://github.com/ghdl/ghdl>`_ provide ready-to-use docker images at `hub.docker.com/u/ghdl/dashboard <https://hub.docker.com/u/ghdl/dashboard/>`_.
+Contributors of project `GHDL <https://github.com/ghdl/ghdl>`_ provide ready-to-use docker images at `hub.docker.com/u/ghdl/ <https://hub.docker.com/u/ghdl/>`_.
 Some of these include not only GHDL but also VUnit. Precisely, ``ghdl/vunit:{mcode|llvm|gcc}`` are images based on Debian
 Buster image, with GHDL built from the latest commit of the master branch, and the latest release of VUnit installed through
 ``pip``. ``ghdl/vunit:{mcode|llvm|gcc}-master`` images include the latest commit of VUnit from the master branch. There are
