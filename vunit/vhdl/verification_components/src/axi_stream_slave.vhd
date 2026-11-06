@@ -105,93 +105,139 @@ begin
     variable mismatch : boolean;
     variable tstrb_resolved : std_logic_vector(tstrb'range);
     variable stall_config : integer_vector_ptr_t;
+    variable delay : delay_length;
+
+    impure function get_reset_policy(slave : axi_stream_slave_t) return axi_stream_reset_policy_t is
+    begin
+      return axi_stream_reset_policy_t'val(get(slave.p_config, p_reset_policy_idx));
+    end;
+
+    procedure flush_pending_transactions(queue : queue_t) is
+      constant total_length : natural := length(queue);
+      variable consumed_length : natural := 0;
+      variable before_pop_length : natural;
+      variable msg : msg_t;
+      variable msg_type : msg_type_t;
+    begin
+      while consumed_length < total_length loop
+        before_pop_length := length(queue);
+        msg := pop(queue);
+        consumed_length := consumed_length + (before_pop_length - length(queue));
+
+        -- Messages to keep are pushed back into the queue.
+        msg_type := message_type(msg);
+        if msg_type = stream_pop_msg or msg_type = pop_axi_stream_msg or
+          msg_type = check_axi_stream_msg or msg_type = wait_for_time_msg then
+          null;
+        else
+          push(message_queue, msg);
+        end if;
+      end loop;
+    end;
   begin
     rnd.InitSeed(rnd'instance_name);
     loop
-      if is_empty(message_queue) then
-        -- Wait for messages to arrive on the queue, posted by the process above
-        wait until rising_edge(aclk) and (not is_empty(message_queue));
-      end if;
-
-      while not is_empty(message_queue) loop
-        msg := pop(message_queue);
-        msg_type := message_type(msg);
-
-        if msg_type = wait_for_time_msg then
-          handle_sync_message(net, msg_type, msg);
-          wait until rising_edge(aclk);
-
-        elsif msg_type = notify_request_msg then
-          -- Ignore this message, but expect it
-
-        elsif msg_type = stream_pop_msg or msg_type = pop_axi_stream_msg or msg_type = check_axi_stream_msg then
-
-          -- stall according to probability configuration
-          probability_stall_axi_stream(
-            aclk,
-            p_to_stall_config(to_integer_vector_ptr(get(slave.p_config, p_stall_config_idx))),
-            rnd);
-
-          tready <= '1';
-          wait until (tvalid and tready) = '1' and rising_edge(aclk);
-          tready <= '0';
-
-          tstrb_resolved := resolve_tstrb(tkeep, tstrb);
-          if msg_type = stream_pop_msg or msg_type = pop_axi_stream_msg then
-            axi_stream_transaction := (
-              tdata => tdata,
-              tlast => tlast = '1',
-              tkeep => tkeep,
-              tstrb => tstrb_resolved,
-              tid   => tid,
-              tdest => tdest,
-              tuser => tuser
-            );
-
-            reply_msg := new_axi_stream_transaction_msg(axi_stream_transaction);
-            reply(net, msg, reply_msg);
-          elsif msg_type = check_axi_stream_msg then
-            report_msg := new_string_ptr(pop_string(msg));
-
-            expected_tdata := pop_std_ulogic_vector(msg);
-            mismatch := false;
-            for idx in tkeep'range loop
-              if tkeep(idx) and tstrb_resolved(idx) then
-                mismatch := tdata(8 * idx + 7 downto 8 * idx) /= expected_tdata(8 * idx + 7 downto 8 * idx);
-                exit when mismatch;
-              end if;
-            end loop;
-            if mismatch then
-              check_field(tdata, expected_tdata, "TDATA mismatch, " & to_string(report_msg));
-            end if;
-
-            check_field(tkeep, pop_std_ulogic_vector(msg), "TKEEP mismatch, " & to_string(report_msg));
-            check_field(tstrb_resolved, pop_std_ulogic_vector(msg), "TSTRB mismatch, " & to_string(report_msg));
-            check_equal(tlast, pop_std_ulogic(msg), "TLAST mismatch, " & to_string(report_msg));
-            check_field(tid, pop_std_ulogic_vector(msg), "TID mismatch, " & to_string(report_msg));
-            check_field(tdest, pop_std_ulogic_vector(msg), "TDEST mismatch, " & to_string(report_msg));
-            check_field(tuser, pop_std_ulogic_vector(msg), "TUSER mismatch, " & to_string(report_msg));
-          end if;
-
-
-        elsif msg_type = set_stall_config_msg then
-          deallocate(to_integer_vector_ptr(get(slave.p_config, p_stall_config_idx)));
-          set(slave.p_config, p_stall_config_idx, to_integer(pop_integer_vector_ptr_ref(msg)));
-
-        elsif msg_type = get_stall_config_msg then
-          reply_msg := new_msg(get_stall_config_reply_msg);
-          stall_config := to_integer_vector_ptr(get(slave.p_config, p_stall_config_idx));
-          push(reply_msg, stall_config);
-          reply(net, msg, reply_msg);
-
-        else
-          unexpected_msg_type(msg_type);
+      if areset_n = '0' then
+        tready <= '0';
+        wait until areset_n = '1' and rising_edge(aclk);
+        if get_reset_policy(slave) = abort_all_transactions then
+          flush_pending_transactions(message_queue);
+        end if;
+      else
+        if is_empty(message_queue) then
+          -- Wait for messages to arrive on the queue, posted by the process above
+          wait until areset_n = '0' or (not is_empty(message_queue) and rising_edge(aclk));
         end if;
 
-        delete(msg);
-      end loop;
+        while not is_empty(message_queue) and areset_n = '1' loop
+          msg := pop(message_queue);
+          msg_type := message_type(msg);
 
-      notify(bus_process_done);
+          if msg_type = wait_for_time_msg then
+            handle_message(msg_type);
+            delay := pop_time(msg);
+            wait until areset_n = '0' for delay;
+
+            if areset_n /= '0' then
+              wait until rising_edge(aclk);
+            end if;
+
+          elsif msg_type = notify_request_msg then
+            -- Ignore this message, but expect it
+
+          elsif msg_type = stream_pop_msg or msg_type = pop_axi_stream_msg or msg_type = check_axi_stream_msg then
+
+            -- stall according to probability configuration
+            probability_stall_axi_stream(
+              aclk,
+              p_to_stall_config(to_integer_vector_ptr(get(slave.p_config, p_stall_config_idx))),
+              rnd);
+
+            tready <= '1';
+            wait until areset_n = '0' or ((tvalid and tready) = '1' and rising_edge(aclk));
+            tready <= '0';
+
+            tstrb_resolved := resolve_tstrb(tkeep, tstrb);
+            if areset_n = '0' then
+              null;
+            elsif msg_type = stream_pop_msg or msg_type = pop_axi_stream_msg then
+              axi_stream_transaction := (
+                tdata => tdata,
+                tlast => tlast = '1',
+                tkeep => tkeep,
+                tstrb => tstrb_resolved,
+                tid   => tid,
+                tdest => tdest,
+                tuser => tuser
+              );
+
+              reply_msg := new_axi_stream_transaction_msg(axi_stream_transaction);
+              reply(net, msg, reply_msg);
+            elsif msg_type = check_axi_stream_msg then
+              report_msg := new_string_ptr(pop_string(msg));
+
+              expected_tdata := pop_std_ulogic_vector(msg);
+              mismatch := false;
+              for idx in tkeep'range loop
+                if tkeep(idx) and tstrb_resolved(idx) then
+                  mismatch := tdata(8 * idx + 7 downto 8 * idx) /= expected_tdata(8 * idx + 7 downto 8 * idx);
+                  exit when mismatch;
+                end if;
+              end loop;
+              if mismatch then
+                check_field(tdata, expected_tdata, "TDATA mismatch, " & to_string(report_msg));
+              end if;
+
+              check_field(tkeep, pop_std_ulogic_vector(msg), "TKEEP mismatch, " & to_string(report_msg));
+              check_field(tstrb_resolved, pop_std_ulogic_vector(msg), "TSTRB mismatch, " & to_string(report_msg));
+              check_equal(tlast, pop_std_ulogic(msg), "TLAST mismatch, " & to_string(report_msg));
+              check_field(tid, pop_std_ulogic_vector(msg), "TID mismatch, " & to_string(report_msg));
+              check_field(tdest, pop_std_ulogic_vector(msg), "TDEST mismatch, " & to_string(report_msg));
+              check_field(tuser, pop_std_ulogic_vector(msg), "TUSER mismatch, " & to_string(report_msg));
+            end if;
+
+
+          elsif msg_type = set_stall_config_msg then
+            deallocate(to_integer_vector_ptr(get(slave.p_config, p_stall_config_idx)));
+            set(slave.p_config, p_stall_config_idx, to_integer(pop_integer_vector_ptr_ref(msg)));
+
+          elsif msg_type = get_stall_config_msg then
+            reply_msg := new_msg(get_stall_config_reply_msg);
+            stall_config := to_integer_vector_ptr(get(slave.p_config, p_stall_config_idx));
+            push(reply_msg, stall_config);
+            reply(net, msg, reply_msg);
+
+          else
+            unexpected_msg_type(msg_type);
+          end if;
+
+          delete(msg);
+        end loop;
+
+        if is_empty(message_queue) then
+          notify(bus_process_done);
+        end if;
+      end if;
     end loop;
   end process;
 
