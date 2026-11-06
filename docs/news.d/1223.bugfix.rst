@@ -1,0 +1,1 @@
+GHDL: a configuration no longer inherits the generics of other configurations through a shared ``ghdl.sim_flags`` list.
