@@ -137,13 +137,6 @@ def _create_argument_parser(description=None, for_documentation=False):
     )
 
     parser.add_argument(
-        "--parallel-compile",
-        action="store_true",
-        default=False,
-        help="Compile as many files in parallel as -p runs tests, rather than one file at a time",
-    )
-
-    parser.add_argument(
         "--fail-fast",
         action="store_true",
         default=False,
@@ -252,13 +245,22 @@ def _create_argument_parser(description=None, for_documentation=False):
     parser.add_argument(
         "-p",
         "--num-threads",
+        "--num-sim-threads",
         type=nonnegative_int,
         default=1,
         help=(
-            "Number of tests to run in parallel, and of files to compile in parallel with --parallel-compile. "
+            "Number of tests to run in parallel. "
             "Test output is not continuously written in verbose mode with p != 1. "
             "p = 0 uses all logical CPUs."
         ),
+    )
+
+    parser.add_argument(
+        "-j",
+        "--num-compile-threads",
+        type=nonnegative_int,
+        default=1,
+        help="Number of files to compile in parallel. j = 0 uses all logical CPUs.",
     )
 
     parser.add_argument(

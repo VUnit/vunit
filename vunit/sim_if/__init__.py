@@ -13,13 +13,15 @@ import os
 from os import environ, listdir, pathsep
 import locale
 import subprocess
-from collections import Counter
-from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
+from concurrent.futures import FIRST_COMPLETED, Future, ThreadPoolExecutor, wait
 from pathlib import Path
-from typing import List, Optional
+from typing import TYPE_CHECKING, Any, Counter, Dict, List, Optional, Tuple
 from ..ostools import Process, simplify_path
 from ..exceptions import CompileError
 from ..color_printer import NO_COLOR_PRINTER
+
+if TYPE_CHECKING:
+    from ..source_file import SourceFile
 
 
 class Option(object):
@@ -327,7 +329,7 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
             printer.write("Re-compile not needed\n")
 
     def _compile_in_dependency_order(
-        self, project, source_files, *, dependency_graph, printer, continue_on_error, num_threads
+        self, project, source_files: List["SourceFile"], *, dependency_graph, printer, continue_on_error, num_threads
     ):  # pylint: disable=too-many-arguments,too-many-locals
         """
         Compile source_files, num_threads at a time, and return the files that failed. A file is
@@ -349,7 +351,7 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
             sys.stdout.flush()
             return self._compile_source_file(source_file, output)
 
-        to_compile = list(source_files)
+        to_compile = source_files.copy()
         dependencies = {
             source_file: dependency_graph.get_direct_dependencies(source_file) & set(source_files)
             for source_file in source_files
@@ -359,11 +361,13 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
             source_file: {dependency.library.name for dependency in dependency_graph.get_dependencies([source_file])}
             for source_file in source_files
         }
-        compiled = {}  # Whether a finished file was compiled, rather than failed or skipped
-        failures = []
-        running = {}
-        libraries_written = Counter()
-        libraries_being_read = Counter()
+        compiled: Dict["SourceFile", bool] = {}  # Whether a finished file was compiled, rather than failed or skipped
+        failures: List["SourceFile"] = []
+        running: Dict[Future, Tuple["SourceFile", Any]] = {}
+        libraries_written: Counter[str] = Counter()
+        libraries_being_read: Counter[str] = Counter()
+        # The output of a file is written once it is compiled, so that parallel outputs do not mix
+        create_output = _BufferedPrinter if num_threads > 1 else lambda: printer
 
         with ThreadPoolExecutor(max_workers=num_threads) as executor:
             while to_compile or running:
@@ -394,8 +398,7 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
                     to_compile.remove(source_file)
                     libraries_written[library] += 1
                     libraries_being_read.update(libraries_read[source_file])
-                    # The output of a file is written once it is compiled, so that outputs do not mix
-                    output = printer if num_threads == 1 else _BufferedPrinter()
+                    output = create_output()
                     running[executor.submit(compile_source_file, source_file, output)] = (source_file, output)
 
                 if not running:
@@ -474,6 +477,7 @@ def check_output(command, env=None):
     """
     Wrapper arround subprocess.check_output
     """
+
     def _decode(data: bytes) -> str:
         """Decode tool output robustly across platforms.
 
@@ -483,10 +487,12 @@ def check_output(command, env=None):
 
         # Deduplicate via dict.fromkeys to avoid trying utf-8 twice
         # when locale.getpreferredencoding() returns "UTF-8".
-        encodings_to_try = dict.fromkeys([
-            "utf-8",
-            locale.getpreferredencoding(False),
-        ])
+        encodings_to_try = dict.fromkeys(
+            [
+                "utf-8",
+                locale.getpreferredencoding(False),
+            ]
+        )
 
         for encoding in encodings_to_try:
             try:
