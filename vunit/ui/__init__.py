@@ -179,7 +179,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         self._create_output_path(args.clean)
 
-        self._database_version = (11, sys.version)
+        self._database_version = (12, sys.version)
         self._pickled_database_version = (self._database_version[0], pickle.HIGHEST_PROTOCOL)
 
         self._database = self._create_database()
@@ -1352,7 +1352,8 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         """
         Removed json4vhdl add-on.
         """
-        raise RuntimeError("""\
+        raise RuntimeError(
+            """\
 add_json4vhdl() has been removed. JSON-for-VHDL support is now provided through a separate package.
 
 Install it with:
@@ -1360,7 +1361,8 @@ Install it with:
 pip install vunit-json-for-vhdl
 
 Then replace the add_json4vhdl() call with add_package("vunit-json-for-vhdl").
-""")
+"""
+        )
 
     def update_test_pattern(
         self,

@@ -61,6 +61,7 @@ class VHDLDesignFile(object):  # pylint: disable=too-many-instance-attributes
         component_instantiations=None,
         configurations=None,
         references=None,
+        library_clauses=None,
     ):
         self.entities = [] if entities is None else entities
         self.packages = [] if packages is None else packages
@@ -70,6 +71,7 @@ class VHDLDesignFile(object):  # pylint: disable=too-many-instance-attributes
         self.component_instantiations = [] if component_instantiations is None else component_instantiations
         self.configurations = [] if configurations is None else configurations
         self.references = [] if references is None else references
+        self.library_clauses = [] if library_clauses is None else library_clauses
 
     @classmethod
     def parse(cls, code):
@@ -86,7 +88,15 @@ class VHDLDesignFile(object):  # pylint: disable=too-many-instance-attributes
             component_instantiations=list(cls._component_re.findall(code)),
             configurations=list(VHDLConfiguration.find(code)),
             references=list(VHDLReference.find(code)),
+            library_clauses=[
+                name.strip() for match in cls._library_re.finditer(code) for name in match.group("names").split(",")
+            ],
         )
+
+    _library_re = re.compile(
+        rf"\blibrary\s+(?P<names>(?:{_ID_PATTERN})(?:\s*,\s*(?:{_ID_PATTERN}))*)\s*;",
+        re.IGNORECASE,
+    )
 
     _component_re = re.compile(
         rf"(?:{_ID_PATTERN})\s*\:\s*(?:component)?\s*(?:(?:{_ID_PATTERN})\.)?({_ID_PATTERN})\s*"

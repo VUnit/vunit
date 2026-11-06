@@ -333,9 +333,11 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
     ):  # pylint: disable=too-many-arguments,too-many-locals
         """
         Compile source_files, num_threads at a time, and return the files that failed. A file is
-        compiled once its dependencies are. Unless supports_concurrent_compiles_into_library, it is
-        not compiled while its library is compiled into or read, or while a library it reads, that of
-        any of its dependencies, is compiled into. The dependents of a failed file are skipped.
+        compiled once its dependencies are, and once the first file before it of each library in its
+        library clauses is, since a library clause fails on a library nothing is compiled into. Unless
+        supports_concurrent_compiles_into_library, it is not compiled while its library is compiled
+        into or read, or while a library it reads, that of a dependency or of a library clause, is
+        compiled into. The dependents of a failed file are skipped.
         """
         max_library_name = max((len(source_file.library.name) for source_file in source_files), default=0)
         max_source_file_name = max((len(simplify_path(source_file.name)) for source_file in source_files), default=0)
@@ -356,11 +358,15 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
             source_file: dependency_graph.get_direct_dependencies(source_file) & set(source_files)
             for source_file in source_files
         }
-        # ponytail: a bare library clause, with nothing used from the library, is not a read
+        # Library names are compared in lower case, as library clauses are parsed
         libraries_read = {
-            source_file: {dependency.library.name for dependency in dependency_graph.get_dependencies([source_file])}
+            source_file: {
+                dependency.library.name.lower() for dependency in dependency_graph.get_dependencies([source_file])
+            }
+            | set(source_file.library_clauses)
             for source_file in source_files
         }
+        waits_for = _files_to_wait_for(source_files, dependencies)
         compiled: Dict["SourceFile", bool] = {}  # Whether a finished file was compiled, rather than failed or skipped
         failures: List["SourceFile"] = []
         running: Dict[Future, Tuple["SourceFile", Any]] = {}
@@ -376,7 +382,7 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
                     if len(running) == num_threads or (failures and not continue_on_error):
                         break
 
-                    if not dependencies[source_file] <= compiled.keys():
+                    if not waits_for[source_file] <= compiled.keys():
                         continue
 
                     if not all(compiled[dependency] for dependency in dependencies[source_file]):
@@ -387,7 +393,7 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
                         printer.write("\n")
                         continue
 
-                    library = source_file.library.name
+                    library = source_file.library.name.lower()
                     if not self.supports_concurrent_compiles_into_library and (
                         libraries_written[library]
                         or libraries_being_read[library]
@@ -407,7 +413,7 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
                 done, _ = wait(running, return_when=FIRST_COMPLETED)
                 for future in done:
                     source_file, output = running.pop(future)
-                    libraries_written[source_file.library.name] -= 1
+                    libraries_written[source_file.library.name.lower()] -= 1
                     libraries_being_read.subtract(libraries_read[source_file])
                     if output is not printer:
                         output.write_to(printer)
@@ -428,6 +434,22 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         """
         Allows inheriting classes to overload this to modify environment variables. Return None for default environment
         """
+
+
+def _files_to_wait_for(source_files, dependencies):
+    """
+    Return the files that must be finished, compiled or not, before each file is compiled: its
+    dependencies and the first file before it of each other library in its library clauses
+    """
+    waits_for = {}
+    first_files: Dict[str, "SourceFile"] = {}
+    for source_file in source_files:
+        library = source_file.library.name.lower()
+        waits_for[source_file] = dependencies[source_file] | {
+            first_files[name] for name in source_file.library_clauses if name in first_files and name != library
+        }
+        first_files.setdefault(library, source_file)
+    return waits_for
 
 
 class _BufferedPrinter(object):

@@ -192,20 +192,22 @@ Compile failed
         self.assertEqual(project.get_files_in_compile_order(incremental=True), [source_file])
 
     def _compile_concurrently(
-        self, libraries, supports_concurrent_compiles_into_library=False, fail=None, dependencies=()
+        self, libraries, supports_concurrent_compiles_into_library=False, fail=None, dependencies=(), library_clauses=()
     ):
         """
         Compile one file per library name in libraries with 4 threads, the compile commands
         waiting for each other in pairs. dependencies are (file index, index of the file it depends
-        on) pairs. Return the printer output and the compile commands that ran at the same time as
+        on) pairs and library_clauses (file index, library name) pairs. Return the printer output and the compile commands that ran at the same time as
         another.
         """
         simif = create_simulator_interface()
         simif.supports_concurrent_compiles_into_library = supports_concurrent_compiles_into_library
         simif.compile_source_file_command.side_effect = lambda source_file: [Path(source_file.name).stem]
-        project, _ = create_project(
+        project, source_files = create_project(
             [(f"file{idx}.vhd", library) for idx, library in enumerate(libraries)], dependencies
         )
+        for idx, library in library_clauses:
+            source_files[idx].library_clauses.append(library)
 
         barrier = threading.Barrier(2, timeout=0.5)
         concurrent = set()
@@ -246,6 +248,19 @@ Compile failed
     def test_compile_source_files_reading_the_same_library_concurrently(self):
         _, concurrent = self._compile_concurrently(["lib0", "lib1", "lib2"], dependencies=[(1, 0), (2, 0)])
         self.assertEqual(concurrent, {"file1", "file2"})
+
+    def test_compile_source_files_after_the_first_file_of_a_library_in_their_library_clauses(self):
+        _, concurrent = self._compile_concurrently(
+            ["lib0", "lib1"],
+            supports_concurrent_compiles_into_library=True,
+            library_clauses=[(0, "lib1"), (1, "lib0")],  # Whichever file is compiled first
+        )
+        self.assertEqual(concurrent, set())
+
+    def test_compile_source_files_not_while_a_library_in_their_library_clauses_is_compiled_into(self):
+        # Once file0 is compiled, file1 is compiled into lib0, which file2 names in a library clause
+        _, concurrent = self._compile_concurrently(["lib0", "lib0", "lib1"], library_clauses=[(2, "lib0")])
+        self.assertEqual(concurrent, set())
 
     def test_compile_source_files_concurrently_writes_the_output_of_a_file_at_once(self):
         output, _ = self._compile_concurrently(["lib0", "lib1"], fail="file1")
