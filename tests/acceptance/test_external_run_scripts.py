@@ -60,6 +60,10 @@ class TestExternalRunScripts(TestCase):
         self.check(ROOT / "examples/verilog/uart/run.py")
 
     @mark.skipif(not simulator_supports_verilog(), reason="Requires a Verilog simulator")
+    def test_mixed_uart_example_project(self):
+        self.check(ROOT / "examples/mixed/uart/run.py")
+
+    @mark.skipif(not simulator_supports_verilog(), reason="Requires a Verilog simulator")
     @mark.xfail(reason="Requires AMS")
     def test_verilog_ams_example(self):
         self.check(ROOT / "examples/verilog/verilog_ams/run.py")
