@@ -24,7 +24,7 @@ from vunit.library import Library
 LOGGER = logging.getLogger(__name__)
 
 
-class SourceFile(object):
+class SourceFile(object):  # pylint: disable=too-many-instance-attributes
     """
     Represents a generic source file
     """
@@ -34,6 +34,7 @@ class SourceFile(object):
         self.library = library
         self.file_type = file_type
         self.design_units = []
+        self.library_clauses = []  # The libraries named in library clauses
         self._content_hash = None
         self._compile_options = {}
 
@@ -243,6 +244,7 @@ class VHDLSourceFile(SourceFile):
         """
         self.design_units = self._find_design_units(design_file)
         self.dependencies = self._find_dependencies(design_file)
+        self.library_clauses = design_file.library_clauses
         self.depending_components = design_file.component_instantiations
 
         for design_unit in self.design_units:

@@ -169,7 +169,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         # Needs the simulator only when something is added, which selects it
         self._builtins = Builtins(self, self._vhdl_standard)
 
-        self._database_version = (11, sys.version)
+        self._database_version = (12, sys.version)
         self._pickled_database_version = (self._database_version[0], pickle.HIGHEST_PROTOCOL)
 
         self._dependency_graph = None
@@ -1257,6 +1257,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
             continue_on_error=self._args.keep_compiling,
             printer=self._printer,
             target_files=target_files,
+            num_threads=self._args.num_compile_threads,
         )
 
     def _get_testbench_files(self, simulator_if: Union[None, SimulatorInterface]):
@@ -1404,7 +1405,8 @@ Then replace the add_osvvm() call with add_package("vunit-osvvm").
         """
         Removed json4vhdl add-on.
         """
-        raise RuntimeError("""\
+        raise RuntimeError(
+            """\
 add_json4vhdl() has been removed. JSON-for-VHDL support is now provided through a separate package.
 
 Install it with:
@@ -1412,7 +1414,8 @@ Install it with:
 pip install vunit-json-for-vhdl
 
 Then replace the add_json4vhdl() call with add_package("vunit-json-for-vhdl").
-""")
+"""
+        )
 
     def update_test_pattern(
         self,

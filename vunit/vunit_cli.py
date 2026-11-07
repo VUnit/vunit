@@ -247,6 +247,7 @@ def _create_argument_parser(description=None, for_documentation=False, add_help=
     parser.add_argument(
         "-p",
         "--num-threads",
+        "--num-sim-threads",
         type=nonnegative_int,
         default=1,
         help=(
@@ -254,6 +255,14 @@ def _create_argument_parser(description=None, for_documentation=False, add_help=
             "Test output is not continuously written in verbose mode with p != 1. "
             "p = 0 uses all logical CPUs."
         ),
+    )
+
+    parser.add_argument(
+        "-j",
+        "--num-compile-threads",
+        type=nonnegative_int,
+        default=1,
+        help="Number of files to compile in parallel. j = 0 uses all logical CPUs.",
     )
 
     parser.add_argument(
