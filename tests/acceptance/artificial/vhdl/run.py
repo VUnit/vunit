@@ -187,10 +187,10 @@ def configure_tb_seed(ui):
         tb.test("test_2").set_generic("expected_seed", "2e373913e5ad677d")
         tb.set_pre_config(make_pre_config("0123456789abcdef"))
     elif args.seed == "repeat":
-        tb.test("test_1").set_generic("expected_seed", "ffa08cd9489aad14")
-        tb.test("test_2").set_generic("expected_seed", "9a292b3679afd081")
-        tb.test("test_1").set_pre_config(make_pre_config("7ac31eb89c4059f9"))
-        tb.test("test_2").set_pre_config(make_pre_config("8b1cd665d806e572"))
+        tb.test("test_1").set_generic("expected_seed", "26ed8a0eb8082bbf")
+        tb.test("test_2").set_generic("expected_seed", "0fb04a8354f93686")
+        tb.test("test_1").set_pre_config(make_pre_config("97efb983156f43a1"))
+        tb.test("test_2").set_pre_config(make_pre_config("8f969236d04594ae"))
     elif args.seed is None:
         tb.set_pre_config(make_pre_config())
 

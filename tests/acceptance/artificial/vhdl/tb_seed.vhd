@@ -35,10 +35,10 @@ begin
 
       if run("test_1") then
         -- Not expecting the seed derived from --seed=repeat
-        check_implication(expected_seed = "", seed /= "ffa08cd9489aad14");
+        check_implication(expected_seed = "", seed /= "26ed8a0eb8082bbf");
       elsif run("test_2") then
         -- Not expecting the seed derived from --seed=repeat
-        check_implication(expected_seed = "", seed /= "9a292b3679afd081");
+        check_implication(expected_seed = "", seed /= "0fb04a8354f93686");
       end if;
     end loop;
 
