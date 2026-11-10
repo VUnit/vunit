@@ -214,6 +214,38 @@ package new_pkg is new lib.pkg;
             ),
         )
 
+    def test_use_of_local_package_instance_is_not_a_library_reference(self):
+        # A 'use' clause that targets a locally declared generic/instantiated
+        # package name must not be reported as a reference to a library of that
+        # name; only the real reference to the instantiated package remains.
+        design_file = VHDLDesignFile.parse(
+            """\
+entity th is
+    generic(
+        package th_pkg is new work.overlay_th_pkg generic map (<>)
+    );
+end entity;
+
+architecture a of th is
+    use th_pkg.all;
+
+    package inst_pkg is new work.generic_pkg;
+    use inst_pkg.all;
+begin
+end architecture;
+"""
+        )
+        self.assertEqual(
+            sorted(design_file.references, key=repr),
+            sorted(
+                [
+                    VHDLReference("package", "work", "overlay_th_pkg", None),
+                    VHDLReference("package", "work", "generic_pkg", None),
+                ],
+                key=repr,
+            ),
+        )
+
     def test_parsing_entity_with_generics(self):
         entity = self.parse_single_entity(
             """\
