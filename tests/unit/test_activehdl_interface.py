@@ -8,13 +8,12 @@
 Test the ActiveHDL interface
 """
 
-
 import unittest
 from pathlib import Path
 import os
 from shutil import rmtree
 from unittest import mock
-from vunit.sim_if.activehdl import ActiveHDLInterface, VersionConsumer, Version
+from vunit.sim_if.activehdl import ActiveHDLInterface, ActiveHDLVersion, VersionConsumer
 from vunit.project import Project
 from vunit.ostools import renew_path, write_file
 from vunit.vhdl_standard import VHDL
@@ -347,125 +346,166 @@ class TestVersionConsumer(unittest.TestCase):
         consumer(version_line)
         self.assertEqual(
             consumer.version,
-            Version(expected_major, expected_minor, expected_minor_letter),
+            ActiveHDLVersion(f"{expected_major}.{expected_minor}{expected_minor_letter}"),
         )
 
-    def test_vendor_version_without_letters(self):
+    def test_version_string_without_letters(self):
         self._assert_version_correct(
-            "Aldec, Inc. VHDL compiler version 10.5.216.6767 built for Windows on January 20, 2018.",
+            "10.5.216.6767",
             10,
             5,
             "",
         )
 
-    def test_vendor_version_with_letters(self):
+    def test_version_string_with_letters(self):
         self._assert_version_correct(
-            "Aldec, Inc. VHDL compiler version 10.5a.12.6914 built for Windows on June 06, 2018.",
+            "10.5a.12.6914",
             10,
             5,
             "a",
         )
 
 
-class TestVersion(unittest.TestCase):
+class TestActiveHDLVersion(unittest.TestCase):
     """
-    Test the Version class.
+    Test ActiveHDL version comparisons.
     Test cases = (assert true, assert false) x (with letters, without letters, mixed) x number_of_operations
     Where number_of_operations = 1 for <, and 2 for <=, etc
     """
 
-    high_version_letter = Version(10, 5, "b")
-    low_version_letter = Version(10, 5, "a")
-    high_version_no_letter = Version(10, 6)
-    low_version_no_letter = Version(10, 5)
-    high_version_letter_for_mixed = Version(10, 6, "")
+    high_version_letter = ActiveHDLVersion("10.5b")
+    low_version_letter = ActiveHDLVersion("10.5a")
+    high_version_no_letter = ActiveHDLVersion("10.6")
+    low_version_no_letter = ActiveHDLVersion("10.5")
+    high_version_letter_for_mixed = ActiveHDLVersion("10.6")
+
+    def test_versions_are_ordered_by_major_minor_and_minor_letter(self):
+        self.assertLess(ActiveHDLVersion("10.5"), ActiveHDLVersion("10.5a"))
+        self.assertLess(ActiveHDLVersion("10.5a"), ActiveHDLVersion("10.5b"))
+        self.assertLess(ActiveHDLVersion("10.5b"), ActiveHDLVersion("10.6"))
+        self.assertEqual(ActiveHDLVersion("10.5a.12.6914"), ActiveHDLVersion("10.5a"))
+        self.assertEqual(str(ActiveHDLVersion("10.5a")), "10.5a")
+
+    def test_from_output_extracts_versions_from_vendor_output(self):
+        self.assertEqual(
+            ActiveHDLVersion.from_output(
+                "Aldec, Inc. VHDL compiler version 10.5.216.6767 built for Windows on January 20, 2018."
+            ),
+            ActiveHDLVersion("10.5"),
+        )
+        self.assertEqual(
+            ActiveHDLVersion.from_output(
+                "Aldec, Inc. VHDL compiler version 10.5a.12.6914 built for Windows on June 06, 2018."
+            ),
+            ActiveHDLVersion("10.5a"),
+        )
+
+    def test_from_output_returns_unknown_when_version_cannot_be_parsed(self):
+        with self.assertWarnsRegex(RuntimeWarning, "version is unknown"):
+            version = ActiveHDLVersion.from_output("Active-HDL version unavailable")
+
+        self.assertFalse(version.is_valid)
+        self.assertEqual(str(version), "unknown")
+
+    def test_unknown_versions_cannot_be_ordered(self):
+        with self.assertWarns(RuntimeWarning):
+            version = ActiveHDLVersion("unknown")
+
+        with self.assertRaisesRegex(ValueError, "Cannot order unknown ActiveHDL versions"):
+            version < ActiveHDLVersion("10.5")
 
     def test_lt(self):
         # Test with letters
-        self.assertTrue(TestVersion.low_version_letter < TestVersion.high_version_letter)
-        self.assertFalse(TestVersion.high_version_letter < TestVersion.low_version_letter)
+        self.assertTrue(TestActiveHDLVersion.low_version_letter < TestActiveHDLVersion.high_version_letter)
+        self.assertFalse(TestActiveHDLVersion.high_version_letter < TestActiveHDLVersion.low_version_letter)
         # Test without letters
-        self.assertTrue(TestVersion.low_version_no_letter < TestVersion.high_version_no_letter)
-        self.assertFalse(TestVersion.high_version_no_letter < TestVersion.low_version_no_letter)
+        self.assertTrue(TestActiveHDLVersion.low_version_no_letter < TestActiveHDLVersion.high_version_no_letter)
+        self.assertFalse(TestActiveHDLVersion.high_version_no_letter < TestActiveHDLVersion.low_version_no_letter)
         # Both
-        self.assertTrue(TestVersion.low_version_letter < TestVersion.high_version_no_letter)
-        self.assertFalse(TestVersion.high_version_letter < TestVersion.low_version_no_letter)
+        self.assertTrue(TestActiveHDLVersion.low_version_letter < TestActiveHDLVersion.high_version_no_letter)
+        self.assertFalse(TestActiveHDLVersion.high_version_letter < TestActiveHDLVersion.low_version_no_letter)
 
     def test_le(self):
         # Test equal
         # Test with letters
-        self.assertTrue(TestVersion.high_version_letter <= TestVersion.high_version_letter)
-        self.assertFalse(TestVersion.high_version_letter <= TestVersion.low_version_letter)
+        self.assertTrue(TestActiveHDLVersion.high_version_letter <= TestActiveHDLVersion.high_version_letter)
+        self.assertFalse(TestActiveHDLVersion.high_version_letter <= TestActiveHDLVersion.low_version_letter)
         # Test without letters
-        self.assertTrue(TestVersion.high_version_no_letter <= TestVersion.high_version_no_letter)
-        self.assertFalse(TestVersion.high_version_no_letter <= TestVersion.low_version_no_letter)
+        self.assertTrue(TestActiveHDLVersion.high_version_no_letter <= TestActiveHDLVersion.high_version_no_letter)
+        self.assertFalse(TestActiveHDLVersion.high_version_no_letter <= TestActiveHDLVersion.low_version_no_letter)
         # Both
-        self.assertTrue(TestVersion.high_version_letter <= TestVersion.high_version_no_letter)
-        self.assertFalse(TestVersion.high_version_letter <= TestVersion.low_version_no_letter)
+        self.assertTrue(TestActiveHDLVersion.high_version_letter <= TestActiveHDLVersion.high_version_no_letter)
+        self.assertFalse(TestActiveHDLVersion.high_version_letter <= TestActiveHDLVersion.low_version_no_letter)
 
         # Test less than
         # Test with letters
-        self.assertTrue(TestVersion.low_version_letter <= TestVersion.high_version_letter)
-        self.assertFalse(TestVersion.high_version_letter <= TestVersion.low_version_letter)
+        self.assertTrue(TestActiveHDLVersion.low_version_letter <= TestActiveHDLVersion.high_version_letter)
+        self.assertFalse(TestActiveHDLVersion.high_version_letter <= TestActiveHDLVersion.low_version_letter)
         # Test without letters
-        self.assertTrue(TestVersion.low_version_no_letter <= TestVersion.high_version_no_letter)
-        self.assertFalse(TestVersion.high_version_no_letter <= TestVersion.low_version_no_letter)
+        self.assertTrue(TestActiveHDLVersion.low_version_no_letter <= TestActiveHDLVersion.high_version_no_letter)
+        self.assertFalse(TestActiveHDLVersion.high_version_no_letter <= TestActiveHDLVersion.low_version_no_letter)
         # Both
-        self.assertTrue(TestVersion.low_version_letter <= TestVersion.high_version_no_letter)
-        self.assertFalse(TestVersion.high_version_letter <= TestVersion.low_version_no_letter)
+        self.assertTrue(TestActiveHDLVersion.low_version_letter <= TestActiveHDLVersion.high_version_no_letter)
+        self.assertFalse(TestActiveHDLVersion.high_version_letter <= TestActiveHDLVersion.low_version_no_letter)
 
     def test_gt(self):
         # Test with letters
-        self.assertTrue(TestVersion.high_version_letter > TestVersion.low_version_letter)
-        self.assertFalse(TestVersion.low_version_letter > TestVersion.high_version_letter)
+        self.assertTrue(TestActiveHDLVersion.high_version_letter > TestActiveHDLVersion.low_version_letter)
+        self.assertFalse(TestActiveHDLVersion.low_version_letter > TestActiveHDLVersion.high_version_letter)
         # Test without letters
-        self.assertTrue(TestVersion.high_version_no_letter > TestVersion.low_version_no_letter)
-        self.assertFalse(TestVersion.low_version_no_letter > TestVersion.high_version_no_letter)
+        self.assertTrue(TestActiveHDLVersion.high_version_no_letter > TestActiveHDLVersion.low_version_no_letter)
+        self.assertFalse(TestActiveHDLVersion.low_version_no_letter > TestActiveHDLVersion.high_version_no_letter)
         # Both
-        self.assertTrue(TestVersion.high_version_letter > TestVersion.low_version_no_letter)
-        self.assertFalse(TestVersion.low_version_letter > TestVersion.high_version_no_letter)
+        self.assertTrue(TestActiveHDLVersion.high_version_letter > TestActiveHDLVersion.low_version_no_letter)
+        self.assertFalse(TestActiveHDLVersion.low_version_letter > TestActiveHDLVersion.high_version_no_letter)
 
     def test_ge(self):
         # Test equal
         # Test with letters
-        self.assertTrue(TestVersion.high_version_letter >= TestVersion.high_version_letter)
-        self.assertFalse(TestVersion.low_version_letter >= TestVersion.high_version_letter)
+        self.assertTrue(TestActiveHDLVersion.high_version_letter >= TestActiveHDLVersion.high_version_letter)
+        self.assertFalse(TestActiveHDLVersion.low_version_letter >= TestActiveHDLVersion.high_version_letter)
         # Test without letters
-        self.assertTrue(TestVersion.high_version_no_letter >= TestVersion.high_version_no_letter)
-        self.assertFalse(TestVersion.low_version_no_letter >= TestVersion.high_version_no_letter)
+        self.assertTrue(TestActiveHDLVersion.high_version_no_letter >= TestActiveHDLVersion.high_version_no_letter)
+        self.assertFalse(TestActiveHDLVersion.low_version_no_letter >= TestActiveHDLVersion.high_version_no_letter)
         # Both
-        self.assertTrue(TestVersion.high_version_letter_for_mixed >= TestVersion.high_version_no_letter)
-        self.assertFalse(TestVersion.low_version_letter >= TestVersion.high_version_no_letter)
+        self.assertTrue(
+            TestActiveHDLVersion.high_version_letter_for_mixed >= TestActiveHDLVersion.high_version_no_letter
+        )
+        self.assertFalse(TestActiveHDLVersion.low_version_letter >= TestActiveHDLVersion.high_version_no_letter)
 
         # Test greater than
         # Test with letters
-        self.assertTrue(TestVersion.high_version_letter >= TestVersion.low_version_letter)
-        self.assertFalse(TestVersion.low_version_letter >= TestVersion.high_version_letter)
+        self.assertTrue(TestActiveHDLVersion.high_version_letter >= TestActiveHDLVersion.low_version_letter)
+        self.assertFalse(TestActiveHDLVersion.low_version_letter >= TestActiveHDLVersion.high_version_letter)
         # Test without letters
-        self.assertTrue(TestVersion.high_version_no_letter >= TestVersion.low_version_no_letter)
-        self.assertFalse(TestVersion.low_version_no_letter >= TestVersion.high_version_no_letter)
+        self.assertTrue(TestActiveHDLVersion.high_version_no_letter >= TestActiveHDLVersion.low_version_no_letter)
+        self.assertFalse(TestActiveHDLVersion.low_version_no_letter >= TestActiveHDLVersion.high_version_no_letter)
         # Both
-        self.assertTrue(TestVersion.high_version_letter >= TestVersion.low_version_no_letter)
-        self.assertFalse(TestVersion.low_version_letter >= TestVersion.high_version_no_letter)
+        self.assertTrue(TestActiveHDLVersion.high_version_letter >= TestActiveHDLVersion.low_version_no_letter)
+        self.assertFalse(TestActiveHDLVersion.low_version_letter >= TestActiveHDLVersion.high_version_no_letter)
 
     def test_eq(self):
         # Test with letters
-        self.assertTrue(TestVersion.high_version_letter == TestVersion.high_version_letter)
-        self.assertFalse(TestVersion.high_version_letter == TestVersion.low_version_letter)
+        self.assertTrue(TestActiveHDLVersion.high_version_letter == TestActiveHDLVersion.high_version_letter)
+        self.assertFalse(TestActiveHDLVersion.high_version_letter == TestActiveHDLVersion.low_version_letter)
         # Test without letters
-        self.assertTrue(TestVersion.high_version_no_letter == TestVersion.high_version_no_letter)
-        self.assertFalse(TestVersion.high_version_no_letter == TestVersion.low_version_no_letter)
+        self.assertTrue(TestActiveHDLVersion.high_version_no_letter == TestActiveHDLVersion.high_version_no_letter)
+        self.assertFalse(TestActiveHDLVersion.high_version_no_letter == TestActiveHDLVersion.low_version_no_letter)
         # Both
-        self.assertTrue(TestVersion.high_version_letter_for_mixed == TestVersion.high_version_no_letter)
-        self.assertFalse(TestVersion.high_version_letter == TestVersion.low_version_no_letter)
+        self.assertTrue(
+            TestActiveHDLVersion.high_version_letter_for_mixed == TestActiveHDLVersion.high_version_no_letter
+        )
+        self.assertFalse(TestActiveHDLVersion.high_version_letter == TestActiveHDLVersion.low_version_no_letter)
 
     def test_ne(self):
         # Test with letters
-        self.assertTrue(TestVersion.high_version_letter != TestVersion.low_version_letter)
-        self.assertFalse(TestVersion.high_version_letter != TestVersion.high_version_letter)
+        self.assertTrue(TestActiveHDLVersion.high_version_letter != TestActiveHDLVersion.low_version_letter)
+        self.assertFalse(TestActiveHDLVersion.high_version_letter != TestActiveHDLVersion.high_version_letter)
         # Test without letters
-        self.assertTrue(TestVersion.high_version_no_letter != TestVersion.low_version_no_letter)
-        self.assertFalse(TestVersion.high_version_no_letter != TestVersion.high_version_no_letter)
+        self.assertTrue(TestActiveHDLVersion.high_version_no_letter != TestActiveHDLVersion.low_version_no_letter)
+        self.assertFalse(TestActiveHDLVersion.high_version_no_letter != TestActiveHDLVersion.high_version_no_letter)
         # Both
-        self.assertTrue(TestVersion.high_version_letter != TestVersion.low_version_no_letter)
-        self.assertFalse(TestVersion.high_version_letter_for_mixed != TestVersion.high_version_no_letter)
+        self.assertTrue(TestActiveHDLVersion.high_version_letter != TestActiveHDLVersion.low_version_no_letter)
+        self.assertFalse(
+            TestActiveHDLVersion.high_version_letter_for_mixed != TestActiveHDLVersion.high_version_no_letter
+        )

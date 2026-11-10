@@ -1,0 +1,22 @@
+{
+  "$schema": "https://context7.com/schema/context7.json",
+  "url": "https://context7.com/vunit/vunit",
+  "public_key": "pk_lFI1bFQ8pHgYDeBRtvnEp",
+  "projectTitle": "VUnit",
+  "description": "Unit testing framework for VHDL and SystemVerilog: a Python test runner (run.py) and VHDL libraries for checks, logging, message passing, data types and verification components.",
+  "folders": [
+    "docs",
+    "examples"
+  ],
+  "excludeFolders": [
+    "docs/blog",
+    "docs/release_notes",
+    "docs/news.d"
+  ],
+  "excludeFiles": [],
+  "rules": [
+    "Complete VHDL API signatures: https://vunit.github.io/api/vunit_lib.json",
+    "Complete Python API signatures: https://vunit.github.io/api/python.json",
+    "All documentation as plain text, including the VHDL package headers: https://vunit.github.io/llms-full.txt"
+  ]
+}

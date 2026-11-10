@@ -51,26 +51,15 @@ AXI-bus instead of re-implementing it yourself.
 See :meth:`add_verification_components() <vunit.ui.VUnit.add_verification_components>` and :ref:`vc_user_guide`.
 
 .. NOTE::
-  The VCL depends on both the Communication Library and OSVVM, which are added implicitly.
+  The VCL depends on both the Communication Library and the vunit-osvvm package, which are added implicitly.
 
 Random
 ------
 
 VUnit provides random integer vector and pointer generation, based on built-in :ref:`Data Types <data_types_library>`
-and OSVVM.
+and the external vunit-osvvm package.
 
 See :meth:`add_random() <vunit.ui.VUnit.add_random>`.
-
-OSVVM
------
-
-VUnit includes the core of `OSVVM <https://github.com/osvvm/>`__ as a submodule and internal dependency of optional
-libraries such as Random or Verification Components.
-However, it can be added explicitly through :meth:`add_osvvm() <vunit.ui.VUnit.add_osvvm>`.
-
-Moreover, multiple approaches are supported for using `OSVVMLibraries <https://github.com/OSVVM/OsvvmLibraries>`__ in
-VUnit.
-See :ref:`OSVB: Examples » SISO AXI4 Stream <osvb:Examples:AXI4Stream>`.
 
 System Verilog
 ==============

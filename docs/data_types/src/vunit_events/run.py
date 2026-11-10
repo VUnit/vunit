@@ -121,7 +121,7 @@ class LogRegistry:
 
 
 vu = VUnit.from_argv()
-vu.add_osvvm()
+vu.add_package("vunit-osvvm")
 vu.add_verification_components()
 vu.enable_location_preprocessing()
 

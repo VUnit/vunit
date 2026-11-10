@@ -14,7 +14,7 @@ from os import environ, listdir, pathsep
 import locale
 import subprocess
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 from ..ostools import Process, simplify_path
 from ..exceptions import CompileError
 from ..color_printer import NO_COLOR_PRINTER
@@ -62,9 +62,23 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
     # True if simulator supports ANSI colors in GUI mode
     supports_colors_in_gui = False
 
+    # The path prefix the interface was built with, set by the interfaces having one
+    _prefix: Optional[str] = None
+
     def __init__(self, output_path, gui):
         self._output_path = output_path
         self._gui = gui
+
+    @property
+    def prefix(self) -> Optional[str]:
+        """
+        The path prefix the executables of the simulator were found in, None for an
+        interface not built with one.
+
+        A simulator hook of a VUnit package is given this interface and can use the prefix
+        to reach what the simulator installation itself provides.
+        """
+        return self._prefix
 
     @property
     def output_path(self):
@@ -159,12 +173,6 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
             if all([path0 in paths for paths in all_paths] + [constraint(path0) for constraint in constraints]):
                 return path0
         return None
-
-    @classmethod
-    def get_osvvm_coverage_api(cls):
-        """
-        Returns simulator name when OSVVM coverage API is supported, None otherwise.
-        """
 
     @classmethod
     def supports_vhdl_package_generics(cls):
@@ -361,6 +369,7 @@ def check_output(command, env=None):
     """
     Wrapper arround subprocess.check_output
     """
+
     def _decode(data: bytes) -> str:
         """Decode tool output robustly across platforms.
 
@@ -370,10 +379,12 @@ def check_output(command, env=None):
 
         # Deduplicate via dict.fromkeys to avoid trying utf-8 twice
         # when locale.getpreferredencoding() returns "UTF-8".
-        encodings_to_try = dict.fromkeys([
-            "utf-8",
-            locale.getpreferredencoding(False),
-        ])
+        encodings_to_try = dict.fromkeys(
+            [
+                "utf-8",
+                locale.getpreferredencoding(False),
+            ]
+        )
 
         for encoding in encodings_to_try:
             try:

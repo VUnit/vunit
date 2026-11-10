@@ -18,16 +18,17 @@ import json
 import os
 import ast
 import pickle
-from typing import Optional, Set, Union, Iterable
+from typing import Iterable, List, Optional, Set, Union
 from pathlib import Path
 from fnmatch import fnmatch
 from glob import glob
 
 from ..database import PickledDataBase, DataBase
 from .. import ostools
-from ..vunit_cli import VUnitCLI
+from ..vunit_cli import VUnitCLI, _create_argument_parser
 from ..sim_if.factory import SIMULATOR_FACTORY
 from ..sim_if import SimulatorInterface
+from ..sim_if.hooks import SimulatorHooks
 from ..color_printer import COLOR_PRINTER, NO_COLOR_PRINTER
 
 from ..project import Project
@@ -36,6 +37,7 @@ from ..location_preprocessor import LocationPreprocessor
 from ..check_preprocessor import CheckPreprocessor
 from ..parsing.encodings import HDL_FILE_ENCODING
 from ..builtins import Builtins
+from ..packages import add_package as add_vunit_package
 from ..vhdl_standard import VHDL, VHDLStandard
 from ..test.bench_list import TestBenchList
 from ..test.report import TestReport
@@ -47,6 +49,17 @@ from .common import LOGGER, TEST_OUTPUT_PATH, select_vhdl_standard, check_not_em
 from .source import SourceFile, SourceFileList
 from .library import Library, LibraryList
 from .results import Results
+
+
+def _find_run_script_path() -> Optional[Path]:
+    """
+    Return the path of the run script, the file Python was started with, or None if Python was
+    not started with a script file, for example with python -c or in an interactive session.
+    """
+    main_file = getattr(sys.modules.get("__main__"), "__file__", None)
+    if main_file is None or not Path(main_file).is_file():
+        return None
+    return Path(main_file).resolve()
 
 
 class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-public-methods
@@ -88,8 +101,12 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
           functionality.
           See :vunit_issue:`777`.
         """
-        args = VUnitCLI().parse_args(argv=argv)
-        return cls.from_args(args, vhdl_standard=vhdl_standard)
+        # Simulator packages added later may bring command line arguments of their own. Parse what is known
+        # now (no prefix matching, it would take their options for built-in ones) and strictly once selected.
+        args, _ = _create_argument_parser(add_help=False, allow_abbrev=False).parse_known_args(argv)
+        vunit_obj = cls.from_args(args, vhdl_standard=vhdl_standard)
+        vunit_obj._argv = sys.argv[1:] if argv is None else list(argv)  # pylint: disable=protected-access
+        return vunit_obj
 
     @classmethod
     def from_args(
@@ -138,49 +155,91 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         vhdl_standard: Optional[str] = None,
     ):
         self._args = args
-        self._configure_logging(args.log_level)
-        self._output_path = str(Path(args.output_path).resolve())
+        self._argv: Optional[List[str]] = None  # Set by from_argv to parse again when the simulator is selected
+        self._simulator_selected = False
+        self._run_script_path = _find_run_script_path()
 
-        if args.no_color:
-            self._printer = NO_COLOR_PRINTER
-        else:
-            self._printer = COLOR_PRINTER
+        # The simulator hooks registered by the packages of this project
+        self._simulator_hooks = SimulatorHooks()
 
-        self._test_filter = self._make_test_filter(args, args.test_patterns)
         self._vhdl_standard: VHDLStandard = select_vhdl_standard(vhdl_standard)
 
         self._preprocessors = []  # type: ignore
 
-        self._simulator_class = SIMULATOR_FACTORY.select_simulator()
-
-        # Use default simulator options if no simulator was present
-        if self._simulator_class is None:
-            simulator_class = SimulatorInterface
-            self._simulator_output_path = str(Path(self._output_path) / "none")
-        else:
-            simulator_class = self._simulator_class
-            self._simulator_output_path = str(Path(self._output_path) / simulator_class.name)
-
-        self._create_output_path(args.clean)
+        # Needs the simulator only when something is added, which selects it
+        self._builtins = Builtins(self, self._vhdl_standard)
 
         self._database_version = (11, sys.version)
         self._pickled_database_version = (self._database_version[0], pickle.HIGHEST_PROTOCOL)
-
-        self._database = self._create_database()
-        self._project = Project(
-            database=self._database,
-            depend_on_package_body=simulator_class.package_users_depend_on_bodies,
-        )
-
-        self._test_bench_list = TestBenchList(database=self._database)
-
-        self._builtins = Builtins(self, self._vhdl_standard, simulator_class)
 
         self._dependency_graph = None
         self._include_in_test_pattern: Optional[Iterable[Union[str, Path]]] = None
         self._exclude_from_test_pattern: Optional[Iterable[Union[str, Path]]] = None
         self._latest_dependency_updates = None
         self._test_history = None
+
+    def _select_simulator(self):
+        """
+        Select the simulator and create what depends on it, once. Called by the first use of the
+        simulator, such that packages providing simulators can be added until then.
+        """
+        # pylint: disable=attribute-defined-outside-init
+        if self._simulator_selected:
+            return
+        self._simulator_selected = True
+
+        # Everything depending on the command line is set up here since simulator packages
+        # can add arguments until the simulator is selected
+        if self._argv is not None:
+            self._args = VUnitCLI().parse_args(argv=self._argv)
+        args = self._args
+
+        self._configure_logging(args.log_level)
+        self._output_path = str(Path(args.output_path).resolve())
+        self._printer = NO_COLOR_PRINTER if args.no_color else COLOR_PRINTER
+        self._test_filter = self._make_test_filter(args, args.test_patterns)
+        self._create_output_path(args.clean)
+        self._database = self._create_database()
+        self._test_bench_list = TestBenchList(database=self._database)
+
+        self._simulator_class_ = SIMULATOR_FACTORY.select_simulator()
+
+        # Use default simulator options if no simulator was present
+        if self._simulator_class_ is None:
+            simulator_class = SimulatorInterface
+            self._simulator_output_path_ = str(Path(self._output_path) / "none")
+        else:
+            simulator_class = self._simulator_class_
+            self._simulator_output_path_ = str(Path(self._output_path) / simulator_class.name)
+
+        self._project_ = Project(
+            database=self._database,
+            depend_on_package_body=simulator_class.package_users_depend_on_bodies,
+        )
+        self._builtins.create_vunit_lib()
+
+    def __getattr__(self, name):
+        # State set up when the simulator is selected
+        if name in ("_output_path", "_printer", "_test_filter", "_database", "_test_bench_list"):
+            if not self.__dict__.get("_simulator_selected", True):
+                self._select_simulator()
+                return getattr(self, name)
+        raise AttributeError(f"{type(self).__name__!r} object has no attribute {name!r}")
+
+    @property
+    def _simulator_class(self):
+        self._select_simulator()
+        return self._simulator_class_
+
+    @property
+    def _simulator_output_path(self):
+        self._select_simulator()
+        return self._simulator_output_path_
+
+    @property
+    def _project(self):
+        self._select_simulator()
+        return self._project_
 
     def _create_database(self):
         """
@@ -827,7 +886,9 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         if isinstance(self._args.test_patterns, list):
             test_patterns += self._args.test_patterns
 
-        self._test_filter = self._make_test_filter(self._args, test_patterns)
+        self._test_filter = self._make_test_filter(  # pylint: disable=attribute-defined-outside-init
+            self._args, test_patterns
+        )
 
     def _create_simulator_if(self):
         """
@@ -845,7 +906,9 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         if not Path(self._simulator_output_path).exists():
             os.makedirs(self._simulator_output_path)
 
-        return self._simulator_class.from_args(args=self._args, output_path=self._simulator_output_path)
+        simulator_if = self._simulator_class.from_args(args=self._args, output_path=self._simulator_output_path)
+        simulator_if.simulator_hooks = self._simulator_hooks
+        return simulator_if
 
     def _get_test_history(self, simulator_if):
         """
@@ -1232,6 +1295,7 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         runner = TestRunner(
             report,
             str(Path(self._output_path) / TEST_OUTPUT_PATH),
+            self._run_script_path,
             verbosity=verbosity,
             num_threads=self._args.num_threads,
             fail_fast=self._args.fail_fast,
@@ -1277,10 +1341,26 @@ other preprocessors. Lowest value first. The order between preprocessors with th
         """
         self._builtins.add_vhdl_builtins(external=external, use_external_log=use_external_log)
 
-    def add_package(self, package_name: str) -> None:
-        """Add VUnit package."""
+    def add_package(self, package_name: str, allow_setup: bool = False) -> None:
+        """
+        Add a VUnit package, that is an installed Python package providing HDL code.
 
-        self._builtins.add_package(package_name)
+        See :ref:`vunit_packages` for how a package is created.
+
+        :param package_name: The name of the Python package. Dashes and dots are, just like for
+                             PyPI package names, equivalent to underscores.
+        :param allow_setup: Allow the setup function of the package to run. Defaults to ``False``,
+                            which makes a package declaring a setup function an error such that no
+                            Python code of a package runs unless the run script asks for it.
+
+        :example:
+
+        .. code-block:: python
+
+            VU.add_package("vunit-json-for-vhdl")
+        """
+
+        add_vunit_package(self, package_name, allow_setup=allow_setup)
 
     def add_com(self):
         """
@@ -1308,16 +1388,23 @@ other preprocessors. Lowest value first. The order between preprocessors with th
 
     def add_osvvm(self):
         """
-        Add osvvm library
+        Removed osvvm library
         """
-        self._builtins.add("osvvm")
+        raise RuntimeError("""\
+add_osvvm() has been removed. OSVVM support is now provided through a separate package.
+
+Install it with:
+
+pip install vunit-osvvm
+
+Then replace the add_osvvm() call with add_package("vunit-osvvm").
+""")
 
     def add_json4vhdl(self):
         """
         Removed json4vhdl add-on.
         """
-        raise RuntimeError(
-            """\
+        raise RuntimeError("""\
 add_json4vhdl() has been removed. JSON-for-VHDL support is now provided through a separate package.
 
 Install it with:
@@ -1325,8 +1412,7 @@ Install it with:
 pip install vunit-json-for-vhdl
 
 Then replace the add_json4vhdl() call with add_package("vunit-json-for-vhdl").
-"""
-        )
+""")
 
     def update_test_pattern(
         self,

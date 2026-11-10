@@ -20,7 +20,7 @@ jobs:
       fail-fast: false
       matrix:
         task: [
-          { tag: llvm,  pkg: llvm-9 },
+          { tag: llvm,  pkg: llvm-14 },
           { tag: mcode, pkg: mcode  },
         ]
     runs-on: ubuntu-latest
@@ -68,7 +68,7 @@ jobs:
          && rm -rf /var/lib/apt/lists/*
 
         RUN python3 -m pip install -U pip --break-system-packages --progress-bar off \
-         && python3 -m pip install -U tox colorama coverage --break-system-packages --progress-bar off
+         && python3 -m pip install -U tox colorama vunit-osvvm coverage --break-system-packages --progress-bar off
         EOF
 
     - name: '🛰️ Push container image to registry'

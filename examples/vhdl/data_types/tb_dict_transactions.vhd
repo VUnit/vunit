@@ -40,7 +40,7 @@ begin
     -- to 10 before the first rising edge of clk. Global dicts can easily lead to
     -- data races if one is not careful. There are better ways to signal completion but this
     -- is an example of dicts so that's why we're using it.
-    wait until rising_edge(clk) and get(global, "pending transactions") = 0;
+    wait until rising_edge(clk) and get_integer(global, "pending transactions") = 0;
 
     test_runner_cleanup(runner);
   end process;
@@ -51,16 +51,16 @@ begin
   begin
     -- There is one overloaded set procedure for each type. You can also use the type specific alias,
     -- in this case set_integer. Type specific aliases also exist for the get functions, get_integer for example.
-    set(global, "pending transactions", rnd.RandInt(10, 100));
+    set_integer(global, "pending transactions", rnd.RandInt(10, 100));
 
-    generate_random_read_and_write_transactions: for i in 1 to get(global, "pending transactions") loop
+    generate_random_read_and_write_transactions: for i in 1 to get_integer(global, "pending transactions") loop
       -- Dicts can contain a mix of data types. In this case the dict represents a bus initiator
       -- read or write transaction. All transactions have an integer address and write transactions
       -- also have a std_ulogic_vector data word.
       transaction := new_dict;
-      set(transaction, "address", rnd.RandInt(0, 2 ** 20 - 1));
+      set_integer(transaction, "address", rnd.RandInt(0, 2 ** 20 - 1));
       if rnd.RandBool then
-        set(transaction, "data", rnd.RandSlv(32));
+        set_std_ulogic_vector(transaction, "data", rnd.RandSlv(32));
       end if;
 
       -- Dicts can be used with other complex data types, for example pushed into a queue. push_ref
@@ -85,7 +85,7 @@ begin
     -- "Stored value for address is of type integer but get function for std_ulogic_vector was called.
     --
     -- It's also possible to be explicit by using get_integer
-    address := get(transaction, "address");
+    address := get_integer(transaction, "address");
 
     if has_key(transaction, "data") then
       info("Writing 0x" & to_hstring(get_std_ulogic_vector(transaction, "data")) & " to address " & to_string(address));
@@ -99,7 +99,7 @@ begin
 
     end if;
 
-    set(global, "pending transactions", get(global, "pending transactions") - 1);
+    set_integer(global, "pending transactions", get_integer(global, "pending transactions") - 1);
     deallocate(transaction); -- Garbage collection
   end process;
 

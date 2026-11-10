@@ -9,15 +9,13 @@ Functions to add builtin VHDL code to a project for compilation
 """
 
 from pathlib import Path
-from glob import glob
 import logging
 import importlib
-import importlib.resources
 import importlib.util
 import re
 import operator
 from dataclasses import dataclass
-from typing import TypeVar, Any, Tuple
+from typing import Any, Optional, Tuple
 
 try:
     # Python 3.11+
@@ -28,12 +26,20 @@ except ModuleNotFoundError:
 from vunit.vhdl_standard import VHDL, VHDLStandard
 from vunit.ui.common import get_checked_file_names_from_globs
 from vunit.about import version, VUnitVersion
-
+from vunit.package_context import PackageContext
+from vunit.sim_if.activehdl import ActiveHDLVersion
+from vunit.sim_if.ghdl import GHDLVersion
+from vunit.sim_if.modelsim import ModelSimVersion
+from vunit.sim_if.nvc import NVCVersion
+from vunit.sim_if.rivierapro import RivieraProVersion
 
 LOGGER = logging.getLogger(__name__)
 
 VHDL_PATH = (Path(__file__).parent / "vhdl").resolve()
 VERILOG_PATH = (Path(__file__).parent / "verilog").resolve()
+
+# The setup function of a package is given on the format module:function
+RE_SETUP = re.compile(r"^[A-Za-z_]\w*(\.[A-Za-z_]\w*)*:[A-Za-z_]\w*$")
 
 
 @dataclass(frozen=True)
@@ -42,7 +48,119 @@ class ValidationError:
     message: str
 
 
-VersionT = TypeVar("VersionT", VHDLStandard, VUnitVersion)
+SIMULATOR_VERSION_MARKERS = {
+    "activehdl_version": ("activehdl", ActiveHDLVersion),
+    "ghdl_version": ("ghdl", GHDLVersion),
+    "modelsim_version": ("modelsim", ModelSimVersion),
+    "nvc_version": ("nvc", NVCVersion),
+    "rivierapro_version": ("rivierapro", RivieraProVersion),
+}
+
+
+class _MarkerExpressionParser:
+    """Parse the supported subset of PEP 508 marker expressions."""
+
+    _TOKEN_RE = re.compile(
+        r"(?P<space>\s+)|(?P<operator>===|~=|=>|<=|>=|==|!=|[<>=])|(?P<left>\()|(?P<right>\))|"
+        r"(?P<keyword>and\b|or\b)|(?P<identifier>[A-Za-z_][A-Za-z0-9_]*)|"
+        r"(?P<string>\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*')"
+    )
+    _SUPPORTED_OPERATORS = {"<", "<=", "==", "!=", ">=", ">"}
+
+    def __init__(self, expression: str):
+        """Initialize the parser and tokenize the marker expression."""
+        self._expression = expression
+        self._tokens = self._tokenize(expression)
+        self._index = 0
+
+    @classmethod
+    def _tokenize(cls, expression: str) -> list[tuple[str, str]]:
+        """Tokenize the marker expression according to the supported grammar."""
+        tokens = []
+        position = 0
+        while position < len(expression):
+            match = cls._TOKEN_RE.match(expression, position)
+            if match is None:
+                raise RuntimeError(f"Invalid marker expression syntax at position {position}: {expression!r}.")
+            position = match.end()
+            token_type = match.lastgroup
+            if token_type is not None and token_type != "space":
+                tokens.append((token_type, match.group(token_type)))
+        return tokens
+
+    def _peek(self) -> Optional[tuple[str, str]]:
+        """Return the next token without consuming it."""
+        return self._tokens[self._index] if self._index < len(self._tokens) else None
+
+    def _take(self, token_type: str) -> Optional[str]:
+        """Consume and return a token of the requested type when present."""
+        token = self._peek()
+        if token is not None and token[0] == token_type:
+            self._index += 1
+            return token[1]
+        return None
+
+    def parse(self) -> tuple:
+        """Parse the full marker expression and return the syntax tree."""
+        if not self._tokens:
+            raise RuntimeError(f"Invalid marker expression syntax: {self._expression!r} is empty.")
+        result = self._parse_or()
+        if self._peek() is not None:
+            self._syntax_error("unexpected token")
+        return result
+
+    def _parse_or(self) -> tuple:
+        """Parse an OR expression."""
+        result = self._parse_and()
+        while self._peek() == ("keyword", "or"):
+            self._index += 1
+            result = ("or", result, self._parse_and())
+        return result
+
+    def _parse_and(self) -> tuple:
+        """Parse an AND expression."""
+        result = self._parse_comparison()
+        while self._peek() == ("keyword", "and"):
+            self._index += 1
+            result = ("and", result, self._parse_comparison())
+        return result
+
+    def _parse_comparison(self) -> tuple:
+        """Parse a single comparison expression."""
+        if self._take("left") is not None:
+            result = self._parse_or()
+            if self._take("right") is None:
+                self._syntax_error("expected ')'")
+            return result
+
+        marker = self._take("identifier")
+        if marker is None:
+            self._syntax_error("expected a marker name")
+
+        operator_token = self._take("operator")
+        if operator_token is None:
+            self._syntax_error("expected a comparison operator")
+        if operator_token not in self._SUPPORTED_OPERATORS:
+            raise RuntimeError(f"Unsupported marker comparison operator: {operator_token}.")
+
+        value_token = self._take("string")
+        if value_token is None:
+            self._syntax_error("expected a quoted string value")
+            # This is to satisfy the type checker. _syntax_error always raises an exception, so the following line is
+            # never reached.
+            assert value_token is not None
+
+        value = re.sub(r"\\([\\'\"])", r"\1", value_token[1:-1])
+        return ("compare", marker, operator_token, value)
+
+    def _syntax_error(self, reason: str) -> None:
+        """Raise a syntax error for the current parser state."""
+        token = self._peek()
+        location = f" near {token[1]!r}" if token is not None else " at end of expression"
+        raise RuntimeError(f"Invalid marker expression syntax: {reason}{location} in {self._expression!r}.")
+
+
+_SELECTED = object()  # The simulator class is the one VUnit selects
 
 
 class Builtins(object):
@@ -50,11 +168,11 @@ class Builtins(object):
     Manage VUnit builtins and their dependencies
     """
 
-    def __init__(self, vunit_obj, vhdl_standard: VHDLStandard, simulator_class):
+    def __init__(self, vunit_obj, vhdl_standard: VHDLStandard, simulator_class=_SELECTED):
         self._vunit_obj = vunit_obj
-        self._vunit_lib = vunit_obj.add_library("vunit_lib")
+        self._vunit_lib_ = None
         self._vhdl_standard = vhdl_standard
-        self._simulator_class = simulator_class
+        self._simulator_class_ = simulator_class
         self._builtins_adder = BuiltinsAdder()
 
         def add(name, deps=tuple()):
@@ -62,9 +180,28 @@ class Builtins(object):
 
         add("array_util")  # Removed in v5.0.0
         add("com")
-        add("verification_components", ["com", "osvvm"])
-        add("osvvm")
-        add("random", ["osvvm"])
+        add("verification_components", ["com", "vunit_osvvm"])
+        add("vunit_osvvm")
+        add("random", ["vunit_osvvm"])
+
+    @property
+    def _vunit_lib(self):
+        """The library of VUnit itself, created when first needed"""
+        # Created when first needed since that selects the simulator
+        if self._vunit_lib_ is None:
+            self._vunit_lib_ = self._vunit_obj.add_library("vunit_lib")
+        return self._vunit_lib_
+
+    def create_vunit_lib(self):
+        """Create the library of VUnit itself"""
+        return self._vunit_lib
+
+    @property
+    def _simulator_class(self):
+        """The simulator class given explicitly, else the selected one which is looked up when first needed"""
+        if self._simulator_class_ is not _SELECTED:
+            return self._simulator_class_
+        return self._vunit_obj._simulator_class  # pylint: disable=protected-access
 
     def add(self, name, args=None):
         self._builtins_adder.add(name, args)
@@ -79,16 +216,16 @@ class Builtins(object):
         "<": operator.lt,
     }
 
-    def _meets_required_version(
+    def _meets_version_specifier(
         self,
-        version_class: type[VersionT],
+        version_class: type,
         current_version_str: str,
-        required_version_specifier: str,
+        version_specifier: str,
     ) -> bool:
-        """Check if the current VUnit version meets the required version."""
+        """Check whether a version satisfies a comma-separated specifier."""
 
         current_version = version_class(current_version_str)
-        requirement_list = required_version_specifier.split(",")
+        requirement_list = version_specifier.split(",")
         for requirement in requirement_list:
             requirement = requirement.strip()
             # Skip empty requirements since trailing commas are allowed
@@ -115,6 +252,72 @@ class Builtins(object):
 
         return True
 
+    def _current_simulator_marker(self, marker: str, current_value: Optional[str]) -> Optional[str]:
+        """The value of a simulator marker, which selects the simulator, other markers are returned as is."""
+        if marker == "simulator":
+            return getattr(self._simulator_class, "name", None)
+        if marker in SIMULATOR_VERSION_MARKERS:
+            simulator_name, _ = SIMULATOR_VERSION_MARKERS[marker]
+            if getattr(self._simulator_class, "name", None) == simulator_name:
+                return str(self._simulator_class.determine_version(self._simulator_class.find_prefix()))
+        return current_value
+
+    def _evaluate_marker_expression(self, expression: str, vhdl_standard: Optional[VHDLStandard] = None) -> bool:
+        """Evaluate an expression against the explicitly supported environment markers."""
+        syntax = _MarkerExpressionParser(expression).parse()
+        marker_values = {
+            "vunit": (version(), VUnitVersion),
+            "vhdl": (str(vhdl_standard if vhdl_standard is not None else self._vhdl_standard), VHDLStandard),
+            "simulator": (None, None),  # Set when used, see evaluate
+        }
+        marker_values.update(
+            {marker: (None, version_class) for marker, (_, version_class) in SIMULATOR_VERSION_MARKERS.items()}
+        )
+
+        def evaluate(node: tuple) -> bool:
+            kind = node[0]
+            if kind == "compare":
+                _, marker, version_operator, required_value = node
+                if marker not in marker_values:
+                    raise RuntimeError(f"Unknown environment marker {marker!r}.")
+                current_value, version_class = marker_values[marker]
+                current_value = self._current_simulator_marker(marker, current_value)
+                if current_value is None:
+                    if version_operator == "==":
+                        return False
+                    if version_operator == "!=":
+                        return True
+                    if marker in SIMULATOR_VERSION_MARKERS:
+                        simulator_name, _ = SIMULATOR_VERSION_MARKERS[marker]
+                        raise RuntimeError(
+                            f"The {marker} marker is unavailable because {simulator_name} was not selected."
+                        )
+                    raise RuntimeError("The simulator marker is unavailable because no simulator was selected.")
+                try:
+                    if version_class is not None:
+                        return self._meets_version_specifier(
+                            version_class, current_value, f"{version_operator}{required_value}"
+                        )
+                    return self._OPERATORS[version_operator](current_value, required_value)
+                except (TypeError, ValueError) as exc:
+                    raise RuntimeError(f"Invalid value {required_value!r} for environment marker {marker!r}.") from exc
+            if kind == "and":
+                return evaluate(node[1]) and evaluate(node[2])
+            if kind == "or":
+                return evaluate(node[1]) or evaluate(node[2])
+            raise AssertionError(f"Unknown expression node: {kind}")
+
+        def validate_markers(node: tuple) -> None:
+            if node[0] == "compare":
+                if node[1] not in marker_values:
+                    raise RuntimeError(f"Unknown environment marker {node[1]!r}.")
+                return
+            validate_markers(node[1])
+            validate_markers(node[2])
+
+        validate_markers(syntax)
+        return evaluate(syntax)
+
     @staticmethod
     def _to_toml_type(python_type: type) -> Tuple[str, str]:
         """Translate Python type to TOML type terminology."""
@@ -127,31 +330,73 @@ class Builtins(object):
         }
         return mapping.get(python_type, (python_type.__name__, "a"))
 
-    def _check_valid_keys(
-        self, data: dict[str, Any], valid: dict[str, type], path: str = "TOML"
-    ) -> list[ValidationError]:
+    @staticmethod
+    def _check_valid_keys(data: dict[str, Any], valid: dict[str, type], path: str = "TOML") -> list[ValidationError]:
         """Check that TOML keys are valid, both name and type."""
         errors = []
         for key, value in data.items():
             if key not in valid:
-                toml_type, _ = self._to_toml_type(type(value))
+                toml_type, _ = Builtins._to_toml_type(type(value))
                 errors.append(ValidationError(path=f"{path}.{key}", message=f"Unexpected {toml_type} '{key}'."))
             elif not isinstance(value, valid[key]):
-                toml_type, article = self._to_toml_type(valid[key])
+                toml_type, article = Builtins._to_toml_type(valid[key])
                 errors.append(ValidationError(path=f"{path}.{key}", message=f"'{key}' must be {article} {toml_type}."))
 
         return errors
 
+    @staticmethod
     def _check_mandatory_keys(
-        self, data: dict[str, Any], mandatory: dict[str, type], path: str = "TOML"
+        data: dict[str, Any], mandatory: dict[str, type], path: str = "TOML"
     ) -> list[ValidationError]:
         """Check that mandatory TOML keys are present."""
         missing_keys = [key for key in mandatory.keys() if key not in data]
         errors = []
 
         for key in missing_keys:
-            toml_type, _ = self._to_toml_type(mandatory[key])
+            toml_type, _ = Builtins._to_toml_type(mandatory[key])
             errors.append(ValidationError(path=f"{path}", message=f"Missing mandatory {toml_type} '{key}'."))
+
+        return errors
+
+    @staticmethod
+    def _check_compile_options(compile_options: list, path: str) -> list[ValidationError]:
+        """Check that compile options are pairs of a name and a list of strings."""
+        errors = []
+        for idx, option in enumerate(compile_options):
+            option_path = f"{path}[{idx}]"
+            if not isinstance(option, list) or len(option) != 2:
+                errors.append(
+                    ValidationError(
+                        path=option_path,
+                        message="Compile option must be an array containing a string and an array of strings.",
+                    )
+                )
+                continue
+
+            name, values = option
+            if not isinstance(name, str):
+                errors.append(
+                    ValidationError(
+                        path=f"{option_path}[0]",
+                        message="Compile option name must be a string.",
+                    )
+                )
+            if not isinstance(values, list):
+                errors.append(
+                    ValidationError(
+                        path=f"{option_path}[1]",
+                        message="Compile option value must be an array of strings.",
+                    )
+                )
+            else:
+                for value_idx, value in enumerate(values):
+                    if not isinstance(value, str):
+                        errors.append(
+                            ValidationError(
+                                path=f"{option_path}[1][{value_idx}]",
+                                message="Compile option value must be a string.",
+                            )
+                        )
 
         return errors
 
@@ -164,31 +409,62 @@ class Builtins(object):
 
             raise RuntimeError(f"Invalid vunit_pkg.toml: {len(errors)} error(s) found.")
 
-    def _validate_toml(self, data: dict) -> None:
+    @staticmethod
+    def _validate_toml(data: dict) -> None:
         """Validate that the TOML specification has the correct format."""
         errors = []
 
-        errors.extend(self._check_mandatory_keys(data, mandatory={"package": dict}, path="TOML"))
-        errors.extend(self._check_valid_keys(data, valid={"package": dict}, path="TOML"))
+        errors.extend(Builtins._check_mandatory_keys(data, mandatory={"package": dict}, path="TOML"))
+        errors.extend(Builtins._check_valid_keys(data, valid={"package": dict}, path="TOML"))
 
-        self._log_validation_errors(errors)
+        Builtins._log_validation_errors(errors)
 
         package = data["package"]
         errors.extend(
-            self._check_valid_keys(
+            Builtins._check_valid_keys(
                 package,
-                valid={"requires-vunit": str, "requires-vhdl": str, "library": str, "sources": list},
+                valid={
+                    "requires-vunit": str,
+                    "requires-vhdl": str,
+                    "requires": str,
+                    "library": str,
+                    "sources": list,
+                    "setup": str,
+                    "simulator": str,
+                    "compile_option": list,
+                },
                 path="package",
             )
         )
 
+        if isinstance(package.get("compile_option"), list):
+            errors.extend(Builtins._check_compile_options(package["compile_option"], "package.compile_option"))
+
+        # pylint: disable=too-many-nested-blocks
         if "sources" in package:
-            errors.extend(self._check_mandatory_keys(package, mandatory={"library": str}, path="package"))
+            errors.extend(Builtins._check_mandatory_keys(package, mandatory={"library": str}, path="package"))
 
             for idx, source in enumerate(package["sources"]):
                 errors.extend(
-                    self._check_mandatory_keys(source, mandatory={"include": list}, path=f"package.sources[{idx}]")
+                    Builtins._check_valid_keys(
+                        source,
+                        valid={"include": list, "library": str, "compile_option": list, "when": str},
+                        path=f"package.sources[{idx}]",
+                    )
                 )
+                if isinstance(source.get("compile_option"), list):
+                    errors.extend(
+                        Builtins._check_compile_options(
+                            source["compile_option"], f"package.sources[{idx}].compile_option"
+                        )
+                    )
+                if "include" not in source:
+                    errors.append(
+                        ValidationError(
+                            path=f"package.sources[{idx}]",
+                            message="Missing mandatory array 'include'.",
+                        )
+                    )
                 if "include" in source:
                     for list_idx, path in enumerate(source["include"]):
                         if not isinstance(path, str):
@@ -199,7 +475,23 @@ class Builtins(object):
                                 )
                             )
 
-        self._log_validation_errors(errors)
+        if isinstance(package.get("setup"), str) and not RE_SETUP.match(package["setup"]):
+            errors.append(
+                ValidationError(
+                    path="package.setup",
+                    message="'setup' must be on the format 'module:function'.",
+                )
+            )
+
+        if isinstance(package.get("simulator"), str) and not RE_SETUP.match(package["simulator"]):
+            errors.append(
+                ValidationError(
+                    path="package.simulator",
+                    message="'simulator' must be on the format 'module:class'.",
+                )
+            )
+
+        Builtins._log_validation_errors(errors)
 
     @staticmethod
     def _read_toml(root: Path, package_name: str) -> dict:
@@ -222,7 +514,12 @@ class Builtins(object):
         # find_spec is safe since it does not execute the package __init__.py file
         spec = importlib.util.find_spec(package_name)
         if spec is None:
-            raise RuntimeError(f"Could not find package {package_name}.")
+            raise RuntimeError(f"""
+Could not find package '{package_name}'.
+Install it in the Python environment used to run this script:
+
+    python -m pip install {package_name}
+""")
 
         if spec.submodule_search_locations is not None and spec.origin is None:
             raise RuntimeError(f"Package {package_name} is a namespace package, which is currently not supported.")
@@ -232,8 +529,25 @@ class Builtins(object):
 
         raise RuntimeError(f"Failed to find location of package {package_name}.")
 
-    def add_package(self, package_name: str) -> None:
-        """Add VUnit package."""
+    @staticmethod
+    def read_package(package_name: str) -> Tuple[str, dict]:
+        """Return the normalized name and the validated package table of a package."""
+        package_name = package_name.replace("-", "_").replace(".", "_")
+        data = Builtins._read_toml(Builtins._find_package(package_name), package_name)
+        Builtins._validate_toml(data)
+        return package_name, data["package"]
+
+    def add_package_content(  # pylint: disable=too-many-locals
+        self, package_name: str, allow_setup: bool = False
+    ) -> None:
+        """
+        Add the sources of a VUnit package and, if allowed, run its setup function.
+
+        :param package_name: The name of the installed Python package. Dashes, dots and underscores are
+                             equivalent, just like for PyPI package names.
+        :param allow_setup: Run the setup function declared by the package. Adding a package declaring one
+                            without ``allow_setup=True`` is an error.
+        """
         # The following future improvements are planned:
         # - Support for user specified library name
         # - Support for shared libraries across multiple packages
@@ -249,40 +563,22 @@ class Builtins(object):
 
         package = data["package"]
         vunit_version = version()
-        if not self._meets_required_version(VUnitVersion, vunit_version, package.get("requires-vunit", "")):
+        if not self._meets_version_specifier(VUnitVersion, vunit_version, package.get("requires-vunit", "")):
             raise RuntimeError(
                 f"Package {package_name} requires VUnit version "
                 f"{package['requires-vunit']} but current version is {vunit_version}."
             )
 
-        package_vhdl_standard = package.get("requires-vhdl", "")
-        if not self._meets_required_version(VHDLStandard, str(self._vhdl_standard), package_vhdl_standard):
-            use_vhdl_standard = None
-            for vhdl_standard in VHDL.STANDARDS:
-                if self._meets_required_version(VHDLStandard, str(vhdl_standard), package_vhdl_standard):
-                    use_vhdl_standard = str(vhdl_standard)
-                    break
+        use_vhdl_standard = self._find_vhdl_standard(package_name, package)
 
-            if not use_vhdl_standard:
-                raise RuntimeError(
-                    f"Package {package_name} requires VHDL standard "
-                    f"{package['requires-vhdl']}. Failed to find a compatible standard."
-                )
-
-            LOGGER.warning(
-                "Package %s requires VHDL standard %s but current standard is %s. "
-                "Proceeding with mixed-language compilation using VHDL standard %s for the package.",
-                package_name,
-                package["requires-vhdl"],
-                self._vhdl_standard,
-                use_vhdl_standard,
-            )
-
-        else:
-            use_vhdl_standard = None
-
-        sources = package.get("sources", [])
+        library = None
+        sources = [
+            source
+            for source in package.get("sources", [])
+            if "when" not in source or self._evaluate_marker_expression(source["when"])
+        ]
         if sources:
+            package_compile_options = dict(package.get("compile_option", []))
             library_name = package.get("library")
             library = self._add_library_if_not_exist(
                 library_name,
@@ -292,9 +588,158 @@ class Builtins(object):
             if library is None:
                 return
 
+            libraries = {library_name.lower(): library}
             for source in sources:
-                for include in source["include"]:
-                    library.add_source_files(package_root / include, vhdl_standard=use_vhdl_standard)
+                source_library_name = source.get("library", library_name)
+                source_library = libraries.get(source_library_name.lower())
+                if source_library is None:
+                    source_library = self._add_library_if_not_exist(
+                        source_library_name,
+                        f"Library {source_library_name} previously defined. Skipping addition of {package_name}.",
+                    )
+                    if source_library is None:
+                        return
+                    libraries[source_library_name.lower()] = source_library
+
+                compile_options = package_compile_options.copy()
+                compile_options.update(source.get("compile_option", []))
+                for include in source.get("include", []):
+                    source_files = source_library.add_source_files(
+                        package_root / include, vhdl_standard=use_vhdl_standard
+                    )
+                    for name, value in compile_options.items():
+                        source_files.set_compile_option(name, value)
+
+        setup = package.get("setup")
+        if setup:
+            if not allow_setup:
+                raise RuntimeError(
+                    f"Package {package_name} requires running Python code when it is added ({setup}). "
+                    "Pass allow_setup=True to add_package to allow it."
+                )
+
+            self._call_setup(
+                package_name,
+                setup,
+                PackageContext(
+                    package_root,
+                    library,
+                    VHDL.standard(use_vhdl_standard) if use_vhdl_standard else self._vhdl_standard,
+                    Path(self._vunit_obj._output_path),  # pylint: disable=protected-access
+                    self._vunit_obj._run_script_path,  # pylint: disable=protected-access
+                    self._simulator_class,
+                    self._vunit_obj,
+                ),
+            )
+
+    def _find_vhdl_standard(self, package_name: str, package: dict) -> Optional[str]:
+        """
+        Find the VHDL standard to compile the sources of a package with.
+
+        The standard of the project is used when the package supports it, otherwise the first
+        standard the package supports, and None stands for the standard of the project.
+        """
+        package_vhdl_standard = package.get("requires-vhdl", "")
+        requires_expression = package.get("requires")
+        standard_order = {standard: index for index, standard in enumerate(VHDL.STANDARDS)}
+        current_standard_index = standard_order[self._vhdl_standard]
+        candidate_standards = [self._vhdl_standard] + [
+            *sorted(
+                (standard for standard in VHDL.STANDARDS if standard != self._vhdl_standard),
+                key=lambda standard: abs(standard_order[standard] - current_standard_index),
+            )
+        ]
+        unavailable_marker_errors = []
+
+        def meets_requires(standard: VHDLStandard) -> bool:
+            if requires_expression is None:
+                return True
+            try:
+                return self._evaluate_marker_expression(requires_expression, vhdl_standard=standard)
+            except RuntimeError as exc:
+                if "marker is unavailable" not in str(exc):
+                    raise
+                unavailable_marker_errors.append(exc)
+                return False
+
+        def meets_vhdl_requirement(standard: VHDLStandard) -> bool:
+            return self._meets_version_specifier(VHDLStandard, str(standard), package_vhdl_standard)
+
+        if meets_requires(self._vhdl_standard) and meets_vhdl_requirement(self._vhdl_standard):
+            return None
+
+        use_vhdl_standard = next(
+            (
+                str(standard)
+                for standard in candidate_standards[1:]
+                if meets_requires(standard) and meets_vhdl_requirement(standard)
+            ),
+            None,
+        )
+
+        if not use_vhdl_standard:
+            if requires_expression is not None:
+                requires_matches_any_standard = any(meets_requires(standard) for standard in candidate_standards)
+                if not requires_matches_any_standard:
+                    if unavailable_marker_errors:
+                        raise unavailable_marker_errors[0]
+                    raise RuntimeError(
+                        f"Package {package_name} does not satisfy requires expression {requires_expression!r} "
+                        "in the current environment."
+                    )
+            if package_vhdl_standard:
+                raise RuntimeError(
+                    f"Package {package_name} requires VHDL standard "
+                    f"{package_vhdl_standard}. Failed to find a compatible standard."
+                )
+            raise RuntimeError(
+                f"Package {package_name} does not satisfy requires expression {requires_expression!r} "
+                "in the current environment."
+            )
+
+        if package_vhdl_standard and not meets_vhdl_requirement(self._vhdl_standard):
+            LOGGER.warning(
+                "Package %s requires VHDL standard %s but current standard is %s. "
+                "Proceeding with mixed-language compilation using VHDL standard %s for the package.",
+                package_name,
+                package_vhdl_standard,
+                self._vhdl_standard,
+                use_vhdl_standard,
+            )
+        else:
+            LOGGER.warning(
+                "Package %s requires a VHDL standard matching requires expression %r but current standard is %s. "
+                "Proceeding with mixed-language compilation using VHDL standard %s for the package.",
+                package_name,
+                requires_expression,
+                self._vhdl_standard,
+                use_vhdl_standard,
+            )
+
+        return use_vhdl_standard
+
+    @staticmethod
+    def _call_setup(package_name: str, setup: str, context: PackageContext) -> None:
+        """Call the setup function of a package with its context."""
+        module_name, function_name = setup.split(":")
+
+        try:
+            module = importlib.import_module(module_name)
+        except ImportError as exc:
+            raise RuntimeError(
+                f"Failed to import module {module_name} of the setup function for package {package_name}."
+            ) from exc
+
+        function = getattr(module, function_name, None)
+        if not callable(function):
+            raise RuntimeError(
+                f"Could not find setup function {function_name} in module {module_name} for package {package_name}."
+            )
+
+        try:
+            function(context)
+        except Exception as exc:  # pylint: disable=broad-except
+            raise RuntimeError(f"Setup function {setup} for package {package_name} failed: {exc}") from exc
 
     def _add_files(self, pattern=None, allow_empty=True):
         """
@@ -389,64 +834,18 @@ class Builtins(object):
             return None
         return self._vunit_obj.add_library(library_name)
 
-    def _add_osvvm(self):
+    def _add_vunit_osvvm(self):
         """
-        Add osvvm library
+        Add vunit-osvvm package
         """
-        library = self._add_library_if_not_exist(
-            "osvvm", "Library 'OSVVM' previously defined. Skipping addition of builtin OSVVM (2023.04)."
-        )
-        if library is None:
-            return
 
-        simulator_coverage_api = self._simulator_class.get_osvvm_coverage_api()
-        supports_vhdl_package_generics = self._simulator_class.supports_vhdl_package_generics()
+        if importlib.util.find_spec("vunit_osvvm") is None:
+            raise RuntimeError("""\
+The required 'vunit-osvvm' VUnit package is missing. Install it in the same Python environment
+as VUnit with 'python -m pip install vunit-osvvm'.
+""")
 
-        if not osvvm_is_installed():
-            raise RuntimeError(
-                """
-Found no OSVVM VHDL files. Did you forget to run
-
-git submodule update --init --recursive
-
-in your VUnit Git repository? You have to do this first if installing using setup.py."""
-            )
-
-        for file_name in glob(str(VHDL_PATH / "osvvm" / "*.vhd")):
-            bname = Path(file_name).name
-
-            if (bname == "AlertLogPkg_body_BVUL.vhd") or ("2019" in bname):
-                continue
-
-            if ((simulator_coverage_api != "rivierapro") and (bname == "VendorCovApiPkg_Aldec.vhd")) or (
-                (simulator_coverage_api == "rivierapro") and (bname == "VendorCovApiPkg.vhd")
-            ):
-                continue
-
-            if not supports_vhdl_package_generics and (
-                bname
-                in [
-                    "ScoreboardGenericPkg.vhd",
-                    "ScoreboardPkg_int.vhd",
-                    "ScoreboardPkg_slv.vhd",
-                    "MemoryPkg.vhd",
-                    "MemoryGenericPkg.vhd",
-                ]
-            ):
-                continue
-
-            if supports_vhdl_package_generics and (
-                bname
-                in [
-                    "ScoreboardPkg_int_c.vhd",
-                    "ScoreboardPkg_slv_c.vhd",
-                    "MemoryPkg_c.vhd",
-                    "MemoryPkg_orig_c.vhd",
-                ]
-            ):
-                continue
-
-            library.add_source_files(file_name, preprocessors=[])
+        self._vunit_obj.add_package("vunit-osvvm")
 
     def _add_vhdl_logging(self, use_external_log):
         """
@@ -518,13 +917,6 @@ in your VUnit Git repository? You have to do this first if installing using setu
             "path",
         ):
             self._add_files(VHDL_PATH / path / "src" / "*.vhd")
-
-
-def osvvm_is_installed():
-    """
-    Checks if OSVVM is installed within the VUnit directory structure
-    """
-    return len(glob(str(VHDL_PATH / "osvvm" / "*.vhd"))) != 0
 
 
 def add_verilog_include_dir(include_dirs):

@@ -19,7 +19,6 @@ from subprocess import check_call
 
 from textwrap import indent
 
-
 ROOT = Path(__file__).parent.parent / "docs"
 
 
@@ -74,7 +73,7 @@ def _get_eg_doc(location: Path, ref):
             f".. _examples:{location.parent.name}:{location.name}:\n",
             title,
             "-" * len(title),
-            f":vunit_example:`➚ examples/{ref} <{ref!s}>`\n",
+            f":vunit_example:`examples/{ref} <{ref!s}>`\n",
             eg_doc.split("---\n", 1)[1],
             "\n",
         ]

@@ -22,7 +22,6 @@ classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Natural Language :: English",
     "Intended Audience :: Developers",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -33,10 +32,10 @@ classifiers = [
     "Topic :: Software Development :: Testing",
     "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "colorama",
-    "tomli; python_version < '3.11'",
+    "vunit-osvvm",
 ]
 
 [tool.setuptools]
@@ -98,12 +97,14 @@ underlines = ["-", "~"]
 [tool.tox]
 legacy_tox_ini = """
 [tox]
-envlist = py{310,311,312,313}-{fmt,unit,lint,docs}, py{310,311,312,313}-{acceptance,vcomponents}-{activehdl,ghdl,modelsim,nvc,rivierapro}, py{310,311,312,313}-coverage
+envlist = py{311,312,313}-{fmt,unit,lint,docs}, py{311,312,313}-{acceptance,vcomponents}-{activehdl,ghdl,modelsim,nvc,rivierapro}, py{311,312,313}-coverage
 isolated_build = True
 
 [testenv]
 recreate=True
-passenv=ALDEC_LICENSE_FILE
+passenv=
+    ALDEC_LICENSE_FILE
+    VUNIT_DOCS_SKIP_API
 
 deps=
     fmt: black
@@ -136,7 +137,9 @@ commands=
     fmt:         {envpython} -m black ./ --exclude .eggs|.git|.hg|.mypy_cache|.nox|.tox|.venv|_build|buck-out|build|dist' {posargs}
     unit:        {envpython} -m pytest -v -ra tests/unit {posargs}
     lint:        {envpython} -m pytest -v -ra tests/lint {posargs}
+    docs:        {envpython} -m pytest -ra tests/unit/test_api_reference.py
     docs:        {envpython} tools/build_docs.py {envtmpdir}/docsbuild {posargs}
+    docs:        {envpython} tools/build_api_reference.py {envtmpdir}/docsbuild
     acceptance:  {envpython} -m pytest -v -ra tests/acceptance {posargs}
     vcomponents: {envpython} vunit/vhdl/verification_components/run.py --clean
     coverage:    {envpython} -m coverage run --branch --source vunit/ -m pytest tests/

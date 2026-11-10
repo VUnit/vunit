@@ -14,7 +14,7 @@ from tools.doc_support import highlight_code, highlight_log, LogRegistry
 
 vu = VUnit.from_argv()
 vu.add_verification_components()
-vu.add_osvvm()
+vu.add_package("vunit-osvvm")
 
 root = Path(__file__).parent
 

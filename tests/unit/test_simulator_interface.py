@@ -221,6 +221,24 @@ Compile failed
         self.assertEqual(simif.find_prefix(), "prefix_from_path")
         environ.get.assert_called_once_with("VUNIT_SIMNAME_PATH", None)
 
+    def test_prefix_is_a_read_only_property(self):
+        class MySimulatorInterface(SimulatorInterface):  # pylint: disable=abstract-method
+            """
+            Dummy simulator interface built with a prefix
+            """
+
+            name = "simname"
+
+            def __init__(self, output_path, prefix, gui=False):
+                SimulatorInterface.__init__(self, output_path, gui)
+                self._prefix = prefix
+
+        simif = MySimulatorInterface(output_path="output_path", prefix="simname/bin")
+        self.assertEqual(simif.prefix, "simname/bin")
+        self.assertRaises(AttributeError, setattr, simif, "prefix", "other/bin")
+
+        self.assertIsNone(SimulatorInterface(output_path="output_path", gui=False).prefix)
+
     def setUp(self):
         self.output_path = str(Path(__file__).parent / "test_simulator_interface__out")
         renew_path(self.output_path)

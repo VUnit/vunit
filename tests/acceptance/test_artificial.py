@@ -117,12 +117,17 @@ class TestVunitArtificial(unittest.TestCase):
             ],
         )
 
-    def test_not_executing_package_init_on_package_addition(self):
+    def test_package_addition_calls_setup_without_executing_package_init(self):
         self.check(self.artificial_run_vhdl, args=["lib.tb_vunit_pkg.all"])
         check_report(
             self.report_file,
             [("passed", "lib.tb_vunit_pkg.all")],
         )
+
+        setup_marker = Path(self.output_path) / "foo_setup_called.txt"
+        self.assertTrue(setup_marker.exists())
+        self.assertIn("library=foo_lib", setup_marker.read_text())
+        self.assertIn("run_script_path=%s" % self.artificial_run_vhdl, setup_marker.read_text())
 
     def _test_artificial(self, args=None):
         """

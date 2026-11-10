@@ -13,14 +13,12 @@ PyPI setup script
 import os
 import sys
 from pathlib import Path
-from logging import warning
 from setuptools import setup
 
 # Ensure that the source tree is on the sys path
 sys.path.insert(0, str(Path(__file__).parent.resolve()))
 
 from vunit.about import version  # pylint: disable=wrong-import-position
-from vunit.builtins import osvvm_is_installed  # pylint: disable=wrong-import-position
 
 
 def find_all_files(directory, endings=None):
@@ -46,14 +44,3 @@ setup(
     version=version(),
     package_data={"vunit": DATA_FILES},
 )
-
-if not osvvm_is_installed():
-    warning(
-        """
-Found no OSVVM VHDL files. If you're installing from a Git repository and plan to use VUnit's integration
-of OSVVM you should run
-
-git submodule update --init --recursive
-
-in your VUnit repository before running setup.py."""
-    )

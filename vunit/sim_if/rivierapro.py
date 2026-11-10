@@ -9,14 +9,17 @@ Interface towards Aldec Riviera Pro
 """
 
 from pathlib import Path
+from functools import total_ordering
 import os
 import re
 import logging
+import warnings
 from ..exceptions import CompileError
 from ..ostools import Process, file_exists
 from ..vhdl_standard import VHDL
 from . import SimulatorInterface, ListOfStringOption, StringOption
 from .vsim_simulator_mixin import VsimSimulatorMixin, fix_path
+from . import hooks
 
 LOGGER = logging.getLogger(__name__)
 
@@ -73,25 +76,18 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
     @classmethod
     def _get_version(cls):
         """
-        Return a VersionConsumer object containing the simulator version.
+        Return a RivieraProVersion object representing the simulator version.
         """
-        proc = Process([str(Path(cls.find_prefix()) / "vcom"), "-version"], env=cls.get_env())
-        consumer = VersionConsumer()
-        proc.consume_output(consumer)
 
-        return consumer
+        return cls.determine_version(cls.find_prefix())
 
     @classmethod
-    def get_osvvm_coverage_api(cls):
-        """
-        Returns simulator name when OSVVM coverage API is supported, None otherwise.
-        """
-        version = cls._get_version()
-        if version.year is not None:
-            if (version.year == 2016 and version.month >= 10) or (version.year > 2016):
-                return cls.name
-
-        return None
+    def determine_version(cls, prefix):
+        """Determine the Riviera-PRO version."""
+        proc = Process([str(Path(prefix) / "vcom"), "-version"], env=cls.get_env())
+        consumer = VersionConsumer()
+        proc.consume_output(consumer)
+        return consumer.version
 
     @classmethod
     def supports_vhdl_call_paths(cls):
@@ -168,8 +164,8 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         Convert standard to format of Riviera-PRO command line flag
         """
         if vhdl_standard == VHDL.STD_2019:
-            if self._version.year is not None:
-                if (self._version.year == 2020 and self._version.month < 4) or (self._version.year < 2020):
+            if self._version.is_valid:
+                if self._version < RivieraProVersion("2020.4"):
                     return "-2018"
 
             return "-2019"
@@ -352,9 +348,7 @@ proc vunit_load {{}} {{
 
     return false
 }}
-""".format(
-            vsim_flags=" ".join(vsim_flags), break_level=config.vhdl_assert_stop_level
-        )
+""".format(vsim_flags=" ".join(vsim_flags), break_level=config.vhdl_assert_stop_level)
 
         return tcl
 
@@ -368,7 +362,7 @@ proc vunit_load {{}} {{
         if self._gui:
             vsim_extra_args = config.sim_options.get("rivierapro.vsim_flags.gui", vsim_extra_args)
 
-        return " ".join(vsim_extra_args)
+        return " ".join(vsim_extra_args + hooks.get_flags(self, "run_flags"))
 
     @staticmethod
     def _create_run_function():
@@ -458,14 +452,60 @@ class VersionConsumer(object):
     """
 
     def __init__(self):
-        self.year = None
-        self.month = None
-
-    _version_re = re.compile(r"(?P<year>\d+)\.(?P<month>\d+)\.\d+")
+        self.version = None
 
     def __call__(self, line):
-        match = self._version_re.search(line)
-        if match is not None:
-            self.year = int(match.group("year"))
-            self.month = int(match.group("month"))
+        self.version = RivieraProVersion.from_output(line)
+
         return True
+
+
+@total_ordering
+class RivieraProVersion:
+    """Riviera-PRO version."""
+
+    _VERSION_RE = re.compile(r"(\d+)\.(\d+)(?:\.\d+){0,2}")
+
+    def __init__(self, version_string):
+        self.version_string = version_string
+        self._version = None
+        match = self._VERSION_RE.fullmatch(version_string)
+        if not match:
+            warnings.warn(
+                f"Cannot parse Riviera-PRO version: {version_string!r}; version is unknown",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+            return
+
+        self._version = (int(match.group(1)), int(match.group(2)))
+
+    @classmethod
+    def from_output(cls, output):
+        """Extract the Riviera-PRO version from command output, or return an unknown version."""
+        match = cls._VERSION_RE.search(output)
+        return cls(match.group(0) if match else output)
+
+    @property
+    def is_valid(self):
+        return self._version is not None
+
+    def __eq__(self, other):
+        if isinstance(other, RivieraProVersion):
+            if not self.is_valid or not other.is_valid:
+                raise ValueError("Cannot compare unknown Riviera-PRO versions")
+            return self._version == other._version  # pylint: disable=protected-access
+        return NotImplemented
+
+    def __lt__(self, other):
+        if isinstance(other, RivieraProVersion):
+            if not self.is_valid or not other.is_valid:
+                raise ValueError("Cannot order unknown Riviera-PRO versions")
+            return self._version < other._version  # pylint: disable=protected-access
+        return NotImplemented
+
+    def __str__(self):
+        return ".".join(str(component) for component in self._version) if self.is_valid else "unknown"
+
+    def __repr__(self):
+        return f"RivieraProVersion({self.version_string!r})"

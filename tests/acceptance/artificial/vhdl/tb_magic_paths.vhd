@@ -25,6 +25,7 @@ begin
     test_runner_setup(runner, runner_cfg);
     check_has_suffix(tb_path, "/tests/acceptance/artificial/vhdl/");
     check_has_suffix(vunit_lib.run_pkg.tb_path(runner_cfg), "/tests/acceptance/artificial/vhdl/");
+    check_has_suffix(vunit_lib.run_pkg.run_script_path(runner_cfg), "/run.py");
     test_runner_cleanup(runner);
     wait;
   end process;

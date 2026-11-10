@@ -23,10 +23,9 @@ class SimulatorFactory(object):
     Create simulator instances
     """
 
-    @staticmethod
-    def supported_simulators():
+    def supported_simulators(self):
         """
-        Return a list of supported simulator classes
+        Return a list of supported simulator classes, built-in ones first
         """
         return [
             ModelSimInterface,
@@ -35,7 +34,37 @@ class SimulatorFactory(object):
             GHDLInterface,
             IncisiveInterface,
             NVCInterface,
-        ]
+        ] + self._extra_simulators
+
+    def register_simulator(self, simulator_class):
+        """
+        Add a simulator class (a SimulatorInterface subclass) to the supported simulators.
+        """
+        name = getattr(simulator_class, "name", None)
+        if not name:
+            raise ValueError(f"Simulator class {simulator_class!r} must define a non-empty 'name'")
+        if name in [sim.name for sim in self.supported_simulators()]:
+            raise ValueError(f"A simulator named {name!r} is already registered")
+
+        self._extra_simulators.append(simulator_class)
+        try:
+            self._compile_options = self._extract_compile_options()
+            self._sim_options = self._extract_sim_options()
+        except ValueError:
+            self._extra_simulators.remove(simulator_class)
+            raise
+
+    @staticmethod
+    def _check_option(sim_class, opt, existing):
+        """
+        Raise ValueError naming the option if it cannot be used by sim_class
+        """
+        if not hasattr(opt, "name") or not hasattr(opt, "validate"):
+            raise ValueError(f"Simulator {sim_class.name!r}: option {opt!r} must have a 'name' and a 'validate' method")
+        if not opt.name.startswith(sim_class.name + "."):
+            raise ValueError(f"Simulator {sim_class.name!r}: option {opt.name!r} must start with '{sim_class.name}.'")
+        if opt.name in existing:
+            raise ValueError(f"Simulator {sim_class.name!r}: option {opt.name!r} is already defined")
 
     def _extract_compile_options(self):
         """
@@ -44,10 +73,7 @@ class SimulatorFactory(object):
         result = dict((opt.name, opt) for opt in [BooleanOption("enable_coverage")])
         for sim_class in self.supported_simulators():
             for opt in sim_class.compile_options:
-                assert hasattr(opt, "name")
-                assert hasattr(opt, "validate")
-                assert opt.name.startswith(sim_class.name + ".")
-                assert opt.name not in result
+                self._check_option(sim_class, opt, result)
                 result[opt.name] = opt
         return result
 
@@ -68,10 +94,7 @@ class SimulatorFactory(object):
 
         for sim_class in self.supported_simulators():
             for opt in sim_class.sim_options:
-                assert hasattr(opt, "name")
-                assert hasattr(opt, "validate")
-                assert opt.name.startswith(sim_class.name + ".")
-                assert opt.name not in result
+                self._check_option(sim_class, opt, result)
                 result[opt.name] = opt
 
         return result
@@ -146,6 +169,7 @@ class SimulatorFactory(object):
             sim.add_arguments(parser)
 
     def __init__(self):
+        self._extra_simulators = []
         self._compile_options = self._extract_compile_options()
         self._sim_options = self._extract_sim_options()
 

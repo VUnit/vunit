@@ -49,7 +49,7 @@ jobs:
       matrix:
         include:
           - { py: '3.13' , task: 313-lint }
-          - { py: '3.10'  , task: 310-unit }
+          - { py: '3.11'  , task: 311-unit }
           - { py: '3.13' , task: 313-unit }
     name: '🐧 Ubuntu · ${{ matrix.task }}'
     steps:
@@ -130,10 +130,10 @@ jobs:
       fail-fast: false
       matrix:
         task: [
-          310-acceptance-ghdl,
-          310-vcomponents-ghdl,
-          310-lint,
-          310-unit,
+          311-acceptance-ghdl,
+          311-vcomponents-ghdl,
+          311-lint,
+          311-unit,
         ]
     name: '🟦 Windows · nightly · ${{ matrix.task }}'
     defaults:
@@ -144,9 +144,9 @@ jobs:
     - name: '🟦 Setup MSYS2'
       uses: msys2/setup-msys2@v2
       with:
-        msystem: mingw64
+        msystem: ucrt64
         update: true
-        install: mingw-w64-x86_64-python-pip
+        install: mingw-w64-ucrt-x86_64-python-pip
 
     - name: '🧰 Checkout'
       uses: actions/checkout@v4
@@ -157,7 +157,7 @@ jobs:
       uses: ghdl/setup-ghdl@main
       with:
         backend: mcode
-        runtime: mingw64
+        runtime: ucrt64
 
     - name: '🐍 Install dependencies'
       run: pip install -U tox --progress-bar off
@@ -194,7 +194,7 @@ jobs:
     - name: '🐍 Install dependencies'
       run: |
         pip install -U pip
-        pip install -U setuptools wheel twine
+        pip install -U setuptools build twine
 
     - name: '🚀 Build and deploy to PyPI'
       if: github.repository == 'VUnit/vunit'
@@ -203,5 +203,5 @@ jobs:
         TWINE_PASSWORD: ${{ secrets.VUNIT_HDL_PYPI_DEPLOY_TOKEN }}
       run: |
         ./tools/release.py validate
-        python setup.py sdist
+        python -m build
         twine upload dist/*

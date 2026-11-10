@@ -8,7 +8,7 @@ Requirements
 ============
 
 .. NOTE::
-  Full VUnit functionality requires Python (3.10 or higher) and a simulator
+  Full VUnit functionality requires Python (3.11 or higher) and a simulator
   supported by the VUnit Python test runner (see list below).
   However, VUnit can run with limited functionality entirely within VHDL using
   the :doc:`VHDL test runner <./run/user_guide>`.
@@ -103,7 +103,7 @@ Start by cloning our `GIT repository on GitHub <https://github.com/vunit/vunit/>
 
    git clone --recurse-submodules https://github.com/VUnit/vunit.git
 
-The ``--recurse-submodules`` option initializes `OSVVM <https://github.com/JimLewis/OSVVM>`__ which is included as a submodule in the VUnit repository.
+The ``--recurse-submodules`` option initializes any submodules which are included in the VUnit repository.
 
 To be able to import :class:`VUnit <vunit.ui.VUnit>` in your ``run.py`` script
 you need to make it visible to Python or else the following error

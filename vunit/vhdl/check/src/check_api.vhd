@@ -45,6 +45,12 @@ package check_pkg is
   procedure log(check_result : check_result_t);
 
   procedure notify_if_fail(check_result : check_result_t; signal event : inout any_event_t);
+  impure function is_pass(check_result : check_result_t) return boolean;
+  impure function get_checker(check_result : check_result_t) return checker_t;
+  impure function get_msg(check_result : check_result_t) return string;
+  impure function get_log_level(check_result : check_result_t) return log_level_t;
+  impure function get_line_num(check_result : check_result_t) return natural;
+  impure function get_file_name(check_result : check_result_t) return string;
 
   -----------------------------------------------------------------------------
   -- check
