@@ -772,16 +772,43 @@ package body logger_pkg is
     return make_string(got_logger_name, got_msg, got_level, got_log_time, got_line_num, got_file_name, check_time);
   end;
 
+  impure function pop_log_item_with_substring(check_time : boolean; substr : string) return string is
+    constant SUBSTR_PREFIX : string := "Substring: ";
+    constant got_logger_name : string := pop_string(mock_queue);
+    constant got_level : log_level_t := log_level_t'val(pop_byte(mock_queue));
+    constant got_msg : string := pop_string(mock_queue);
+    constant got_log_time : time := pop_time(mock_queue);
+    constant got_line_num : natural := pop_integer(mock_queue);
+    constant got_file_name : string := pop_string(mock_queue);
+	variable found_str : string(1 to SUBSTR_PREFIX'length + substr'length) := SUBSTR_PREFIX & substr;
+  begin
+    set(p_mock_queue_length, 0, get(p_mock_queue_length, 0) - 1);
+
+	-- Replace substring with whitespace
+    if find(got_msg, substr) = 0 then
+		found_str(SUBSTR_PREFIX'length to found_str'high) := (others => ' ');
+    end if;
+
+    return make_string(got_logger_name, found_str, got_level, got_log_time, got_line_num, got_file_name, check_time);
+  end;
+
   procedure check_log(logger : logger_t;
                       msg : string;
                       log_level : log_level_t;
                       log_time : time := no_time_check;
                       line_num : natural := 0;
-                      file_name : string := "") is
+                      file_name : string := "";
+                      msg_is_substr : boolean := false) is
+
+	constant SUBSTR_PREFIX : string := "Substring: ";
 
     constant expected_item : string := make_string(get_full_name(logger),
                                                    msg, log_level, log_time, line_num, file_name,
                                                    log_time /= no_time_check);
+
+    constant expected_item_with_substr : string := make_string(get_full_name(logger),
+                                                               SUBSTR_PREFIX & msg, log_level, log_time, line_num, file_name,
+                                                               log_time /= no_time_check);
 
     procedure check_log_when_not_empty is
       constant got_item : string := pop_log_item_string(log_time /= no_time_check);
@@ -790,12 +817,35 @@ package body logger_pkg is
         core_failure("log item mismatch:" & LF & LF & "Got:" & LF & got_item & LF & LF & "expected:" & LF & expected_item & LF);
       end if;
     end;
+
+	procedure check_log_when_not_empty_with_substr is
+      constant got_item : string := pop_log_item_with_substring(log_time /= no_time_check, msg);
+    begin
+      if expected_item_with_substr /= got_item then
+        core_failure("log item mismatch:" & LF & LF & "Got:" & LF & got_item & LF & LF & "expected:" & LF & expected_item_with_substr & LF);
+      end if;
+    end;
+
   begin
-    if length(mock_queue) > 0 then
-      check_log_when_not_empty;
+
+    if msg_is_substr then
+
+      if length(mock_queue) > 0 then
+        check_log_when_not_empty_with_substr;
+      else
+        core_failure("log item mismatch - Got no log item " & LF & LF & "expected:" & LF & expected_item_with_substr & LF);
+      end if;
+
     else
-      core_failure("log item mismatch - Got no log item " & LF & LF & "expected" & LF & expected_item & LF);
+
+      if length(mock_queue) > 0 then
+        check_log_when_not_empty;
+      else
+        core_failure("log item mismatch - Got no log item " & LF & LF & "expected:" & LF & expected_item & LF);
+      end if;
+
     end if;
+
   end;
 
   procedure check_only_log(logger : logger_t;
@@ -803,9 +853,10 @@ package body logger_pkg is
                            log_level : log_level_t;
                            log_time : time := no_time_check;
                            line_num : natural := 0;
-                           file_name : string := "") is
+                           file_name : string := "";
+                           msg_is_substr : boolean := false) is
   begin
-    check_log(logger, msg, log_level, log_time, line_num, file_name);
+    check_log(logger, msg, log_level, log_time, line_num, file_name, msg_is_substr);
     check_no_log;
   end;
 
