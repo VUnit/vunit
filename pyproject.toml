@@ -35,8 +35,12 @@ classifiers = [
 requires-python = ">=3.11"
 dependencies = [
     "colorama",
+    "prompt_toolkit",
     "vunit-osvvm",
 ]
+
+[project.scripts]
+vunit = "vunit.app.cli:main"
 
 [tool.setuptools]
 include-package-data = false
@@ -44,7 +48,7 @@ include-package-data = false
 [tool.setuptools.packages.find]
 where = ["."]
 include = [
-    "vunit", "vunit.com", "vunit.parsing","vunit.parsing.verilog", "vunit.sim_if",
+    "vunit", "vunit.app", "vunit.app.generation", "vunit.com", "vunit.parsing","vunit.parsing.verilog", "vunit.sim_if",
     "vunit.test", "vunit.ui"
 ]
 
