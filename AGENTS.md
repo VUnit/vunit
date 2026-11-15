@@ -6,8 +6,16 @@ To *use* VUnit rather than develop it, read the [documentation](https://vunit.gi
 [llms-full.txt](https://vunit.github.io/llms-full.txt), and the machine-readable
 [VHDL API](https://vunit.github.io/api/vunit_lib.json) and [Python API](https://vunit.github.io/api/python.json).
 
+## Skills
+
+The `skills/` folder contains agent skills, one per subfolder with a `SKILL.md`. When a task matches a skill's
+`description`, read its `SKILL.md` and follow it instead of improvising. For example, use
+[skills/create-testbench/SKILL.md](skills/create-testbench/SKILL.md) when creating or extending a VUnit VHDL testbench.
+Check the folder for other skills before starting a task.
+
 ## Repository layout
 
+- `skills/`: agent skills for using VUnit, see "Skills".
 - `vunit/`: the Python package, with the run script API in `vunit/ui/`, the simulator interfaces in `vunit/sim_if/` and the test runner in `vunit/test/`.
 - `vunit/vhdl/`: the VHDL libraries compiled into `vunit_lib` (`run`, `check`, `logging`, `com`, `data_types`, `verification_components`, ...). `vunit/vhdl/osvvm` is a third-party git submodule.
 - `vunit/verilog/`: the SystemVerilog support.
