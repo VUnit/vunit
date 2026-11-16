@@ -1180,6 +1180,27 @@ endmodule
             ui = self._create_ui_real_sim("--files")
             self._run_main(ui, 0)
 
+    def _compile_threads(self, *args):
+        """
+        The number of threads the files of a ui created with args are compiled with
+        """
+        ui = self._create_ui(*args)
+        simulator_if = mock.Mock(spec=SimulatorInterface)
+        ui._compile(simulator_if)  # pylint: disable=protected-access
+        return simulator_if.compile_project.call_args.kwargs["num_threads"]
+
+    def test_compile_one_file_at_a_time_by_default(self):
+        self.assertEqual(self._compile_threads("-p", "4"), 1)
+
+    def test_compile_in_parallel_with_num_compile_threads(self):
+        self.assertEqual(self._compile_threads("-j", "4"), 4)
+        self.assertEqual(self._compile_threads("--num-compile-threads", "0", "-p", "2"), 0)
+
+    def test_num_sim_threads_is_an_alias_of_num_threads(self):
+        self.assertEqual(
+            self._create_ui("--num-sim-threads", "3")._args.num_threads, 3
+        )  # pylint: disable=protected-access
+
     @mock.patch("vunit.ui.LOGGER", autospec=True)
     def test_compile_without_simulator_fails(self, logger):
         with set_env():

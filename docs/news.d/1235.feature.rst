@@ -1,0 +1,4 @@
+Added ``-j`` (``--num-compile-threads``), the number of files compiled in parallel, independent of ``-p``: a file is
+compiled once the files it depends on are compiled. Unless the simulator locks its libraries, as NVC does, a file is not
+compiled while its library, or a library it reads, is compiled into. Added ``--num-sim-threads`` as an alias of
+``--num-threads``.

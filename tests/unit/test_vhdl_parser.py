@@ -161,6 +161,17 @@ end architecture;
         self.assertEqual(arch[0].entity, "foo")
         self.assertEqual(arch[0].identifier, "rtl")
 
+    def test_parsing_library_clauses(self):
+        design_file = VHDLDesignFile.parse(
+            """
+library Name1;
+library lib1,lib2 , lib3 ;
+-- library commented;
+entity foo is end entity;
+"""
+        )
+        self.assertEqual(design_file.library_clauses, ["name1", "lib1", "lib2", "lib3"])
+
     def test_parsing_references(self):
         design_file = VHDLDesignFile.parse(
             """
