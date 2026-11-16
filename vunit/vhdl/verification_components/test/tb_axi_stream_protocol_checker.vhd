@@ -241,6 +241,19 @@ begin
       unmock(rule_logger);
     end;
 
+    procedure transfer(id : natural; last : std_logic) is
+    begin
+      tvalid <= '1';
+      tready <= '1';
+      tid    <= std_logic_vector(to_unsigned(id, tid'length));
+      tlast  <= last;
+      wait until rising_edge(aclk);
+    end;
+
+    -- The highest tid. The exponent is limited such that the value can also be calculated when tid
+    -- is wider than an integer. This constant isn't used in that case.
+    constant highest_id : natural := 2 ** minimum(id_length, 30) - 1;
+
   begin
     test_runner_setup(runner, runner_cfg);
 
@@ -517,6 +530,119 @@ begin
 
       unmock(rule_logger);
 
+    elsif run("Test passing check of that all packets are complete for the highest tid") then
+      wait until rising_edge(aclk);
+      transfer(highest_id, last => '0');
+      transfer(highest_id, last => '0');
+      transfer(highest_id, last => '1');
+
+    elsif run("Test failing check of that all packets are complete for the highest tid") then
+      rule_logger := get_logger(get_name(logger) & ":rule 9");
+      mock(rule_logger);
+
+      wait until rising_edge(aclk);
+      transfer(highest_id, last => '0');
+
+      set_phase(runner_state, test_runner_cleanup);
+      entry_gate(runner);
+
+      if id_length = 0 then
+        check_only_log(rule_logger, "Check failed for packet completion.", error);
+      else
+        check_only_log(
+          rule_logger,
+          "Unconditional check failed for packet completion for the following streams: " &
+          to_string(highest_id) & ".",
+          error
+        );
+      end if;
+
+      unmock(rule_logger);
+
+    elsif run("Test failing check of that all packets are complete for interleaved streams") then
+      rule_logger := get_logger(get_name(logger) & ":rule 9");
+      mock(rule_logger);
+
+      wait until rising_edge(aclk);
+      transfer(highest_id, last => '0');
+      transfer(1, last => '0');
+      transfer(highest_id - 2, last => '0');
+      transfer(highest_id, last => '1');
+      transfer(0, last => '0');
+      transfer(highest_id - 1, last => '0');
+      transfer(1, last => '1');
+      transfer(2, last => '0');
+      transfer(1, last => '0');
+
+      set_phase(runner_state, test_runner_cleanup);
+      entry_gate(runner);
+
+      check_only_log(
+        rule_logger,
+        "Unconditional check failed for packet completion for the following streams: 0, 1, 2, " &
+        to_string(highest_id - 2) & ", " & to_string(highest_id - 1) & ".",
+        error
+      );
+
+      unmock(rule_logger);
+
+    elsif run("Test failing check of that all packets are complete for weak tid and tlast values") then
+      rule_logger := get_logger(get_name(logger) & ":rule 9");
+      mock(rule_logger);
+
+      wait until rising_edge(aclk);
+      tvalid <= '1';
+      tready <= '1';
+      tid    <= (others => 'H');
+      tlast  <= '0';
+      wait until rising_edge(aclk);
+      tid    <= (others => 'L');
+      tlast  <= 'L';
+      wait until rising_edge(aclk);
+      tid    <= (others => '1');
+      tlast  <= 'H';
+      wait until rising_edge(aclk);
+
+      set_phase(runner_state, test_runner_cleanup);
+      entry_gate(runner);
+
+      check_only_log(
+        rule_logger, "Unconditional check failed for packet completion for the following streams: 0.", error
+      );
+
+      unmock(rule_logger);
+
+    elsif run("Test failing check of that all packets are complete for a tid wider than an integer") then
+      -- The tid is also too wide for rule 21
+      rule_logger := get_logger(get_name(logger) & ":rule 21");
+      mock(rule_logger);
+
+      wait until rising_edge(aclk);
+      check_only_log(
+        rule_logger, "True check failed for tid width and tdest width together must be less than 25", error
+      );
+      unmock(rule_logger);
+
+      rule_logger := get_logger(get_name(logger) & ":rule 9");
+      mock(rule_logger);
+
+      tvalid <= '1';
+      tready <= '1';
+      tid    <= (others => '1');
+      tlast  <= '0';
+      wait until rising_edge(aclk);
+
+      set_phase(runner_state, test_runner_cleanup);
+      entry_gate(runner);
+
+      check_only_log(
+        rule_logger,
+        "Unconditional check failed for packet completion for the following streams: 1099511627775.",
+        error
+      );
+
+      unmock(rule_logger);
+
     elsif run("Test passing check of that tuser must not be unknown unless in reset") then
       pass_unknown_test(tuser, areset_n, areset_n);
 
@@ -646,6 +772,31 @@ begin
           error);
 
       unmock(rule_logger);
+
+    elsif run("Test passing check of that tid is not wider than the recommended maximum") then
+      rule_logger := get_logger(get_name(logger) & ":rule 23");
+      mock(rule_logger, warning);
+
+      wait for 1 ns;
+      check_no_log;
+
+      unmock(rule_logger);
+
+    elsif run("Test failing check of that tid is not wider than the recommended maximum") then
+      rule_logger := get_logger(get_name(logger) & ":rule 23");
+      mock(rule_logger, warning);
+
+      wait for 1 ns;
+      check_only_log(
+          rule_logger,
+          "True check failed for tid width must not be more than 8 bits (maximum recommendation)",
+          warning);
+
+      unmock(rule_logger);
+
+      -- The simulation continues and the other rules are checked
+      wait until rising_edge(aclk);
+      transfer(highest_id, last => '1');
 
     elsif run("Test passing check of that tvalid must be low just after areset_n goes high") then
       areset_n <= '0';

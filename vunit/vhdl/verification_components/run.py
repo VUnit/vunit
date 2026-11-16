@@ -157,6 +157,30 @@ for data_length in [0, 8, 32]:
 for test in TB_AXI_STREAM_PROTOCOL_CHECKER.get_tests("*failing*tid width*"):
     test.add_config(name="dest_length=25", generics=dict(dest_length=25))
     test.add_config(name="id_length=8 dest_length=17", generics=dict(id_length=8, dest_length=17))
+    test.add_config(name="id_length=25 dest_length=0", generics=dict(id_length=25, dest_length=0))
+
+TB_AXI_STREAM_PROTOCOL_CHECKER.test(
+    "Test passing check of that tid is not wider than the recommended maximum"
+).add_config(name="id_length=8 dest_length=0", generics=dict(id_length=8, dest_length=0))
+
+TB_AXI_STREAM_PROTOCOL_CHECKER.test(
+    "Test failing check of that tid is not wider than the recommended maximum"
+).add_config(name="id_length=9 dest_length=0", generics=dict(id_length=9, dest_length=0))
+
+for test in TB_AXI_STREAM_PROTOCOL_CHECKER.get_tests("*packets are complete for the highest tid"):
+    for id_length in [0, 8, 9, 24]:
+        test.add_config(
+            name="id_length=%d dest_length=0" % id_length, generics=dict(id_length=id_length, dest_length=0)
+        )
+
+for test in TB_AXI_STREAM_PROTOCOL_CHECKER.get_tests("*packets are complete for interleaved streams"):
+    for id_length in [8, 9, 24]:
+        test.add_config(
+            name="id_length=%d dest_length=0" % id_length, generics=dict(id_length=id_length, dest_length=0)
+        )
+
+for test in TB_AXI_STREAM_PROTOCOL_CHECKER.get_tests("*packets are complete for a tid wider than an integer"):
+    test.add_config(name="id_length=40 dest_length=0", generics=dict(id_length=40, dest_length=0))
 
 TEST_FAILING_MAX_WAITS = TB_AXI_STREAM_PROTOCOL_CHECKER.test(
     "Test failing check of that tready comes within max_waits after valid"

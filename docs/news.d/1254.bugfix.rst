@@ -1,0 +1,4 @@
+The AXI stream protocol checker no longer stops the simulation when ``tid`` is wider than 8 bits. Since the
+specification only recommends this limit, a warning is given instead (rule 23). The check for incomplete packets at
+the end of the simulation (rule 9) now covers all ``tid`` values. Previously, only the first ``2 * tid'length`` values
+were checked, so a testbench that leaves a packet incomplete on a higher value now fails this check.

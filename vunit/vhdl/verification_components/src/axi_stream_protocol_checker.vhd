@@ -14,12 +14,13 @@ use work.axi_stream_pkg.all;
 use work.axi_stream_private_pkg.all;
 use work.check_pkg.all;
 use work.checker_pkg.all;
+use work.dict_pkg.all;
 use work.event_common_pkg.is_active;
-use work.integer_array_pkg.all;
 use work.log_levels_pkg.all;
 use work.logger_pkg.all;
 use work.run_pkg.all;
 use work.run_types_pkg.all;
+use work.string_ops.to_integer_string;
 
 entity axi_stream_protocol_checker is
   generic (
@@ -62,6 +63,7 @@ architecture a of axi_stream_protocol_checker is
   constant rule20_checker : checker_t := new_checker(get_name(protocol_checker.p_logger) & ":rule 20");
   constant rule21_checker : checker_t := new_checker(get_name(protocol_checker.p_logger) & ":rule 21");
   constant rule22_checker : checker_t := new_checker(get_name(protocol_checker.p_logger) & ":rule 22");
+  constant rule23_checker : checker_t := new_checker(get_name(protocol_checker.p_logger) & ":rule 23");
 
   signal handshake_is_not_x : std_logic;
   signal enable_rule1_check : std_logic;
@@ -154,47 +156,73 @@ begin
   -- AXI4STREAM_ERRM_STREAM_ALL_DONE_EOS At the end of simulation, all streams have had
   -- their corresponding TLAST transfer
   check_complete_packets : block is
-    constant active_streams : integer_array_t := new_1d(length => 2 ** tid'length);
+    -- Maps the key of every stream with an incomplete packet to its tid. Only these streams
+    -- are stored such that the memory used doesn't grow with 2 ** tid'length.
+    constant active_streams : dict_t := new_dict;
   begin
-    assert tid'length <= 8 report "tid must not be more than 8 bits (maximum recommendation)" severity failure;
-
     track_streams : process
-      variable value : natural;
+      -- Streams are identified by tid. All transfers belong to the same stream if tid is not used.
+      -- All keys have the same length such that their alphabetical order is the numerical order of tid.
+      variable key : string(1 to tid'length);
     begin
       wait until rising_edge(aclk) and (to_x01(tvalid) = '1');
-      if tid'length = 0 then
-        value := 1 when to_x01(tlast) = '0' else 0;
-        set(active_streams, 0, value);
-      elsif not is_x(tid) then
-        value := 1 when to_x01(tlast) = '0' else 0;
-        set(active_streams, to_integer(tid), value);
+      if not is_x(tid) then
+        -- 'H' and 'L' denote the same stream as '1' and '0'
+        key := to_string(to_x01(tid));
+        if to_x01(tlast) = '0' then
+          -- Storing the stream again for every transfer of the packet would be slow
+          if not has_key(active_streams, key) then
+            set_std_ulogic_vector(active_streams, key, to_x01(tid));
+          end if;
+        else
+          remove(active_streams, key);
+        end if;
       end if;
     end process;
 
     check_that_streams_have_ended : process
       variable incomplete_streams : line;
+
+      -- Write the tid of all streams with an incomplete packet in ascending order
+      procedure write_active_streams(variable l : inout line) is
+        constant num_streams : natural := num_keys(active_streams);
+        constant len : natural := tid'length;
+        -- The sorted keys one after the other
+        variable keys : line := new string(1 to num_streams * len);
+        variable key : string(1 to len);
+        variable idx : natural;
+      begin
+        -- Insertion sort. idx is where the key starts in keys.
+        for i in 0 to num_streams - 1 loop
+          key := get_key(active_streams, i);
+          idx := i * len;
+          while idx > 0 and keys(idx - len + 1 to idx) > key loop
+            keys(idx + 1 to idx + len) := keys(idx - len + 1 to idx);
+            idx := idx - len;
+          end loop;
+          keys(idx + 1 to idx + len) := key;
+        end loop;
+
+        for i in 0 to num_streams - 1 loop
+          if i > 0 then
+            write(l, string'(", "));
+          end if;
+          write(l, to_integer_string(get_std_ulogic_vector(active_streams, keys(i * len + 1 to (i + 1) * len))));
+        end loop;
+
+        deallocate(keys);
+      end procedure;
     begin
       wait until is_active(runner_phase) and is_within_gates_of(test_runner_cleanup);
 
       if tid'length = 0 then
-        check(rule9_checker, get(active_streams, 0) = 0, result("for packet completion."));
+        check(rule9_checker, num_keys(active_streams) = 0, result("for packet completion."));
+      elsif num_keys(active_streams) = 0 then
+        check_passed(rule9_checker, result("for packet completion."));
       else
-        for i in 0 to 2 * tid'length - 1 loop
-          if get(active_streams, i) /= 0 then
-            if incomplete_streams = null then
-              write(incomplete_streams, to_string(i));
-            else
-              write(incomplete_streams, ", " & to_string(i));
-            end if;
-          end if;
-        end loop;
-
-        if incomplete_streams /= null then
-          check_failed(rule9_checker, result("for packet completion for the following streams: " &
-            incomplete_streams.all & "."));
-        else
-          check_passed(rule9_checker, result("for packet completion."));
-        end if;
+        write_active_streams(incomplete_streams);
+        check_failed(rule9_checker, result("for packet completion for the following streams: " &
+          incomplete_streams.all & "."));
       end if;
 
       wait;
@@ -269,6 +297,19 @@ begin
     check_true(
       rule21_checker, tid'length + tdest'length <= 24,
       result("for tid width and tdest width together must be less than 25")
+    );
+    wait;
+  end process;
+
+  -- The specification recommends that TID_WIDTH is no more than 8. This is not an ARM protocol assertion.
+  -- Must wait a short while to allow testing of the rule.
+  process
+  begin
+    wait for 1 ps;
+    check_true(
+      rule23_checker, tid'length <= 8,
+      result("for tid width must not be more than 8 bits (maximum recommendation)"),
+      level => warning
     );
     wait;
   end process;
