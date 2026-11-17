@@ -28,19 +28,22 @@ entity tb_axi_stream is
     g_data_length : positive := 8;
     g_id_length   : natural := 8;
     g_dest_length : natural := 8;
-    g_user_length : natural := 8
+    g_user_length : natural := 8;
+    reset_policy_value : natural := 1 -- 0 = abort_all_transactions, 1 = abort_active_transaction
   );
 end entity;
 
 architecture a of tb_axi_stream is
-
+  constant clk_period : time := 10 ns;
   constant min_stall_cycles : natural := 5;
   constant max_stall_cycles : natural := 15;
+  constant reset_policy : axi_stream_reset_policy_t := axi_stream_reset_policy_t'val(reset_policy_value);
 
   constant master_axi_stream : axi_stream_master_t := new_axi_stream_master(
     data_length => g_data_length, id_length => g_id_length, dest_length => g_dest_length, user_length => g_user_length,
     logger => get_logger("master"), actor => new_actor("master"),
-    monitor => default_axi_stream_monitor, protocol_checker => default_axi_stream_protocol_checker
+    monitor => default_axi_stream_monitor, protocol_checker => default_axi_stream_protocol_checker,
+    reset_policy => reset_policy
   );
   constant master_stream : stream_master_t := as_stream(master_axi_stream);
   constant master_sync   : sync_handle_t   := as_sync(master_axi_stream);
@@ -48,7 +51,8 @@ architecture a of tb_axi_stream is
   constant slave_axi_stream : axi_stream_slave_t := new_axi_stream_slave(
     data_length => g_data_length, id_length => g_id_length, dest_length => g_dest_length, user_length => g_user_length,
     logger => get_logger("slave"), actor => new_actor("slave"),
-    monitor => default_axi_stream_monitor, protocol_checker => default_axi_stream_protocol_checker
+    monitor => default_axi_stream_monitor, protocol_checker => default_axi_stream_protocol_checker,
+    reset_policy => reset_policy
   );
   constant slave_stream : stream_slave_t := as_stream(slave_axi_stream);
   constant slave_sync   : sync_handle_t  := as_sync(slave_axi_stream);
@@ -135,6 +139,7 @@ begin
     variable inactive_policy_read_back : inactive_bus_policy_t;
     variable loop_count : natural := 0;
     variable cov : CoverageIDType;
+    variable com_status : com_status_t;
 
     impure function select_policy(
       modified_signal, signal_to_check : axi_stream_signal_t;
@@ -266,13 +271,79 @@ begin
         );
         check_true(axi_stream_transaction.tlast, result("for axi_stream_transaction.tlast"));
       end loop;
-    elsif run("test reset") then
-      wait until rising_edge(aclk);
+
+    elsif run("test reset of transactions") then
+      -- Depending on the reset policy, a reset will abort only the active transactions
+      -- or the active + any pending transaction. Pending configuration messages should not be affected.
+      push_stream(net, master_stream, x"01", true);
+      stall_config := new_stall_config(0.17, 0, 0);
+      set_stall_config(net, master_axi_stream, stall_config);
+      push_stream(net, master_stream, x"02", true);
+
+      pop_stream(net, slave_stream, reference);
+      push(reference_queue, reference);
+      stall_config := new_stall_config(0.21, 0, 0);
+      set_stall_config(net, slave_axi_stream, stall_config);
+      pop_stream(net, slave_stream, reference);
+      push(reference_queue, reference);
+
+      wait until tvalid = '1';
+      wait until falling_edge(aclk);
       areset_n <= '0';
-      wait until rising_edge(aclk);
-      check_equal(tvalid, '0', result("for valid low check while in reset"));
+      timestamp := now;
+      wait until tvalid = '0' for 1 ps;
+      check_equal(now - timestamp, 0 ns, result("for reset activation delay."));
+      check_equal(tvalid, '0', result("for tvalid low check while in reset"));
+      wait for 1 ns;
       areset_n <= '1';
-      wait until rising_edge(aclk);
+      wait for 0 ns;
+
+      timestamp := now;
+      reference := pop(reference_queue);
+      wait_for_reply(net, reference, com_status, timeout => 100 ns);
+      check_equal(now - timestamp, 100 ns, result("for first transaction timeout"));
+
+      timestamp := now;
+      reference := pop(reference_queue);
+      if reset_policy = abort_active_transaction then
+        await_pop_stream_reply(net, reference, data);
+        check_equal(data, std_logic_vector'(x"02"), result("for data in second transaction"));
+      else
+        wait_for_reply(net, reference, com_status, timeout => 100 ns);
+        check_equal(now - timestamp, 100 ns, result("for second transaction timeout"));
+      end if;
+      get_stall_config(net, master_axi_stream, stall_config_read_back);
+      check_equal(stall_config_read_back.stall_probability, 0.17,
+        result(" for master stall probability"), max_diff => 0.001);
+      get_stall_config(net, slave_axi_stream, stall_config_read_back);
+      check_equal(stall_config_read_back.stall_probability, 0.21,
+        result(" for slave stall probability"), max_diff => 0.001);
+
+      -- Check that the VCs are fully recovered.
+      push_stream(net, master_stream, x"03", true);
+      pop_stream(net, slave_stream, data, last_bool);
+      check_equal(data, std_logic_vector'(x"03"), result("for pop stream data"));
+      check_true(last_bool, result("for pop stream last"));
+
+    elsif run("test reset of time delays") then
+      push_stream(net, master_stream, x"01", true);
+      wait_for_time(net, master_sync, clk_period * 5);
+      push_stream(net, master_stream, x"02", true);
+
+      pop_stream(net, slave_stream, data, last_bool);
+      check_equal(data, std_logic_vector'(x"01"), result("for pop stream data"));
+      wait_for_time(net, slave_sync, clk_period * 5);
+      wait for clk_period / 10;
+
+      areset_n <= '0';
+      wait for clk_period / 10;
+      areset_n <= '1';
+      wait for 0 ns;
+      timestamp := now;
+      pop_stream(net, slave_stream, data, last_bool);
+
+      check_equal(now - timestamp, 18 * clk_period / 10, result("for pop delay."));
+      check_equal(data, std_logic_vector'(x"02"), result("for pop stream data"));
 
     elsif run("test single push and pop with tlast") then
       push_stream(net, master_stream, x"88", true);
@@ -1070,5 +1141,5 @@ begin
     end if;
   end process;
 
-  aclk <= not aclk after 5 ns;
+  aclk <= not aclk after clk_period / 2;
 end architecture;
