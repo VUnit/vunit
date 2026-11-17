@@ -45,7 +45,10 @@ class TestBenchList(object):
         self._libraries[test_bench.library_name][test_bench.name] = test_bench
 
     def get_test_bench(self, library_name, name):
-        return self._libraries[library_name][name]
+        try:
+            return self._libraries[library_name][name]
+        except KeyError:
+            return self._libraries[library_name][name.lower()] 
 
     def get_test_benches_in_library(self, library_name):
         return list(self._libraries.get(library_name, {}).values())
