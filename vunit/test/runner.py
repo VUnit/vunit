@@ -458,9 +458,12 @@ class TestScheduler(object):  # pylint: disable=too-many-instance-attributes
                     if test_data:
                         if test_data["total_time"] is not None:
                             exec_time += test_data["total_time"]
-                        updated_dependency = self._latest_dependency_updates[test_suite.file_name] > test_data.get(
-                            "start_time", 0
-                        )
+                        # Tests may be scanned from a file which is not a project source file
+                        # (scan_tests_from_file). Without dependency information, treat it as
+                        # updated like _get_latest_dependency_updates does for changed files.
+                        updated_dependency = self._latest_dependency_updates.get(
+                            test_suite.file_name, 10e9
+                        ) > test_data.get("start_time", 0)
 
                         if test_data["skipped"]:
                             set_idx = 2

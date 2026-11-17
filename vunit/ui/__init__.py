@@ -1077,7 +1077,8 @@ other preprocessors. Lowest value first. The order between preprocessors with th
             self._test_history = self._get_test_history(simulator_if=None)
 
         def depending_on_change(test_suite):
-            latest_dependency_update = self._latest_dependency_updates[test_suite.file_name]
+            # Unknown files (tests scanned from a non-project file) count as changed
+            latest_dependency_update = self._latest_dependency_updates.get(test_suite.file_name, 10e9)
             test_suite_history = self._test_history.get(test_suite.name, None)
             if test_suite_history:
                 test_start_times = [test_data["start_time"] for test_data in test_suite_history.values()]
