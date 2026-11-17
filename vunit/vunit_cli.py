@@ -139,6 +139,23 @@ def _create_argument_parser(description=None, for_documentation=False, add_help=
     )
 
     parser.add_argument(
+        "--parallel-compile",
+        action="store_true",
+        default=False,
+        help="Compile as many files in parallel as -p runs tests, rather than one file at a time",
+    )
+
+    parser.add_argument(
+        "--batch-compile",
+        action="store_true",
+        default=False,
+        help=(
+            "Compile the VHDL files of a library that are ready to be compiled at the same time, "
+            "and have the same compile options, in one call. Supported by GHDL, NVC and Riviera-PRO"
+        ),
+    )
+
+    parser.add_argument(
         "--fail-fast",
         action="store_true",
         default=False,
@@ -250,7 +267,7 @@ def _create_argument_parser(description=None, for_documentation=False, add_help=
         type=nonnegative_int,
         default=1,
         help=(
-            "Number of tests to run in parallel. "
+            "Number of tests to run in parallel, and of files to compile in parallel with --parallel-compile. "
             "Test output is not continuously written in verbose mode with p != 1. "
             "p = 0 uses all logical CPUs."
         ),

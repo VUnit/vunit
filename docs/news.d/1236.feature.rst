@@ -1,0 +1,3 @@
+Added ``--batch-compile``, which compiles the VHDL files of a library that are ready to be compiled at the same time, and
+have the same compile options, in one call to the compiler. A batch that fails is compiled again one file at a time.
+Supported by GHDL, NVC and Riviera-PRO.

@@ -12,6 +12,7 @@ import unittest
 from pathlib import Path
 from os import chdir, getcwd
 import subprocess
+import threading
 from shutil import rmtree
 from unittest import mock
 from vunit.project import Project
@@ -190,6 +191,205 @@ Compile failed
             self.assertRaises(CompileError, simif.compile_source_files, project)
         self.assertEqual(project.get_files_in_compile_order(incremental=True), [source_file])
 
+    def _compile_concurrently(
+        self, libraries, supports_concurrent_compiles_into_library=False, fail=None, dependencies=()
+    ):
+        """
+        Compile one file per library name in libraries with 4 threads, the compile commands
+        waiting for each other in pairs. dependencies are (file index, index of the file it depends
+        on) pairs. Return the printer output and the compile commands that ran at the same time as
+        another.
+        """
+        simif = create_simulator_interface()
+        simif.supports_concurrent_compiles_into_library = supports_concurrent_compiles_into_library
+        simif.compile_source_file_command.side_effect = lambda source_file: [Path(source_file.name).stem]
+        project, _ = create_project(
+            [(f"file{idx}.vhd", library) for idx, library in enumerate(libraries)], dependencies
+        )
+
+        barrier = threading.Barrier(2, timeout=0.5)
+        concurrent = set()
+
+        def check_output_side_effect(command, env=None):  # pylint: disable=unused-argument
+            try:
+                barrier.wait()
+                concurrent.add(command[0])
+            except threading.BrokenBarrierError:
+                barrier.reset()  # Ran alone, let the next compiles meet
+            if command[0] == fail:
+                raise subprocess.CalledProcessError(returncode=-1, cmd=command, output="bad stuff")
+            return command[0] + " output\n"
+
+        with mock.patch("vunit.sim_if.check_output", autospec=True) as check_output:
+            check_output.side_effect = check_output_side_effect
+            printer = MockPrinter()
+            simif.compile_source_files(project, printer=printer, num_threads=4, continue_on_error=True)
+        return printer.output, concurrent
+
+    def test_compile_source_files_of_different_libraries_concurrently(self):
+        _, concurrent = self._compile_concurrently(["lib1", "lib2"])
+        self.assertEqual(concurrent, {"file0", "file1"})
+
+    def test_compile_source_files_of_a_library_one_at_a_time(self):
+        _, concurrent = self._compile_concurrently(["lib", "lib"])
+        self.assertEqual(concurrent, set())
+
+    def test_compile_source_files_of_a_library_concurrently_when_supported(self):
+        _, concurrent = self._compile_concurrently(["lib", "lib"], supports_concurrent_compiles_into_library=True)
+        self.assertEqual(concurrent, {"file0", "file1"})
+
+    def test_compile_source_files_not_while_a_library_they_read_is_compiled_into(self):
+        # Once file0 is compiled, file1 is compiled into lib1, which file2 reads
+        _, concurrent = self._compile_concurrently(["lib1", "lib1", "lib2"], dependencies=[(1, 0), (2, 0)])
+        self.assertEqual(concurrent, set())
+
+    def test_compile_source_files_reading_the_same_library_concurrently(self):
+        _, concurrent = self._compile_concurrently(["lib1", "lib2", "lib3"], dependencies=[(1, 0), (2, 0)])
+        self.assertEqual(concurrent, {"file1", "file2"})
+
+    def test_compile_source_files_concurrently_writes_the_output_of_a_file_at_once(self):
+        output, _ = self._compile_concurrently(["lib1", "lib2"], fail="file1")
+        self.assertIn("Compiling into lib1: file0.vhd passed\nfile0 output\n", output)
+        self.assertIn("Compiling into lib2: file1.vhd failed\n=== Command used: ===\nfile1\n", output)
+        self.assertTrue(output.endswith("Compile failed\n"))
+
+    def test_compile_source_files_waits_for_dependencies(self):
+        simif = create_simulator_interface()
+        simif.compile_source_file_command.side_effect = lambda source_file: [Path(source_file.name).stem]
+        project, (file1, file2, file3) = create_project(
+            [("file1.vhd", "lib1"), ("file2.vhd", "lib2"), ("file3.vhd", "lib1")], dependencies=[(2, 1)]
+        )
+
+        def check_output_side_effect(command, env=None):  # pylint: disable=unused-argument
+            if command == ["file2"]:
+                raise subprocess.CalledProcessError(returncode=-1, cmd=command, output="bad stuff")
+            return ""
+
+        with mock.patch("vunit.sim_if.check_output", autospec=True) as check_output:
+            check_output.side_effect = check_output_side_effect
+            printer = MockPrinter()
+            simif.compile_source_files(project, printer=printer, num_threads=4, continue_on_error=True)
+            self.assertIn("Compiling into lib1: file3.vhd skipped\n", printer.output)
+            self.assertEqual(len(check_output.mock_calls), 2)
+        self.assertEqual(project.get_files_in_compile_order(incremental=True), [file2, file3])
+        self.assertNotIn(file1, project.get_files_in_compile_order(incremental=True))
+
+    def _compile_in_batches(
+        self,
+        files,
+        fail=(),
+        num_threads=1,
+        dependencies=(),
+        supports_concurrent_compiles_into_library=False,
+        batch_file_list_arguments=None,
+    ):  # pylint: disable=too-many-arguments,too-many-locals
+        """
+        Compile files, (name, library, option) tuples, in batches. dependencies are (file index, index
+        of the file it depends on) pairs, and a command naming a file in fail fails. Return the
+        printer output and the file names of each command.
+        """
+        simif = create_simulator_interface()
+        simif.supports_batch_compile = True
+        simif.supports_concurrent_compiles_into_library = supports_concurrent_compiles_into_library
+        simif.batch_file_list_arguments = batch_file_list_arguments
+        simif.compile_source_file_command.side_effect = lambda source_file: [
+            "compile",
+            source_file.library.name,
+            str(source_file.compile_options.get("ghdl.a_flags", [])),
+            source_file.name,
+        ]
+        project, source_files = create_project([(name, library) for name, library, _ in files], dependencies)
+        for source_file, (_, _, option) in zip(source_files, files):
+            if option:
+                source_file.set_compile_option("ghdl.a_flags", [option])
+
+        commands = []
+        lock = threading.Lock()
+
+        def check_output_side_effect(command, env=None):  # pylint: disable=unused-argument
+            names = command[3:]
+            if names and names[0].startswith("@"):
+                names = Path(names[0][1:]).read_text().splitlines()
+            with lock:
+                commands.append(names)
+            if set(names) & set(fail):
+                raise subprocess.CalledProcessError(returncode=-1, cmd=command, output="bad stuff")
+            return ""
+
+        with mock.patch("vunit.sim_if.check_output", autospec=True) as check_output:
+            check_output.side_effect = check_output_side_effect
+            printer = MockPrinter()
+            simif.compile_source_files(
+                project, printer=printer, continue_on_error=True, num_threads=num_threads, batch=True
+            )
+        return printer.output, commands
+
+    def test_compile_source_files_in_a_batch(self):
+        output, commands = self._compile_in_batches(
+            [("file1.vhd", "lib", None), ("file2.vhd", "lib", None)], dependencies=[(1, 0)]
+        )
+        self.assertEqual(commands, [["file1.vhd", "file2.vhd"]])
+        self.assertEqual(
+            output,
+            """\
+Compiling into lib: file1.vhd passed
+Compiling into lib: file2.vhd passed
+Compile passed
+""",
+        )
+
+    def test_compile_source_files_in_batches_with_commands_of_limited_length(self):
+        # A command of a batch is "compile lib [] " followed by the file names
+        with mock.patch("vunit.sim_if._MAX_BATCH_COMMAND_LENGTH", len("compile lib [] file1.vhd file2.vhd")):
+            _, commands = self._compile_in_batches(
+                [("file1.vhd", "lib", None), ("file2.vhd", "lib", None), ("file3.vhd", "lib", None)],
+                dependencies=[(1, 0), (2, 1)],
+            )
+        self.assertEqual(commands, [["file1.vhd", "file2.vhd"], ["file3.vhd"]])
+
+    def test_compile_source_files_in_a_batch_with_a_file_list(self):
+        with mock.patch("vunit.sim_if._MAX_BATCH_COMMAND_LENGTH", 1):
+            _, commands = self._compile_in_batches(
+                [("file1.vhd", "lib", None), ("file2.vhd", "lib", None), ("file3.vhd", "lib", None)],
+                batch_file_list_arguments=("@{}",),
+            )
+        self.assertEqual(sorted(commands[0]), ["file1.vhd", "file2.vhd", "file3.vhd"])
+        self.assertEqual(len(commands), 1)
+        self.assertEqual(list(Path(".").glob("batch_*.txt")), [])
+
+    def test_compile_source_files_in_a_batch_per_library_and_compile_options(self):
+        _, commands = self._compile_in_batches(
+            [("file1.vhd", "lib1", None), ("file2.vhd", "lib1", "-x"), ("file3.vhd", "lib2", None)]
+        )
+        self.assertEqual(sorted(commands), [["file1.vhd"], ["file2.vhd"], ["file3.vhd"]])
+
+    def test_compile_source_files_of_a_failed_batch_one_at_a_time(self):
+        output, commands = self._compile_in_batches(
+            [("file1.vhd", "lib", None), ("file2.vhd", "lib", None), ("file3.vhd", "lib", None)],
+            fail=["file2.vhd"],
+            dependencies=[(2, 1)],
+        )
+        self.assertEqual(sorted(commands[0]), ["file1.vhd", "file2.vhd", "file3.vhd"])
+        self.assertEqual(sorted(commands[1:]), [["file1.vhd"], ["file2.vhd"]])
+        self.assertIn("Compiling 3 files into lib in one call failed, compiling them one at a time\n", output)
+        self.assertIn("Compiling into lib: file1.vhd passed\n", output)
+        self.assertIn("Compiling into lib: file2.vhd failed\n", output)
+        self.assertIn("Compiling into lib: file3.vhd skipped\n", output)
+
+    def _test_compile_source_files_in_batches_in_parallel(self, supports_concurrent_compiles_into_library):
+        _, commands = self._compile_in_batches(
+            [("file1.vhd", "lib1", None), ("file2.vhd", "lib1", None), ("file3.vhd", "lib2", None)],
+            num_threads=4,
+            supports_concurrent_compiles_into_library=supports_concurrent_compiles_into_library,
+        )
+        self.assertEqual(sorted(sorted(command) for command in commands), [["file1.vhd", "file2.vhd"], ["file3.vhd"]])
+
+    def test_compile_source_files_in_batches_in_parallel(self):
+        self._test_compile_source_files_in_batches_in_parallel(False)
+
+    def test_compile_source_files_in_batches_in_parallel_into_a_library(self):
+        self._test_compile_source_files_in_batches_in_parallel(True)
+
     @mock.patch("os.environ", autospec=True)
     def test_find_prefix(self, environ):
         class MySimulatorInterface(SimulatorInterface):  # pylint: disable=abstract-method
@@ -317,6 +517,23 @@ def create_simulator_interface():
     simif = SimulatorInterface(output_path="output_path", gui=False)
     simif.compile_source_file_command = mock.create_autospec(simif.compile_source_file_command)
     return simif
+
+
+def create_project(files, dependencies=()):
+    """
+    Create a project of VHDL files, (name, library) pairs. dependencies are (file index, index of
+    the file it depends on) pairs. Return the project and its source files.
+    """
+    project = Project()
+    source_files = []
+    for name, library in files:
+        if library not in [existing.name for existing in project.get_libraries()]:
+            project.add_library(library, library + "_path")
+        write_file(name, "")
+        source_files.append(project.add_source_file(name, library, file_type="vhdl"))
+    for idx, depends_on in dependencies:
+        project.add_manual_dependency(source_files[idx], depends_on=source_files[depends_on])
+    return project, source_files
 
 
 class MockPrinter(object):

@@ -39,6 +39,7 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
     executable = environ.get("GHDL", "ghdl")
     supports_gui_flag = True
     supports_colors_in_gui = True
+    supports_batch_compile = True
 
     compile_options = [
         ListOfStringOption("ghdl.a_flags"),
@@ -255,6 +256,21 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
         else:
             self._vhdl_standard = list(vhdl_standards)[0]
 
+        # A library clause fails on a library nothing has been compiled into, which files compiled
+        # in parallel may come before, so every library is created first
+        for library in project.get_libraries():
+            if not list(Path(library.directory).glob(f"{library.name}-obj*.cf")):
+                subprocess.check_call(
+                    [
+                        str(Path(self._prefix) / self.executable),
+                        "-i",
+                        f"--workdir={library.directory!s}",
+                        f"--work={library.name!s}",
+                        f"--std={self._std_str(self._vhdl_standard)!s}",
+                    ],
+                    env=self.get_env(),
+                )
+
     def compile_source_file_command(self, source_file):
         """
         Returns the command to compile a single source_file
@@ -443,6 +459,26 @@ class GHDLInterface(SimulatorInterface, ViewerMixin):  # pylint: disable=too-man
             subprocess.call(cmd)
 
         return status
+
+    def compile_source_files(self, project, *args, num_threads=1, **kwargs):  # pylint: disable=arguments-differ
+        """
+        Compile one file at a time with coverage of the gcc backend, which writes the .gcno file
+        of every file to the working directory
+        """
+        if self._backend == "gcc" and any(
+            source_file.compile_options.get("enable_coverage", False)
+            for source_file in project.get_source_files_in_order()
+        ):
+            num_threads = 1
+        super().compile_source_files(project, *args, num_threads=num_threads, **kwargs)
+
+    def _batch_command(self, source_file):
+        """
+        Files compiled with coverage are compiled one at a time, see _compile_source_file
+        """
+        if source_file.compile_options.get("enable_coverage", False):
+            return None
+        return super()._batch_command(source_file)
 
     def _compile_source_file(self, source_file, printer):
         """
