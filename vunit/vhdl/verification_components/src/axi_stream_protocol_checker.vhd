@@ -165,7 +165,8 @@ begin
       -- All keys have the same length such that their alphabetical order is the numerical order of tid.
       variable key : string(1 to tid'length);
     begin
-      wait until rising_edge(aclk) and (to_x01(tvalid) = '1');
+      -- A transfer is only made when both tvalid and tready are high
+      wait until rising_edge(aclk) and (to_x01(tvalid) = '1') and (to_x01(tready) = '1');
       if not is_x(tid) then
         -- 'H' and 'L' denote the same stream as '1' and '0'
         key := to_string(to_x01(tid));

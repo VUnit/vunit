@@ -173,6 +173,12 @@ for test in TB_AXI_STREAM_PROTOCOL_CHECKER.get_tests("*packets are complete for 
             name="id_length=%d dest_length=0" % id_length, generics=dict(id_length=id_length, dest_length=0)
         )
 
+for test in TB_AXI_STREAM_PROTOCOL_CHECKER.get_tests("*packets are complete when*transfer is*accepted"):
+    for id_length in [0, 8, 9]:
+        test.add_config(
+            name="id_length=%d dest_length=0" % id_length, generics=dict(id_length=id_length, dest_length=0)
+        )
+
 for test in TB_AXI_STREAM_PROTOCOL_CHECKER.get_tests("*packets are complete for interleaved streams"):
     for id_length in [8, 9, 24]:
         test.add_config(

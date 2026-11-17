@@ -559,6 +559,42 @@ begin
 
       unmock(rule_logger);
 
+    elsif run("Test passing check of that all packets are complete when no transfer is accepted") then
+      wait until rising_edge(aclk);
+      tvalid <= '1';
+      tready <= '0';
+      tid    <= std_logic_vector(to_unsigned(highest_id, tid'length));
+      tlast  <= '0';
+      wait until rising_edge(aclk);
+      wait until rising_edge(aclk);
+
+    elsif run("Test failing check of that all packets are complete when the last transfer is not accepted") then
+      rule_logger := get_logger(get_name(logger) & ":rule 9");
+      mock(rule_logger);
+
+      wait until rising_edge(aclk);
+      transfer(highest_id, last => '0');
+      tready <= '0';
+      tlast  <= '1';
+      wait until rising_edge(aclk);
+      wait until rising_edge(aclk);
+
+      set_phase(runner_state, test_runner_cleanup);
+      entry_gate(runner);
+
+      if id_length = 0 then
+        check_only_log(rule_logger, "Check failed for packet completion.", error);
+      else
+        check_only_log(
+          rule_logger,
+          "Unconditional check failed for packet completion for the following streams: " &
+          to_string(highest_id) & ".",
+          error
+        );
+      end if;
+
+      unmock(rule_logger);
+
     elsif run("Test failing check of that all packets are complete for interleaved streams") then
       rule_logger := get_logger(get_name(logger) & ":rule 9");
       mock(rule_logger);
