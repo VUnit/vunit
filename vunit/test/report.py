@@ -67,6 +67,9 @@ class TestReport(object):
         self._printer = printer
         self._real_total_time = 0.0
         self._expected_num_tests = 0
+        self._n_passed = 0
+        self._n_failed = 0
+        self._n_skipped = 0
 
     def set_real_total_time(self, real_total_time):
         """
@@ -93,6 +96,12 @@ class TestReport(object):
         result = TestResult(*args, **kwargs)
         self._test_results[result.name] = result
         self._test_names_in_order.append(result.name)
+        if result.passed:
+            self._n_passed += 1
+        elif result.failed:
+            self._n_failed += 1
+        elif result.skipped:
+            self._n_skipped += 1
 
     def _last_test_result(self):
         """
@@ -113,7 +122,6 @@ class TestReport(object):
         total number of passed, failed and skipped tests
         """
         result = self._last_test_result()
-        passed, failed, skipped = self._split()
         if result.passed:
             self._printer.write("pass", fg="gi")
         elif result.failed:
@@ -124,9 +132,9 @@ class TestReport(object):
             assert False
 
         args = []
-        args.append(f"P={len(passed):d}")
-        args.append(f"S={len(skipped):d}")
-        args.append(f"F={len(failed):d}")
+        args.append(f"P={self._n_passed:d}")
+        args.append(f"S={self._n_skipped:d}")
+        args.append(f"F={self._n_failed:d}")
         args.append(f"T={total_tests:d}")
 
         self._printer.write(f" ({' '.join(args)!s}) {result.name!s} ({get_parsed_time(result.time)})\n")
