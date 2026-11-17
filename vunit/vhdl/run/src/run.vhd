@@ -85,6 +85,8 @@ package body run_pkg is
         end if;
       end loop;
     end if;
+    set_num_of_run_test_cases(runner_state, 0);
+
     exit_gate(runner);
     set_phase(runner_state, test_suite_setup);
     trace(runner_trace_logger, "Entering test suite setup phase.");
@@ -341,7 +343,7 @@ package body run_pkg is
     if get_test_suite_completed(runner_state) then
       set_running_test_case(runner_state, "");
       return false;
-    elsif get_run_all(runner_state) then
+    elsif get_run_all(runner_state) or get_test_case_name(runner_state, get_active_test_case_index(runner_state)) = name then
       if not has_run(name) then
         register_run(name);
         info(runner_trace_logger, "Test case: " & name);
@@ -350,14 +352,10 @@ package body run_pkg is
         end if;
         set_running_test_case(runner_state, name);
         return true;
+      elsif get_test_case_name(runner_state, get_active_test_case_index(runner_state)) = name then
+        error(runner_trace_logger, "Test case: " & name & " cannot be run more than once.");
+        return false;
       end if;
-    elsif get_test_case_name(runner_state, get_active_test_case_index(runner_state)) = name then
-      info(runner_trace_logger, "Test case: " & name);
-      if has_active_python_runner(runner_state) then
-        core_pkg.test_start(name);
-      end if;
-      set_running_test_case(runner_state, name);
-      return true;
     end if;
 
     set_running_test_case(runner_state, "");
