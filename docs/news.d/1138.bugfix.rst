@@ -1,0 +1,1 @@
+Fixed AttributeError when running ``--export-json`` on testbenches using ``run_all_in_same_sim`` pragma.
