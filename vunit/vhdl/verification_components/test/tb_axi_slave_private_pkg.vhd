@@ -36,6 +36,17 @@ begin
                                                              logger => logger);
     variable stat : axi_statistics_t;
 
+    constant axi_stall_slave_a : axi_slave_t := new_axi_slave(
+      memory => new_memory,
+      actor => new_actor("axi_stall_slave_a"),
+      data_stall_probability => 0.5);
+    constant axi_stall_slave_b : axi_slave_t := new_axi_slave(
+      memory => new_memory,
+      actor => new_actor("axi_stall_slave_b"),
+      data_stall_probability => 0.5);
+    variable stall_slave_a, stall_slave_b : axi_slave_private_t;
+    variable stalls_a, stalls_b : boolean_vector(0 to 63);
+
     procedure slave_init(axi_slave_type : axi_slave_type_t) is
     begin
       axi_slave.init(axi_public_slave,
@@ -47,7 +58,18 @@ begin
   begin
     test_runner_setup(runner, runner_cfg);
 
-    if run("test create_burst updates statistics") then
+    if run("test different actors have different stall sequences") then
+      stall_slave_a.init(axi_stall_slave_a, read_slave, max_id, data);
+      stall_slave_b.init(axi_stall_slave_b, read_slave, max_id, data);
+
+      for i in stalls_a'range loop
+        stalls_a(i) := stall_slave_a.should_stall_data;
+        stalls_b(i) := stall_slave_b.should_stall_data;
+      end loop;
+
+      check(stalls_a /= stalls_b, "Different actors should produce different stall sequences");
+
+    elsif run("test create_burst updates statistics") then
       slave_init(read_slave);
       init <= true;
       wait for 0 ns;
