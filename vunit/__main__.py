@@ -4,7 +4,7 @@
 #
 # Copyright (c) 2014-2026, Lars Asplund lars.anders.asplund@gmail.com
 
-from vunit.app.cli import main
+from vunit.tool.cli import main
 
 if __name__ == "__main__":
     raise SystemExit(main())

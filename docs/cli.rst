@@ -108,7 +108,7 @@ The generators can also be used without the interactive interface. Each accepts 
 
 .. code-block:: python
 
-   from vunit.app.generation import project, testbench
+   from vunit.tool.generation import project, testbench
 
    project_config = {
        "root": "my_project",

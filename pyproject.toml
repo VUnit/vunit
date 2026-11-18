@@ -40,7 +40,7 @@ dependencies = [
 ]
 
 [project.scripts]
-vunit = "vunit.app.cli:main"
+vunit = "vunit.tool.cli:main"
 
 [tool.setuptools]
 include-package-data = false
@@ -48,7 +48,7 @@ include-package-data = false
 [tool.setuptools.packages.find]
 where = ["."]
 include = [
-    "vunit", "vunit.app", "vunit.app.generation", "vunit.com", "vunit.parsing","vunit.parsing.verilog", "vunit.sim_if",
+    "vunit", "vunit.tool", "vunit.tool.generation", "vunit.com", "vunit.parsing","vunit.parsing.verilog", "vunit.sim_if",
     "vunit.test", "vunit.ui"
 ]
 

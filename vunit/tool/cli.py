@@ -84,7 +84,7 @@ def _preview_options(parser, args, complete):
 
 def main(argv=None):
     """Select and run a VUnit command."""
-    parser = argparse.ArgumentParser(prog="vunit", description="Standalone VUnit command-line application")
+    parser = argparse.ArgumentParser(prog="vunit", description="Standalone VUnit command-line tool")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("version", help="Print the installed VUnit version")
     project = commands.add_parser("create-project", help="Create a VUnit run.py project")

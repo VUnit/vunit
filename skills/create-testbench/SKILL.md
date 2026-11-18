@@ -8,7 +8,7 @@ license: MPL-2.0
 
 1. **Inspect the DUT interface and requirements.** Read the available HDL declarations, specifications, and existing project conventions. The DUT implementation need not exist yet; support test-driven development from an entity definition alone. Identify meaningful tests based on the intended behavior, and clarify essential ambiguities rather than assuming undocumented behavior.
 
-2. **Generate the testbench.** Use the deterministic VUnit application instead of writing boilerplate manually. Run `vunit create-testbench --help` to discover its current interface. Use noninteractive options and `--preview` where available. Do not overwrite existing files without authorization.
+2. **Generate the testbench.** Use the VUnit command-line tool (vunit create-testbench) to generate testbench scaffolding rather than writing it manually. Run `vunit create-testbench --help` to discover its current interface. Use noninteractive options and `--preview` where available. Do not overwrite existing files without authorization.
 
 3. **Create test scaffolding.** Where supported, pass the proposed test names to the VUnit generator so it creates their `run(...)` branches. If no tests are specified, the generator creates a placeholder test named `first_test`.
 

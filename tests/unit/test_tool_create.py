@@ -27,9 +27,9 @@ from prompt_toolkit.output import DummyOutput
 from prompt_toolkit.output.vt100 import Vt100_Output
 from prompt_toolkit.data_structures import Size
 
-from vunit.app import cli, cli_helpers, create_project as new, create_testbench
-from vunit.app.generation import project as project_generator
-from vunit.app.generation import testbench as testbench_generator
+from vunit.tool import cli, cli_helpers, create_project as new, create_testbench
+from vunit.tool.generation import project as project_generator
+from vunit.tool.generation import testbench as testbench_generator
 
 
 class TestProjectGenerator(unittest.TestCase):
