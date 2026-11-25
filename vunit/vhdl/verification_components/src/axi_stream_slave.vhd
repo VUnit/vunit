@@ -161,6 +161,13 @@ begin
                 exit when mismatch;
               end if;
             end loop;
+            -- The bits above the last whole byte have no TKEEP bit and are always part of the
+            -- transfer, so compare them unconditionally. Below eight bits of data the loop above
+            -- has no byte to look at at all and this is the only comparison that happens.
+            if not mismatch and (tdata'length > 8 * tkeep'length) then
+              mismatch := tdata(tdata'length - 1 downto 8 * tkeep'length) /=
+                          expected_tdata(tdata'length - 1 downto 8 * tkeep'length);
+            end if;
             if mismatch then
               check_field(tdata, expected_tdata, "TDATA mismatch, " & to_string(report_msg));
             end if;

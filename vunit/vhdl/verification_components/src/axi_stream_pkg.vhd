@@ -903,6 +903,13 @@ package body axi_stream_pkg is
           exit when mismatch;
         end if;
       end loop;
+      -- The bits above the last whole byte have no TKEEP bit and are always part of the transfer,
+      -- so compare them unconditionally. Below eight bits of data the loop above has no byte to
+      -- look at at all and this is the only comparison that happens.
+      if not mismatch and (got_tdata'length > 8 * got_tkeep'length) then
+        mismatch := got_tdata(got_tdata'length - 1 downto 8 * got_tkeep'length) /=
+                    expected_normalized(got_tdata'length - 1 downto 8 * got_tkeep'length);
+      end if;
       if mismatch then
         check_equal(got_tdata, expected, "TDATA mismatch, " & msg);
       end if;

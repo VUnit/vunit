@@ -106,6 +106,7 @@ begin
     variable data      : std_logic_vector(tdata'range);
     variable last_bool : boolean;
     variable last      : std_logic;
+    variable expected  : std_logic_vector(tdata'range);
     variable keep      : std_logic_vector(tkeep'range);
     variable strb      : std_logic_vector(tstrb'range);
     variable id        : std_logic_vector(tid'range);
@@ -590,6 +591,47 @@ begin
       end if;
 
       unmock(mock_logger);
+
+    elsif run("test failing check above the last whole byte") then
+      -- The bits above the last whole byte have no TKEEP bit, so they always belong to the
+      -- transfer and must be compared. They used to escape the comparison when the data width was
+      -- not a multiple of eight, and with less than eight bits of data no byte was compared at all.
+      if g_data_length mod 8 = 0 then
+        info("Skipping: this test needs a data width that is not a multiple of eight");
+      else
+        data := (others => '0');
+        keep := (others => '1');
+        strb := (others => '1');
+        push_axi_stream(net, master_axi_stream, data, tlast => '1', tkeep => keep, tstrb => strb);
+        -- Delay mocking the logger to prevent 'invalid checks' from failing the checks below
+        wait until rising_edge (aclk) and tvalid = '1';
+
+        mock_logger := get_logger("check");
+        mock(mock_logger);
+
+        expected          := data;
+        expected(expected'left) := '1';
+        check_axi_stream(
+          net, slave_axi_stream, expected, tlast => '0', tkeep => not keep, tstrb => not strb,
+          msg => "checking axi stream");
+        check_log(
+          mock_logger, "TDATA mismatch, checking axi stream - Got " &
+          to_nibble_string(data) & " (" & to_string(to_integer(data)) & "). Expected " &
+          to_nibble_string(expected) & " (" & to_string(to_integer(expected)) & ").", error);
+        if keep'length > 0 then
+          check_log(
+            mock_logger, "TKEEP mismatch, checking axi stream - Got " &
+            to_nibble_string(keep) & " (" & to_string(to_integer(keep)) & "). Expected " &
+            to_nibble_string(not keep) & " (" & to_string(to_integer(not keep)) & ").", error);
+          check_log(
+            mock_logger, "TSTRB mismatch, checking axi stream - Got " &
+            to_nibble_string(strb) & " (" & to_string(to_integer(strb)) & "). Expected " &
+            to_nibble_string(not strb) & " (" & to_string(to_integer(not strb)) & ").", error);
+        end if;
+        check_log(mock_logger, "TLAST mismatch, checking axi stream - Got 1. Expected 0.", error);
+
+        unmock(mock_logger);
+      end if;
 
     elsif run("test back-to-back passing check") then
       keep := (others => '1');

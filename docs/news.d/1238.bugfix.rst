@@ -1,0 +1,5 @@
+``check_axi_stream`` compared ``TDATA`` byte by byte, using the ``TKEEP`` bits as the loop range. The
+bits above the last whole byte have no ``TKEEP`` bit, so they were never compared: with a data width
+below eight bits no byte was compared at all, and with a width that is not a multiple of eight the
+most significant bits were ignored. Both cases let a mismatch pass silently. Those bits are now
+compared unconditionally, in the blocking check as well as in the check performed by the slave actor.

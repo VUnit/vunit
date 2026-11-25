@@ -148,6 +148,12 @@ for id_length in [0, 8]:
 
 TB_AXI_STREAM.test("test passing with no tkeep").set_generic("g_data_length", 16)
 
+for data_length in [4, 12]:
+    TB_AXI_STREAM.test("test failing check above the last whole byte").add_config(
+        name=f"data_l={data_length}",
+        generics=dict(g_data_length=data_length, g_id_length=0, g_dest_length=0, g_user_length=0),
+    )
+
 TB_AXI_STREAM_PROTOCOL_CHECKER = LIB.test_bench("tb_axi_stream_protocol_checker")
 
 for data_length in [0, 8, 32]:
